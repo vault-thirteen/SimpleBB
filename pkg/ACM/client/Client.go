@@ -24,7 +24,7 @@ const (
 	FuncUnbanUser              = "UnbanUser"
 	FuncGetSelfRoles           = "GetSelfRoles"
 	FuncShowDiagnosticData     = "ShowDiagnosticData"
-	FuncTest                   = "Test" //TODO
+	FuncTest                   = "Test"
 )
 
 func NewClient(host string, port uint16, path string, enableSelfSignedCertificate bool) (c *cc.Client, err error) {

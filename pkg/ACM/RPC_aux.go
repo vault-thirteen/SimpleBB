@@ -20,7 +20,7 @@ import (
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SMTP/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
-	n "github.com/vault-thirteen/auxie/number"
+	num "github.com/vault-thirteen/auxie/number"
 )
 
 // Auxiliary functions used in RPC functions.
@@ -384,7 +384,7 @@ func (srv *Server) checkCaptcha(captchaId string, answer string) (result *rm.Che
 		return nil, errors.New(ErrCaptchaAnswerIsNotSet)
 	}
 
-	params.Value, err = n.ParseUint(answer)
+	params.Value, err = num.ParseUint(answer)
 	if err != nil {
 		return nil, err
 	}

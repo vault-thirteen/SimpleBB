@@ -734,7 +734,7 @@ type ShowDiagnosticDataHandler struct {
 	Server *Server
 }
 
-func (h ShowDiagnosticDataHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h ShowDiagnosticDataHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (any, *js.Error) {
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
@@ -756,15 +756,9 @@ type TestHandler struct {
 	Server *Server
 }
 
-func (h TestHandler) ServeJSONRPC(ctx context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h TestHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
-
-	//requestId, jerr := c.GetRequestId(ctx)
-	//if jerr != nil {
-	//	return nil, jerr
-	//}
-	//log.Println("Test. Request start. ID:", requestId) //TODO
 
 	var p mm.TestParams
 	jerr := js.Unmarshal(params, &p)
@@ -782,8 +776,6 @@ func (h TestHandler) ServeJSONRPC(ctx context.Context, params *json.RawMessage) 
 	if result != nil {
 		result.TimeSpent = taskDuration
 	}
-
-	//log.Println("Test. Request end. ID:", requestId) //TODO
 
 	h.Server.diag.IncSuccessfulRequestsCount()
 	return result, nil

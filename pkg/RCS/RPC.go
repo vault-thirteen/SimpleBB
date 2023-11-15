@@ -73,7 +73,7 @@ type CheckCaptchaHandler struct {
 	Server *Server
 }
 
-func (h CheckCaptchaHandler) ServeJSONRPC(c context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h CheckCaptchaHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
