@@ -294,7 +294,9 @@ type ShowDiagnosticDataResult struct {
 	SuccessfulRequestsCount uint64 `json:"successfulRequestsCount"`
 }
 
-type TestParams struct{}
+type TestParams struct {
+	N uint `json:"n"`
+}
 
 type TestResult struct {
 	cm.CommonResult

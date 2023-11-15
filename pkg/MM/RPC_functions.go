@@ -1157,14 +1157,13 @@ func (srv *Server) showDiagnosticData() (result *mm.ShowDiagnosticDataResult, je
 	return result, nil
 }
 
-func (srv *Server) doTest(_ *mm.TestParams) (result *mm.TestResult, jerr *js.Error) {
+func (srv *Server) doTest(p *mm.TestParams) (result *mm.TestResult, jerr *js.Error) {
 	result = &mm.TestResult{}
 
 	var wg = new(sync.WaitGroup)
-	n := 450 //TODO
-	var errChan = make(chan error, n)
+	var errChan = make(chan error, p.N)
 
-	for i := 1; i <= n; i++ {
+	for i := uint(1); i <= p.N; i++ {
 		wg.Add(1)
 		go srv.doTestA(wg, errChan)
 	}
