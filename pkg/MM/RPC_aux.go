@@ -1,0 +1,98 @@
+package mm
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"log"
+	"net"
+
+	js "github.com/osamingo/jsonrpc/v2"
+	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
+	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
+	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+)
+
+// Auxiliary functions used in RPC functions.
+
+const (
+	ErrFDBError = "DB error: %s"
+)
+
+// databaseError checks the database error and returns the JSON RPC error.
+func (srv *Server) databaseError(err error) (jerr *js.Error) {
+	srv.checkForNetworkError(err)
+	log.Println(fmt.Sprintf(ErrFDBError, err.Error()))
+	return &js.Error{Code: c.RpcErrorCode_DatabaseError, Message: c.RpcErrorMsg_DatabaseError}
+}
+
+// checkForNetworkError informs the system about database network errors.
+func (srv *Server) checkForNetworkError(err error) {
+	var nerr net.Error
+	isNetworkError := errors.As(err, &nerr)
+
+	if isNetworkError {
+		srv.dbErrors <- nerr
+	}
+}
+
+// mustBeAnAuthToken ensures that an authorization token is present and is
+// valid. If the token is absent or invalid, an error is returned and the caller
+// of this function must stop and return this error. User data is returned when
+// token is valid.
+func (srv *Server) mustBeAnAuthToken(auth *cm.Auth) (userRoles *am.GetSelfRolesResult, jerr *js.Error) {
+	jerr = srv.mustBeAuthUserIPA(auth)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	if len(auth.Token) == 0 {
+		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+	}
+
+	var err error
+	userRoles, err = srv.getUserSelfRoles(auth)
+	if err != nil {
+		jerr = &js.Error{Code: c.RpcErrorCode_GetUserDataByAuthToken, Message: fmt.Sprintf(c.RpcErrorMsgF_GetUserDataByAuthToken, err.Error())}
+		return nil, jerr
+	}
+
+	return userRoles, nil
+}
+
+// mustBeAuthUserIPA ensures that user's IP address is set. If it is not set,
+// an error is returned and the caller of this function must stop and return
+// this error.
+func (srv *Server) mustBeAuthUserIPA(auth *cm.Auth) (jerr *js.Error) {
+	if auth == nil {
+		return &js.Error{Code: c.RpcErrorCode_MalformedRequest, Message: c.RpcErrorMsg_MalformedRequest}
+	}
+
+	if len(auth.UserIPA) == 0 {
+		return &js.Error{Code: c.RpcErrorCode_MalformedRequest, Message: c.RpcErrorMsg_MalformedRequest}
+	}
+
+	auth.UserIPAB = net.ParseIP(auth.UserIPA)
+	if auth.UserIPAB == nil {
+		return &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, c.ErrNetParseIP)}
+	}
+
+	return nil
+}
+
+func (srv *Server) getUserSelfRoles(auth *cm.Auth) (userRoles *am.GetSelfRolesResult, err error) {
+	var params = am.GetSelfRolesParams{
+		CommonParams: cm.CommonParams{
+			Auth: auth,
+		},
+	}
+
+	userRoles = &am.GetSelfRolesResult{}
+	err = srv.acmServiceClient.MakeRequest(context.Background(), userRoles, ac.FuncGetSelfRoles, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return userRoles, nil
+}

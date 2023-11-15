@@ -1,0 +1,13 @@
+{
+  "http": {
+    "host": "localhost",
+    "port": 2005
+  },
+  "smtp": {
+    "host": "smtp.example.org",
+    "port": 465,
+    "user": "mailer@example.org",
+    "password": "",
+    "userAgent": "Mailer"
+  }
+}
