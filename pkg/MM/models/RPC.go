@@ -234,7 +234,7 @@ type ListThreadMessagesParams struct {
 type ListThreadMessagesResult struct {
 	cm.CommonResult
 
-	ThreadWithMessages *ThreadWithMessages `json:"twm"`
+	ThreadWithMessages *ThreadAndMessages `json:"twm"`
 }
 
 type ListThreadMessagesOnPageParams struct {
@@ -247,7 +247,7 @@ type ListThreadMessagesOnPageParams struct {
 type ListThreadMessagesOnPageResult struct {
 	cm.CommonResult
 
-	ThreadWithMessages *ThreadWithMessages `json:"twmop"`
+	ThreadWithMessages *ThreadAndMessages `json:"twmop"`
 }
 
 type ListForumThreadsParams struct {
@@ -259,7 +259,7 @@ type ListForumThreadsParams struct {
 type ListForumThreadsResult struct {
 	cm.CommonResult
 
-	ForumWithThreads *ForumWithThreads `json:"fwt"`
+	ForumWithThreads *ForumAndThreads `json:"fwt"`
 }
 
 type ListForumThreadsOnPageParams struct {
@@ -272,7 +272,7 @@ type ListForumThreadsOnPageParams struct {
 type ListForumThreadsOnPageResult struct {
 	cm.CommonResult
 
-	ForumWithThreads *ForumWithThreads `json:"fwtop"`
+	ForumWithThreads *ForumAndThreads `json:"fwtop"`
 }
 
 type ListForumsParams struct {

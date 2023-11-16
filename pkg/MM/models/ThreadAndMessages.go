@@ -2,12 +2,17 @@ package models
 
 import ul "github.com/vault-thirteen/SimpleBB/pkg/UidList"
 
-type ThreadWithMessages struct {
+type ThreadAndMessages struct {
 	// Thread parameters.
 	ThreadId      uint   `json:"threadId"`
-	ThreadName    string `json:"threadName"`
 	ThreadForumId uint   `json:"threadForumId"`
+	ThreadName    string `json:"threadName"`
 	EventData
+
+	// Message parameters. If pagination is used, these lists contain
+	// information after the application of pagination.
+	MessageIds ul.UidList `json:"messageIds"`
+	Messages   []Message  `json:"messages"`
 
 	// Number of the current page of messages.
 	Page *uint `json:"page,omitempty"`
@@ -17,22 +22,17 @@ type ThreadWithMessages struct {
 
 	// Total number of available messages.
 	TotalMessages *uint `json:"totalMessages,omitempty"`
-
-	// Message parameters. If pagination is used, these lists contain
-	// information after the application of pagination.
-	MessageIds ul.UidList `json:"messageIds"`
-	Messages   []Message  `json:"messages"`
 }
 
-func NewThreadWithMessages(thread *Thread) (twm *ThreadWithMessages) {
+func NewThreadAndMessages(thread *Thread) (tam *ThreadAndMessages) {
 	if thread == nil {
 		return nil
 	}
 
-	twm = &ThreadWithMessages{
+	tam = &ThreadAndMessages{
 		ThreadId:      thread.Id,
-		ThreadName:    thread.Name,
 		ThreadForumId: thread.ForumId,
+		ThreadName:    thread.Name,
 
 		EventData: EventData{
 			Creator: &EventParameters{
@@ -46,5 +46,5 @@ func NewThreadWithMessages(thread *Thread) (twm *ThreadWithMessages) {
 		},
 	}
 
-	return twm
+	return tam
 }

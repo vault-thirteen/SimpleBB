@@ -3,14 +3,16 @@ package models
 import ul "github.com/vault-thirteen/SimpleBB/pkg/UidList"
 
 type Thread struct {
+	// Identifier of this thread.
 	Id uint `json:"id"`
 
-	// ID of a forum containing this thread.
+	// Identifier of a forum containing this thread.
 	ForumId uint `json:"forumId"`
 
+	// Name of this thread.
 	Name string `json:"name"`
 
-	// List of IDs of messages of this thread.
+	// List of identifiers of messages of this thread.
 	Messages *ul.UidList `json:"messages"`
 
 	// Thread meta-data.
