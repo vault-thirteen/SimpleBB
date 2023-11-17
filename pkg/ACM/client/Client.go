@@ -8,23 +8,34 @@ import (
 
 // List of supported functions.
 const (
-	FuncPing                   = "Ping"
+	// Ping.
+	FuncPing = "Ping"
+
+	// User registration.
 	FuncRegisterUser           = "RegisterUser"
 	FuncApproveAndRegisterUser = "ApproveAndRegisterUser"
-	FuncLogUserIn              = "LogUserIn"
-	FuncLogUserOut             = "LogUserOut"
-	FuncGetListOfLoggedUsers   = "GetListOfLoggedUsers"
-	FuncIsUserLoggedIn         = "IsUserLoggedIn"
-	FuncGetUserRoles           = "GetUserRoles"
-	FuncViewUserParameters     = "ViewUserParameters"
-	FuncSetUserRoleAuthor      = "SetUserRoleAuthor"
-	FuncSetUserRoleWriter      = "SetUserRoleWriter"
-	FuncSetUserRoleReader      = "SetUserRoleReader"
-	FuncBanUser                = "BanUser"
-	FuncUnbanUser              = "UnbanUser"
-	FuncGetSelfRoles           = "GetSelfRoles"
-	FuncShowDiagnosticData     = "ShowDiagnosticData"
-	FuncTest                   = "Test"
+
+	// Logging in and out.
+	FuncLogUserIn            = "LogUserIn"
+	FuncLogUserOut           = "LogUserOut"
+	FuncGetListOfLoggedUsers = "GetListOfLoggedUsers"
+	FuncIsUserLoggedIn       = "IsUserLoggedIn"
+
+	// User properties.
+	FuncGetUserRoles       = "GetUserRoles"
+	FuncViewUserParameters = "ViewUserParameters"
+	FuncSetUserRoleAuthor  = "SetUserRoleAuthor"
+	FuncSetUserRoleWriter  = "SetUserRoleWriter"
+	FuncSetUserRoleReader  = "SetUserRoleReader"
+	FuncGetSelfRoles       = "GetSelfRoles"
+
+	// User banning.
+	FuncBanUser   = "BanUser"
+	FuncUnbanUser = "UnbanUser"
+
+	// Other.
+	FuncShowDiagnosticData = "ShowDiagnosticData"
+	FuncTest               = "Test"
 )
 
 func NewClient(host string, port uint16, path string, enableSelfSignedCertificate bool) (c *cc.Client, err error) {

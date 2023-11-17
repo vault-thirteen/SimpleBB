@@ -7,29 +7,47 @@ import (
 
 // List of supported functions.
 const (
-	FuncPing                     = "Ping"
-	FuncAddForum                 = "AddForum"
-	FuncChangeForumName          = "ChangeForumName"
-	FuncChangeForumParent        = "ChangeForumParent"
-	FuncAddThread                = "AddThread"
-	FuncChangeThreadName         = "ChangeThreadName"
-	FuncChangeThreadForum        = "ChangeThreadForum"
-	FuncAddMessage               = "AddMessage"
-	FuncChangeMessageText        = "ChangeMessageText"
-	FuncChangeMessageThread      = "ChangeMessageThread"
-	FuncDeleteMessage            = "DeleteMessage"
-	FuncGetMessage               = "GetMessage"
-	FuncGetThread                = "GetThread"
-	FuncDeleteThread             = "DeleteThread"
-	FuncGetForum                 = "GetForum"
-	FuncDeleteForum              = "DeleteForum"
-	FuncListThreadMessages       = "ListThreadMessages"
-	FuncListThreadMessagesOnPage = "ListThreadMessagesOnPage"
-	FuncListForumThreads         = "ListForumThreads"
-	FuncListForumThreadsOnPage   = "ListForumThreadsOnPage"
-	FuncListForums               = "ListForums"
-	FuncShowDiagnosticData       = "ShowDiagnosticData"
-	FuncTest                     = "Test"
+	// Ping.
+	FuncPing = "Ping"
+
+	// Section.
+	FuncAddSection          = "AddSection"
+	FuncChangeSectionName   = "ChangeSectionName"
+	FuncChangeSectionParent = "ChangeSectionParent"
+	FuncGetSection          = "GetSection"
+	FuncDeleteSection       = "DeleteSection"
+
+	// Forum.
+	FuncAddForum           = "AddForum"
+	FuncChangeForumName    = "ChangeForumName"
+	FuncChangeForumSection = "ChangeForumSection"
+	FuncGetForum           = "GetForum"
+	FuncDeleteForum        = "DeleteForum"
+
+	// Thread.
+	FuncAddThread         = "AddThread"
+	FuncChangeThreadName  = "ChangeThreadName"
+	FuncChangeThreadForum = "ChangeThreadForum"
+	FuncGetThread         = "GetThread"
+	FuncDeleteThread      = "DeleteThread"
+
+	// Message.
+	FuncAddMessage          = "AddMessage"
+	FuncChangeMessageText   = "ChangeMessageText"
+	FuncChangeMessageThread = "ChangeMessageThread"
+	FuncGetMessage          = "GetMessage"
+	FuncDeleteMessage       = "DeleteMessage"
+
+	// Composite objects.
+	FuncListThreadAndMessages       = "ListThreadAndMessages"
+	FuncListThreadAndMessagesOnPage = "ListThreadAndMessagesOnPage"
+	FuncListForumAndThreads         = "ListForumAndThreads"
+	FuncListForumAndThreadsOnPage   = "ListForumAndThreadsOnPage"
+	FuncListSectionsAndForums       = "ListSectionsAndForums"
+
+	// Other.
+	FuncShowDiagnosticData = "ShowDiagnosticData"
+	FuncTest               = "Test"
 )
 
 func NewClient(host string, port uint16, path string, enableSelfSignedCertificate bool) (c *cc.Client, err error) {

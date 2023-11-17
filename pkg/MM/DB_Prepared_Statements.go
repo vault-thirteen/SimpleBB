@@ -7,15 +7,15 @@ import (
 
 // Indices of prepared statements.
 const (
-	DbPsid_CountRootForums              = 0
+	DbPsid_ReadSections                 = 0
 	DbPsid_InsertNewForum               = 1
 	DbPsid_CountForumsById              = 2
-	DbPsid_GetForumChildrenById         = 3
-	DbPsid_SetForumChildrenById         = 4
+	DbPsid_DeleteSectionById            = 3
+	DbPsid_GetSectionById               = 4
 	DbPsid_SetForumNameById             = 5
-	DbPsid_GetRootForumId               = 6
-	DbPsid_SetForumParentById           = 7
-	DbPsid_GetForumParentById           = 8
+	DbPsid_SetSectionChildTypeById      = 6
+	DbPsid_SetForumSectionById          = 7
+	DbPsid_GetForumSectionById          = 8
 	DbPsid_InsertNewThread              = 9
 	DbPsid_GetForumThreadsById          = 10
 	DbPsid_SetForumThreadsById          = 11
@@ -37,6 +37,15 @@ const (
 	DbPsid_GetForumById                 = 27
 	DbPsid_DeleteForumById              = 28
 	DbPsid_ReadForums                   = 29
+	DbPsid_CountRootSections            = 30
+	DbPsid_InsertNewSection             = 31
+	DbPsid_CountSectionsById            = 32
+	DbPsid_GetSectionChildrenById       = 33
+	DbPsid_SetSectionChildrenById       = 34
+	DbPsid_SetSectionNameById           = 35
+	DbPsid_GetSectionParentById         = 36
+	DbPsid_SetSectionParentById         = 37
+	DbPsid_GetSectionChildTypeById      = 38
 )
 
 func (srv *Server) prepareDbStatements() (err error) {
@@ -44,11 +53,11 @@ func (srv *Server) prepareDbStatements() (err error) {
 	qs := make([]string, 0)
 
 	// 0.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Parent IS NULL;`, srv.dbTableNames.Forums)
+	q = fmt.Sprintf(`SELECT Id, Parent, ChildType, Children, Name, CreatorUserId, CreatorTime, EditorUserId, EditorTime FROM %s;`, srv.dbTableNames.Sections)
 	qs = append(qs, q)
 
 	// 1.
-	q = fmt.Sprintf(`INSERT INTO %s (Parent, NAME, CreatorUserId, CreatorTime) VALUES (?, ?, ?, Now());`, srv.dbTableNames.Forums)
+	q = fmt.Sprintf(`INSERT INTO %s (SectionId, NAME, CreatorUserId, CreatorTime) VALUES (?, ?, ?, Now());`, srv.dbTableNames.Forums)
 	qs = append(qs, q)
 
 	// 2.
@@ -56,11 +65,11 @@ func (srv *Server) prepareDbStatements() (err error) {
 	qs = append(qs, q)
 
 	// 3.
-	q = fmt.Sprintf(`SELECT Children FROM %s WHERE Id = ?;`, srv.dbTableNames.Forums)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ? AND ((Children IS NULL) OR (JSON_LENGTH(JSON_EXTRACT(Children, "$")) = 0));`, srv.dbTableNames.Sections)
 	qs = append(qs, q)
 
 	// 4.
-	q = fmt.Sprintf(`UPDATE %s SET Children = ? WHERE Id = ?;`, srv.dbTableNames.Forums)
+	q = fmt.Sprintf(`SELECT Id, Parent, ChildType, Children, Name, CreatorUserId, CreatorTime, EditorUserId, EditorTime FROM %s WHERE Id = ?;`, srv.dbTableNames.Sections)
 	qs = append(qs, q)
 
 	// 5.
@@ -68,15 +77,15 @@ func (srv *Server) prepareDbStatements() (err error) {
 	qs = append(qs, q)
 
 	// 6.
-	q = fmt.Sprintf(`SELECT Id FROM %s WHERE Parent IS NULL;`, srv.dbTableNames.Forums)
+	q = fmt.Sprintf(`UPDATE %s SET ChildType = ? WHERE Id = ?;`, srv.dbTableNames.Sections)
 	qs = append(qs, q)
 
 	// 7.
-	q = fmt.Sprintf(`UPDATE %s SET Parent = ?, EditorUserId = ?, EditorTime = Now() WHERE Id = ?;`, srv.dbTableNames.Forums)
+	q = fmt.Sprintf(`UPDATE %s SET SectionId = ?, EditorUserId = ?, EditorTime = Now() WHERE Id = ?;`, srv.dbTableNames.Forums)
 	qs = append(qs, q)
 
 	// 8.
-	q = fmt.Sprintf(`SELECT Parent FROM %s WHERE Id = ?;`, srv.dbTableNames.Forums)
+	q = fmt.Sprintf(`SELECT SectionId FROM %s WHERE Id = ?;`, srv.dbTableNames.Forums)
 	qs = append(qs, q)
 
 	// 9.
@@ -148,19 +157,55 @@ func (srv *Server) prepareDbStatements() (err error) {
 	qs = append(qs, q)
 
 	// 26.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ?;`, srv.dbTableNames.Threads)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ? AND ((Messages IS NULL) OR (JSON_LENGTH(JSON_EXTRACT(Messages, "$")) = 0));`, srv.dbTableNames.Threads)
 	qs = append(qs, q)
 
 	// 27.
-	q = fmt.Sprintf(`SELECT Id, Parent, Children, Name, Threads, CreatorUserId, CreatorTime, EditorUserId, EditorTime FROM %s WHERE Id = ?;`, srv.dbTableNames.Forums)
+	q = fmt.Sprintf(`SELECT Id, SectionId, Name, Threads, CreatorUserId, CreatorTime, EditorUserId, EditorTime FROM %s WHERE Id = ?;`, srv.dbTableNames.Forums)
 	qs = append(qs, q)
 
 	// 28.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ?;`, srv.dbTableNames.Forums)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ? AND ((Threads IS NULL) OR (JSON_LENGTH(JSON_EXTRACT(Threads, "$")) = 0));`, srv.dbTableNames.Forums)
 	qs = append(qs, q)
 
 	// 29.
-	q = fmt.Sprintf(`SELECT Id, Parent, Children, Name, Threads, CreatorUserId, CreatorTime, EditorUserId, EditorTime FROM %s;`, srv.dbTableNames.Forums)
+	q = fmt.Sprintf(`SELECT Id, SectionId, Name, Threads, CreatorUserId, CreatorTime, EditorUserId, EditorTime FROM %s;`, srv.dbTableNames.Forums)
+	qs = append(qs, q)
+
+	// 30.
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Parent IS NULL;`, srv.dbTableNames.Sections)
+	qs = append(qs, q)
+
+	// 31.
+	q = fmt.Sprintf(`INSERT INTO %s (Parent, NAME, CreatorUserId, CreatorTime) VALUES (?, ?, ?, Now());`, srv.dbTableNames.Sections)
+	qs = append(qs, q)
+
+	// 32.
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Id = ?;`, srv.dbTableNames.Sections)
+	qs = append(qs, q)
+
+	// 33.
+	q = fmt.Sprintf(`SELECT Children FROM %s WHERE Id = ?;`, srv.dbTableNames.Sections)
+	qs = append(qs, q)
+
+	// 34.
+	q = fmt.Sprintf(`UPDATE %s SET Children = ? WHERE Id = ?;`, srv.dbTableNames.Sections)
+	qs = append(qs, q)
+
+	// 35.
+	q = fmt.Sprintf(`UPDATE %s SET NAME = ?, EditorUserId = ?, EditorTime = Now() WHERE Id = ?;`, srv.dbTableNames.Sections)
+	qs = append(qs, q)
+
+	// 36.
+	q = fmt.Sprintf(`SELECT Parent FROM %s WHERE Id = ?;`, srv.dbTableNames.Sections)
+	qs = append(qs, q)
+
+	// 37.
+	q = fmt.Sprintf(`UPDATE %s SET Parent = ?, EditorUserId = ?, EditorTime = Now() WHERE Id = ?;`, srv.dbTableNames.Sections)
+	qs = append(qs, q)
+
+	// 38.
+	q = fmt.Sprintf(`SELECT ChildType FROM %s WHERE Id = ?;`, srv.dbTableNames.Sections)
 	qs = append(qs, q)
 
 	srv.dbPreparedStatementQueries = make([]string, 0, len(qs))

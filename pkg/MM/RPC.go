@@ -8,136 +8,10 @@ import (
 	"time"
 
 	js "github.com/osamingo/jsonrpc/v2"
-	mc "github.com/vault-thirteen/SimpleBB/pkg/MM/client"
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 )
 
-func (srv *Server) initJsonRpcHandlers() (err error) {
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncPing, PingHandler{Server: srv}, mm.PingParams{}, mm.PingResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncAddForum, AddForumHandler{Server: srv}, mm.AddForumParams{}, mm.AddForumResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncChangeForumName, ChangeForumNameHandler{Server: srv}, mm.ChangeForumNameParams{}, mm.ChangeForumNameResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncChangeForumParent, ChangeForumParentHandler{Server: srv}, mm.ChangeForumParentParams{}, mm.ChangeForumParentResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncAddThread, AddThreadHandler{Server: srv}, mm.AddThreadParams{}, mm.AddThreadResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncChangeThreadName, ChangeThreadNameHandler{Server: srv}, mm.ChangeThreadNameParams{}, mm.ChangeThreadNameResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncChangeThreadForum, ChangeThreadForumHandler{Server: srv}, mm.ChangeThreadForumParams{}, mm.ChangeThreadForumResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncAddMessage, AddMessageHandler{Server: srv}, mm.AddMessageParams{}, mm.AddMessageResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncChangeMessageText, ChangeMessageTextHandler{Server: srv}, mm.ChangeMessageTextParams{}, mm.ChangeMessageTextResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncChangeMessageThread, ChangeMessageThreadHandler{Server: srv}, mm.ChangeMessageThreadParams{}, mm.ChangeMessageThreadResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncDeleteMessage, DeleteMessageHandler{Server: srv}, mm.DeleteMessageParams{}, mm.DeleteMessageResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncGetMessage, GetMessageHandler{Server: srv}, mm.GetMessageParams{}, mm.GetMessageResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncGetThread, GetThreadHandler{Server: srv}, mm.GetThreadParams{}, mm.GetThreadResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncDeleteThread, DeleteThreadHandler{Server: srv}, mm.DeleteThreadParams{}, mm.DeleteThreadResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncGetForum, GetForumHandler{Server: srv}, mm.GetForumParams{}, mm.GetForumResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncDeleteForum, DeleteForumHandler{Server: srv}, mm.DeleteForumParams{}, mm.DeleteForumResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncListThreadMessages, ListThreadMessagesHandler{Server: srv}, mm.ListThreadMessagesParams{}, mm.ListThreadMessagesResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncListThreadMessagesOnPage, ListThreadMessagesOnPageHandler{Server: srv}, mm.ListThreadMessagesOnPageParams{}, mm.ListThreadMessagesOnPageResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncListForumThreads, ListForumThreadsHandler{Server: srv}, mm.ListForumThreadsParams{}, mm.ListForumThreadsResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncListForumThreadsOnPage, ListForumThreadsOnPageHandler{Server: srv}, mm.ListForumThreadsOnPageParams{}, mm.ListForumThreadsOnPageResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncListForums, ListForumsHandler{Server: srv}, mm.ListForumsParams{}, mm.ListForumsResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncShowDiagnosticData, ShowDiagnosticDataHandler{Server: srv}, mm.ShowDiagnosticDataParams{}, mm.ShowDiagnosticDataResult{})
-	if err != nil {
-		return err
-	}
-
-	if srv.settings.SystemSettings.IsDebugMode {
-		err = srv.jsonRpcHandlers.RegisterMethod(mc.FuncTest, TestHandler{Server: srv}, mm.TestParams{}, mm.TestResult{})
-		if err != nil {
-			return err
-		}
-	}
-
-	// Template.
-	//err = srv.jsonRpcHandlers.RegisterMethod("Abc", AbcHandler{Server: srv}, models.AbcParams{}, models.AbcResult{})
-	//if err != nil {
-	//	return err
-	//}
-
-	return nil
-}
+// Ping.
 
 type PingHandler struct {
 	Server *Server
@@ -149,6 +23,155 @@ func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (any, *
 	h.Server.diag.IncSuccessfulRequestsCount()
 	return result, nil
 }
+
+// Section.
+
+type AddSectionHandler struct {
+	Server *Server
+}
+
+func (h AddSectionHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+	h.Server.diag.IncTotalRequestsCount()
+	var timeStart = time.Now()
+
+	var p mm.AddSectionParams
+	jerr := js.Unmarshal(params, &p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var result *mm.AddSectionResult
+	result, jerr = h.Server.addSection(&p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
+	if result != nil {
+		result.TimeSpent = taskDuration
+	}
+
+	h.Server.diag.IncSuccessfulRequestsCount()
+	return result, nil
+}
+
+type ChangeSectionNameHandler struct {
+	Server *Server
+}
+
+func (h ChangeSectionNameHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+	h.Server.diag.IncTotalRequestsCount()
+	var timeStart = time.Now()
+
+	var p mm.ChangeSectionNameParams
+	jerr := js.Unmarshal(params, &p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var result *mm.ChangeSectionNameResult
+	result, jerr = h.Server.changeSectionName(&p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
+	if result != nil {
+		result.TimeSpent = taskDuration
+	}
+
+	h.Server.diag.IncSuccessfulRequestsCount()
+	return result, nil
+}
+
+type ChangeSectionParentHandler struct {
+	Server *Server
+}
+
+func (h ChangeSectionParentHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+	h.Server.diag.IncTotalRequestsCount()
+	var timeStart = time.Now()
+
+	var p mm.ChangeSectionParentParams
+	jerr := js.Unmarshal(params, &p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var result *mm.ChangeSectionParentResult
+	result, jerr = h.Server.changeSectionParent(&p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
+	if result != nil {
+		result.TimeSpent = taskDuration
+	}
+
+	h.Server.diag.IncSuccessfulRequestsCount()
+	return result, nil
+}
+
+type GetSectionHandler struct {
+	Server *Server
+}
+
+func (h GetSectionHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+	h.Server.diag.IncTotalRequestsCount()
+	var timeStart = time.Now()
+
+	var p mm.GetSectionParams
+	jerr := js.Unmarshal(params, &p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var result *mm.GetSectionResult
+	result, jerr = h.Server.getSection(&p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
+	if result != nil {
+		result.TimeSpent = taskDuration
+	}
+
+	h.Server.diag.IncSuccessfulRequestsCount()
+	return result, nil
+}
+
+type DeleteSectionHandler struct {
+	Server *Server
+}
+
+func (h DeleteSectionHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+	h.Server.diag.IncTotalRequestsCount()
+	var timeStart = time.Now()
+
+	var p mm.DeleteSectionParams
+	jerr := js.Unmarshal(params, &p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var result *mm.DeleteSectionResult
+	result, jerr = h.Server.deleteSection(&p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
+	if result != nil {
+		result.TimeSpent = taskDuration
+	}
+
+	h.Server.diag.IncSuccessfulRequestsCount()
+	return result, nil
+}
+
+// Forum.
 
 type AddForumHandler struct {
 	Server *Server
@@ -208,22 +231,22 @@ func (h ChangeForumNameHandler) ServeJSONRPC(_ context.Context, params *json.Raw
 	return result, nil
 }
 
-type ChangeForumParentHandler struct {
+type ChangeForumSectionHandler struct {
 	Server *Server
 }
 
-func (h ChangeForumParentHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h ChangeForumSectionHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
-	var p mm.ChangeForumParentParams
+	var p mm.ChangeForumSectionParams
 	jerr := js.Unmarshal(params, &p)
 	if jerr != nil {
 		return nil, jerr
 	}
 
-	var result *mm.ChangeForumParentResult
-	result, jerr = h.Server.changeForumParent(&p)
+	var result *mm.ChangeForumSectionResult
+	result, jerr = h.Server.changeForumSection(&p)
 	if jerr != nil {
 		return nil, jerr
 	}
@@ -236,6 +259,66 @@ func (h ChangeForumParentHandler) ServeJSONRPC(_ context.Context, params *json.R
 	h.Server.diag.IncSuccessfulRequestsCount()
 	return result, nil
 }
+
+type GetForumHandler struct {
+	Server *Server
+}
+
+func (h GetForumHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+	h.Server.diag.IncTotalRequestsCount()
+	var timeStart = time.Now()
+
+	var p mm.GetForumParams
+	jerr := js.Unmarshal(params, &p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var result *mm.GetForumResult
+	result, jerr = h.Server.getForum(&p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
+	if result != nil {
+		result.TimeSpent = taskDuration
+	}
+
+	h.Server.diag.IncSuccessfulRequestsCount()
+	return result, nil
+}
+
+type DeleteForumHandler struct {
+	Server *Server
+}
+
+func (h DeleteForumHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+	h.Server.diag.IncTotalRequestsCount()
+	var timeStart = time.Now()
+
+	var p mm.DeleteForumParams
+	jerr := js.Unmarshal(params, &p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var result *mm.DeleteForumResult
+	result, jerr = h.Server.deleteForum(&p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
+	if result != nil {
+		result.TimeSpent = taskDuration
+	}
+
+	h.Server.diag.IncSuccessfulRequestsCount()
+	return result, nil
+}
+
+// Thread.
 
 type AddThreadHandler struct {
 	Server *Server
@@ -324,6 +407,66 @@ func (h ChangeThreadForumHandler) ServeJSONRPC(_ context.Context, params *json.R
 	return result, nil
 }
 
+type GetThreadHandler struct {
+	Server *Server
+}
+
+func (h GetThreadHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+	h.Server.diag.IncTotalRequestsCount()
+	var timeStart = time.Now()
+
+	var p mm.GetThreadParams
+	jerr := js.Unmarshal(params, &p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var result *mm.GetThreadResult
+	result, jerr = h.Server.getThread(&p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
+	if result != nil {
+		result.TimeSpent = taskDuration
+	}
+
+	h.Server.diag.IncSuccessfulRequestsCount()
+	return result, nil
+}
+
+type DeleteThreadHandler struct {
+	Server *Server
+}
+
+func (h DeleteThreadHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+	h.Server.diag.IncTotalRequestsCount()
+	var timeStart = time.Now()
+
+	var p mm.DeleteThreadParams
+	jerr := js.Unmarshal(params, &p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var result *mm.DeleteThreadResult
+	result, jerr = h.Server.deleteThread(&p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
+	if result != nil {
+		result.TimeSpent = taskDuration
+	}
+
+	h.Server.diag.IncSuccessfulRequestsCount()
+	return result, nil
+}
+
+// Message.
+
 type AddMessageHandler struct {
 	Server *Server
 }
@@ -411,35 +554,6 @@ func (h ChangeMessageThreadHandler) ServeJSONRPC(_ context.Context, params *json
 	return result, nil
 }
 
-type DeleteMessageHandler struct {
-	Server *Server
-}
-
-func (h DeleteMessageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.DeleteMessageParams
-	jerr := js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.DeleteMessageResult
-	result, jerr = h.Server.deleteMessage(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
 type GetMessageHandler struct {
 	Server *Server
 }
@@ -469,22 +583,22 @@ func (h GetMessageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessa
 	return result, nil
 }
 
-type GetThreadHandler struct {
+type DeleteMessageHandler struct {
 	Server *Server
 }
 
-func (h GetThreadHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h DeleteMessageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
-	var p mm.GetThreadParams
+	var p mm.DeleteMessageParams
 	jerr := js.Unmarshal(params, &p)
 	if jerr != nil {
 		return nil, jerr
 	}
 
-	var result *mm.GetThreadResult
-	result, jerr = h.Server.getThread(&p)
+	var result *mm.DeleteMessageResult
+	result, jerr = h.Server.deleteMessage(&p)
 	if jerr != nil {
 		return nil, jerr
 	}
@@ -498,22 +612,24 @@ func (h GetThreadHandler) ServeJSONRPC(_ context.Context, params *json.RawMessag
 	return result, nil
 }
 
-type DeleteThreadHandler struct {
+// Composite objects.
+
+type ListThreadAndMessagesHandler struct {
 	Server *Server
 }
 
-func (h DeleteThreadHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h ListThreadAndMessagesHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
-	var p mm.DeleteThreadParams
+	var p mm.ListThreadAndMessagesParams
 	jerr := js.Unmarshal(params, &p)
 	if jerr != nil {
 		return nil, jerr
 	}
 
-	var result *mm.DeleteThreadResult
-	result, jerr = h.Server.deleteThread(&p)
+	var result *mm.ListThreadAndMessagesResult
+	result, jerr = h.Server.listThreadAndMessages(&p)
 	if jerr != nil {
 		return nil, jerr
 	}
@@ -527,22 +643,22 @@ func (h DeleteThreadHandler) ServeJSONRPC(_ context.Context, params *json.RawMes
 	return result, nil
 }
 
-type GetForumHandler struct {
+type ListThreadAndMessagesOnPageHandler struct {
 	Server *Server
 }
 
-func (h GetForumHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h ListThreadAndMessagesOnPageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
-	var p mm.GetForumParams
+	var p mm.ListThreadAndMessagesOnPageParams
 	jerr := js.Unmarshal(params, &p)
 	if jerr != nil {
 		return nil, jerr
 	}
 
-	var result *mm.GetForumResult
-	result, jerr = h.Server.getForum(&p)
+	var result *mm.ListThreadAndMessagesOnPageResult
+	result, jerr = h.Server.listThreadAndMessagesOnPage(&p)
 	if jerr != nil {
 		return nil, jerr
 	}
@@ -556,22 +672,22 @@ func (h GetForumHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage
 	return result, nil
 }
 
-type DeleteForumHandler struct {
+type ListForumAndThreadsHandler struct {
 	Server *Server
 }
 
-func (h DeleteForumHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h ListForumAndThreadsHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
-	var p mm.DeleteForumParams
+	var p mm.ListForumAndThreadsParams
 	jerr := js.Unmarshal(params, &p)
 	if jerr != nil {
 		return nil, jerr
 	}
 
-	var result *mm.DeleteForumResult
-	result, jerr = h.Server.deleteForum(&p)
+	var result *mm.ListForumAndThreadsResult
+	result, jerr = h.Server.listForumAndThreads(&p)
 	if jerr != nil {
 		return nil, jerr
 	}
@@ -585,22 +701,22 @@ func (h DeleteForumHandler) ServeJSONRPC(_ context.Context, params *json.RawMess
 	return result, nil
 }
 
-type ListThreadMessagesHandler struct {
+type ListForumAndThreadsOnPageHandler struct {
 	Server *Server
 }
 
-func (h ListThreadMessagesHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h ListForumAndThreadsOnPageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
-	var p mm.ListThreadMessagesParams
+	var p mm.ListForumAndThreadsOnPageParams
 	jerr := js.Unmarshal(params, &p)
 	if jerr != nil {
 		return nil, jerr
 	}
 
-	var result *mm.ListThreadMessagesResult
-	result, jerr = h.Server.listThreadMessages(&p)
+	var result *mm.ListForumAndThreadsOnPageResult
+	result, jerr = h.Server.listForumAndThreadsOnPage(&p)
 	if jerr != nil {
 		return nil, jerr
 	}
@@ -614,22 +730,22 @@ func (h ListThreadMessagesHandler) ServeJSONRPC(_ context.Context, params *json.
 	return result, nil
 }
 
-type ListThreadMessagesOnPageHandler struct {
+type ListSectionsAndForumsHandler struct {
 	Server *Server
 }
 
-func (h ListThreadMessagesOnPageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h ListSectionsAndForumsHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
-	var p mm.ListThreadMessagesOnPageParams
+	var p mm.ListSectionsAndForumsParams
 	jerr := js.Unmarshal(params, &p)
 	if jerr != nil {
 		return nil, jerr
 	}
 
-	var result *mm.ListThreadMessagesOnPageResult
-	result, jerr = h.Server.listThreadMessagesOnPage(&p)
+	var result *mm.ListSectionsAndForumsResult
+	result, jerr = h.Server.listSectionsAndForums(&p)
 	if jerr != nil {
 		return nil, jerr
 	}
@@ -643,92 +759,7 @@ func (h ListThreadMessagesOnPageHandler) ServeJSONRPC(_ context.Context, params 
 	return result, nil
 }
 
-type ListForumThreadsHandler struct {
-	Server *Server
-}
-
-func (h ListForumThreadsHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ListForumThreadsParams
-	jerr := js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.ListForumThreadsResult
-	result, jerr = h.Server.listForumThreads(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type ListForumThreadsOnPageHandler struct {
-	Server *Server
-}
-
-func (h ListForumThreadsOnPageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ListForumThreadsOnPageParams
-	jerr := js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.ListForumThreadsOnPageResult
-	result, jerr = h.Server.listForumThreadsOnPage(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type ListForumsHandler struct {
-	Server *Server
-}
-
-func (h ListForumsHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ListForumsParams
-	jerr := js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.ListForumsResult
-	result, jerr = h.Server.listForums(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
+// Other.
 
 type ShowDiagnosticDataHandler struct {
 	Server *Server

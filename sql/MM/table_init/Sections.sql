@@ -1,9 +1,10 @@
-CREATE TABLE IF NOT EXISTS Forums
+CREATE TABLE IF NOT EXISTS Sections
 (
     Id            serial,
-    SectionId     bigint UNSIGNED NOT NULL,
+    Parent        bigint UNSIGNED,
+    ChildType     tinyint UNSIGNED DEFAULT 0,
+    Children      json,
     Name          varchar(255)    NOT NULL,
-    Threads       json,
 
     -- Meta data --
     CreatorUserId bigint UNSIGNED NOT NULL,

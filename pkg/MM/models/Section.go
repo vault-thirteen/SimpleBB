@@ -3,6 +3,7 @@ package models
 import ul "github.com/vault-thirteen/SimpleBB/pkg/UidList"
 
 const (
+	ChildTypeNone    = 0
 	ChildTypeSection = 1
 	ChildTypeForum   = 2
 )
