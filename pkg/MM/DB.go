@@ -39,10 +39,8 @@ const (
 )
 
 const (
-	ErrTableNameIsNotFound       = "table name is not found"
-	ErrfRowsAffectedCount        = "affected rows count error: %v vs %v"
-	ErrNoRootForumsAreFound      = "no root forums are found"
-	ErrSeveralRootForumsAreFound = "several root forums are found"
+	ErrTableNameIsNotFound = "table name is not found"
+	ErrfRowsAffectedCount  = "affected rows count error: %v vs %v"
 )
 
 func (srv *Server) initDbM() (err error) {
