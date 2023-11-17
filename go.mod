@@ -10,7 +10,7 @@ require (
 	github.com/vault-thirteen/BytePackedPassword v0.2.1
 	github.com/vault-thirteen/RingCaptcha v0.5.0
 	github.com/vault-thirteen/SQL v0.6.0
-	github.com/vault-thirteen/Versioneer v0.9.0
+	github.com/vault-thirteen/Versioneer v0.10.0
 	github.com/vault-thirteen/auxie v0.15.0
 	github.com/vault-thirteen/errorz v1.2.0
 	github.com/vault-thirteen/tester v1.2.0
