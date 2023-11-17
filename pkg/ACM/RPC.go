@@ -8,106 +8,10 @@ import (
 	"time"
 
 	js "github.com/osamingo/jsonrpc/v2"
-	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 )
 
-func (srv *Server) initJsonRpcHandlers() (err error) {
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncPing, PingHandler{Server: srv}, am.PingParams{}, am.PingResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncRegisterUser, RegisterUserHandler{Server: srv}, am.RegisterUserParams{}, am.RegisterUserResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncApproveAndRegisterUser, ApproveAndRegisterUserHandler{Server: srv}, am.ApproveAndRegisterUserParams{}, am.ApproveAndRegisterUserResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncLogUserIn, LogUserInHandler{Server: srv}, am.LogUserInParams{}, am.LogUserInResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncLogUserOut, LogUserOutHandler{Server: srv}, am.LogUserOutParams{}, am.LogUserOutResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncGetListOfLoggedUsers, GetListOfLoggedUsersHandler{Server: srv}, am.GetListOfLoggedUsersParams{}, am.GetListOfLoggedUsersResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncIsUserLoggedIn, IsUserLoggedInHandler{Server: srv}, am.IsUserLoggedInParams{}, am.IsUserLoggedInResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncGetUserRoles, GetUserRolesHandler{Server: srv}, am.GetUserRolesParams{}, am.GetUserRolesResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncViewUserParameters, ViewUserParametersHandler{Server: srv}, am.ViewUserParametersParams{}, am.ViewUserParametersResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncSetUserRoleAuthor, SetUserRoleAuthorHandler{Server: srv}, am.SetUserRoleAuthorParams{}, am.SetUserRoleAuthorResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncSetUserRoleWriter, SetUserRoleWriterHandler{Server: srv}, am.SetUserRoleWriterParams{}, am.SetUserRoleWriterResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncSetUserRoleReader, SetUserRoleReaderHandler{Server: srv}, am.SetUserRoleReaderParams{}, am.SetUserRoleReaderResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncBanUser, BanUserHandler{Server: srv}, am.BanUserParams{}, am.BanUserResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncUnbanUser, UnbanUserHandler{Server: srv}, am.UnbanUserParams{}, am.UnbanUserResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncGetSelfRoles, GetSelfRolesHandler{Server: srv}, am.GetSelfRolesParams{}, am.GetSelfRolesResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncShowDiagnosticData, ShowDiagnosticDataHandler{Server: srv}, am.ShowDiagnosticDataParams{}, am.ShowDiagnosticDataResult{})
-	if err != nil {
-		return err
-	}
-
-	if srv.settings.SystemSettings.IsDebugMode {
-		err = srv.jsonRpcHandlers.RegisterMethod(ac.FuncTest, TestHandler{Server: srv}, am.TestParams{}, am.TestResult{})
-		if err != nil {
-			return err
-		}
-	}
-
-	// Template.
-	//err = srv.jsonRpcHandlers.RegisterMethod(FuncAbc, AbcHandler{Server: srv}, am.AbcParams{}, am.AbcResult{})
-	//if err != nil {
-	//	return err
-	//}
-
-	return nil
-}
+// Ping.
 
 type PingHandler struct {
 	Server *Server
@@ -119,6 +23,8 @@ func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (any, *
 	h.Server.diag.IncSuccessfulRequestsCount()
 	return result, nil
 }
+
+// User registration.
 
 type RegisterUserHandler struct {
 	Server *Server
@@ -177,6 +83,8 @@ func (h ApproveAndRegisterUserHandler) ServeJSONRPC(_ context.Context, params *j
 	h.Server.diag.IncSuccessfulRequestsCount()
 	return result, nil
 }
+
+// Logging in and out.
 
 type LogUserInHandler struct {
 	Server *Server
@@ -293,6 +201,8 @@ func (h IsUserLoggedInHandler) ServeJSONRPC(_ context.Context, params *json.RawM
 	h.Server.diag.IncSuccessfulRequestsCount()
 	return result, nil
 }
+
+// User properties.
 
 type GetUserRolesHandler struct {
 	Server *Server
@@ -439,6 +349,37 @@ func (h SetUserRoleReaderHandler) ServeJSONRPC(_ context.Context, params *json.R
 	return result, nil
 }
 
+type GetSelfRolesHandler struct {
+	Server *Server
+}
+
+func (h GetSelfRolesHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+	h.Server.diag.IncTotalRequestsCount()
+	var timeStart = time.Now()
+
+	var p am.GetSelfRolesParams
+	jerr := js.Unmarshal(params, &p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var result *am.GetSelfRolesResult
+	result, jerr = h.Server.getSelfRoles(&p)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
+	if result != nil {
+		result.TimeSpent = taskDuration
+	}
+
+	h.Server.diag.IncSuccessfulRequestsCount()
+	return result, nil
+}
+
+// User banning.
+
 type BanUserHandler struct {
 	Server *Server
 }
@@ -497,34 +438,7 @@ func (h UnbanUserHandler) ServeJSONRPC(_ context.Context, params *json.RawMessag
 	return result, nil
 }
 
-type GetSelfRolesHandler struct {
-	Server *Server
-}
-
-func (h GetSelfRolesHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.GetSelfRolesParams
-	jerr := js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *am.GetSelfRolesResult
-	result, jerr = h.Server.getSelfRoles(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
+// Other.
 
 type ShowDiagnosticDataHandler struct {
 	Server *Server

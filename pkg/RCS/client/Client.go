@@ -8,9 +8,14 @@ import (
 
 // List of supported functions.
 const (
-	FuncPing               = "Ping"
-	FuncCreateCaptcha      = "CreateCaptcha"
-	FuncCheckCaptcha       = "CheckCaptcha"
+	// Ping.
+	FuncPing = "Ping"
+
+	// Captcha.
+	FuncCreateCaptcha = "CreateCaptcha"
+	FuncCheckCaptcha  = "CheckCaptcha"
+
+	// Other.
 	FuncShowDiagnosticData = "ShowDiagnosticData"
 )
 

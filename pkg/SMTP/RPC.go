@@ -8,28 +8,10 @@ import (
 	"time"
 
 	js "github.com/osamingo/jsonrpc/v2"
-	sc "github.com/vault-thirteen/SimpleBB/pkg/SMTP/client"
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SMTP/models"
 )
 
-func (srv *Server) initJsonRpcHandlers() (err error) {
-	err = srv.jsonRpcHandlers.RegisterMethod(sc.FuncPing, PingHandler{Server: srv}, sm.PingParams{}, sm.PingResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(sc.FuncSendMessage, SendMessageHandler{Server: srv}, sm.SendMessageParams{}, sm.SendMessageResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(sc.FuncShowDiagnosticData, ShowDiagnosticDataHandler{Server: srv}, sm.ShowDiagnosticDataParams{}, sm.ShowDiagnosticDataResult{})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
+// Ping.
 
 type PingHandler struct {
 	Server *Server
@@ -41,6 +23,8 @@ func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (any, *
 	h.Server.diag.IncSuccessfulRequestsCount()
 	return result, nil
 }
+
+// Message.
 
 type SendMessageHandler struct {
 	Server *Server
@@ -69,6 +53,8 @@ func (h SendMessageHandler) ServeJSONRPC(_ context.Context, params *json.RawMess
 	h.Server.diag.IncSuccessfulRequestsCount()
 	return result, nil
 }
+
+// Other.
 
 type ShowDiagnosticDataHandler struct {
 	Server *Server

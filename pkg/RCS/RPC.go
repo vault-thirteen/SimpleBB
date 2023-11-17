@@ -8,33 +8,10 @@ import (
 	"time"
 
 	js "github.com/osamingo/jsonrpc/v2"
-	rc "github.com/vault-thirteen/SimpleBB/pkg/RCS/client"
 	rm "github.com/vault-thirteen/SimpleBB/pkg/RCS/models"
 )
 
-func (srv *Server) initJsonRpcHandlers() (err error) {
-	err = srv.jsonRpcHandlers.RegisterMethod(rc.FuncPing, PingHandler{Server: srv}, rm.PingParams{}, rm.PingResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(rc.FuncCreateCaptcha, CreateCaptchaHandler{Server: srv}, rm.CreateCaptchaParams{}, rm.CreateCaptchaResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(rc.FuncCheckCaptcha, CheckCaptchaHandler{Server: srv}, rm.CheckCaptchaParams{}, rm.CheckCaptchaResult{})
-	if err != nil {
-		return err
-	}
-
-	err = srv.jsonRpcHandlers.RegisterMethod(rc.FuncShowDiagnosticData, ShowDiagnosticDataHandler{Server: srv}, rm.ShowDiagnosticDataParams{}, rm.ShowDiagnosticDataResult{})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
+// Ping.
 
 type PingHandler struct {
 	Server *Server
@@ -46,6 +23,8 @@ func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (any, *
 	h.Server.diag.IncSuccessfulRequestsCount()
 	return result, nil
 }
+
+// Captcha.
 
 type CreateCaptchaHandler struct {
 	Server *Server
@@ -97,6 +76,8 @@ func (h CheckCaptchaHandler) ServeJSONRPC(_ context.Context, params *json.RawMes
 	h.Server.diag.IncSuccessfulRequestsCount()
 	return result, nil
 }
+
+// Other.
 
 type ShowDiagnosticDataHandler struct {
 	Server *Server

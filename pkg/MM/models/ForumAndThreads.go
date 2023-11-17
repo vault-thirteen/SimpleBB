@@ -2,13 +2,17 @@ package models
 
 import ul "github.com/vault-thirteen/SimpleBB/pkg/UidList"
 
-type ForumWithThreads struct {
+type ForumAndThreads struct {
 	// Forum parameters.
-	ForumId       uint        `json:"forumId"`
-	ForumParent   *uint       `json:"forumParent"`
-	ForumChildren *ul.UidList `json:"forumChildren"`
-	ForumName     string      `json:"forumName"`
+	ForumId        uint   `json:"forumId"`
+	ForumSectionId uint   `json:"forumSectionId"`
+	ForumName      string `json:"forumName"`
 	EventData
+
+	// Thread parameters. If pagination is used, these lists contain
+	// information after the application of pagination.
+	ThreadIds ul.UidList `json:"threadIds"`
+	Threads   []Thread   `json:"threads"`
 
 	// Number of the current page of threads.
 	Page *uint `json:"page,omitempty"`
@@ -18,23 +22,17 @@ type ForumWithThreads struct {
 
 	// Total number of available threads.
 	TotalThreads *uint `json:"totalThreads,omitempty"`
-
-	// Thread parameters. If pagination is used, these lists contain
-	// information after the application of pagination.
-	ThreadIds ul.UidList `json:"threadIds"`
-	Threads   []Thread   `json:"threads"`
 }
 
-func NewForumWithThreads(forum *Forum) (fwt *ForumWithThreads) {
+func NewForumAndThreads(forum *Forum) (fat *ForumAndThreads) {
 	if forum == nil {
 		return nil
 	}
 
-	fwt = &ForumWithThreads{
-		ForumId:       forum.Id,
-		ForumParent:   forum.Parent,
-		ForumChildren: forum.Children,
-		ForumName:     forum.Name,
+	fat = &ForumAndThreads{
+		ForumId:        forum.Id,
+		ForumSectionId: forum.SectionId,
+		ForumName:      forum.Name,
 
 		EventData: EventData{
 			Creator: &EventParameters{
@@ -48,5 +46,5 @@ func NewForumWithThreads(forum *Forum) (fwt *ForumWithThreads) {
 		},
 	}
 
-	return fwt
+	return fat
 }

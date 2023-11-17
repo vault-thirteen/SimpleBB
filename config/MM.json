@@ -23,6 +23,7 @@
   "system": {
     "tableNamePrefix": "v1",
     "tablesToInit": [
+      "Sections",
       "Forums",
       "Threads",
       "Messages"

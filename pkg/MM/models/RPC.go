@@ -4,21 +4,100 @@ import (
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 
+// Ping.
+
 type PingParams struct{}
 
 type PingResult struct {
 	OK bool `json:"ok"`
 }
 
+// Section.
+
+type AddSectionParams struct {
+	cm.CommonParams
+
+	// Identifier of a parent section containing this section.
+	// Null means that this section is a root section.
+	// Only a single root section can exist.
+	Parent *uint `json:"parent"`
+
+	// Name of this section.
+	Name string `json:"name"`
+}
+
+type AddSectionResult struct {
+	cm.CommonResult
+
+	// ID of the created section.
+	SectionId uint `json:"sectionId"`
+}
+
+type ChangeSectionNameParams struct {
+	cm.CommonParams
+
+	// Identifier of a section.
+	SectionId uint `json:"sectionId"`
+
+	// Name of this section.
+	Name string `json:"name"`
+}
+
+type ChangeSectionNameResult struct {
+	cm.CommonResult
+
+	OK bool `json:"ok"`
+}
+
+type ChangeSectionParentParams struct {
+	cm.CommonParams
+
+	// Identifier of a section.
+	SectionId uint `json:"sectionId"`
+
+	// Identifier of a parent section containing this section.
+	Parent uint `json:"parent"`
+}
+
+type ChangeSectionParentResult struct {
+	cm.CommonResult
+
+	OK bool `json:"ok"`
+}
+
+type GetSectionParams struct {
+	cm.CommonParams
+
+	SectionId uint `json:"sectionId"`
+}
+
+type GetSectionResult struct {
+	cm.CommonResult
+
+	Section *Section `json:"section"`
+}
+
+type DeleteSectionParams struct {
+	cm.CommonParams
+
+	SectionId uint `json:"sectionId"`
+}
+
+type DeleteSectionResult struct {
+	cm.CommonResult
+
+	OK bool `json:"ok"`
+}
+
+// Forum.
+
 type AddForumParams struct {
 	cm.CommonParams
 
-	// ID of a parent forum containing this forum.
-	// Null means that this forum is a root forum.
-	// Only a single forum can be a root forum.
-	Parent *uint `json:"parent"`
+	// Identifier of a section containing this forum.
+	SectionId uint `json:"sectionId"`
 
-	// Forum name.
+	// Name of this forum.
 	Name string `json:"name"`
 }
 
@@ -44,20 +123,47 @@ type ChangeForumNameResult struct {
 	OK bool `json:"ok"`
 }
 
-type ChangeForumParentParams struct {
+type ChangeForumSectionParams struct {
 	cm.CommonParams
 
+	// Identifier of this forum.
 	ForumId uint `json:"forumId"`
 
-	// ID of a new parent forum.
-	Parent uint `json:"parent"`
+	// Identifier of a section containing this forum.
+	SectionId uint `json:"sectionId"`
 }
 
-type ChangeForumParentResult struct {
+type ChangeForumSectionResult struct {
 	cm.CommonResult
 
 	OK bool `json:"ok"`
 }
+
+type GetForumParams struct {
+	cm.CommonParams
+
+	ForumId uint `json:"forumId"`
+}
+
+type GetForumResult struct {
+	cm.CommonResult
+
+	Forum *Forum `json:"forum"`
+}
+
+type DeleteForumParams struct {
+	cm.CommonParams
+
+	ForumId uint `json:"forumId"`
+}
+
+type DeleteForumResult struct {
+	cm.CommonResult
+
+	OK bool `json:"ok"`
+}
+
+// Thread.
 
 type AddThreadParams struct {
 	cm.CommonParams
@@ -106,6 +212,32 @@ type ChangeThreadForumResult struct {
 	OK bool `json:"ok"`
 }
 
+type GetThreadParams struct {
+	cm.CommonParams
+
+	ThreadId uint `json:"threadId"`
+}
+
+type GetThreadResult struct {
+	cm.CommonResult
+
+	Thread *Thread `json:"thread"`
+}
+
+type DeleteThreadParams struct {
+	cm.CommonParams
+
+	ThreadId uint `json:"threadId"`
+}
+
+type DeleteThreadResult struct {
+	cm.CommonResult
+
+	OK bool `json:"ok"`
+}
+
+// Message.
+
 type AddMessageParams struct {
 	cm.CommonParams
 
@@ -153,18 +285,6 @@ type ChangeMessageThreadResult struct {
 	OK bool `json:"ok"`
 }
 
-type DeleteMessageParams struct {
-	cm.CommonParams
-
-	MessageId uint `json:"messageId"`
-}
-
-type DeleteMessageResult struct {
-	cm.CommonResult
-
-	OK bool `json:"ok"`
-}
-
 type GetMessageParams struct {
 	cm.CommonParams
 
@@ -177,113 +297,81 @@ type GetMessageResult struct {
 	Message *Message `json:"message"`
 }
 
-type GetThreadParams struct {
+type DeleteMessageParams struct {
 	cm.CommonParams
 
-	ThreadId uint `json:"threadId"`
+	MessageId uint `json:"messageId"`
 }
 
-type GetThreadResult struct {
-	cm.CommonResult
-
-	Thread *Thread `json:"thread"`
-}
-
-type DeleteThreadParams struct {
-	cm.CommonParams
-
-	ThreadId uint `json:"threadId"`
-}
-
-type DeleteThreadResult struct {
+type DeleteMessageResult struct {
 	cm.CommonResult
 
 	OK bool `json:"ok"`
 }
 
-type GetForumParams struct {
-	cm.CommonParams
+// Composite objects.
 
-	ForumId uint `json:"forumId"`
-}
-
-type GetForumResult struct {
-	cm.CommonResult
-
-	Forum *Forum `json:"forum"`
-}
-
-type DeleteForumParams struct {
-	cm.CommonParams
-
-	ForumId uint `json:"forumId"`
-}
-
-type DeleteForumResult struct {
-	cm.CommonResult
-
-	OK bool `json:"ok"`
-}
-
-type ListThreadMessagesParams struct {
+type ListThreadAndMessagesParams struct {
 	cm.CommonParams
 
 	ThreadId uint `json:"threadId"`
 }
 
-type ListThreadMessagesResult struct {
+type ListThreadAndMessagesResult struct {
 	cm.CommonResult
 
-	ThreadWithMessages *ThreadWithMessages `json:"twm"`
+	ThreadAndMessages *ThreadAndMessages `json:"tam"`
 }
 
-type ListThreadMessagesOnPageParams struct {
+type ListThreadAndMessagesOnPageParams struct {
 	cm.CommonParams
 
 	ThreadId uint `json:"threadId"`
 	Page     uint `json:"page"`
 }
 
-type ListThreadMessagesOnPageResult struct {
+type ListThreadAndMessagesOnPageResult struct {
 	cm.CommonResult
 
-	ThreadWithMessages *ThreadWithMessages `json:"twmop"`
+	ThreadAndMessagesOnPage *ThreadAndMessages `json:"tamop"`
 }
 
-type ListForumThreadsParams struct {
+type ListForumAndThreadsParams struct {
 	cm.CommonParams
 
 	ForumId uint `json:"forumId"`
 }
 
-type ListForumThreadsResult struct {
+type ListForumAndThreadsResult struct {
 	cm.CommonResult
 
-	ForumWithThreads *ForumWithThreads `json:"fwt"`
+	ForumAndThreads *ForumAndThreads `json:"fat"`
 }
 
-type ListForumThreadsOnPageParams struct {
+type ListForumAndThreadsOnPageParams struct {
 	cm.CommonParams
 
 	ForumId uint `json:"forumId"`
 	Page    uint `json:"page"`
 }
 
-type ListForumThreadsOnPageResult struct {
+type ListForumAndThreadsOnPageResult struct {
 	cm.CommonResult
 
-	ForumWithThreads *ForumWithThreads `json:"fwtop"`
+	ForumAndThreadsOnPage *ForumAndThreads `json:"fatop"`
 }
 
-type ListForumsParams struct {
+type ListSectionsAndForumsParams struct {
 	cm.CommonParams
 }
 
-type ListForumsResult struct {
+type ListSectionsAndForumsResult struct {
 	cm.CommonResult
 
-	Forums []Forum `json:"forums"`
+	SectionsAndForums *SectionsAndForums `json:"saf"`
 }
+
+// Other.
 
 type ShowDiagnosticDataParams struct{}
 

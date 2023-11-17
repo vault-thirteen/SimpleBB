@@ -8,8 +8,13 @@ import (
 
 // List of supported functions.
 const (
-	FuncPing               = "Ping"
-	FuncSendMessage        = "SendMessage"
+	// Ping.
+	FuncPing = "Ping"
+
+	// Message.
+	FuncSendMessage = "SendMessage"
+
+	// Other.
 	FuncShowDiagnosticData = "ShowDiagnosticData"
 )
 

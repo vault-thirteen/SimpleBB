@@ -1,11 +1,13 @@
 package models
 
 type Message struct {
+	// Identifier of this message.
 	Id uint `json:"id"`
 
-	// ID of a thread containing this message.
+	// Identifier of a thread containing this message.
 	ThreadId uint `json:"threadId"`
 
+	// Textual information of this message.
 	Text string `json:"text"`
 
 	// Message meta-data.

@@ -32,16 +32,15 @@ const (
 )
 
 const (
+	TableSections = "Sections"
 	TableForums   = "Forums"
 	TableThreads  = "Threads"
 	TableMessages = "Messages"
 )
 
 const (
-	ErrTableNameIsNotFound       = "table name is not found"
-	ErrfRowsAffectedCount        = "affected rows count error: %v vs %v"
-	ErrNoRootForumsAreFound      = "no root forums are found"
-	ErrSeveralRootForumsAreFound = "several root forums are found"
+	ErrTableNameIsNotFound = "table name is not found"
+	ErrfRowsAffectedCount  = "affected rows count error: %v vs %v"
 )
 
 func (srv *Server) initDbM() (err error) {
@@ -74,6 +73,7 @@ func (srv *Server) initDbM() (err error) {
 
 func (srv *Server) initDBTableNames() {
 	srv.dbTableNames = &DBTableNames{
+		Sections: srv.prefixTableName(TableSections),
 		Forums:   srv.prefixTableName(TableForums),
 		Threads:  srv.prefixTableName(TableThreads),
 		Messages: srv.prefixTableName(TableMessages),
@@ -198,7 +198,7 @@ func (srv *Server) probeDbM() (err error) {
 	return nil
 }
 
-func (srv *Server) countRootForumsM() (n int, err error) {
+func (srv *Server) countRootSectionsM() (n int, err error) {
 	srv.dbGuard.Lock()
 	defer srv.dbGuard.Unlock()
 
@@ -221,7 +221,7 @@ func (srv *Server) countRootForumsM() (n int, err error) {
 		}
 	}()
 
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CountRootForums]).QueryRow().Scan(&n)
+	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CountRootSections]).QueryRow().Scan(&n)
 	if err != nil {
 		return CountOnError, err
 	}
@@ -229,7 +229,7 @@ func (srv *Server) countRootForumsM() (n int, err error) {
 	return n, nil
 }
 
-func (srv *Server) insertNewForumM(parent *uint, name string, creatorUserId uint) (lastInsertedId int64, err error) {
+func (srv *Server) insertNewSectionM(parent *uint, name string, creatorUserId uint) (lastInsertedId int64, err error) {
 	srv.dbGuard.Lock()
 	defer srv.dbGuard.Unlock()
 
@@ -253,7 +253,7 @@ func (srv *Server) insertNewForumM(parent *uint, name string, creatorUserId uint
 	}()
 
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_InsertNewForum]).Exec(parent, name, creatorUserId)
+	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_InsertNewSection]).Exec(parent, name, creatorUserId)
 	if err != nil {
 		return LastInsertedIdOnError, err
 	}
@@ -264,6 +264,74 @@ func (srv *Server) insertNewForumM(parent *uint, name string, creatorUserId uint
 	}
 
 	return lastInsertedId, nil
+}
+
+func (srv *Server) insertNewForumM(sectionId uint, name string, creatorUserId uint) (lastInsertedId int64, err error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
+	var tx *sql.Tx
+	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return LastInsertedIdOnError, err
+	}
+
+	defer func() {
+		var txErr error
+		if err != nil {
+			txErr = tx.Rollback()
+		} else {
+			txErr = tx.Commit()
+		}
+
+		if txErr != nil {
+			err = errorz.Combine(err, txErr)
+		}
+	}()
+
+	var result sql.Result
+	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_InsertNewForum]).Exec(sectionId, name, creatorUserId)
+	if err != nil {
+		return LastInsertedIdOnError, err
+	}
+
+	lastInsertedId, err = result.LastInsertId()
+	if err != nil {
+		return LastInsertedIdOnError, err
+	}
+
+	return lastInsertedId, nil
+}
+
+func (srv *Server) countSectionsByIdM(sectionId uint) (n int, err error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
+	var tx *sql.Tx
+	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return CountOnError, err
+	}
+
+	defer func() {
+		var txErr error
+		if err != nil {
+			txErr = tx.Rollback()
+		} else {
+			txErr = tx.Commit()
+		}
+
+		if txErr != nil {
+			err = errorz.Combine(err, txErr)
+		}
+	}()
+
+	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CountSectionsById]).QueryRow(sectionId).Scan(&n)
+	if err != nil {
+		return CountOnError, err
+	}
+
+	return n, nil
 }
 
 func (srv *Server) countForumsByIdM(forumId uint) (n int, err error) {
@@ -297,7 +365,7 @@ func (srv *Server) countForumsByIdM(forumId uint) (n int, err error) {
 	return n, nil
 }
 
-func (srv *Server) getForumChildrenByIdM(forumId uint) (children *ul.UidList, err error) {
+func (srv *Server) getSectionChildrenByIdM(sectionId uint) (children *ul.UidList, err error) {
 	srv.dbGuard.Lock()
 	defer srv.dbGuard.Unlock()
 
@@ -321,7 +389,7 @@ func (srv *Server) getForumChildrenByIdM(forumId uint) (children *ul.UidList, er
 	}()
 
 	children = ul.New()
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetForumChildrenById]).QueryRow(forumId).Scan(children)
+	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetSectionChildrenById]).QueryRow(sectionId).Scan(children)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +397,38 @@ func (srv *Server) getForumChildrenByIdM(forumId uint) (children *ul.UidList, er
 	return children, nil
 }
 
-func (srv *Server) setForumChildrenByIdM(forumId uint, children *ul.UidList) (err error) {
+func (srv *Server) getSectionChildTypeByIdM(sectionId uint) (childType byte, err error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
+	var tx *sql.Tx
+	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return 0, err
+	}
+
+	defer func() {
+		var txErr error
+		if err != nil {
+			txErr = tx.Rollback()
+		} else {
+			txErr = tx.Commit()
+		}
+
+		if txErr != nil {
+			err = errorz.Combine(err, txErr)
+		}
+	}()
+
+	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetSectionChildTypeById]).QueryRow(sectionId).Scan(&childType)
+	if err != nil {
+		return 0, err
+	}
+
+	return childType, nil
+}
+
+func (srv *Server) setSectionChildTypeByIdM(sectionId uint, childType byte) (err error) {
 	srv.dbGuard.Lock()
 	defer srv.dbGuard.Unlock()
 
@@ -353,7 +452,91 @@ func (srv *Server) setForumChildrenByIdM(forumId uint, children *ul.UidList) (er
 	}()
 
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetForumChildrenById]).Exec(children, forumId)
+	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetSectionChildTypeById]).Exec(childType, sectionId)
+	if err != nil {
+		return err
+	}
+
+	var ra int64
+	ra, err = result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if ra != 1 {
+		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+	}
+
+	return nil
+}
+
+func (srv *Server) setSectionChildrenByIdM(sectionId uint, children *ul.UidList) (err error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
+	var tx *sql.Tx
+	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		var txErr error
+		if err != nil {
+			txErr = tx.Rollback()
+		} else {
+			txErr = tx.Commit()
+		}
+
+		if txErr != nil {
+			err = errorz.Combine(err, txErr)
+		}
+	}()
+
+	var result sql.Result
+	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetSectionChildrenById]).Exec(children, sectionId)
+	if err != nil {
+		return err
+	}
+
+	var ra int64
+	ra, err = result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if ra != 1 {
+		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+	}
+
+	return nil
+}
+
+func (srv *Server) setSectionNameByIdM(sectionId uint, name string, editorUserId uint) (err error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
+	var tx *sql.Tx
+	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		var txErr error
+		if err != nil {
+			txErr = tx.Rollback()
+		} else {
+			txErr = tx.Commit()
+		}
+
+		if txErr != nil {
+			err = errorz.Combine(err, txErr)
+		}
+	}()
+
+	var result sql.Result
+	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetSectionNameById]).Exec(name, editorUserId, sectionId)
 	if err != nil {
 		return err
 	}
@@ -413,56 +596,7 @@ func (srv *Server) setForumNameByIdM(forumId uint, name string, editorUserId uin
 	return nil
 }
 
-func (srv *Server) getRootForumIdM() (forumId uint, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return IdOnError, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	var rows *sql.Rows
-	rows, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetRootForumId]).Query(forumId)
-	if err != nil {
-		return IdOnError, err
-	}
-
-	var id uint
-	var ids = make([]uint, 0, 1)
-	for rows.Next() {
-		err = rows.Scan(&id)
-		if err != nil {
-			return IdOnError, err
-		}
-
-		ids = append(ids, id)
-	}
-
-	if len(ids) < 1 {
-		return IdOnError, errors.New(ErrNoRootForumsAreFound)
-	} else if len(ids) > 1 {
-		return IdOnError, errors.New(ErrSeveralRootForumsAreFound)
-	}
-
-	return ids[0], nil
-}
-
-func (srv *Server) setForumParentByIdM(forumId uint, parent uint, editorUserId uint) (err error) {
+func (srv *Server) setSectionParentByIdM(sectionId uint, parent uint, editorUserId uint) (err error) {
 	srv.dbGuard.Lock()
 	defer srv.dbGuard.Unlock()
 
@@ -486,7 +620,7 @@ func (srv *Server) setForumParentByIdM(forumId uint, parent uint, editorUserId u
 	}()
 
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetForumParentById]).Exec(parent, editorUserId, forumId)
+	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetSectionParentById]).Exec(parent, editorUserId, sectionId)
 	if err != nil {
 		return err
 	}
@@ -504,7 +638,49 @@ func (srv *Server) setForumParentByIdM(forumId uint, parent uint, editorUserId u
 	return nil
 }
 
-func (srv *Server) getForumParentByIdM(forumId uint) (parent *uint, err error) {
+func (srv *Server) setForumSectionByIdM(forumId uint, sectionId uint, editorUserId uint) (err error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
+	var tx *sql.Tx
+	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		var txErr error
+		if err != nil {
+			txErr = tx.Rollback()
+		} else {
+			txErr = tx.Commit()
+		}
+
+		if txErr != nil {
+			err = errorz.Combine(err, txErr)
+		}
+	}()
+
+	var result sql.Result
+	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetForumSectionById]).Exec(sectionId, editorUserId, forumId)
+	if err != nil {
+		return err
+	}
+
+	var ra int64
+	ra, err = result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if ra != 1 {
+		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+	}
+
+	return nil
+}
+
+func (srv *Server) getSectionParentByIdM(sectionId uint) (parent *uint, err error) {
 	srv.dbGuard.Lock()
 	defer srv.dbGuard.Unlock()
 
@@ -528,12 +704,43 @@ func (srv *Server) getForumParentByIdM(forumId uint) (parent *uint, err error) {
 	}()
 
 	parent = new(uint)
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetForumParentById]).QueryRow(forumId).Scan(parent)
+	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetSectionParentById]).QueryRow(sectionId).Scan(&parent)
 	if err != nil {
 		return nil, err
 	}
 
 	return parent, nil
+}
+
+func (srv *Server) getForumSectionByIdM(forumId uint) (sectionId uint, err error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
+	var tx *sql.Tx
+	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return IdOnError, err
+	}
+
+	defer func() {
+		var txErr error
+		if err != nil {
+			txErr = tx.Rollback()
+		} else {
+			txErr = tx.Commit()
+		}
+
+		if txErr != nil {
+			err = errorz.Combine(err, txErr)
+		}
+	}()
+
+	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetForumSectionById]).QueryRow(forumId).Scan(&sectionId)
+	if err != nil {
+		return IdOnError, err
+	}
+
+	return sectionId, nil
 }
 
 func (srv *Server) insertNewThreadM(parentForum uint, threadName string, creatorUserId uint) (lastInsertedId int64, err error) {
@@ -1242,8 +1449,7 @@ func (srv *Server) getForumByIdM(forumId uint) (forum *mm.Forum, err error) {
 	forum = mm.NewForum()
 	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetForumById]).QueryRow(forumId).Scan(
 		&forum.Id,
-		&forum.Parent,
-		&forum.Children,
+		&forum.SectionId,
 		&forum.Name,
 		&forum.Threads,
 		&forum.Creator.UserId,
@@ -1419,7 +1625,7 @@ func (srv *Server) readThreadsByIdM(threadIds ul.UidList) (threads []mm.Thread, 
 	return threads, nil
 }
 
-func (srv *Server) readForums() (forums []mm.Forum, err error) {
+func (srv *Server) readForumsM() (forums []mm.Forum, err error) {
 	forums = make([]mm.Forum, 0)
 
 	srv.dbGuard.Lock()
@@ -1451,25 +1657,163 @@ func (srv *Server) readForums() (forums []mm.Forum, err error) {
 	}
 
 	for rows.Next() {
-		frm := mm.NewForum()
+		forum := mm.NewForum()
 
 		err = rows.Scan(
-			&frm.Id,
-			&frm.Parent,
-			&frm.Children,
-			&frm.Name,
-			&frm.Threads,
-			&frm.Creator.UserId,
-			&frm.Creator.Time,
-			&frm.Editor.UserId,
-			&frm.Editor.Time,
+			&forum.Id,
+			&forum.SectionId,
+			&forum.Name,
+			&forum.Threads,
+			&forum.Creator.UserId,
+			&forum.Creator.Time,
+			&forum.Editor.UserId,
+			&forum.Editor.Time,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		forums = append(forums, *frm)
+		forums = append(forums, *forum)
 	}
 
 	return forums, nil
+}
+
+func (srv *Server) getSectionByIdM(sectionId uint) (section *mm.Section, err error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
+	var tx *sql.Tx
+	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		var txErr error
+		if err != nil {
+			txErr = tx.Rollback()
+		} else {
+			txErr = tx.Commit()
+		}
+
+		if txErr != nil {
+			err = errorz.Combine(err, txErr)
+		}
+	}()
+
+	section = mm.NewSection()
+	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetSectionById]).QueryRow(sectionId).Scan(
+		&section.Id,
+		&section.Parent,
+		&section.ChildType,
+		&section.Children,
+		&section.Name,
+		&section.Creator.UserId,
+		&section.Creator.Time,
+		&section.Editor.UserId,
+		&section.Editor.Time,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return section, nil
+}
+
+func (srv *Server) deleteSectionByIdM(sectionId uint) (err error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
+	var tx *sql.Tx
+	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		var txErr error
+		if err != nil {
+			txErr = tx.Rollback()
+		} else {
+			txErr = tx.Commit()
+		}
+
+		if txErr != nil {
+			err = errorz.Combine(err, txErr)
+		}
+	}()
+
+	var result sql.Result
+	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_DeleteSectionById]).Exec(sectionId)
+	if err != nil {
+		return err
+	}
+
+	var ra int64
+	ra, err = result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if ra != 1 {
+		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+	}
+
+	return nil
+}
+
+func (srv *Server) readSectionsM() (sections []mm.Section, err error) {
+	sections = make([]mm.Section, 0)
+
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
+	var tx *sql.Tx
+	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		var txErr error
+		if err != nil {
+			txErr = tx.Rollback()
+		} else {
+			txErr = tx.Commit()
+		}
+
+		if txErr != nil {
+			err = errorz.Combine(err, txErr)
+		}
+	}()
+
+	var rows *sql.Rows
+	rows, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_ReadSections]).Query()
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		section := mm.NewSection()
+
+		err = rows.Scan(
+			&section.Id,
+			&section.Parent,
+			&section.ChildType,
+			&section.Children,
+			&section.Name,
+			&section.Creator.UserId,
+			&section.Creator.Time,
+			&section.Editor.UserId,
+			&section.Editor.Time,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		sections = append(sections, *section)
+	}
+
+	return sections, nil
 }
