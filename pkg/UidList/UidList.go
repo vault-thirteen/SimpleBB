@@ -13,7 +13,7 @@ import (
 const (
 	ErrDestinationIsNotInitialized = "destination is not initialized"
 	ErrFUnsupportedDataType        = "unsupported data type: %s"
-	ErrFDuplicateUid               = "duplicated uid: %v"
+	ErrFDuplicateUid               = "duplicate uid: %v"
 	ErrFUidIsNotFound              = "uid is not found: %v"
 )
 
@@ -72,7 +72,9 @@ func (ul *UidList) Size() (n int) {
 }
 
 // AddItem add a new identifier to the end of the list.
-func (ul *UidList) AddItem(uid uint) (err error) {
+// If 'addToTop' is set to 'True', then the item is added to the beginning
+// (top) of the list; otherwise – to the end (bottom) of the list.
+func (ul *UidList) AddItem(uid uint, addToTop bool) (err error) {
 	// Check for uniqueness.
 	for _, x := range *ul {
 		if x == uid {
@@ -80,7 +82,15 @@ func (ul *UidList) AddItem(uid uint) (err error) {
 		}
 	}
 
-	*ul = append(*ul, uid)
+	if addToTop {
+		*ul = append(*ul, 0)
+		for i := len(*ul) - 1; i > 0; i-- {
+			(*ul)[i] = (*ul)[i-1]
+		}
+		(*ul)[0] = uid
+	} else {
+		*ul = append(*ul, uid)
+	}
 
 	return nil
 }
@@ -111,6 +121,37 @@ func (ul *UidList) RemoveItem(uid uint) (err error) {
 		[]uint(*ul)[lastIndex] = 0
 		*ul = (*ul)[:lastIndex]
 	}
+
+	return nil
+}
+
+// RaiseItem moves an existing identifier to the top of the list.
+func (ul *UidList) RaiseItem(uid uint) (err error) {
+	// Find the item and check for uniqueness.
+	positions := make([]int, 0)
+	for i, x := range *ul {
+		if x == uid {
+			positions = append(positions, i)
+		}
+	}
+	if len(positions) == 0 {
+		return fmt.Errorf(ErrFUidIsNotFound, uid)
+	}
+	if len(positions) > 1 {
+		return fmt.Errorf(ErrFDuplicateUid, uid)
+	}
+	position := positions[0]
+
+	// Move the item to the top position.
+	if position == 0 {
+		return nil
+	}
+
+	var movedItem = (*ul)[position]
+	for i := position; i > 0; i-- {
+		(*ul)[i] = (*ul)[i-1]
+	}
+	(*ul)[0] = movedItem
 
 	return nil
 }
@@ -203,9 +244,6 @@ func (ul *UidList) OnPage(pageNumber uint, pageSize uint) (ulop UidList) {
 
 	// Last index in array.
 	iLast := uint(len(*ul) - 1)
-	if iLast < 0 {
-		return nil
-	}
 
 	// Left index of a virtual page.
 	ipL := pageSize * (pageNumber - 1)

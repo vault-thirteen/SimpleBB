@@ -29,6 +29,10 @@ func Test_NewFromArray(t *testing.T) {
 	aTest.MustBeNoError(err)
 	x = UidList([]uint{1, 2, 3})
 	aTest.MustBeEqual(ul, &x)
+
+	// Test #4.
+	ul, err = NewFromArray([]uint{1, 2, 2, 3})
+	aTest.MustBeAnError(err)
 }
 
 func Test_Size(t *testing.T) {
@@ -79,16 +83,28 @@ func Test_AddItem(t *testing.T) {
 	var ul *UidList
 	var err error
 
-	// Tests.
+	// Test #1.
 	ul = New()
-	err = ul.AddItem(1)
+	err = ul.AddItem(1, false)
 	aTest.MustBeNoError(err)
-	err = ul.AddItem(2)
+	err = ul.AddItem(2, false)
 	aTest.MustBeNoError(err)
-	err = ul.AddItem(3)
+	err = ul.AddItem(3, false)
 	aTest.MustBeNoError(err)
-	err = ul.AddItem(2)
+	aTest.MustBeEqual([]uint(*ul), []uint{1, 2, 3})
+	err = ul.AddItem(2, false)
 	aTest.MustBeAnError(err)
+	aTest.MustBeEqual([]uint(*ul), []uint{1, 2, 3})
+
+	// Test #2.
+	ul = New()
+	err = ul.AddItem(1, false)
+	aTest.MustBeNoError(err)
+	err = ul.AddItem(2, false)
+	aTest.MustBeNoError(err)
+	err = ul.AddItem(3, true)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual([]uint(*ul), []uint{3, 1, 2})
 }
 
 func Test_RemoveItem(t *testing.T) {
@@ -127,6 +143,41 @@ func Test_RemoveItem(t *testing.T) {
 	err = ul.RemoveItem(3)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(*ul, UidList([]uint{1, 2}))
+}
+
+func Test_RaiseItem(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+	var err error
+
+	// Test #1. Item is not found.
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	err = ul.RaiseItem(4)
+	aTest.MustBeAnError(err)
+
+	// Test #2. Duplicate item.
+	ul = &UidList{1, 2, 3, 2}
+	err = ul.RaiseItem(2)
+	aTest.MustBeAnError(err)
+
+	// Test #3. No moving is needed.
+	ul = &UidList{1, 2, 3}
+	err = ul.RaiseItem(1)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual([]uint(*ul), []uint{1, 2, 3})
+
+	// Test #4. Middle item is moved.
+	ul = &UidList{1, 2, 3}
+	err = ul.RaiseItem(2)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual([]uint(*ul), []uint{2, 1, 3})
+
+	// Test #5. Last item is moved.
+	ul = &UidList{1, 2, 3}
+	err = ul.RaiseItem(3)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual([]uint(*ul), []uint{3, 1, 2})
 }
 
 func Test_Scan(t *testing.T) {
@@ -225,6 +276,12 @@ func Test_ValuesString(t *testing.T) {
 	vs, err = ul.ValuesString()
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(vs, "1,2,3")
+
+	// Test #5.
+	ul = nil
+	vs, err = ul.ValuesString()
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual(vs, "")
 }
 
 func Test_OnPage(t *testing.T) {
@@ -281,4 +338,8 @@ func Test_OnPage(t *testing.T) {
 	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12})
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(ul.OnPage(2, 5), UidList([]uint{6, 7, 8, 9, 10}))
+
+	// Test #11.
+	ul = nil
+	aTest.MustBeEqual(ul.OnPage(1, 1), UidList(nil))
 }

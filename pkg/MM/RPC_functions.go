@@ -104,7 +104,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 		return nil, srv.databaseError(err)
 	}
 
-	err = parentChildren.AddItem(uint(insertedSectionId))
+	err = parentChildren.AddItem(uint(insertedSectionId), false)
 	if err != nil {
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
@@ -241,7 +241,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 		return nil, srv.databaseError(err)
 	}
 
-	err = childrenR.AddItem(p.SectionId)
+	err = childrenR.AddItem(p.SectionId, false)
 	if err != nil {
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
@@ -455,7 +455,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 		return nil, srv.databaseError(err)
 	}
 
-	err = parentChildren.AddItem(uint(insertedForumId))
+	err = parentChildren.AddItem(uint(insertedForumId), false)
 	if err != nil {
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
@@ -588,7 +588,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 		return nil, srv.databaseError(err)
 	}
 
-	err = childrenR.AddItem(p.ForumId)
+	err = childrenR.AddItem(p.ForumId, false)
 	if err != nil {
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
@@ -779,7 +779,7 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 		return nil, srv.databaseError(err)
 	}
 
-	err = parentThreads.AddItem(uint(insertedThreadId))
+	err = parentThreads.AddItem(uint(insertedThreadId), srv.settings.SystemSettings.NewThreadsAtTop)
 	if err != nil {
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
@@ -894,7 +894,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 		return nil, srv.databaseError(err)
 	}
 
-	err = threadsR.AddItem(p.ThreadId)
+	err = threadsR.AddItem(p.ThreadId, false)
 	if err != nil {
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
@@ -1063,13 +1063,13 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 		return nil, srv.databaseError(err)
 	}
 
-	var insertedThreadId int64
-	insertedThreadId, err = srv.insertNewMessageM(p.ThreadId, p.Text, userRoles.UserId)
+	var insertedMessageId int64
+	insertedMessageId, err = srv.insertNewMessageM(p.ThreadId, p.Text, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = parentMessages.AddItem(uint(insertedThreadId))
+	err = parentMessages.AddItem(uint(insertedMessageId), false)
 	if err != nil {
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
@@ -1079,8 +1079,33 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 		return nil, srv.databaseError(err)
 	}
 
+	// Update thread's position if needed.
+	if srv.settings.SystemSettings.NewThreadsAtTop {
+		var messageThread *mm.Thread
+		messageThread, err = srv.getThreadByIdM(p.ThreadId)
+		if err != nil {
+			return nil, srv.databaseError(err)
+		}
+
+		var threads *ul.UidList
+		threads, err = srv.getForumThreadsByIdM(messageThread.ForumId)
+		if err != nil {
+			return nil, srv.databaseError(err)
+		}
+
+		err = threads.RaiseItem(p.ThreadId)
+		if err != nil {
+			return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		}
+
+		err = srv.setForumThreadsByIdM(messageThread.ForumId, threads)
+		if err != nil {
+			return nil, srv.databaseError(err)
+		}
+	}
+
 	result = &mm.AddMessageResult{
-		MessageId: uint(insertedThreadId),
+		MessageId: uint(insertedMessageId),
 	}
 
 	return result, nil
@@ -1214,7 +1239,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 		return nil, srv.databaseError(err)
 	}
 
-	err = messagesR.AddItem(p.MessageId)
+	err = messagesR.AddItem(p.MessageId, false)
 	if err != nil {
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
