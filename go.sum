@@ -28,7 +28,7 @@ github.com/rogpeppe/go-internal v1.9.0 h1:73kH8U+JUqXU8lRuOHeVHaa/SZPifC7BkcraZV
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.1-0.20190311161405-34c6fa2dc709/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
-github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
+github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/valord577/mailx v0.3.20220208 h1:h5B6DrWANVQBRQ5iz0fxwjaMkFIsF8Y4MhuKMyVZgs4=
 github.com/valord577/mailx v0.3.20220208/go.mod h1:aGgPawsLOerLCxf7XU9jnke7B0lyp5Bl5JhsufWBwS0=
 github.com/vault-thirteen/BytePackedPassword v0.2.1 h1:33FIAtsOnwrm+64VBvvxV02a9IBckQGim/W59IU6rN8=
@@ -49,8 +49,8 @@ github.com/vault-thirteen/header v1.4.0 h1:ddFPWEJOpXqHoNNKpEdq9Kt3J+JXhxZBaRLgO
 github.com/vault-thirteen/header v1.4.0/go.mod h1:d5OZnwd79kKmCq0pGM++vmFdpZpYKDnnpYa0Nw1nTxo=
 github.com/vault-thirteen/tester v1.2.0 h1:eUfPZqS5bXbQ+6Zed9EceN3ddsOBBMZoU0y+/eJV8cc=
 github.com/vault-thirteen/tester v1.2.0/go.mod h1:UT1/YEVk2UWl+Jt7c/JhAw5LZwe5qL1cbK/QS016HrQ=
-github.com/ybbus/jsonrpc/v3 v3.1.4 h1:pPmgfWXnqR2GdIlealyCzmV6LV3nxm3w9gwA1B3cP3Y=
-github.com/ybbus/jsonrpc/v3 v3.1.4/go.mod h1:4HQTl0UzErqWGa6bSXhp8rIjifMAMa55E4D5wdhe768=
+github.com/ybbus/jsonrpc/v3 v3.1.5 h1:0cC/QzS8OCuXYqqDbYnKKhsEe+IZLrNlDx8KPCieeW0=
+github.com/ybbus/jsonrpc/v3 v3.1.5/go.mod h1:U1QbyNfL5Pvi2roT0OpRbJeyvGxfWYSgKJHjxWdAEeE=
 golang.org/x/crypto v0.15.0 h1:frVn1TEaCEaZcn3Tmd7Y2b5KKPaZ+I32Q2OA3kYp5TA=
 golang.org/x/crypto v0.15.0/go.mod h1:4ChreQoLWfG3xLDer1WdlH5NdlQ3+mwnQq1YTKY+72g=
 golang.org/x/image v0.14.0 h1:tNgSxAFe3jC4uYqvZdTr84SZoM1KfwdC9SKIFrLjFn4=

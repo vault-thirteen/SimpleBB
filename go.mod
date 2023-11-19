@@ -14,7 +14,7 @@ require (
 	github.com/vault-thirteen/auxie v0.15.0
 	github.com/vault-thirteen/errorz v1.2.0
 	github.com/vault-thirteen/tester v1.2.0
-	github.com/ybbus/jsonrpc/v3 v3.1.4
+	github.com/ybbus/jsonrpc/v3 v3.1.5
 	golang.org/x/term v0.14.0
 )
 
