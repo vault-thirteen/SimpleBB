@@ -1,14 +1,12 @@
 package mm
 
 import (
-	"context"
 	"fmt"
 	"math"
 	"sync"
 	"time"
 
 	js "github.com/osamingo/jsonrpc/v2"
-	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	ul "github.com/vault-thirteen/SimpleBB/pkg/UidList"
@@ -19,6 +17,9 @@ import (
 
 // addSection inserts a new section as a root section or as a sub-section.
 func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -123,6 +124,9 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 
 // changeSectionName renames a section.
 func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.ChangeSectionNameResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -158,6 +162,9 @@ func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.
 
 // changeSectionParent moves a section from an old parent to a new parent.
 func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result *mm.ChangeSectionParentResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -285,6 +292,9 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 
 // getSection reads a section.
 func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -318,6 +328,9 @@ func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResu
 
 // deleteSection removes a section.
 func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSectionResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -394,6 +407,9 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 
 // addForum inserts a new forum into a section.
 func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -474,6 +490,9 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 
 // changeForumName renames a forum.
 func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.ChangeForumNameResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -509,6 +528,9 @@ func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.Chan
 
 // changeForumSection moves a forum from an old section to a new section.
 func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *mm.ChangeForumSectionResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -632,6 +654,9 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 
 // getForum reads a forum.
 func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -665,6 +690,9 @@ func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, je
 
 // deleteForum removes a forum.
 func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -734,6 +762,9 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 
 // addThread inserts a new thread into a forum.
 func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -798,6 +829,9 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 
 // changeThreadName renames a thread.
 func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.ChangeThreadNameResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -833,6 +867,9 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 
 // changeThreadForum moves a thread from an old forum to a new forum.
 func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.ChangeThreadForumResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -930,6 +967,9 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 
 // getThread reads a thread.
 func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -963,6 +1003,9 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 
 // deleteThread removes a thread.
 func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThreadResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1024,6 +1067,9 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 
 // addMessage inserts a new message into a thread.
 func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1113,6 +1159,9 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 
 // changeMessageText changes text of a message.
 func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.ChangeMessageTextResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1178,6 +1227,9 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 
 // changeMessageThread moves a message from an old thread to a new thread.
 func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result *mm.ChangeMessageThreadResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1275,6 +1327,9 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 
 // getMessage reads a message.
 func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1308,6 +1363,9 @@ func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResu
 
 // deleteMessage removes a message.
 func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMessageResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1364,6 +1422,9 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 
 // listThreadAndMessages reads a thread and all its messages.
 func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (result *mm.ListThreadAndMessagesResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1406,6 +1467,9 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 
 // listThreadAndMessagesOnPage reads a thread and its messages on a selected page.
 func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPageParams) (result *mm.ListThreadAndMessagesOnPageResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1461,6 +1525,9 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 
 // listForumAndThreads reads a forum and all its threads.
 func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result *mm.ListForumAndThreadsResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1503,6 +1570,9 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 
 // listForumAndThreadsOnPage reads a forum and its threads on a selected page.
 func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPageParams) (result *mm.ListForumAndThreadsOnPageResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1558,6 +1628,9 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 
 // listSectionsAndForums reads all sections and forums.
 func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (result *mm.ListSectionsAndForumsResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1623,15 +1696,4 @@ func (srv *Server) doTest(p *mm.TestParams) (result *mm.TestResult, jerr *js.Err
 	}
 
 	return result, nil
-}
-
-func (srv *Server) doTestA(wg *sync.WaitGroup, errChan chan error) {
-	defer wg.Done()
-
-	var ap = am.TestParams{}
-	var ar = am.TestResult{}
-	err := srv.acmServiceClient.MakeRequest(context.Background(), &ar, ac.FuncTest, ap)
-	if err != nil {
-		errChan <- err
-	}
 }

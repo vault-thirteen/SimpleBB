@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync"
 
 	js "github.com/osamingo/jsonrpc/v2"
 	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
@@ -95,4 +96,15 @@ func (srv *Server) getUserSelfRoles(auth *cm.Auth) (userRoles *am.GetSelfRolesRe
 	}
 
 	return userRoles, nil
+}
+
+func (srv *Server) doTestA(wg *sync.WaitGroup, errChan chan error) {
+	defer wg.Done()
+
+	var ap = am.TestParams{}
+	var ar = am.TestResult{}
+	err := srv.acmServiceClient.MakeRequest(context.Background(), &ar, ac.FuncTest, ap)
+	if err != nil {
+		errChan <- err
+	}
 }

@@ -50,7 +50,7 @@ type Server struct {
 
 	// Database.
 	db                         *sql.DB
-	dbGuard                    sync.Mutex // Methods using the guard are marked with an 'M' postfix.
+	dbGuard                    sync.RWMutex
 	dbPreparedStatements       []*sql.Stmt
 	dbPreparedStatementQueries []string // Source code of prepared statements.
 	dbTableNames               *DBTableNames
