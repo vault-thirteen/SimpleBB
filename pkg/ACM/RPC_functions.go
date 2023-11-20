@@ -21,6 +21,9 @@ func (srv *Server) registerUser(p *am.RegisterUserParams) (result *am.RegisterUs
 		return nil, jerr
 	}
 
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	switch p.StepN {
 	case 1:
 		return srv.registerUserStep1(p)
@@ -218,6 +221,9 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 }
 
 func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (result *am.ApproveAndRegisterUserResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -260,6 +266,9 @@ func (srv *Server) logUserIn(p *am.LogUserInParams) (result *am.LogUserInResult,
 	if jerr != nil {
 		return nil, jerr
 	}
+
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
 
 	switch p.StepN {
 	case 1:
@@ -844,6 +853,9 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 }
 
 func (srv *Server) logUserOut(p *am.LogUserOutParams) (result *am.LogUserOutResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -859,6 +871,9 @@ func (srv *Server) logUserOut(p *am.LogUserOutParams) (result *am.LogUserOutResu
 }
 
 func (srv *Server) getListOfLoggedUsers(p *am.GetListOfLoggedUsersParams) (result *am.GetListOfLoggedUsersResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	_, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
 		return nil, jerr
@@ -876,6 +891,9 @@ func (srv *Server) getListOfLoggedUsers(p *am.GetListOfLoggedUsersParams) (resul
 }
 
 func (srv *Server) isUserLoggedIn(p *am.IsUserLoggedInParams) (result *am.IsUserLoggedInResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	_, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
 		return nil, jerr
@@ -906,6 +924,9 @@ func (srv *Server) isUserLoggedIn(p *am.IsUserLoggedInParams) (result *am.IsUser
 }
 
 func (srv *Server) getUserRoles(p *am.GetUserRolesParams) (result *am.GetUserRolesResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	_, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
 		return nil, jerr
@@ -938,6 +959,9 @@ func (srv *Server) getUserRoles(p *am.GetUserRolesParams) (result *am.GetUserRol
 }
 
 func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *am.ViewUserParametersResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -984,6 +1008,9 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 }
 
 func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.SetUserRoleAuthorResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1016,6 +1043,9 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 }
 
 func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.SetUserRoleWriterResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1048,6 +1078,9 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 }
 
 func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.SetUserRoleReaderResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1079,7 +1112,36 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 	return &am.SetUserRoleReaderResult{OK: true}, nil
 }
 
+func (srv *Server) getSelfRoles(p *am.GetSelfRolesParams) (result *am.GetSelfRolesResult, jerr *js.Error) {
+	srv.dbGuard.RLock()
+	defer srv.dbGuard.RUnlock()
+
+	var thisUserData *am.UserData
+	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
+	if jerr != nil {
+		return nil, jerr
+	}
+
+	result = &am.GetSelfRolesResult{
+		UserId: thisUserData.User.Id,
+	}
+
+	result.UserRoles = cm.UserRoles{
+		IsAdministrator: thisUserData.User.IsAdministrator,
+		IsModerator:     thisUserData.User.IsModerator,
+		IsAuthor:        thisUserData.User.IsAuthor,
+		IsWriter:        thisUserData.User.IsWriter,
+		IsReader:        thisUserData.User.IsReader,
+		CanLogIn:        thisUserData.User.CanLogIn,
+	}
+
+	return result, nil
+}
+
 func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1122,6 +1184,9 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, jerr 
 }
 
 func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult, jerr *js.Error) {
+	srv.dbGuard.Lock()
+	defer srv.dbGuard.Unlock()
+
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -1151,29 +1216,6 @@ func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult,
 	}
 
 	return &am.UnbanUserResult{OK: true}, nil
-}
-
-func (srv *Server) getSelfRoles(p *am.GetSelfRolesParams) (result *am.GetSelfRolesResult, jerr *js.Error) {
-	var thisUserData *am.UserData
-	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	result = &am.GetSelfRolesResult{
-		UserId: thisUserData.User.Id,
-	}
-
-	result.UserRoles = cm.UserRoles{
-		IsAdministrator: thisUserData.User.IsAdministrator,
-		IsModerator:     thisUserData.User.IsModerator,
-		IsAuthor:        thisUserData.User.IsAuthor,
-		IsWriter:        thisUserData.User.IsWriter,
-		IsReader:        thisUserData.User.IsReader,
-		CanLogIn:        thisUserData.User.CanLogIn,
-	}
-
-	return result, nil
 }
 
 func (srv *Server) showDiagnosticData() (result *am.ShowDiagnosticDataResult, jerr *js.Error) {

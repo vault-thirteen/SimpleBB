@@ -1,7 +1,6 @@
 package acm
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -37,9 +36,6 @@ const (
 )
 
 func (srv *Server) initDbM() (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
 	fmt.Print(c.MsgConnectingToDatabase)
 
 	err = srv.connectDb()
@@ -169,9 +165,6 @@ func (srv *Server) replaceTableNameInCreateTableScript(scriptText []byte, tableN
 }
 
 func (srv *Server) probeDbM() (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
 	err = srv.db.Ping()
 	if err != nil {
 		return err
@@ -181,29 +174,7 @@ func (srv *Server) probeDbM() (err error) {
 }
 
 func (srv *Server) countUsersWithEmailAddrM(email string) (n int, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return CountOnError, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CountUsersWithEmailAddr]).QueryRow(email, email).Scan(&n)
+	err = srv.dbPreparedStatements[DbPsid_CountUsersWithEmailAddr].QueryRow(email, email).Scan(&n)
 	if err != nil {
 		return CountOnError, err
 	}
@@ -212,30 +183,8 @@ func (srv *Server) countUsersWithEmailAddrM(email string) (n int, err error) {
 }
 
 func (srv *Server) insertPreRegisteredUserM(email string) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_InsertPreRegisteredUser]).Exec(email)
+	result, err = srv.dbPreparedStatements[DbPsid_InsertPreRegisteredUser].Exec(email)
 	if err != nil {
 		return err
 	}
@@ -254,30 +203,8 @@ func (srv *Server) insertPreRegisteredUserM(email string) (err error) {
 }
 
 func (srv *Server) attachVerificationCodeToPreRegUserM(email string, code string) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_AttachVerificationCodeToPreRegUser]).Exec(code, email)
+	result, err = srv.dbPreparedStatements[DbPsid_AttachVerificationCodeToPreRegUser].Exec(code, email)
 	if err != nil {
 		return err
 	}
@@ -296,30 +223,8 @@ func (srv *Server) attachVerificationCodeToPreRegUserM(email string, code string
 }
 
 func (srv *Server) checkRegVerificationCodeM(email, code string) (ok bool, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return false, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var n int
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CheckVerificationCodeOfPreRegUser]).QueryRow(email, code).Scan(&n)
+	err = srv.dbPreparedStatements[DbPsid_CheckVerificationCodeOfPreRegUser].QueryRow(email, code).Scan(&n)
 	if err != nil {
 		return false, err
 	}
@@ -332,29 +237,7 @@ func (srv *Server) checkRegVerificationCodeM(email, code string) (ok bool, err e
 }
 
 func (srv *Server) countUsersWithNameM(name string) (n int, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return CountOnError, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CountUsersWithName]).QueryRow(name, name).Scan(&n)
+	err = srv.dbPreparedStatements[DbPsid_CountUsersWithName].QueryRow(name, name).Scan(&n)
 	if err != nil {
 		return CountOnError, err
 	}
@@ -363,30 +246,8 @@ func (srv *Server) countUsersWithNameM(name string) (n int, err error) {
 }
 
 func (srv *Server) deletePreRegUserIfNotApprovedByEmailM(email string) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_DeletePreRegUserIfNotApprovedByEmail]).Exec(email)
+	result, err = srv.dbPreparedStatements[DbPsid_DeletePreRegUserIfNotApprovedByEmail].Exec(email)
 	if err != nil {
 		return err
 	}
@@ -405,30 +266,8 @@ func (srv *Server) deletePreRegUserIfNotApprovedByEmailM(email string) (err erro
 }
 
 func (srv *Server) approveUserByEmailM(email string) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_ApprovePreRegUserEmail]).Exec(email)
+	result, err = srv.dbPreparedStatements[DbPsid_ApprovePreRegUserEmail].Exec(email)
 	if err != nil {
 		return err
 	}
@@ -447,30 +286,8 @@ func (srv *Server) approveUserByEmailM(email string) (err error) {
 }
 
 func (srv *Server) setPreRegUserDataM(email string, code string, name string, password []byte) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetPreRegUserData]).Exec(name, password, email, code)
+	result, err = srv.dbPreparedStatements[DbPsid_SetPreRegUserData].Exec(name, password, email, code)
 	if err != nil {
 		return err
 	}
@@ -489,30 +306,8 @@ func (srv *Server) setPreRegUserDataM(email string, code string, name string, pa
 }
 
 func (srv *Server) approvePreRegUserM(email string) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_ApprovePreRegUser]).Exec(email)
+	result, err = srv.dbPreparedStatements[DbPsid_ApprovePreRegUser].Exec(email)
 	if err != nil {
 		return err
 	}
@@ -531,31 +326,9 @@ func (srv *Server) approvePreRegUserM(email string) (err error) {
 }
 
 func (srv *Server) registerPreRegUserM(email string) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	// Part 1.
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_RegisterPreRegUserP1]).Exec(email)
+	result, err = srv.dbPreparedStatements[DbPsid_RegisterPreRegUserP1].Exec(email)
 	if err != nil {
 		return err
 	}
@@ -571,7 +344,7 @@ func (srv *Server) registerPreRegUserM(email string) (err error) {
 	}
 
 	// Part 2.
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_RegisterPreRegUserP2]).Exec(email)
+	result, err = srv.dbPreparedStatements[DbPsid_RegisterPreRegUserP2].Exec(email)
 	if err != nil {
 		return err
 	}
@@ -589,29 +362,7 @@ func (srv *Server) registerPreRegUserM(email string) (err error) {
 }
 
 func (srv *Server) countUsersWithEmailAbleToLogInM(email string) (n int, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return CountOnError, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CountUsersWithEmailAbleToLogIn]).QueryRow(email).Scan(&n)
+	err = srv.dbPreparedStatements[DbPsid_CountUsersWithEmailAbleToLogIn].QueryRow(email).Scan(&n)
 	if err != nil {
 		return CountOnError, err
 	}
@@ -622,29 +373,7 @@ func (srv *Server) countUsersWithEmailAbleToLogInM(email string) (n int, err err
 func (srv *Server) deleteAbandonedPreSessionsM() (err error) {
 	timeBorder := time.Now().Add(-time.Duration(srv.settings.SystemSettings.PreSessionExpirationTime) * time.Second)
 
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	_, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_DeleteAbandonedPreSessions]).Exec(timeBorder)
+	_, err = srv.dbPreparedStatements[DbPsid_DeleteAbandonedPreSessions].Exec(timeBorder)
 	if err != nil {
 		return err
 	}
@@ -653,29 +382,7 @@ func (srv *Server) deleteAbandonedPreSessionsM() (err error) {
 }
 
 func (srv *Server) countStartedUserSessionsByEmailM(email string) (n int, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return CountOnError, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CountStartedUserSessionsByEmail]).QueryRow(email).Scan(&n)
+	err = srv.dbPreparedStatements[DbPsid_CountStartedUserSessionsByEmail].QueryRow(email).Scan(&n)
 	if err != nil {
 		return CountOnError, err
 	}
@@ -684,29 +391,7 @@ func (srv *Server) countStartedUserSessionsByEmailM(email string) (n int, err er
 }
 
 func (srv *Server) countCreatedUserPreSessionsByEmailM(email string) (n int, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return CountOnError, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CountCreatedUserPreSessionsByEmail]).QueryRow(email).Scan(&n)
+	err = srv.dbPreparedStatements[DbPsid_CountCreatedUserPreSessionsByEmail].QueryRow(email).Scan(&n)
 	if err != nil {
 		return CountOnError, err
 	}
@@ -715,30 +400,8 @@ func (srv *Server) countCreatedUserPreSessionsByEmailM(email string) (n int, err
 }
 
 func (srv *Server) getUserLastBadLogInTimeByEmailM(email string) (lastBadLogInTime *time.Time, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var u = &am.User{}
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetUserLastBadLogInTimeByEmail]).QueryRow(email).Scan(&u.LastBadLogInTime)
+	err = srv.dbPreparedStatements[DbPsid_GetUserLastBadLogInTimeByEmail].QueryRow(email).Scan(&u.LastBadLogInTime)
 	if err != nil {
 		return nil, err
 	}
@@ -747,30 +410,8 @@ func (srv *Server) getUserLastBadLogInTimeByEmailM(email string) (lastBadLogInTi
 }
 
 func (srv *Server) createPreliminarySessionM(userId uint, requestId string, userIPAB net.IP, pwdSalt []byte, isCaptchaRequired bool, captchaId sql.NullString) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CreatePreliminarySession]).Exec(userId, requestId, userIPAB, pwdSalt, isCaptchaRequired, captchaId)
+	result, err = srv.dbPreparedStatements[DbPsid_CreatePreliminarySession].Exec(userId, requestId, userIPAB, pwdSalt, isCaptchaRequired, captchaId)
 	if err != nil {
 		return err
 	}
@@ -789,29 +430,7 @@ func (srv *Server) createPreliminarySessionM(userId uint, requestId string, user
 }
 
 func (srv *Server) getUserIdByEmailM(email string) (id uint, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return IdOnError, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetUserIdByEmail]).QueryRow(email).Scan(&id)
+	err = srv.dbPreparedStatements[DbPsid_GetUserIdByEmail].QueryRow(email).Scan(&id)
 	if err != nil {
 		return IdOnError, err
 	}
@@ -820,30 +439,8 @@ func (srv *Server) getUserIdByEmailM(email string) (id uint, err error) {
 }
 
 func (srv *Server) updateUserLastBadLogInTimeByEmailM(email string) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_UpdateUserLastBadLogInTimeByEmail]).Exec(email)
+	result, err = srv.dbPreparedStatements[DbPsid_UpdateUserLastBadLogInTimeByEmail].Exec(email)
 	if err != nil {
 		return err
 	}
@@ -862,30 +459,8 @@ func (srv *Server) updateUserLastBadLogInTimeByEmailM(email string) (err error) 
 }
 
 func (srv *Server) getUserPreSessionByRequestIdM(requestId string) (preSession *am.PreSession, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	preSession = &am.PreSession{}
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetUserPreSessionByRequestId]).QueryRow(requestId).Scan(
+	err = srv.dbPreparedStatements[DbPsid_GetUserPreSessionByRequestId].QueryRow(requestId).Scan(
 		&preSession.Id,
 		&preSession.UserId,
 		&preSession.RequestId,
@@ -902,29 +477,7 @@ func (srv *Server) getUserPreSessionByRequestIdM(requestId string) (preSession *
 }
 
 func (srv *Server) getUserPasswordByIdM(userId uint) (password []byte, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetUserPasswordById]).QueryRow(userId).Scan(&password)
+	err = srv.dbPreparedStatements[DbPsid_GetUserPasswordById].QueryRow(userId).Scan(&password)
 	if err != nil {
 		return nil, err
 	}
@@ -933,29 +486,7 @@ func (srv *Server) getUserPasswordByIdM(userId uint) (password []byte, err error
 }
 
 func (srv *Server) deletePreliminarySessionByRequestIdM(requestId string) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	_, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_DeletePreliminarySessionByRequestId]).Exec(requestId)
+	_, err = srv.dbPreparedStatements[DbPsid_DeletePreliminarySessionByRequestId].Exec(requestId)
 	if err != nil {
 		return err
 	}
@@ -964,30 +495,8 @@ func (srv *Server) deletePreliminarySessionByRequestIdM(requestId string) (err e
 }
 
 func (srv *Server) setUserPreSessionCaptchaFlagsM(userId uint, requestId string, isVerifiedByCaptcha bool) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetUserPreSessionCaptchaFlag]).Exec(isVerifiedByCaptcha, requestId, userId)
+	result, err = srv.dbPreparedStatements[DbPsid_SetUserPreSessionCaptchaFlag].Exec(isVerifiedByCaptcha, requestId, userId)
 	if err != nil {
 		return err
 	}
@@ -1006,30 +515,8 @@ func (srv *Server) setUserPreSessionCaptchaFlagsM(userId uint, requestId string,
 }
 
 func (srv *Server) setUserPreSessionPasswordFlagM(userId uint, requestId string, isVerifiedByPassword bool) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetUserPreSessionPasswordFlag]).Exec(isVerifiedByPassword, requestId, userId)
+	result, err = srv.dbPreparedStatements[DbPsid_SetUserPreSessionPasswordFlag].Exec(isVerifiedByPassword, requestId, userId)
 	if err != nil {
 		return err
 	}
@@ -1048,30 +535,8 @@ func (srv *Server) setUserPreSessionPasswordFlagM(userId uint, requestId string,
 }
 
 func (srv *Server) attachVerificationCodeToPreSessionM(userId uint, requestId string, code string) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_AttachVerificationCodeToPreSession]).Exec(code, requestId, userId)
+	result, err = srv.dbPreparedStatements[DbPsid_AttachVerificationCodeToPreSession].Exec(code, requestId, userId)
 	if err != nil {
 		return err
 	}
@@ -1090,30 +555,8 @@ func (srv *Server) attachVerificationCodeToPreSessionM(userId uint, requestId st
 }
 
 func (srv *Server) updatePreSessionRequestIdM(userId uint, requestIdOld string, requestIdNew string) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_UpdatePreSessionRequestId]).Exec(requestIdNew, requestIdOld, userId)
+	result, err = srv.dbPreparedStatements[DbPsid_UpdatePreSessionRequestId].Exec(requestIdNew, requestIdOld, userId)
 	if err != nil {
 		return err
 	}
@@ -1132,30 +575,8 @@ func (srv *Server) updatePreSessionRequestIdM(userId uint, requestIdOld string, 
 }
 
 func (srv *Server) checkLogInVerificationCodeM(requestId string, code string) (ok bool, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return false, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var n int
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CheckVerificationCodeOfLogInUser]).QueryRow(requestId, code).Scan(&n)
+	err = srv.dbPreparedStatements[DbPsid_CheckVerificationCodeOfLogInUser].QueryRow(requestId, code).Scan(&n)
 	if err != nil {
 		return false, err
 	}
@@ -1168,30 +589,8 @@ func (srv *Server) checkLogInVerificationCodeM(requestId string, code string) (o
 }
 
 func (srv *Server) setUserPreSessionVerificationFlagM(userId uint, requestId string, isVerifiedByEmail bool) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetUserPreSessionVerificationFlag]).Exec(isVerifiedByEmail, requestId, userId)
+	result, err = srv.dbPreparedStatements[DbPsid_SetUserPreSessionVerificationFlag].Exec(isVerifiedByEmail, requestId, userId)
 	if err != nil {
 		return err
 	}
@@ -1210,30 +609,8 @@ func (srv *Server) setUserPreSessionVerificationFlagM(userId uint, requestId str
 }
 
 func (srv *Server) createUserSessionM(userId uint, userIPAB net.IP) (lastInsertedId int64, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return LastInsertedIdOnError, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CreateUserSession]).Exec(userId, userIPAB)
+	result, err = srv.dbPreparedStatements[DbPsid_CreateUserSession].Exec(userId, userIPAB)
 	if err != nil {
 		return LastInsertedIdOnError, err
 	}
@@ -1257,30 +634,8 @@ func (srv *Server) createUserSessionM(userId uint, userIPAB net.IP) (lastInserte
 }
 
 func (srv *Server) getUserByIdM(userId uint) (user *am.User, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	user = &am.User{}
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetUserById]).QueryRow(userId).Scan(
+	err = srv.dbPreparedStatements[DbPsid_GetUserById].QueryRow(userId).Scan(
 		&user.Id,
 		&user.PreRegTime,
 		&user.Email,
@@ -1306,30 +661,8 @@ func (srv *Server) getUserByIdM(userId uint) (user *am.User, err error) {
 }
 
 func (srv *Server) getSessionByUserIdM(userId uint) (session *am.Session, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	session = &am.Session{}
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetSessionByUserId]).QueryRow(userId).Scan(
+	err = srv.dbPreparedStatements[DbPsid_GetSessionByUserId].QueryRow(userId).Scan(
 		&session.Id,
 		&session.UserId,
 		&session.StartTime,
@@ -1347,30 +680,8 @@ func (srv *Server) getSessionByUserIdM(userId uint) (session *am.Session, err er
 }
 
 func (srv *Server) deleteUserSessionM(sessionId uint, userId uint, userIPAB net.IP) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_DeleteUserSession]).Exec(sessionId, userId, userIPAB)
+	result, err = srv.dbPreparedStatements[DbPsid_DeleteUserSession].Exec(sessionId, userId, userIPAB)
 	if err != nil {
 		return err
 	}
@@ -1389,30 +700,8 @@ func (srv *Server) deleteUserSessionM(sessionId uint, userId uint, userIPAB net.
 }
 
 func (srv *Server) saveIncidentM(incidentType IncidentType, email string, userIPAB net.IP) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SaveIncident]).Exec(incidentType, email, userIPAB)
+	result, err = srv.dbPreparedStatements[DbPsid_SaveIncident].Exec(incidentType, email, userIPAB)
 	if err != nil {
 		return err
 	}
@@ -1431,30 +720,8 @@ func (srv *Server) saveIncidentM(incidentType IncidentType, email string, userIP
 }
 
 func (srv *Server) saveIncidentWithoutUserIPAM(incidentType IncidentType, email string) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SaveIncidentWithoutUserIPA]).Exec(incidentType, email)
+	result, err = srv.dbPreparedStatements[DbPsid_SaveIncidentWithoutUserIPA].Exec(incidentType, email)
 	if err != nil {
 		return err
 	}
@@ -1473,32 +740,10 @@ func (srv *Server) saveIncidentWithoutUserIPAM(incidentType IncidentType, email 
 }
 
 func (srv *Server) getListOfLoggedUsersM() (userIds []uint, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	userIds = make([]uint, 0)
 
 	var rows *sql.Rows
-	rows, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetListOfLoggedUsers]).Query()
+	rows, err = srv.dbPreparedStatements[DbPsid_GetListOfLoggedUsers].Query()
 	if err != nil {
 		return nil, err
 	}
@@ -1528,29 +773,7 @@ func (srv *Server) getListOfLoggedUsersM() (userIds []uint, err error) {
 }
 
 func (srv *Server) countUserSessionsByUserIdM(userId uint) (n int, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return CountOnError, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_CountUserSessionsByUserId]).QueryRow(userId).Scan(&n)
+	err = srv.dbPreparedStatements[DbPsid_CountUserSessionsByUserId].QueryRow(userId).Scan(&n)
 	if err != nil {
 		return CountOnError, err
 	}
@@ -1559,30 +782,8 @@ func (srv *Server) countUserSessionsByUserIdM(userId uint) (n int, err error) {
 }
 
 func (srv *Server) getUserRolesByIdM(userId uint) (roles *cm.UserRoles, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	roles = &cm.UserRoles{}
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetUserRolesById]).QueryRow(userId).Scan(
+	err = srv.dbPreparedStatements[DbPsid_GetUserRolesById].QueryRow(userId).Scan(
 		&roles.IsAuthor,
 		&roles.IsWriter,
 		&roles.IsReader,
@@ -1600,30 +801,8 @@ func (srv *Server) getUserRolesByIdM(userId uint) (roles *cm.UserRoles, err erro
 }
 
 func (srv *Server) viewUserParametersByIdM(userId uint) (userParameters *cm.UserParameters, err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	userParameters = &cm.UserParameters{}
-	err = tx.Stmt(srv.dbPreparedStatements[DbPsid_GetUserParametersById]).QueryRow(userId).Scan(
+	err = srv.dbPreparedStatements[DbPsid_GetUserParametersById].QueryRow(userId).Scan(
 		&userParameters.Id,
 		&userParameters.PreRegTime,
 		&userParameters.Email,
@@ -1649,30 +828,8 @@ func (srv *Server) viewUserParametersByIdM(userId uint) (userParameters *cm.User
 }
 
 func (srv *Server) setUserRoleAuthorM(userId uint, isRoleEnabled bool) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetUserRoleAuthor]).Exec(isRoleEnabled, userId)
+	result, err = srv.dbPreparedStatements[DbPsid_SetUserRoleAuthor].Exec(isRoleEnabled, userId)
 	if err != nil {
 		return err
 	}
@@ -1691,30 +848,8 @@ func (srv *Server) setUserRoleAuthorM(userId uint, isRoleEnabled bool) (err erro
 }
 
 func (srv *Server) setUserRoleWriterM(userId uint, isRoleEnabled bool) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetUserRoleWriter]).Exec(isRoleEnabled, userId)
+	result, err = srv.dbPreparedStatements[DbPsid_SetUserRoleWriter].Exec(isRoleEnabled, userId)
 	if err != nil {
 		return err
 	}
@@ -1733,30 +868,8 @@ func (srv *Server) setUserRoleWriterM(userId uint, isRoleEnabled bool) (err erro
 }
 
 func (srv *Server) setUserRoleReaderM(userId uint, isRoleEnabled bool) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetUserRoleReader]).Exec(isRoleEnabled, userId)
+	result, err = srv.dbPreparedStatements[DbPsid_SetUserRoleReader].Exec(isRoleEnabled, userId)
 	if err != nil {
 		return err
 	}
@@ -1775,30 +888,8 @@ func (srv *Server) setUserRoleReaderM(userId uint, isRoleEnabled bool) (err erro
 }
 
 func (srv *Server) setUserRoleCanLogInM(userId uint, isRoleEnabled bool) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_SetUserRoleCanLogIn]).Exec(isRoleEnabled, userId)
+	result, err = srv.dbPreparedStatements[DbPsid_SetUserRoleCanLogIn].Exec(isRoleEnabled, userId)
 	if err != nil {
 		return err
 	}
@@ -1817,29 +908,7 @@ func (srv *Server) setUserRoleCanLogInM(userId uint, isRoleEnabled bool) (err er
 }
 
 func (srv *Server) deleteUserSessionByUserIdM(userId uint) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
-	_, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_DeleteUserSessionByUserId]).Exec(userId)
+	_, err = srv.dbPreparedStatements[DbPsid_DeleteUserSessionByUserId].Exec(userId)
 	if err != nil {
 		return err
 	}
@@ -1848,30 +917,8 @@ func (srv *Server) deleteUserSessionByUserIdM(userId uint) (err error) {
 }
 
 func (srv *Server) updateUserBanTimeM(userId uint) (err error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
-
-	var tx *sql.Tx
-	tx, err = srv.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		var txErr error
-		if err != nil {
-			txErr = tx.Rollback()
-		} else {
-			txErr = tx.Commit()
-		}
-
-		if txErr != nil {
-			err = errorz.Combine(err, txErr)
-		}
-	}()
-
 	var result sql.Result
-	result, err = tx.Stmt(srv.dbPreparedStatements[DbPsid_UpdateUserBanTime]).Exec(userId)
+	result, err = srv.dbPreparedStatements[DbPsid_UpdateUserBanTime].Exec(userId)
 	if err != nil {
 		return err
 	}
