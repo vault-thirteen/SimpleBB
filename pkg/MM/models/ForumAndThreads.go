@@ -11,8 +11,8 @@ type ForumAndThreads struct {
 
 	// Thread parameters. If pagination is used, these lists contain
 	// information after the application of pagination.
-	ThreadIds ul.UidList `json:"threadIds"`
-	Threads   []Thread   `json:"threads"`
+	ThreadIds *ul.UidList `json:"threadIds"`
+	Threads   []Thread    `json:"threads"`
 
 	// Number of the current page of threads.
 	Page *uint `json:"page,omitempty"`

@@ -225,7 +225,7 @@ func (ul *UidList) ValuesString() (values string, err error) {
 	return sb.String(), nil
 }
 
-func (ul *UidList) OnPage(pageNumber uint, pageSize uint) (ulop UidList) {
+func (ul *UidList) OnPage(pageNumber uint, pageSize uint) (ulop *UidList) {
 	if pageNumber < 1 {
 		return nil
 	}
@@ -253,9 +253,12 @@ func (ul *UidList) OnPage(pageNumber uint, pageSize uint) (ulop UidList) {
 
 	// Right index of a virtual page.
 	ipR := ipL + pageSize - 1
+	var x UidList
 	if iLast < ipR {
-		return (*ul)[ipL : iLast+1]
+		x = (*ul)[ipL : iLast+1]
 	} else {
-		return (*ul)[ipL : ipR+1]
+		x = (*ul)[ipL : ipR+1]
 	}
+
+	return &x
 }

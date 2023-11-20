@@ -11,8 +11,8 @@ type ThreadAndMessages struct {
 
 	// Message parameters. If pagination is used, these lists contain
 	// information after the application of pagination.
-	MessageIds ul.UidList `json:"messageIds"`
-	Messages   []Message  `json:"messages"`
+	MessageIds *ul.UidList `json:"messageIds"`
+	Messages   []Message   `json:"messages"`
 
 	// Number of the current page of messages.
 	Page *uint `json:"page,omitempty"`

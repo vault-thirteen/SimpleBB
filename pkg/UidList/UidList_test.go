@@ -287,59 +287,70 @@ func Test_ValuesString(t *testing.T) {
 func Test_OnPage(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList
+	var ulx UidList
+	var ulxx *UidList
 	var err error
+	var nullList *UidList = nil
 
 	// Test #1.
 	ul, err = NewFromArray(nil)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.OnPage(0, 1), UidList([]uint(nil)))
+	aTest.MustBeEqual(ul.OnPage(0, 1), nullList)
 
 	// Test #2.
 	ul, err = NewFromArray(nil)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.OnPage(1, 1), UidList([]uint(nil)))
+	aTest.MustBeEqual(ul.OnPage(1, 1), nullList)
 
 	// Test #3.
 	ul, err = NewFromArray([]uint{})
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.OnPage(1, 1), UidList([]uint(nil)))
+	aTest.MustBeEqual(ul.OnPage(1, 1), nullList)
 
 	// Test #4.
 	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5})
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.OnPage(1, 5), UidList([]uint{1, 2, 3, 4, 5}))
+	ulx = []uint{1, 2, 3, 4, 5}
+	aTest.MustBeEqual(ul.OnPage(1, 5), &ulx)
 
 	// Test #5.
 	ul, err = NewFromArray([]uint{1, 2, 3})
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.OnPage(1, 5), UidList([]uint{1, 2, 3}))
+	ulx = []uint{1, 2, 3}
+	aTest.MustBeEqual(ul.OnPage(1, 5), &ulx)
 
 	// Test #6.
 	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5, 6, 7})
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.OnPage(1, 5), UidList([]uint{1, 2, 3, 4, 5}))
+	ulx = []uint{1, 2, 3, 4, 5}
+	aTest.MustBeEqual(ul.OnPage(1, 5), &ulx)
 
 	// Test #7.
 	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5})
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.OnPage(2, 5), UidList([]uint(nil)))
+	ulxx = nil
+	aTest.MustBeEqual(ul.OnPage(2, 5), ulxx)
 
 	// Test #8.
 	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5, 6})
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.OnPage(2, 5), UidList([]uint{6}))
+	ulx = []uint{6}
+	aTest.MustBeEqual(ul.OnPage(2, 5), &ulx)
 
 	// Test #9.
 	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5, 6, 7})
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.OnPage(2, 5), UidList([]uint{6, 7}))
+	ulx = []uint{6, 7}
+	aTest.MustBeEqual(ul.OnPage(2, 5), &ulx)
 
 	// Test #10.
 	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12})
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.OnPage(2, 5), UidList([]uint{6, 7, 8, 9, 10}))
+	ulx = []uint{6, 7, 8, 9, 10}
+	aTest.MustBeEqual(ul.OnPage(2, 5), &ulx)
 
 	// Test #11.
 	ul = nil
-	aTest.MustBeEqual(ul.OnPage(1, 1), UidList(nil))
+	ulxx = nil
+	aTest.MustBeEqual(ul.OnPage(1, 1), ulxx)
 }

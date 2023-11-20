@@ -1450,12 +1450,14 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 	}
 
 	tam := mm.NewThreadAndMessages(thread)
+	tam.MessageIds = thread.Messages
 
 	// Read all the messages.
-	tam.MessageIds = *thread.Messages
-	tam.Messages, err = srv.readMessagesByIdM(*thread.Messages)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	if tam.MessageIds != nil {
+		tam.Messages, err = srv.readMessagesByIdM(*tam.MessageIds)
+		if err != nil {
+			return nil, srv.databaseError(err)
+		}
 	}
 
 	result = &mm.ListThreadAndMessagesResult{
@@ -1499,20 +1501,23 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 	}
 
 	tamop := mm.NewThreadAndMessages(thread)
+	tamop.MessageIds = thread.Messages
 
-	// Total numbers before pagination.
-	tm := uint(thread.Messages.Size())
-	tamop.TotalMessages = &tm
-	tp := uint(math.Ceil(float64(tm) / float64(srv.settings.SystemSettings.PageSize)))
-	tamop.TotalPages = &tp
+	if tamop.MessageIds != nil {
+		// Total numbers before pagination.
+		tm := uint(tamop.MessageIds.Size())
+		tamop.TotalMessages = &tm
+		tp := uint(math.Ceil(float64(tm) / float64(srv.settings.SystemSettings.PageSize)))
+		tamop.TotalPages = &tp
 
-	// Read messages of a specified page.
-	tamop.Page = &p.Page
-	tamop.MessageIds = thread.Messages.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
-	if len(tamop.MessageIds) > 0 {
-		tamop.Messages, err = srv.readMessagesByIdM(tamop.MessageIds)
-		if err != nil {
-			return nil, srv.databaseError(err)
+		// Read messages of a specified page.
+		tamop.Page = &p.Page
+		tamop.MessageIds = tamop.MessageIds.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
+		if len(*tamop.MessageIds) > 0 {
+			tamop.Messages, err = srv.readMessagesByIdM(*tamop.MessageIds)
+			if err != nil {
+				return nil, srv.databaseError(err)
+			}
 		}
 	}
 
@@ -1553,12 +1558,14 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 	}
 
 	fat := mm.NewForumAndThreads(forum)
+	fat.ThreadIds = forum.Threads
 
 	// Read all the threads.
-	fat.ThreadIds = *forum.Threads
-	fat.Threads, err = srv.readThreadsByIdM(*forum.Threads)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	if fat.ThreadIds != nil {
+		fat.Threads, err = srv.readThreadsByIdM(*forum.Threads)
+		if err != nil {
+			return nil, srv.databaseError(err)
+		}
 	}
 
 	result = &mm.ListForumAndThreadsResult{
@@ -1602,20 +1609,23 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 	}
 
 	fatop := mm.NewForumAndThreads(forum)
+	fatop.ThreadIds = forum.Threads
 
-	// Total numbers before pagination.
-	tt := uint(forum.Threads.Size())
-	fatop.TotalThreads = &tt
-	tp := uint(math.Ceil(float64(tt) / float64(srv.settings.SystemSettings.PageSize)))
-	fatop.TotalPages = &tp
+	if fatop.ThreadIds != nil {
+		// Total numbers before pagination.
+		tt := uint(fatop.ThreadIds.Size())
+		fatop.TotalThreads = &tt
+		tp := uint(math.Ceil(float64(tt) / float64(srv.settings.SystemSettings.PageSize)))
+		fatop.TotalPages = &tp
 
-	// Read threads of a specified page.
-	fatop.Page = &p.Page
-	fatop.ThreadIds = forum.Threads.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
-	if len(fatop.ThreadIds) > 0 {
-		fatop.Threads, err = srv.readThreadsByIdM(fatop.ThreadIds)
-		if err != nil {
-			return nil, srv.databaseError(err)
+		// Read threads of a specified page.
+		fatop.Page = &p.Page
+		fatop.ThreadIds = fatop.ThreadIds.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
+		if len(*fatop.ThreadIds) > 0 {
+			fatop.Threads, err = srv.readThreadsByIdM(*fatop.ThreadIds)
+			if err != nil {
+				return nil, srv.databaseError(err)
+			}
 		}
 	}
 
