@@ -31,8 +31,8 @@
     "tableInitScriptsFolder": "sql\\MM\\table_init",
     "messageEditTime": 300,
     "pageSize": 20,
-    "isDebugMode": false,
-    "newThreadsAtTop": true
+    "newThreadsAtTop": true,
+    "isDebugMode": false
   },
   "acm": {
     "host": "localhost",

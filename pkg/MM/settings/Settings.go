@@ -61,7 +61,6 @@ type SystemSettings struct {
 	TableInitScriptsFolder string   `json:"tableInitScriptsFolder"`
 	MessageEditTime        uint     `json:"messageEditTime"`
 	PageSize               uint     `json:"pageSize"`
-	IsDebugMode            bool     `json:"isDebugMode"`
 
 	// NewThreadsAtTop parameter controls how new and updated threads are
 	// placed inside forums. If set to 'True', then following will happen:
@@ -69,9 +68,12 @@ type SystemSettings struct {
 	// threads instead of being added to the end (bottom) of the list;
 	// 2. New messages added to threads will update the thread moving it to the
 	// start (top) position of the list of forum's threads.
-	// If set to 'False', new threads are added to the end (bottom) of the list
-	// and thread's new messages do not update thread's position in the list.
+	// If set to 'False', then new threads are added to the end (bottom) of the
+	// list and thread's new messages do not update thread's position in the
+	// list.
 	NewThreadsAtTop bool `json:"newThreadsAtTop"`
+
+	IsDebugMode bool `json:"isDebugMode"`
 }
 
 // ACMSettings are settings of an Access Control Module.
