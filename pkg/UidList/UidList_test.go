@@ -178,6 +178,12 @@ func Test_RaiseItem(t *testing.T) {
 	err = ul.RaiseItem(3)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual([]uint(*ul), []uint{3, 1, 2})
+
+	// Test #6. One item.
+	ul = &UidList{1}
+	err = ul.RaiseItem(1)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual([]uint(*ul), []uint{1})
 }
 
 func Test_Scan(t *testing.T) {

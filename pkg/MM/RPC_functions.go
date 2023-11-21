@@ -1139,14 +1139,16 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 			return nil, srv.databaseError(err)
 		}
 
-		err = threads.RaiseItem(p.ThreadId)
-		if err != nil {
-			return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
-		}
+		if threads.Size() > 1 {
+			err = threads.RaiseItem(p.ThreadId)
+			if err != nil {
+				return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+			}
 
-		err = srv.setForumThreadsByIdM(messageThread.ForumId, threads)
-		if err != nil {
-			return nil, srv.databaseError(err)
+			err = srv.setForumThreadsByIdM(messageThread.ForumId, threads)
+			if err != nil {
+				return nil, srv.databaseError(err)
+			}
 		}
 	}
 
@@ -1513,7 +1515,7 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 		// Read messages of a specified page.
 		tamop.Page = &p.Page
 		tamop.MessageIds = tamop.MessageIds.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
-		if len(*tamop.MessageIds) > 0 {
+		if tamop.MessageIds.Size() > 0 {
 			tamop.Messages, err = srv.readMessagesByIdM(*tamop.MessageIds)
 			if err != nil {
 				return nil, srv.databaseError(err)
@@ -1621,7 +1623,7 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 		// Read threads of a specified page.
 		fatop.Page = &p.Page
 		fatop.ThreadIds = fatop.ThreadIds.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
-		if len(*fatop.ThreadIds) > 0 {
+		if fatop.ThreadIds.Size() > 0 {
 			fatop.Threads, err = srv.readThreadsByIdM(*fatop.ThreadIds)
 			if err != nil {
 				return nil, srv.databaseError(err)

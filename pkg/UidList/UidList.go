@@ -65,6 +65,9 @@ func (ul *UidList) CheckIntegrity() (err error) {
 
 func (ul *UidList) Size() (n int) {
 	if ul == nil {
+		// Go language allows calling methods of a null interface !
+		// This is even more dangerous than the good old C language.
+		// LMAO ROFL LOL ...  /* TrollFace.gif */
 		return 0
 	} else {
 		return len(*ul)
