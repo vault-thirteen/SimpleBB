@@ -31,6 +31,7 @@ const (
 )
 
 type Server struct {
+	// Settings.
 	settings *s.Settings
 
 	// HTTP server.

@@ -36,6 +36,7 @@ const (
 )
 
 type Server struct {
+	// Settings.
 	settings *as.Settings
 
 	// HTTP server.
@@ -60,7 +61,9 @@ type Server struct {
 	jsonRpcHandlers *js.MethodRepository
 
 	// Verification code generator.
-	vcg              *rp.Generator
+	vcg *rp.Generator
+
+	// SMTP Module client.
 	smtpModuleClient *cc.Client
 
 	// Captcha.
