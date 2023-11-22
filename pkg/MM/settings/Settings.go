@@ -39,6 +39,7 @@ type HttpSettings struct {
 // DbSettings are parameters of the Database. When a password is not set, it is
 // taken from the stdin.
 type DbSettings struct {
+	// Access settings.
 	DriverName string `json:"driverName"`
 	Net        string `json:"net"`
 	Host       string `json:"host"`
@@ -46,6 +47,11 @@ type DbSettings struct {
 	DBName     string `json:"dbName"`
 	User       string `json:"user"`
 	Password   string `json:"password"`
+
+	// Database structure and initialization settings.
+	TableNamePrefix        string   `json:"tableNamePrefix"`
+	TablesToInit           []string `json:"tablesToInit"`
+	TableInitScriptsFolder string   `json:"tableInitScriptsFolder"`
 
 	// Various specific MySQL settings.
 	AllowNativePasswords bool              `json:"allowNativePasswords"`
@@ -56,11 +62,8 @@ type DbSettings struct {
 
 // SystemSettings are system settings.
 type SystemSettings struct {
-	TableNamePrefix        string   `json:"tableNamePrefix"`
-	TablesToInit           []string `json:"tablesToInit"`
-	TableInitScriptsFolder string   `json:"tableInitScriptsFolder"`
-	MessageEditTime        uint     `json:"messageEditTime"`
-	PageSize               uint     `json:"pageSize"`
+	MessageEditTime uint `json:"messageEditTime"`
+	PageSize        uint `json:"pageSize"`
 
 	// NewThreadsAtTop parameter controls how new and updated threads are
 	// placed inside forums. If set to 'True', then following will happen:

@@ -17,8 +17,8 @@ import (
 
 // addSection inserts a new section as a root section or as a sub-section.
 func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -41,7 +41,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	var err error
 	var n int
 	if p.Parent == nil {
-		n, err = srv.countRootSectionsM()
+		n, err = srv.dbo.CountRootSections()
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -51,7 +51,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 		}
 
 		var insertedSectionId int64
-		insertedSectionId, err = srv.insertNewSectionM(p.Parent, p.Name, userRoles.UserId)
+		insertedSectionId, err = srv.dbo.InsertNewSection(p.Parent, p.Name, userRoles.UserId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -65,7 +65,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 
 	// Insert a sub-section.
 	// Ensure that a parent exists.
-	n, err = srv.countSectionsByIdM(*p.Parent)
+	n, err = srv.dbo.CountSectionsById(*p.Parent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -76,7 +76,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 
 	// Check compatibility.
 	var childType byte
-	childType, err = srv.getSectionChildTypeByIdM(*p.Parent)
+	childType, err = srv.dbo.GetSectionChildTypeById(*p.Parent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -86,7 +86,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	}
 
 	if childType == mm.ChildTypeNone {
-		err = srv.setSectionChildTypeByIdM(*p.Parent, mm.ChildTypeSection)
+		err = srv.dbo.SetSectionChildTypeById(*p.Parent, mm.ChildTypeSection)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -94,13 +94,13 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 
 	// Insert a section and link it with its parent.
 	var parentChildren *ul.UidList
-	parentChildren, err = srv.getSectionChildrenByIdM(*p.Parent)
+	parentChildren, err = srv.dbo.GetSectionChildrenById(*p.Parent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	var insertedSectionId int64
-	insertedSectionId, err = srv.insertNewSectionM(p.Parent, p.Name, userRoles.UserId)
+	insertedSectionId, err = srv.dbo.InsertNewSection(p.Parent, p.Name, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -110,7 +110,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setSectionChildrenByIdM(*p.Parent, parentChildren)
+	err = srv.dbo.SetSectionChildrenById(*p.Parent, parentChildren)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -124,8 +124,8 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 
 // changeSectionName renames a section.
 func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.ChangeSectionNameResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -148,7 +148,7 @@ func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.
 	}
 
 	var err error
-	err = srv.setSectionNameByIdM(p.SectionId, p.Name, userRoles.UserId)
+	err = srv.dbo.SetSectionNameById(p.SectionId, p.Name, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -162,8 +162,8 @@ func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.
 
 // changeSectionParent moves a section from an old parent to a new parent.
 func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result *mm.ChangeSectionParentResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -188,7 +188,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	// Ensure that an old parent exists.
 	var oldParent *uint
 	var err error
-	oldParent, err = srv.getSectionParentByIdM(p.SectionId)
+	oldParent, err = srv.dbo.GetSectionParentById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -198,7 +198,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	var n int
-	n, err = srv.countSectionsByIdM(*oldParent)
+	n, err = srv.dbo.CountSectionsById(*oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -208,7 +208,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	// Ensure that a new parent exists.
-	n, err = srv.countSectionsByIdM(p.Parent)
+	n, err = srv.dbo.CountSectionsById(p.Parent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -219,7 +219,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 
 	// Check compatibility.
 	var childType byte
-	childType, err = srv.getSectionChildTypeByIdM(p.Parent)
+	childType, err = srv.dbo.GetSectionChildTypeById(p.Parent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -229,21 +229,21 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	if childType == mm.ChildTypeNone {
-		err = srv.setSectionChildTypeByIdM(p.Parent, mm.ChildTypeSection)
+		err = srv.dbo.SetSectionChildTypeById(p.Parent, mm.ChildTypeSection)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 	}
 
 	// Update the moved section.
-	err = srv.setSectionParentByIdM(p.SectionId, p.Parent, userRoles.UserId)
+	err = srv.dbo.SetSectionParentById(p.SectionId, p.Parent, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Update the new link.
 	var childrenR *ul.UidList
-	childrenR, err = srv.getSectionChildrenByIdM(p.Parent)
+	childrenR, err = srv.dbo.GetSectionChildrenById(p.Parent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -253,14 +253,14 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setSectionChildrenByIdM(p.Parent, childrenR)
+	err = srv.dbo.SetSectionChildrenById(p.Parent, childrenR)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Update the old link.
 	var childrenL *ul.UidList
-	childrenL, err = srv.getSectionChildrenByIdM(*oldParent)
+	childrenL, err = srv.dbo.GetSectionChildrenById(*oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -270,14 +270,14 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setSectionChildrenByIdM(*oldParent, childrenL)
+	err = srv.dbo.SetSectionChildrenById(*oldParent, childrenL)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Clear the child type if the old parent becomes empty.
 	if childrenL.Size() == 0 {
-		err = srv.setSectionChildTypeByIdM(*oldParent, mm.ChildTypeNone)
+		err = srv.dbo.SetSectionChildTypeById(*oldParent, mm.ChildTypeNone)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -292,8 +292,8 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 
 // getSection reads a section.
 func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -314,7 +314,7 @@ func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResu
 	// Read the section.
 	var section *mm.Section
 	var err error
-	section, err = srv.getSectionByIdM(p.SectionId)
+	section, err = srv.dbo.GetSectionById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -328,8 +328,8 @@ func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResu
 
 // deleteSection removes a section.
 func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSectionResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -350,7 +350,7 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 	// Read the section.
 	var section *mm.Section
 	var err error
-	section, err = srv.getSectionByIdM(p.SectionId)
+	section, err = srv.dbo.GetSectionById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -368,7 +368,7 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 	// Update the link.
 	if !isRootSection {
 		var linkSections *ul.UidList
-		linkSections, err = srv.getSectionChildrenByIdM(*section.Parent)
+		linkSections, err = srv.dbo.GetSectionChildrenById(*section.Parent)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -378,14 +378,14 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 			return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 		}
 
-		err = srv.setSectionChildrenByIdM(*section.Parent, linkSections)
+		err = srv.dbo.SetSectionChildrenById(*section.Parent, linkSections)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 
 		// Clear the child type if the old parent becomes empty.
 		if linkSections.Size() == 0 {
-			err = srv.setSectionChildTypeByIdM(*section.Parent, mm.ChildTypeNone)
+			err = srv.dbo.SetSectionChildTypeById(*section.Parent, mm.ChildTypeNone)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -393,7 +393,7 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 	}
 
 	// Delete the section.
-	err = srv.deleteSectionByIdM(p.SectionId)
+	err = srv.dbo.DeleteSectionById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -407,8 +407,8 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 
 // addForum inserts a new forum into a section.
 func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -431,7 +431,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 	}
 
 	// Ensure that a section exists.
-	n, err := srv.countSectionsByIdM(p.SectionId)
+	n, err := srv.dbo.CountSectionsById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -442,7 +442,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 
 	// Check compatibility.
 	var childType byte
-	childType, err = srv.getSectionChildTypeByIdM(p.SectionId)
+	childType, err = srv.dbo.GetSectionChildTypeById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -452,7 +452,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 	}
 
 	if childType == mm.ChildTypeNone {
-		err = srv.setSectionChildTypeByIdM(p.SectionId, mm.ChildTypeForum)
+		err = srv.dbo.SetSectionChildTypeById(p.SectionId, mm.ChildTypeForum)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -460,13 +460,13 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 
 	// Insert a forum and link it with its section.
 	var parentChildren *ul.UidList
-	parentChildren, err = srv.getSectionChildrenByIdM(p.SectionId)
+	parentChildren, err = srv.dbo.GetSectionChildrenById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	var insertedForumId int64
-	insertedForumId, err = srv.insertNewForumM(p.SectionId, p.Name, userRoles.UserId)
+	insertedForumId, err = srv.dbo.InsertNewForum(p.SectionId, p.Name, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -476,7 +476,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setSectionChildrenByIdM(p.SectionId, parentChildren)
+	err = srv.dbo.SetSectionChildrenById(p.SectionId, parentChildren)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -490,8 +490,8 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 
 // changeForumName renames a forum.
 func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.ChangeForumNameResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -514,7 +514,7 @@ func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.Chan
 	}
 
 	var err error
-	err = srv.setForumNameByIdM(p.ForumId, p.Name, userRoles.UserId)
+	err = srv.dbo.SetForumNameById(p.ForumId, p.Name, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -528,8 +528,8 @@ func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.Chan
 
 // changeForumSection moves a forum from an old section to a new section.
 func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *mm.ChangeForumSectionResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -554,13 +554,13 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	// Ensure that an old section exists.
 	var oldParent uint
 	var err error
-	oldParent, err = srv.getForumSectionByIdM(p.ForumId)
+	oldParent, err = srv.dbo.GetForumSectionById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	var n int
-	n, err = srv.countSectionsByIdM(oldParent)
+	n, err = srv.dbo.CountSectionsById(oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -570,7 +570,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	}
 
 	// Ensure that a new section exists.
-	n, err = srv.countSectionsByIdM(p.SectionId)
+	n, err = srv.dbo.CountSectionsById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -581,7 +581,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 
 	// Check compatibility.
 	var childType byte
-	childType, err = srv.getSectionChildTypeByIdM(p.SectionId)
+	childType, err = srv.dbo.GetSectionChildTypeById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -591,21 +591,21 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	}
 
 	if childType == mm.ChildTypeNone {
-		err = srv.setSectionChildTypeByIdM(p.SectionId, mm.ChildTypeForum)
+		err = srv.dbo.SetSectionChildTypeById(p.SectionId, mm.ChildTypeForum)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 	}
 
 	// Update the moved forum.
-	err = srv.setForumSectionByIdM(p.ForumId, p.SectionId, userRoles.UserId)
+	err = srv.dbo.SetForumSectionById(p.ForumId, p.SectionId, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Update the new link.
 	var childrenR *ul.UidList
-	childrenR, err = srv.getSectionChildrenByIdM(p.SectionId)
+	childrenR, err = srv.dbo.GetSectionChildrenById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -615,14 +615,14 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setSectionChildrenByIdM(p.SectionId, childrenR)
+	err = srv.dbo.SetSectionChildrenById(p.SectionId, childrenR)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Update the old link.
 	var childrenL *ul.UidList
-	childrenL, err = srv.getSectionChildrenByIdM(oldParent)
+	childrenL, err = srv.dbo.GetSectionChildrenById(oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -632,14 +632,14 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setSectionChildrenByIdM(oldParent, childrenL)
+	err = srv.dbo.SetSectionChildrenById(oldParent, childrenL)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Clear the child type if the old section becomes empty.
 	if childrenL.Size() == 0 {
-		err = srv.setSectionChildTypeByIdM(oldParent, mm.ChildTypeNone)
+		err = srv.dbo.SetSectionChildTypeById(oldParent, mm.ChildTypeNone)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -654,8 +654,8 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 
 // getForum reads a forum.
 func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -676,7 +676,7 @@ func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, je
 	// Read the forum.
 	var forum *mm.Forum
 	var err error
-	forum, err = srv.getForumByIdM(p.ForumId)
+	forum, err = srv.dbo.GetForumById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -690,8 +690,8 @@ func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, je
 
 // deleteForum removes a forum.
 func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -712,7 +712,7 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 	// Read the forum.
 	var forum *mm.Forum
 	var err error
-	forum, err = srv.getForumByIdM(p.ForumId)
+	forum, err = srv.dbo.GetForumById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -724,7 +724,7 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 
 	// Update the link.
 	var linkChildren *ul.UidList
-	linkChildren, err = srv.getSectionChildrenByIdM(forum.SectionId)
+	linkChildren, err = srv.dbo.GetSectionChildrenById(forum.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -734,21 +734,21 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setSectionChildrenByIdM(forum.SectionId, linkChildren)
+	err = srv.dbo.SetSectionChildrenById(forum.SectionId, linkChildren)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Clear the child type if the old parent becomes empty.
 	if linkChildren.Size() == 0 {
-		err = srv.setSectionChildTypeByIdM(forum.SectionId, mm.ChildTypeNone)
+		err = srv.dbo.SetSectionChildTypeById(forum.SectionId, mm.ChildTypeNone)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 	}
 
 	// Delete the forum.
-	err = srv.deleteForumByIdM(p.ForumId)
+	err = srv.dbo.DeleteForumById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -762,8 +762,8 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 
 // addThread inserts a new thread into a forum.
 func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -788,7 +788,7 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 	// Ensure that a forum exists.
 	var err error
 	var n int
-	n, err = srv.countForumsByIdM(p.ForumId)
+	n, err = srv.dbo.CountForumsById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -799,13 +799,13 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 
 	// Insert a thread and link it with its forum.
 	var parentThreads *ul.UidList
-	parentThreads, err = srv.getForumThreadsByIdM(p.ForumId)
+	parentThreads, err = srv.dbo.GetForumThreadsById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	var insertedThreadId int64
-	insertedThreadId, err = srv.insertNewThreadM(p.ForumId, p.Name, userRoles.UserId)
+	insertedThreadId, err = srv.dbo.InsertNewThread(p.ForumId, p.Name, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -815,7 +815,7 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setForumThreadsByIdM(p.ForumId, parentThreads)
+	err = srv.dbo.SetForumThreadsById(p.ForumId, parentThreads)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -829,8 +829,8 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 
 // changeThreadName renames a thread.
 func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.ChangeThreadNameResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -853,7 +853,7 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 	}
 
 	var err error
-	err = srv.setThreadNameByIdM(p.ThreadId, p.Name, userRoles.UserId)
+	err = srv.dbo.SetThreadNameById(p.ThreadId, p.Name, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -867,8 +867,8 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 
 // changeThreadForum moves a thread from an old forum to a new forum.
 func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.ChangeThreadForumResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -893,13 +893,13 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	// Ensure that an old parent exists.
 	var oldParent uint
 	var err error
-	oldParent, err = srv.getThreadForumByIdM(p.ThreadId)
+	oldParent, err = srv.dbo.GetThreadForumById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	var n int
-	n, err = srv.countForumsByIdM(oldParent)
+	n, err = srv.dbo.CountForumsById(oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -909,7 +909,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	}
 
 	// Ensure that a new parent exists.
-	n, err = srv.countForumsByIdM(p.ForumId)
+	n, err = srv.dbo.CountForumsById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -919,14 +919,14 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	}
 
 	// Update the moved thread.
-	err = srv.setThreadForumByIdM(p.ThreadId, p.ForumId, userRoles.UserId)
+	err = srv.dbo.SetThreadForumById(p.ThreadId, p.ForumId, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Update the new link.
 	var threadsR *ul.UidList
-	threadsR, err = srv.getForumThreadsByIdM(p.ForumId)
+	threadsR, err = srv.dbo.GetForumThreadsById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -936,14 +936,14 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setForumThreadsByIdM(p.ForumId, threadsR)
+	err = srv.dbo.SetForumThreadsById(p.ForumId, threadsR)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Update the old link.
 	var threadsL *ul.UidList
-	threadsL, err = srv.getForumThreadsByIdM(oldParent)
+	threadsL, err = srv.dbo.GetForumThreadsById(oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -953,7 +953,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setForumThreadsByIdM(oldParent, threadsL)
+	err = srv.dbo.SetForumThreadsById(oldParent, threadsL)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -967,8 +967,8 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 
 // getThread reads a thread.
 func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -989,7 +989,7 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 	// Read the thread.
 	var thread *mm.Thread
 	var err error
-	thread, err = srv.getThreadByIdM(p.ThreadId)
+	thread, err = srv.dbo.GetThreadById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1003,8 +1003,8 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 
 // deleteThread removes a thread.
 func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThreadResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1025,7 +1025,7 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 	// Read the thread.
 	var thread *mm.Thread
 	var err error
-	thread, err = srv.getThreadByIdM(p.ThreadId)
+	thread, err = srv.dbo.GetThreadById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1037,7 +1037,7 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 
 	// Update the link.
 	var linkThreads *ul.UidList
-	linkThreads, err = srv.getForumThreadsByIdM(thread.ForumId)
+	linkThreads, err = srv.dbo.GetForumThreadsById(thread.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1047,13 +1047,13 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setForumThreadsByIdM(thread.ForumId, linkThreads)
+	err = srv.dbo.SetForumThreadsById(thread.ForumId, linkThreads)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Delete the thread.
-	err = srv.deleteThreadByIdM(p.ThreadId)
+	err = srv.dbo.DeleteThreadById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1067,8 +1067,8 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 
 // addMessage inserts a new message into a thread.
 func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1093,7 +1093,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 	// Ensure that a parent exists.
 	var err error
 	var n int
-	n, err = srv.countThreadsByIdM(p.ThreadId)
+	n, err = srv.dbo.CountThreadsById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1104,13 +1104,13 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 
 	// Insert a message and link it with its thread.
 	var parentMessages *ul.UidList
-	parentMessages, err = srv.getThreadMessagesByIdM(p.ThreadId)
+	parentMessages, err = srv.dbo.GetThreadMessagesById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	var insertedMessageId int64
-	insertedMessageId, err = srv.insertNewMessageM(p.ThreadId, p.Text, userRoles.UserId)
+	insertedMessageId, err = srv.dbo.InsertNewMessage(p.ThreadId, p.Text, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1120,7 +1120,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setThreadMessagesByIdM(p.ThreadId, parentMessages)
+	err = srv.dbo.SetThreadMessagesById(p.ThreadId, parentMessages)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1128,13 +1128,13 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 	// Update thread's position if needed.
 	if srv.settings.SystemSettings.NewThreadsAtTop {
 		var messageThread *mm.Thread
-		messageThread, err = srv.getThreadByIdM(p.ThreadId)
+		messageThread, err = srv.dbo.GetThreadById(p.ThreadId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 
 		var threads *ul.UidList
-		threads, err = srv.getForumThreadsByIdM(messageThread.ForumId)
+		threads, err = srv.dbo.GetForumThreadsById(messageThread.ForumId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -1145,7 +1145,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 				return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 			}
 
-			err = srv.setForumThreadsByIdM(messageThread.ForumId, threads)
+			err = srv.dbo.SetForumThreadsById(messageThread.ForumId, threads)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -1161,8 +1161,8 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 
 // changeMessageText changes text of a message.
 func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.ChangeMessageTextResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1181,7 +1181,7 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 			var ToC time.Time
 			var ToE *time.Time
 			var err error
-			creatorUserId, ToC, ToE, err = srv.getMessageCreatorAndTimeByIdM(p.MessageId)
+			creatorUserId, ToC, ToE, err = srv.dbo.GetMessageCreatorAndTimeById(p.MessageId)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -1215,7 +1215,7 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 	}
 
 	var err error
-	err = srv.setMessageTextByIdM(p.MessageId, p.Text, userRoles.UserId)
+	err = srv.dbo.SetMessageTextById(p.MessageId, p.Text, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1229,8 +1229,8 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 
 // changeMessageThread moves a message from an old thread to a new thread.
 func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result *mm.ChangeMessageThreadResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1255,13 +1255,13 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	// Ensure that an old parent exists.
 	var oldParent uint
 	var err error
-	oldParent, err = srv.getMessageThreadByIdM(p.MessageId)
+	oldParent, err = srv.dbo.GetMessageThreadById(p.MessageId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	var n int
-	n, err = srv.countThreadsByIdM(oldParent)
+	n, err = srv.dbo.CountThreadsById(oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1271,7 +1271,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	}
 
 	// Ensure that a new parent exists.
-	n, err = srv.countThreadsByIdM(p.ThreadId)
+	n, err = srv.dbo.CountThreadsById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1281,14 +1281,14 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	}
 
 	// Update the moved message.
-	err = srv.setMessageThreadByIdM(p.MessageId, p.ThreadId, userRoles.UserId)
+	err = srv.dbo.SetMessageThreadById(p.MessageId, p.ThreadId, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Update the new link.
 	var messagesR *ul.UidList
-	messagesR, err = srv.getThreadMessagesByIdM(p.ThreadId)
+	messagesR, err = srv.dbo.GetThreadMessagesById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1298,14 +1298,14 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setThreadMessagesByIdM(p.ThreadId, messagesR)
+	err = srv.dbo.SetThreadMessagesById(p.ThreadId, messagesR)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Update the old link.
 	var messagesL *ul.UidList
-	messagesL, err = srv.getThreadMessagesByIdM(oldParent)
+	messagesL, err = srv.dbo.GetThreadMessagesById(oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1315,7 +1315,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setThreadMessagesByIdM(oldParent, messagesL)
+	err = srv.dbo.SetThreadMessagesById(oldParent, messagesL)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1329,8 +1329,8 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 
 // getMessage reads a message.
 func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1351,7 +1351,7 @@ func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResu
 	// Read the message.
 	var message *mm.Message
 	var err error
-	message, err = srv.getMessageByIdM(p.MessageId)
+	message, err = srv.dbo.GetMessageById(p.MessageId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1365,8 +1365,8 @@ func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResu
 
 // deleteMessage removes a message.
 func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMessageResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1387,14 +1387,14 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 	// Read the message.
 	var message *mm.Message
 	var err error
-	message, err = srv.getMessageByIdM(p.MessageId)
+	message, err = srv.dbo.GetMessageById(p.MessageId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Update the link.
 	var linkMessages *ul.UidList
-	linkMessages, err = srv.getThreadMessagesByIdM(message.ThreadId)
+	linkMessages, err = srv.dbo.GetThreadMessagesById(message.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1404,13 +1404,13 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
-	err = srv.setThreadMessagesByIdM(message.ThreadId, linkMessages)
+	err = srv.dbo.SetThreadMessagesById(message.ThreadId, linkMessages)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Delete the message.
-	err = srv.deleteMessageByIdM(p.MessageId)
+	err = srv.dbo.DeleteMessageById(p.MessageId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1424,8 +1424,8 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 
 // listThreadAndMessages reads a thread and all its messages.
 func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (result *mm.ListThreadAndMessagesResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1446,7 +1446,7 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 	// Read the thread.
 	var thread *mm.Thread
 	var err error
-	thread, err = srv.getThreadByIdM(p.ThreadId)
+	thread, err = srv.dbo.GetThreadById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1456,7 +1456,7 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 
 	// Read all the messages.
 	if tam.MessageIds != nil {
-		tam.Messages, err = srv.readMessagesByIdM(*tam.MessageIds)
+		tam.Messages, err = srv.dbo.ReadMessagesById(*tam.MessageIds)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -1471,8 +1471,8 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 
 // listThreadAndMessagesOnPage reads a thread and its messages on a selected page.
 func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPageParams) (result *mm.ListThreadAndMessagesOnPageResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1497,7 +1497,7 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 	// Read the thread.
 	var thread *mm.Thread
 	var err error
-	thread, err = srv.getThreadByIdM(p.ThreadId)
+	thread, err = srv.dbo.GetThreadById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1516,7 +1516,7 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 		tamop.Page = &p.Page
 		tamop.MessageIds = tamop.MessageIds.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
 		if tamop.MessageIds.Size() > 0 {
-			tamop.Messages, err = srv.readMessagesByIdM(*tamop.MessageIds)
+			tamop.Messages, err = srv.dbo.ReadMessagesById(*tamop.MessageIds)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -1532,8 +1532,8 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 
 // listForumAndThreads reads a forum and all its threads.
 func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result *mm.ListForumAndThreadsResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1554,7 +1554,7 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 	// Read the forum.
 	var forum *mm.Forum
 	var err error
-	forum, err = srv.getForumByIdM(p.ForumId)
+	forum, err = srv.dbo.GetForumById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1564,7 +1564,7 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 
 	// Read all the threads.
 	if fat.ThreadIds != nil {
-		fat.Threads, err = srv.readThreadsByIdM(*forum.Threads)
+		fat.Threads, err = srv.dbo.ReadThreadsById(*forum.Threads)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -1579,8 +1579,8 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 
 // listForumAndThreadsOnPage reads a forum and its threads on a selected page.
 func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPageParams) (result *mm.ListForumAndThreadsOnPageResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1605,7 +1605,7 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 	// Read the forum.
 	var forum *mm.Forum
 	var err error
-	forum, err = srv.getForumByIdM(p.ForumId)
+	forum, err = srv.dbo.GetForumById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1624,7 +1624,7 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 		fatop.Page = &p.Page
 		fatop.ThreadIds = fatop.ThreadIds.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
 		if fatop.ThreadIds.Size() > 0 {
-			fatop.Threads, err = srv.readThreadsByIdM(*fatop.ThreadIds)
+			fatop.Threads, err = srv.dbo.ReadThreadsById(*fatop.ThreadIds)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -1640,8 +1640,8 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 
 // listSectionsAndForums reads all sections and forums.
 func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (result *mm.ListSectionsAndForumsResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
 	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1657,14 +1657,14 @@ func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (res
 	// Read all the sections.
 	var sections []mm.Section
 	var err error
-	sections, err = srv.readSectionsM()
+	sections, err = srv.dbo.ReadSections()
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Read all the forums.
 	var forums []mm.Forum
-	forums, err = srv.readForumsM()
+	forums, err = srv.dbo.ReadForums()
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
