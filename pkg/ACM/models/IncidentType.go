@@ -1,4 +1,4 @@
-package acm
+package models
 
 const (
 	IncidentType_IllegalAccessAttempt     = 1

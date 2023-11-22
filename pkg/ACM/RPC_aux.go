@@ -63,7 +63,7 @@ func (srv *Server) mustBeAuthUserIPA(auth *cm.Auth) (jerr *js.Error) {
 	if auth == nil {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.saveIncidentWithoutUserIPAM(IncidentType_IllegalAccessAttempt, "")
+			err := srv.dbo.SaveIncidentWithoutUserIPA(am.IncidentType_IllegalAccessAttempt, "")
 			if err != nil {
 				return srv.databaseError(err)
 			}
@@ -75,7 +75,7 @@ func (srv *Server) mustBeAuthUserIPA(auth *cm.Auth) (jerr *js.Error) {
 	if len(auth.UserIPA) == 0 {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.saveIncidentWithoutUserIPAM(IncidentType_IllegalAccessAttempt, "")
+			err := srv.dbo.SaveIncidentWithoutUserIPA(am.IncidentType_IllegalAccessAttempt, "")
 			if err != nil {
 				return srv.databaseError(err)
 			}
@@ -104,7 +104,7 @@ func (srv *Server) mustBeNoAuthToken(auth *cm.Auth) (jerr *js.Error) {
 	if len(auth.Token) > 0 {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.saveIncidentM(IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
+			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
 			if err != nil {
 				return srv.databaseError(err)
 			}
@@ -129,7 +129,7 @@ func (srv *Server) mustBeAnAuthToken(auth *cm.Auth) (ud *am.UserData, jerr *js.E
 	if len(auth.Token) == 0 {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.saveIncidentM(IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
+			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -145,7 +145,7 @@ func (srv *Server) mustBeAnAuthToken(auth *cm.Auth) (ud *am.UserData, jerr *js.E
 
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_FakeToken, "", auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_FakeToken, "", auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -159,7 +159,7 @@ func (srv *Server) mustBeAnAuthToken(auth *cm.Auth) (ud *am.UserData, jerr *js.E
 
 func (srv *Server) isUserEmailAddressFree(addr string) (isFree bool, err error) {
 	var n int
-	n, err = srv.countUsersWithEmailAddrM(addr)
+	n, err = srv.dbo.CountUsersWithEmailAddr(addr)
 	if err != nil {
 		return false, err
 	}
@@ -265,7 +265,7 @@ func isPasswordAllowed(password string) (err error) {
 
 func (srv *Server) isUserNameFree(name string) (ok bool, err error) {
 	var n int
-	n, err = srv.countUsersWithNameM(name)
+	n, err = srv.dbo.CountUsersWithName(name)
 	if err != nil {
 		return false, err
 	}
@@ -279,7 +279,7 @@ func (srv *Server) isUserNameFree(name string) (ok bool, err error) {
 
 func (srv *Server) canUserLogIn(email string) (ok bool, err error) {
 	var n int
-	n, err = srv.countUsersWithEmailAbleToLogInM(email)
+	n, err = srv.dbo.CountUsersWithEmailAbleToLogIn(email)
 	if err != nil {
 		return false, err
 	}
@@ -293,7 +293,7 @@ func (srv *Server) canUserLogIn(email string) (ok bool, err error) {
 
 func (srv *Server) hasUserActiveSessions(email string) (has bool, err error) {
 	var n int
-	n, err = srv.countStartedUserSessionsByEmailM(email)
+	n, err = srv.dbo.CountStartedUserSessionsByEmail(email)
 	if err != nil {
 		return false, err
 	}
@@ -307,7 +307,7 @@ func (srv *Server) hasUserActiveSessions(email string) (has bool, err error) {
 
 func (srv *Server) hasUserPreSessions(email string) (has bool, err error) {
 	var n int
-	n, err = srv.countCreatedUserPreSessionsByEmailM(email)
+	n, err = srv.dbo.CountCreatedUserPreSessionsByEmail(email)
 	if err != nil {
 		return false, err
 	}
@@ -321,7 +321,7 @@ func (srv *Server) hasUserPreSessions(email string) (has bool, err error) {
 
 func (srv *Server) hasNoUserPreSessions(email string) (hasNo bool, err error) {
 	var n int
-	n, err = srv.countCreatedUserPreSessionsByEmailM(email)
+	n, err = srv.dbo.CountCreatedUserPreSessionsByEmail(email)
 	if err != nil {
 		return false, err
 	}
@@ -335,7 +335,7 @@ func (srv *Server) hasNoUserPreSessions(email string) (hasNo bool, err error) {
 
 func (srv *Server) isCaptchaNeeded(email string) (isCaptchaNeeded bool, err error) {
 	var lastBadLogInTime *time.Time
-	lastBadLogInTime, err = srv.getUserLastBadLogInTimeByEmailM(email)
+	lastBadLogInTime, err = srv.dbo.GetUserLastBadLogInTimeByEmail(email)
 	if err != nil {
 		return false, err
 	}
@@ -401,7 +401,7 @@ func (srv *Server) checkCaptcha(captchaId string, answer string) (result *rm.Che
 
 func (srv *Server) checkPassword(userId uint, salt []byte, userKey []byte) (ok bool, err error) {
 	var pwd []byte
-	pwd, err = srv.getUserPasswordByIdM(userId)
+	pwd, err = srv.dbo.GetUserPasswordById(userId)
 	if err != nil {
 		return false, err
 	}
@@ -428,7 +428,7 @@ func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (us
 
 	userData = am.NewUserData()
 
-	userData.User, err = srv.getUserByIdM(userId)
+	userData.User, err = srv.dbo.GetUserById(userId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -449,7 +449,7 @@ func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (us
 	userData.User.IsModerator = srv.isUserModerator(userData.User.Id)
 	userData.User.IsAdministrator = srv.isUserAdministrator(userData.User.Id)
 
-	userData.Session, err = srv.getSessionByUserIdM(userId)
+	userData.Session, err = srv.dbo.GetSessionByUserId(userId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}

@@ -44,6 +44,7 @@ type HttpSettings struct {
 // DbSettings are parameters of the Database. When a password is not set, it is
 // taken from the stdin.
 type DbSettings struct {
+	// Access settings.
 	DriverName string `json:"driverName"`
 	Net        string `json:"net"`
 	Host       string `json:"host"`
@@ -51,6 +52,11 @@ type DbSettings struct {
 	DBName     string `json:"dbName"`
 	User       string `json:"user"`
 	Password   string `json:"password"`
+
+	// Database structure and initialization settings.
+	TableNamePrefix        string   `json:"tableNamePrefix"`
+	TablesToInit           []string `json:"tablesToInit"`
+	TableInitScriptsFolder string   `json:"tableInitScriptsFolder"`
 
 	// Various specific MySQL settings.
 	AllowNativePasswords bool              `json:"allowNativePasswords"`
@@ -61,12 +67,9 @@ type DbSettings struct {
 
 // SystemSettings are system settings.
 type SystemSettings struct {
-	SiteName               string   `json:"siteName"`
-	SiteDomain             string   `json:"siteDomain"`
-	TableNamePrefix        string   `json:"tableNamePrefix"`
-	TablesToInit           []string `json:"tablesToInit"`
-	TableInitScriptsFolder string   `json:"tableInitScriptsFolder"`
-	VerificationCodeLength int      `json:"verificationCodeLength"`
+	SiteName               string `json:"siteName"`
+	SiteDomain             string `json:"siteDomain"`
+	VerificationCodeLength int    `json:"verificationCodeLength"`
 
 	// This path is used only for composition of e-mail messages.
 	// It must be synchronized with settings of the Gateway Module.

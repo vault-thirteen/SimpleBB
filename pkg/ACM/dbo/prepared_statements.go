@@ -1,4 +1,4 @@
-package acm
+package dbo
 
 import (
 	"database/sql"
@@ -55,13 +55,13 @@ const (
 	DbPsid_UpdateUserBanTime                    = 45
 )
 
-func (srv *Server) prepareDbStatements() (err error) {
+func (dbo *DatabaseObject) prepareStatements() (err error) {
 	// Add prepared statements into an array (slice) for future usage.
-	tblPreRegisteredUsers := srv.prefixTableName("PreRegisteredUsers")
-	tblUsers := srv.prefixTableName("Users")
-	tblPreSessions := srv.prefixTableName("PreSessions")
-	tblSessions := srv.prefixTableName("Sessions")
-	tblIncidents := srv.prefixTableName("Incidents")
+	tblPreRegisteredUsers := dbo.prefixTableName("PreRegisteredUsers")
+	tblUsers := dbo.prefixTableName("Users")
+	tblPreSessions := dbo.prefixTableName("PreSessions")
+	tblSessions := dbo.prefixTableName("Sessions")
+	tblIncidents := dbo.prefixTableName("Incidents")
 
 	var q string
 	qs := make([]string, 0)
@@ -203,11 +203,11 @@ func (srv *Server) prepareDbStatements() (err error) {
 	qs = append(qs, q)
 
 	// 34.
-	q = fmt.Sprintf(`INSERT INTO %s (TIME, Type, Email, UserIPAB) VALUES (Now(), ?, ?, ?);`, tblIncidents)
+	q = fmt.Sprintf(`INSERT INTO %s (Type, Email, UserIPAB) VALUES (?, ?, ?);`, tblIncidents)
 	qs = append(qs, q)
 
 	// 35.
-	q = fmt.Sprintf(`INSERT INTO %s (TIME, Type, Email) VALUES (Now(), ?, ?);`, tblIncidents)
+	q = fmt.Sprintf(`INSERT INTO %s (Type, Email) VALUES (?, ?);`, tblIncidents)
 	qs = append(qs, q)
 
 	// 36.
@@ -250,22 +250,26 @@ func (srv *Server) prepareDbStatements() (err error) {
 	q = fmt.Sprintf(`UPDATE %s SET BanTime = Now() WHERE Id = ?;`, tblUsers)
 	qs = append(qs, q)
 
-	srv.dbPreparedStatementQueries = make([]string, 0, len(qs))
+	dbo.preparedStatementQueries = make([]string, 0, len(qs))
 	for _, q = range qs {
-		srv.dbPreparedStatementQueries = append(srv.dbPreparedStatementQueries, q)
+		dbo.preparedStatementQueries = append(dbo.preparedStatementQueries, q)
 	}
 	qs = nil
 
-	srv.dbPreparedStatements = make([]*sql.Stmt, 0, len(srv.dbPreparedStatementQueries))
+	dbo.preparedStatements = make([]*sql.Stmt, 0, len(dbo.preparedStatementQueries))
 	var st *sql.Stmt
-	for _, psq := range srv.dbPreparedStatementQueries {
-		st, err = srv.db.Prepare(psq)
+	for _, psq := range dbo.preparedStatementQueries {
+		st, err = dbo.db.Prepare(psq)
 		if err != nil {
 			return err
 		}
 
-		srv.dbPreparedStatements = append(srv.dbPreparedStatements, st)
+		dbo.preparedStatements = append(dbo.preparedStatements, st)
 	}
 
 	return nil
+}
+
+func (dbo *DatabaseObject) GetPreparedStatementByIndex(i int) (ps *sql.Stmt) {
+	return dbo.preparedStatements[i]
 }

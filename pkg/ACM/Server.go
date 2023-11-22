@@ -2,7 +2,6 @@ package acm
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -14,6 +13,7 @@ import (
 	"time"
 
 	js "github.com/osamingo/jsonrpc/v2"
+	"github.com/vault-thirteen/SimpleBB/pkg/ACM/dbo"
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/km"
 	as "github.com/vault-thirteen/SimpleBB/pkg/ACM/settings"
 	rc "github.com/vault-thirteen/SimpleBB/pkg/RCS/client"
@@ -53,11 +53,8 @@ type Server struct {
 	httpErrors  chan error
 	dbErrors    chan error
 
-	// Database.
-	db                         *sql.DB
-	dbGuard                    sync.RWMutex
-	dbPreparedStatements       []*sql.Stmt
-	dbPreparedStatementQueries []string // Source code of prepared statements.
+	// Database Object.
+	dbo *dbo.DatabaseObject
 
 	// JSON-RPC handlers.
 	jsonRpcHandlers *js.MethodRepository
@@ -102,7 +99,14 @@ func NewServer(stn *as.Settings) (srv *Server, err error) {
 		return nil, err
 	}
 
-	err = srv.initDbM()
+	// Database.
+	sp := dbo.SystemParameters{
+		PreSessionExpirationTime: srv.settings.SystemSettings.PreSessionExpirationTime,
+	}
+
+	srv.dbo = dbo.NewDatabaseObject(srv.settings.DbSettings, sp)
+
+	err = srv.dbo.Init()
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +184,7 @@ func (srv *Server) Stop() (err error) {
 
 	srv.subRoutines.Wait()
 
-	err = srv.db.Close()
+	err = srv.dbo.Fin()
 	if err != nil {
 		return err
 	}
@@ -220,7 +224,7 @@ func (srv *Server) listenForDbErrors() {
 		// we make a smart thing here.
 
 		// 1. Ensure that the problem still exists.
-		err = srv.probeDbM()
+		err = srv.dbo.ProbeDb()
 		if err == nil {
 			// Network is now fine. Ignore the error.
 			continue
@@ -233,7 +237,7 @@ func (srv *Server) listenForDbErrors() {
 			log.Println(c.MsgReconnectingDatabase)
 			// While we have prepared statements,
 			// the simple reconnect will not help.
-			err = srv.initDbM()
+			err = srv.dbo.Init()
 			if err != nil {
 				// Network is still bad.
 				log.Println(c.MsgReconnectionHasFailed + err.Error())

@@ -21,8 +21,8 @@ func (srv *Server) registerUser(p *am.RegisterUserParams) (result *am.RegisterUs
 		return nil, jerr
 	}
 
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	switch p.StepN {
 	case 1:
@@ -54,7 +54,7 @@ func (srv *Server) registerUserStep1(p *am.RegisterUserParams) (result *am.Regis
 	}
 
 	// Add the client to a list of pre-registered users.
-	err = srv.insertPreRegisteredUserM(p.Email)
+	err = srv.dbo.InsertPreRegisteredUser(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -67,7 +67,7 @@ func (srv *Server) registerUserStep1(p *am.RegisterUserParams) (result *am.Regis
 	}
 
 	// Attach the verification code to the user.
-	err = srv.attachVerificationCodeToPreRegUserM(p.Email, verificationCode)
+	err = srv.dbo.AttachVerificationCodeToPreRegUser(p.Email, verificationCode)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -92,7 +92,7 @@ func (srv *Server) registerUserStep2(p *am.RegisterUserParams) (result *am.Regis
 	}
 
 	// Check the verification code.
-	ok, err := srv.checkRegVerificationCodeM(p.Email, p.VerificationCode)
+	ok, err := srv.dbo.CheckRegVerificationCode(p.Email, p.VerificationCode)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -102,14 +102,14 @@ func (srv *Server) registerUserStep2(p *am.RegisterUserParams) (result *am.Regis
 
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
 		// Delete the pre-registered user.
-		err = srv.deletePreRegUserIfNotApprovedByEmailM(p.Email)
+		err = srv.dbo.DeletePreRegUserIfNotApprovedByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -118,7 +118,7 @@ func (srv *Server) registerUserStep2(p *am.RegisterUserParams) (result *am.Regis
 	}
 
 	// Mark the client as verified by e-mail address.
-	err = srv.approveUserByEmailM(p.Email)
+	err = srv.dbo.ApproveUserByEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -180,7 +180,7 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 	}
 
 	// Check the verification code.
-	ok, err = srv.checkRegVerificationCodeM(p.Email, p.VerificationCode)
+	ok, err = srv.dbo.CheckRegVerificationCode(p.Email, p.VerificationCode)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -188,7 +188,7 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 	if !ok {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -198,7 +198,7 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 	}
 
 	// Set user's name and password.
-	err = srv.setPreRegUserDataM(p.Email, p.VerificationCode, p.Name, pwdBytes)
+	err = srv.dbo.SetPreRegUserData(p.Email, p.VerificationCode, p.Name, pwdBytes)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -207,12 +207,12 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 		return &am.RegisterUserResult{NextStep: 4}, nil
 	}
 
-	err = srv.approvePreRegUserM(p.Email)
+	err = srv.dbo.ApprovePreRegUser(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = srv.registerPreRegUserM(p.Email)
+	err = srv.dbo.RegisterPreRegUser(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -221,8 +221,8 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 }
 
 func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (result *am.ApproveAndRegisterUserResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -234,7 +234,7 @@ func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (r
 	if !thisUserData.User.IsAdministrator {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.saveIncidentM(IncidentType_IllegalAccessAttempt, p.Email, p.Auth.UserIPAB)
+			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -248,12 +248,12 @@ func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (r
 		return nil, &js.Error{Code: RpcErrorCode_RegisterUser_EmailAddresIsNotValid, Message: RpcErrorMsg_RegisterUser_EmailAddresIsNotValid}
 	}
 
-	err := srv.approvePreRegUserM(p.Email)
+	err := srv.dbo.ApprovePreRegUser(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = srv.registerPreRegUserM(p.Email)
+	err = srv.dbo.RegisterPreRegUser(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -267,8 +267,8 @@ func (srv *Server) logUserIn(p *am.LogUserInParams) (result *am.LogUserInResult,
 		return nil, jerr
 	}
 
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	switch p.StepN {
 	case 1:
@@ -300,7 +300,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserCanNotLogIn, Message: RpcErrorMsg_LogUserIn_UserCanNotLogIn}
 	}
 
-	err = srv.deleteAbandonedPreSessionsM()
+	err = srv.dbo.DeleteAbandonedPreSessions()
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -314,13 +314,13 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	if areUserActiveSessionsPresent {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -337,13 +337,13 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	if areUserActivePreSessionsPresent {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -352,7 +352,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	var userId uint
-	userId, err = srv.getUserIdByEmailM(p.Email)
+	userId, err = srv.dbo.GetUserIdByEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -390,7 +390,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 		captchaId.Valid = false // => SQL NULL value.
 	}
 
-	err = srv.createPreliminarySessionM(userId, requestId, p.Auth.UserIPAB, pwdSalt, isCaptchaNeeded, captchaId)
+	err = srv.dbo.CreatePreliminarySession(userId, requestId, p.Auth.UserIPAB, pwdSalt, isCaptchaNeeded, captchaId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -432,7 +432,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserCanNotLogIn, Message: RpcErrorMsg_LogUserIn_UserCanNotLogIn}
 	}
 
-	err = srv.deleteAbandonedPreSessionsM()
+	err = srv.dbo.DeleteAbandonedPreSessions()
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -446,13 +446,13 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	if areUserActiveSessionsPresent {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -469,13 +469,13 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	if areNoUserActivePreSessionsPresent {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -484,14 +484,14 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	var userId uint
-	userId, err = srv.getUserIdByEmailM(p.Email)
+	userId, err = srv.dbo.GetUserIdByEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Check the Request ID and IP address.
 	var preSession *am.PreSession
-	preSession, err = srv.getUserPreSessionByRequestIdM(p.RequestId)
+	preSession, err = srv.dbo.GetUserPreSessionByRequestId(p.RequestId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -499,13 +499,13 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	if preSession.UserId != userId {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -516,13 +516,13 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	if !p.Auth.UserIPAB.Equal(preSession.UserIPAB) {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -542,20 +542,20 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 		if !ccr.IsSuccess {
 			// Report the incident.
 			if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-				err = srv.saveIncidentM(IncidentType_CaptchaAnswerMismatch, p.Email, p.Auth.UserIPAB)
+				err = srv.dbo.SaveIncident(am.IncidentType_CaptchaAnswerMismatch, p.Email, p.Auth.UserIPAB)
 				if err != nil {
 					return nil, srv.databaseError(err)
 				}
 			}
 
-			err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+			err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 
 			// When captcha guess is wrong, we delete the preliminary session
 			// to start the process from the first step.
-			err = srv.deletePreliminarySessionByRequestIdM(preSession.RequestId)
+			err = srv.dbo.DeletePreliminarySessionByRequestId(preSession.RequestId)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -573,20 +573,20 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_PasswordMismatch, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_PasswordMismatch, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 
 		// When password is wrong, we delete the preliminary session
 		// to start the process from the first step.
-		err = srv.deletePreliminarySessionByRequestIdM(preSession.RequestId)
+		err = srv.dbo.DeletePreliminarySessionByRequestId(preSession.RequestId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -597,20 +597,20 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	if !ok {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_PasswordMismatch, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_PasswordMismatch, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 
 		// When password is wrong, we delete the preliminary session to start
 		// the process from the first step.
-		err = srv.deletePreliminarySessionByRequestIdM(preSession.RequestId)
+		err = srv.dbo.DeletePreliminarySessionByRequestId(preSession.RequestId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -622,12 +622,12 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	//
 	// Captcha flag is set to true when either it was not required or it was
 	// required and the answer was correct.
-	err = srv.setUserPreSessionCaptchaFlagsM(userId, preSession.RequestId, true)
+	err = srv.dbo.SetUserPreSessionCaptchaFlags(userId, preSession.RequestId, true)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = srv.setUserPreSessionPasswordFlagM(userId, preSession.RequestId, true)
+	err = srv.dbo.SetUserPreSessionPasswordFlag(userId, preSession.RequestId, true)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -639,7 +639,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_RequestIdGenerator, Message: RpcErrorMsg_LogUserIn_RequestIdGenerator}
 	}
 
-	err = srv.updatePreSessionRequestIdM(userId, preSession.RequestId, step3requestId)
+	err = srv.dbo.UpdatePreSessionRequestId(userId, preSession.RequestId, step3requestId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -651,7 +651,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_VerificationCodeGenerator, Message: RpcErrorMsg_LogUserIn_VerificationCodeGenerator}
 	}
 
-	err = srv.attachVerificationCodeToPreSessionM(userId, step3requestId, verificationCode)
+	err = srv.dbo.AttachVerificationCodeToPreSession(userId, step3requestId, verificationCode)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -691,7 +691,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserCanNotLogIn, Message: RpcErrorMsg_LogUserIn_UserCanNotLogIn}
 	}
 
-	err = srv.deleteAbandonedPreSessionsM()
+	err = srv.dbo.DeleteAbandonedPreSessions()
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -705,13 +705,13 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	if areUserActiveSessionsPresent {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -728,13 +728,13 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	if areNoUserActivePreSessionsPresent {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -743,14 +743,14 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	var userId uint
-	userId, err = srv.getUserIdByEmailM(p.Email)
+	userId, err = srv.dbo.GetUserIdByEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Check the Request ID and IP address.
 	var preSession *am.PreSession
-	preSession, err = srv.getUserPreSessionByRequestIdM(p.RequestId)
+	preSession, err = srv.dbo.GetUserPreSessionByRequestId(p.RequestId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -758,13 +758,13 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	if preSession.UserId != userId {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -775,13 +775,13 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	if !p.Auth.UserIPAB.Equal(preSession.UserIPAB) {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -791,7 +791,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	// Check the verification code.
 	var ok bool
-	ok, err = srv.checkLogInVerificationCodeM(p.RequestId, p.VerificationCode)
+	ok, err = srv.dbo.CheckLogInVerificationCode(p.RequestId, p.VerificationCode)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -801,21 +801,21 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.saveIncidentM(IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
+			err = srv.dbo.SaveIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
 		}
 
 		// Delete the pre-session on error to avoid brute force checks.
-		err = srv.updateUserLastBadLogInTimeByEmailM(p.Email)
+		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 
 		// When password is wrong, we delete the preliminary session to start
 		// the process from the first step.
-		err = srv.deletePreliminarySessionByRequestIdM(preSession.RequestId)
+		err = srv.dbo.DeletePreliminarySessionByRequestId(preSession.RequestId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -824,19 +824,19 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	// Set verification flags.
-	err = srv.setUserPreSessionVerificationFlagM(userId, preSession.RequestId, true)
+	err = srv.dbo.SetUserPreSessionVerificationFlag(userId, preSession.RequestId, true)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Create a normal session and delete the preliminary one.
 	var sessionId int64
-	sessionId, err = srv.createUserSessionM(userId, p.Auth.UserIPAB)
+	sessionId, err = srv.dbo.CreateUserSession(userId, p.Auth.UserIPAB)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = srv.deletePreliminarySessionByRequestIdM(preSession.RequestId)
+	err = srv.dbo.DeletePreliminarySessionByRequestId(preSession.RequestId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -853,8 +853,8 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 }
 
 func (srv *Server) logUserOut(p *am.LogUserOutParams) (result *am.LogUserOutResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -862,7 +862,7 @@ func (srv *Server) logUserOut(p *am.LogUserOutParams) (result *am.LogUserOutResu
 		return nil, jerr
 	}
 
-	err := srv.deleteUserSessionM(thisUserData.Session.Id, thisUserData.User.Id, thisUserData.Session.UserIPAB)
+	err := srv.dbo.DeleteUserSession(thisUserData.Session.Id, thisUserData.User.Id, thisUserData.Session.UserIPAB)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -871,8 +871,8 @@ func (srv *Server) logUserOut(p *am.LogUserOutParams) (result *am.LogUserOutResu
 }
 
 func (srv *Server) getListOfLoggedUsers(p *am.GetListOfLoggedUsersParams) (result *am.GetListOfLoggedUsersResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	_, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -882,7 +882,7 @@ func (srv *Server) getListOfLoggedUsers(p *am.GetListOfLoggedUsersParams) (resul
 	result = &am.GetListOfLoggedUsersResult{}
 
 	var err error
-	result.LoggedUserIds, err = srv.getListOfLoggedUsersM()
+	result.LoggedUserIds, err = srv.dbo.GetListOfLoggedUsers()
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -891,8 +891,8 @@ func (srv *Server) getListOfLoggedUsers(p *am.GetListOfLoggedUsersParams) (resul
 }
 
 func (srv *Server) isUserLoggedIn(p *am.IsUserLoggedInParams) (result *am.IsUserLoggedInResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	_, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -909,7 +909,7 @@ func (srv *Server) isUserLoggedIn(p *am.IsUserLoggedInParams) (result *am.IsUser
 
 	var err error
 	var n int
-	n, err = srv.countUserSessionsByUserIdM(p.UserId)
+	n, err = srv.dbo.CountUserSessionsByUserId(p.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -924,8 +924,8 @@ func (srv *Server) isUserLoggedIn(p *am.IsUserLoggedInParams) (result *am.IsUser
 }
 
 func (srv *Server) getUserRoles(p *am.GetUserRolesParams) (result *am.GetUserRolesResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	_, jerr = srv.mustBeAnAuthToken(p.Auth)
 	if jerr != nil {
@@ -942,7 +942,7 @@ func (srv *Server) getUserRoles(p *am.GetUserRolesParams) (result *am.GetUserRol
 
 	var err error
 	var roles *cm.UserRoles
-	roles, err = srv.getUserRolesByIdM(p.UserId)
+	roles, err = srv.dbo.GetUserRolesById(p.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -959,8 +959,8 @@ func (srv *Server) getUserRoles(p *am.GetUserRolesParams) (result *am.GetUserRol
 }
 
 func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *am.ViewUserParametersResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -972,7 +972,7 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 	if !thisUserData.User.IsAdministrator {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.saveIncidentM(IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -991,7 +991,7 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 
 	var err error
 	var userParameters *cm.UserParameters
-	userParameters, err = srv.viewUserParametersByIdM(p.UserId)
+	userParameters, err = srv.dbo.ViewUserParametersById(p.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1008,8 +1008,8 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 }
 
 func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.SetUserRoleAuthorResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1021,7 +1021,7 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 	if !thisUserData.User.IsAdministrator {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.saveIncidentM(IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -1034,7 +1034,7 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 		return nil, &js.Error{Code: RpcErrorCode_UserIdIsNotSet, Message: RpcErrorMsg_UserIdIsNotSet}
 	}
 
-	err := srv.setUserRoleAuthorM(p.UserId, p.IsRoleEnabled)
+	err := srv.dbo.SetUserRoleAuthor(p.UserId, p.IsRoleEnabled)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1043,8 +1043,8 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 }
 
 func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.SetUserRoleWriterResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1056,7 +1056,7 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 	if !thisUserData.User.IsAdministrator {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.saveIncidentM(IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -1069,7 +1069,7 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 		return nil, &js.Error{Code: RpcErrorCode_UserIdIsNotSet, Message: RpcErrorMsg_UserIdIsNotSet}
 	}
 
-	err := srv.setUserRoleWriterM(p.UserId, p.IsRoleEnabled)
+	err := srv.dbo.SetUserRoleWriter(p.UserId, p.IsRoleEnabled)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1078,8 +1078,8 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 }
 
 func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.SetUserRoleReaderResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1091,7 +1091,7 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 	if !thisUserData.User.IsAdministrator {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.saveIncidentM(IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -1104,7 +1104,7 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 		return nil, &js.Error{Code: RpcErrorCode_UserIdIsNotSet, Message: RpcErrorMsg_UserIdIsNotSet}
 	}
 
-	err := srv.setUserRoleReaderM(p.UserId, p.IsRoleEnabled)
+	err := srv.dbo.SetUserRoleReader(p.UserId, p.IsRoleEnabled)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1113,8 +1113,8 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 }
 
 func (srv *Server) getSelfRoles(p *am.GetSelfRolesParams) (result *am.GetSelfRolesResult, jerr *js.Error) {
-	srv.dbGuard.RLock()
-	defer srv.dbGuard.RUnlock()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1139,8 +1139,8 @@ func (srv *Server) getSelfRoles(p *am.GetSelfRolesParams) (result *am.GetSelfRol
 }
 
 func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1152,7 +1152,7 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, jerr 
 	if !thisUserData.User.IsModerator {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.saveIncidentM(IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -1165,17 +1165,17 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, jerr 
 		return nil, &js.Error{Code: RpcErrorCode_UserIdIsNotSet, Message: RpcErrorMsg_UserIdIsNotSet}
 	}
 
-	err := srv.setUserRoleCanLogInM(p.UserId, false)
+	err := srv.dbo.SetUserRoleCanLogIn(p.UserId, false)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = srv.updateUserBanTimeM(p.UserId)
+	err = srv.dbo.UpdateUserBanTime(p.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = srv.deleteUserSessionByUserIdM(p.UserId)
+	err = srv.dbo.DeleteUserSessionByUserId(p.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1184,8 +1184,8 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, jerr 
 }
 
 func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult, jerr *js.Error) {
-	srv.dbGuard.Lock()
-	defer srv.dbGuard.Unlock()
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var thisUserData *am.UserData
 	thisUserData, jerr = srv.mustBeAnAuthToken(p.Auth)
@@ -1197,7 +1197,7 @@ func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult,
 	if !thisUserData.User.IsModerator {
 		// Report the incident.
 		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.saveIncidentM(IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -1210,7 +1210,7 @@ func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult,
 		return nil, &js.Error{Code: RpcErrorCode_UserIdIsNotSet, Message: RpcErrorMsg_UserIdIsNotSet}
 	}
 
-	err := srv.setUserRoleCanLogInM(p.UserId, true)
+	err := srv.dbo.SetUserRoleCanLogIn(p.UserId, true)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
