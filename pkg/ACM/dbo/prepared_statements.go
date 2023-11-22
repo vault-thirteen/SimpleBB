@@ -56,198 +56,191 @@ const (
 )
 
 func (dbo *DatabaseObject) prepareStatements() (err error) {
-	// Add prepared statements into an array (slice) for future usage.
-	tblPreRegisteredUsers := dbo.prefixTableName("PreRegisteredUsers")
-	tblUsers := dbo.prefixTableName("Users")
-	tblPreSessions := dbo.prefixTableName("PreSessions")
-	tblSessions := dbo.prefixTableName("Sessions")
-	tblIncidents := dbo.prefixTableName("Incidents")
-
 	var q string
 	qs := make([]string, 0)
 
 	// 0.
-	q = fmt.Sprintf(`SELECT (SELECT COUNT(Email) FROM %s WHERE Email = ?) + (SELECT COUNT(Email) FROM %s WHERE Email = ?) AS n;`, tblUsers, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`SELECT (SELECT COUNT(Email) FROM %s WHERE Email = ?) + (SELECT COUNT(Email) FROM %s WHERE Email = ?) AS n;`, dbo.tableNames.Users, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 1.
-	q = fmt.Sprintf(`INSERT INTO %s (Email) VALUES (?);`, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`INSERT INTO %s (Email) VALUES (?);`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 2.
-	q = fmt.Sprintf(`UPDATE %s SET VerificationCode = ? WHERE Email = ?;`, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`UPDATE %s SET VerificationCode = ? WHERE Email = ?;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 3.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Email = ? AND VerificationCode = ?;`, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Email = ? AND VerificationCode = ?;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 4.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE Email = ? AND IsEmailApproved = FALSE;`, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE Email = ? AND IsEmailApproved = FALSE;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 5.
-	q = fmt.Sprintf(`UPDATE %s SET IsEmailApproved = TRUE WHERE Email = ?;`, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`UPDATE %s SET IsEmailApproved = TRUE WHERE Email = ?;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 6.
-	q = fmt.Sprintf(`UPDATE %s SET NAME = ?, PASSWORD = ?, IsReadyForApproval = TRUE WHERE Email = ? AND VerificationCode = ? AND IsReadyForApproval = FALSE;`, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`UPDATE %s SET NAME = ?, PASSWORD = ?, IsReadyForApproval = TRUE WHERE Email = ? AND VerificationCode = ? AND IsReadyForApproval = FALSE;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 7.
-	q = fmt.Sprintf(`UPDATE %s SET IsApproved = TRUE, ApprovalTime = Now() WHERE Email = ? AND IsEmailApproved = TRUE AND IsReadyForApproval = TRUE;`, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`UPDATE %s SET IsApproved = TRUE, ApprovalTime = Now() WHERE Email = ? AND IsEmailApproved = TRUE AND IsReadyForApproval = TRUE;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 8.
-	q = fmt.Sprintf(`INSERT INTO %s (PreRegTime, Email, NAME, PASSWORD, ApprovalTime, RegTime, IsReader, CanLogIn) SELECT PreRegTime, Email, NAME, PASSWORD, ApprovalTime, Now(), TRUE, TRUE FROM %s AS pru WHERE pru.Email = ? AND pru.IsApproved = TRUE;`, tblUsers, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`INSERT INTO %s (PreRegTime, Email, NAME, PASSWORD, ApprovalTime, RegTime, IsReader, CanLogIn) SELECT PreRegTime, Email, NAME, PASSWORD, ApprovalTime, Now(), TRUE, TRUE FROM %s AS pru WHERE pru.Email = ? AND pru.IsApproved = TRUE;`, dbo.tableNames.Users, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 9.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE Email = ? AND IsApproved = TRUE;`, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE Email = ? AND IsApproved = TRUE;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 10.
-	q = fmt.Sprintf(`SELECT (SELECT COUNT(Name) FROM %s WHERE NAME = ?) + (SELECT COUNT(Name) FROM %s WHERE NAME = ?) AS n;`, tblUsers, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`SELECT (SELECT COUNT(Name) FROM %s WHERE NAME = ?) + (SELECT COUNT(Name) FROM %s WHERE NAME = ?) AS n;`, dbo.tableNames.Users, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 11.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE IsReadyForApproval = FALSE AND PreRegTime < ?;`, tblPreRegisteredUsers)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE IsReadyForApproval = FALSE AND PreRegTime < ?;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 12.
-	q = fmt.Sprintf(`SELECT COUNT(Email) AS n FROM %s WHERE Email = ? AND CanLogIn = TRUE;`, tblUsers)
+	q = fmt.Sprintf(`SELECT COUNT(Email) AS n FROM %s WHERE Email = ? AND CanLogIn = TRUE;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 13.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE TimeOfCreation < ?;`, tblPreSessions)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE TimeOfCreation < ?;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 14.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserId = (SELECT Id FROM %s WHERE Email = ?);`, tblSessions, tblUsers)
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserId = (SELECT Id FROM %s WHERE Email = ?);`, dbo.tableNames.Sessions, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 15.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserId = (SELECT Id FROM %s WHERE Email = ?);`, tblPreSessions, tblUsers)
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserId = (SELECT Id FROM %s WHERE Email = ?);`, dbo.tableNames.PreSessions, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 16.
-	q = fmt.Sprintf(`SELECT LastBadLogInTime FROM %s WHERE Email = ?;`, tblUsers)
+	q = fmt.Sprintf(`SELECT LastBadLogInTime FROM %s WHERE Email = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 17.
-	q = fmt.Sprintf(`INSERT INTO %s (UserId, RequestId, UserIPAB, AuthDataBytes, IsCaptchaRequired, CaptchaId) VALUES (?, ?, ?, ?, ?, ?);`, tblPreSessions)
+	q = fmt.Sprintf(`INSERT INTO %s (UserId, RequestId, UserIPAB, AuthDataBytes, IsCaptchaRequired, CaptchaId) VALUES (?, ?, ?, ?, ?, ?);`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 18.
-	q = fmt.Sprintf(`SELECT Id FROM %s WHERE Email = ?;`, tblUsers)
+	q = fmt.Sprintf(`SELECT Id FROM %s WHERE Email = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 19.
-	q = fmt.Sprintf(`UPDATE %s SET LastBadLogInTime = Now() WHERE Email = ?;`, tblUsers)
+	q = fmt.Sprintf(`UPDATE %s SET LastBadLogInTime = Now() WHERE Email = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 20.
-	q = fmt.Sprintf(`SELECT Id, UserId, RequestId, UserIPAB, AuthDataBytes, IsCaptchaRequired, CaptchaId FROM %s WHERE RequestId = ?;`, tblPreSessions)
+	q = fmt.Sprintf(`SELECT Id, UserId, RequestId, UserIPAB, AuthDataBytes, IsCaptchaRequired, CaptchaId FROM %s WHERE RequestId = ?;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 21.
-	q = fmt.Sprintf(`SELECT Password FROM %s WHERE Id = ?;`, tblUsers)
+	q = fmt.Sprintf(`SELECT Password FROM %s WHERE Id = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 22.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE RequestId = ?;`, tblPreSessions)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE RequestId = ?;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 23.
-	q = fmt.Sprintf(`UPDATE %s SET IsVerifiedByCaptcha = ? WHERE RequestId = ? AND UserId = ?;`, tblPreSessions)
+	q = fmt.Sprintf(`UPDATE %s SET IsVerifiedByCaptcha = ? WHERE RequestId = ? AND UserId = ?;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 24.
-	q = fmt.Sprintf(`UPDATE %s SET IsVerifiedByPassword = ? WHERE RequestId = ? AND UserId = ?;`, tblPreSessions)
+	q = fmt.Sprintf(`UPDATE %s SET IsVerifiedByPassword = ? WHERE RequestId = ? AND UserId = ?;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 25.
-	q = fmt.Sprintf(`UPDATE %s SET VerificationCode = ? WHERE RequestId = ? AND UserId = ?;`, tblPreSessions)
+	q = fmt.Sprintf(`UPDATE %s SET VerificationCode = ? WHERE RequestId = ? AND UserId = ?;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 26.
-	q = fmt.Sprintf(`UPDATE %s SET RequestId = ? WHERE RequestId = ? AND UserId = ?;`, tblPreSessions)
+	q = fmt.Sprintf(`UPDATE %s SET RequestId = ? WHERE RequestId = ? AND UserId = ?;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 27.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE RequestId = ? AND VerificationCode = ?;`, tblPreSessions)
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE RequestId = ? AND VerificationCode = ?;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 28.
-	q = fmt.Sprintf(`UPDATE %s SET IsVerifiedByEmail = ? WHERE RequestId = ? AND UserId = ?;`, tblPreSessions)
+	q = fmt.Sprintf(`UPDATE %s SET IsVerifiedByEmail = ? WHERE RequestId = ? AND UserId = ?;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 29.
-	q = fmt.Sprintf(`INSERT INTO %s (UserId, UserIPAB) VALUES (?, ?);`, tblSessions)
+	q = fmt.Sprintf(`INSERT INTO %s (UserId, UserIPAB) VALUES (?, ?);`, dbo.tableNames.Sessions)
 	qs = append(qs, q)
 
 	// 30.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE StartTime < ?;`, tblSessions)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE StartTime < ?;`, dbo.tableNames.Sessions)
 	qs = append(qs, q)
 
 	// 31.
-	q = fmt.Sprintf(`SELECT Id, PreRegTime, Email, Name, ApprovalTime, RegTime, IsAuthor, IsWriter, IsReader, CanLogIn, LastBadLogInTime, BanTime FROM %s WHERE Id = ?;`, tblUsers)
+	q = fmt.Sprintf(`SELECT Id, PreRegTime, Email, Name, ApprovalTime, RegTime, IsAuthor, IsWriter, IsReader, CanLogIn, LastBadLogInTime, BanTime FROM %s WHERE Id = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 32.
-	q = fmt.Sprintf(`SELECT Id, UserId, StartTime, UserIPAB FROM %s WHERE UserId = ?;`, tblSessions)
+	q = fmt.Sprintf(`SELECT Id, UserId, StartTime, UserIPAB FROM %s WHERE UserId = ?;`, dbo.tableNames.Sessions)
 	qs = append(qs, q)
 
 	// 33.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ? AND UserId = ? AND UserIPAB = ?;`, tblSessions)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ? AND UserId = ? AND UserIPAB = ?;`, dbo.tableNames.Sessions)
 	qs = append(qs, q)
 
 	// 34.
-	q = fmt.Sprintf(`INSERT INTO %s (Type, Email, UserIPAB) VALUES (?, ?, ?);`, tblIncidents)
+	q = fmt.Sprintf(`INSERT INTO %s (Type, Email, UserIPAB) VALUES (?, ?, ?);`, dbo.tableNames.Incidents)
 	qs = append(qs, q)
 
 	// 35.
-	q = fmt.Sprintf(`INSERT INTO %s (Type, Email) VALUES (?, ?);`, tblIncidents)
+	q = fmt.Sprintf(`INSERT INTO %s (Type, Email) VALUES (?, ?);`, dbo.tableNames.Incidents)
 	qs = append(qs, q)
 
 	// 36.
-	q = fmt.Sprintf(`SELECT UserId FROM %s;`, tblSessions)
+	q = fmt.Sprintf(`SELECT UserId FROM %s;`, dbo.tableNames.Sessions)
 	qs = append(qs, q)
 
 	// 37.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserId = ?;`, tblSessions)
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserId = ?;`, dbo.tableNames.Sessions)
 	qs = append(qs, q)
 
 	// 38.
-	q = fmt.Sprintf(`SELECT IsAuthor, IsWriter, IsReader, CanLogIn FROM %s WHERE Id = ?;`, tblUsers)
+	q = fmt.Sprintf(`SELECT IsAuthor, IsWriter, IsReader, CanLogIn FROM %s WHERE Id = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 39.
-	q = fmt.Sprintf(`SELECT Id, PreRegTime, Email, Name, ApprovalTime, RegTime, IsAuthor, IsWriter, IsReader, CanLogIn, LastBadLogInTime, BanTime FROM %s WHERE Id = ?;`, tblUsers)
+	q = fmt.Sprintf(`SELECT Id, PreRegTime, Email, Name, ApprovalTime, RegTime, IsAuthor, IsWriter, IsReader, CanLogIn, LastBadLogInTime, BanTime FROM %s WHERE Id = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 40.
-	q = fmt.Sprintf(`UPDATE %s SET IsAuthor = ? WHERE Id = ?;`, tblUsers)
+	q = fmt.Sprintf(`UPDATE %s SET IsAuthor = ? WHERE Id = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 41.
-	q = fmt.Sprintf(`UPDATE %s SET IsWriter = ? WHERE Id = ?;`, tblUsers)
+	q = fmt.Sprintf(`UPDATE %s SET IsWriter = ? WHERE Id = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 42.
-	q = fmt.Sprintf(`UPDATE %s SET IsReader = ? WHERE Id = ?;`, tblUsers)
+	q = fmt.Sprintf(`UPDATE %s SET IsReader = ? WHERE Id = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 43.
-	q = fmt.Sprintf(`UPDATE %s SET CanLogIn = ? WHERE Id = ?;`, tblUsers)
+	q = fmt.Sprintf(`UPDATE %s SET CanLogIn = ? WHERE Id = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 44.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE UserId = ?;`, tblSessions)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE UserId = ?;`, dbo.tableNames.Sessions)
 	qs = append(qs, q)
 
 	// 45.
-	q = fmt.Sprintf(`UPDATE %s SET BanTime = Now() WHERE Id = ?;`, tblUsers)
+	q = fmt.Sprintf(`UPDATE %s SET BanTime = Now() WHERE Id = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	dbo.preparedStatementQueries = make([]string, 0, len(qs))

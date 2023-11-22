@@ -12,5 +12,13 @@ const (
 
 const (
 	ErrTableNameIsNotFound = "table name is not found"
-	ErrfRowsAffectedCount  = "affected rows count error: %v vs %v"
+	ErrFRowsAffectedCount  = "affected rows count error: %v vs %v"
+)
+
+const (
+	TablePreRegisteredUsers = "PreRegisteredUsers"
+	TableUsers              = "Users"
+	TablePreSessions        = "PreSessions"
+	TableSessions           = "Sessions"
+	TableIncidents          = "Incidents"
 )

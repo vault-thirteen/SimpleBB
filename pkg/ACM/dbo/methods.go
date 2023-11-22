@@ -28,7 +28,7 @@ func (dbo *DatabaseObject) ApprovePreRegUser(email string) (err error) {
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -48,7 +48,7 @@ func (dbo *DatabaseObject) ApproveUserByEmail(email string) (err error) {
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -68,7 +68,7 @@ func (dbo *DatabaseObject) AttachVerificationCodeToPreRegUser(email string, code
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -88,7 +88,7 @@ func (dbo *DatabaseObject) AttachVerificationCodeToPreSession(userId uint, reque
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -190,7 +190,7 @@ func (dbo *DatabaseObject) CreatePreliminarySession(userId uint, requestId strin
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -210,7 +210,7 @@ func (dbo *DatabaseObject) CreateUserSession(userId uint, userIPAB net.IP) (last
 	}
 
 	if ra != 1 {
-		return LastInsertedIdOnError, fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return LastInsertedIdOnError, fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	lastInsertedId, err = result.LastInsertId()
@@ -246,7 +246,7 @@ func (dbo *DatabaseObject) DeletePreRegUserIfNotApprovedByEmail(email string) (e
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -275,7 +275,7 @@ func (dbo *DatabaseObject) DeleteUserSession(sessionId uint, userId uint, userIP
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -448,7 +448,7 @@ func (dbo *DatabaseObject) InsertPreRegisteredUser(email string) (err error) {
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -469,7 +469,7 @@ func (dbo *DatabaseObject) RegisterPreRegUser(email string) (err error) {
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	// Part 2.
@@ -484,7 +484,7 @@ func (dbo *DatabaseObject) RegisterPreRegUser(email string) (err error) {
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -504,7 +504,7 @@ func (dbo *DatabaseObject) SaveIncident(incidentType am.IncidentType, email stri
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -524,7 +524,7 @@ func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(incidentType am.IncidentTy
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -544,7 +544,7 @@ func (dbo *DatabaseObject) SetPreRegUserData(email string, code string, name str
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -564,7 +564,7 @@ func (dbo *DatabaseObject) SetUserPreSessionCaptchaFlags(userId uint, requestId 
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -584,7 +584,7 @@ func (dbo *DatabaseObject) SetUserPreSessionPasswordFlag(userId uint, requestId 
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -604,7 +604,7 @@ func (dbo *DatabaseObject) SetUserPreSessionVerificationFlag(userId uint, reques
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -624,7 +624,7 @@ func (dbo *DatabaseObject) SetUserRoleAuthor(userId uint, isRoleEnabled bool) (e
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -644,7 +644,7 @@ func (dbo *DatabaseObject) SetUserRoleCanLogIn(userId uint, isRoleEnabled bool) 
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -664,7 +664,7 @@ func (dbo *DatabaseObject) SetUserRoleReader(userId uint, isRoleEnabled bool) (e
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -684,7 +684,7 @@ func (dbo *DatabaseObject) SetUserRoleWriter(userId uint, isRoleEnabled bool) (e
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -704,7 +704,7 @@ func (dbo *DatabaseObject) UpdatePreSessionRequestId(userId uint, requestIdOld s
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -724,7 +724,7 @@ func (dbo *DatabaseObject) UpdateUserBanTime(userId uint) (err error) {
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -744,7 +744,7 @@ func (dbo *DatabaseObject) UpdateUserLastBadLogInTimeByEmail(email string) (err 
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrfRowsAffectedCount, 1, ra)
+		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil

@@ -38,6 +38,9 @@ type DatabaseObject struct {
 
 	// Source code of prepared statements.
 	preparedStatementQueries []string
+
+	// List of prefixed table names.
+	tableNames *TableNames
 }
 
 func NewDatabaseObject(settings as.DbSettings, sp SystemParameters) (dbo *DatabaseObject) {
@@ -48,6 +51,7 @@ func NewDatabaseObject(settings as.DbSettings, sp SystemParameters) (dbo *Databa
 		guard:                    new(sync.RWMutex),
 		preparedStatements:       make([]*sql.Stmt, 0),
 		preparedStatementQueries: make([]string, 0),
+		tableNames:               new(TableNames),
 	}
 }
 
@@ -55,6 +59,8 @@ func NewDatabaseObject(settings as.DbSettings, sp SystemParameters) (dbo *Databa
 // statements.
 func (dbo *DatabaseObject) Init() (err error) {
 	fmt.Print(c.MsgConnectingToDatabase)
+
+	dbo.initTableNames()
 
 	err = dbo.connect()
 	if err != nil {
@@ -76,34 +82,22 @@ func (dbo *DatabaseObject) Init() (err error) {
 	return nil
 }
 
-// ProbeDb pings the database server.
-func (dbo *DatabaseObject) ProbeDb() (err error) {
-	return dbo.db.Ping()
+func (dbo *DatabaseObject) initTableNames() {
+	dbo.tableNames = &TableNames{
+		PreRegisteredUsers: dbo.prefixTableName(TablePreRegisteredUsers),
+		Users:              dbo.prefixTableName(TableUsers),
+		PreSessions:        dbo.prefixTableName(TablePreSessions),
+		Sessions:           dbo.prefixTableName(TableSessions),
+		Incidents:          dbo.prefixTableName(TableIncidents),
+	}
 }
 
-// Fin disconnects from the database.
-func (dbo *DatabaseObject) Fin() (err error) {
-	return dbo.db.Close()
-}
+func (dbo *DatabaseObject) prefixTableName(tableName string) (tableNameFull string) {
+	if len(dbo.settings.TableNamePrefix) > 0 {
+		return dbo.settings.TableNamePrefix + TableNamePrefixSeparator + tableName
+	}
 
-// LockForReading locks database access for reading operations.
-func (dbo *DatabaseObject) LockForReading() {
-	dbo.guard.RLock()
-}
-
-// UnlockAfterReading unlocks database access after reading operations.
-func (dbo *DatabaseObject) UnlockAfterReading() {
-	dbo.guard.RUnlock()
-}
-
-// LockForWriting locks database access for writing operations.
-func (dbo *DatabaseObject) LockForWriting() {
-	dbo.guard.Lock()
-}
-
-// UnlockAfterWriting unlocks database access after writing operations.
-func (dbo *DatabaseObject) UnlockAfterWriting() {
-	dbo.guard.Unlock()
+	return tableName
 }
 
 func (dbo *DatabaseObject) connect() (err error) {
@@ -158,14 +152,6 @@ func (dbo *DatabaseObject) initTables() (err error) {
 	return nil
 }
 
-func (dbo *DatabaseObject) prefixTableName(tableName string) (tableNameFull string) {
-	if len(dbo.settings.TableNamePrefix) > 0 {
-		return dbo.settings.TableNamePrefix + TableNamePrefixSeparator + tableName
-	}
-
-	return tableName
-}
-
 // initTable runs initialisation scripts for tables which require
 // initialisation as per configuration.
 // tableName is a prefixed table name.
@@ -210,4 +196,34 @@ func (dbo *DatabaseObject) replaceTableNameInCreateTableScript(scriptText []byte
 	}
 
 	return strings.Replace(scriptTextStr, pattern, replacement, 1), nil
+}
+
+// ProbeDb pings the database server.
+func (dbo *DatabaseObject) ProbeDb() (err error) {
+	return dbo.db.Ping()
+}
+
+// Fin disconnects from the database.
+func (dbo *DatabaseObject) Fin() (err error) {
+	return dbo.db.Close()
+}
+
+// LockForReading locks database access for reading operations.
+func (dbo *DatabaseObject) LockForReading() {
+	dbo.guard.RLock()
+}
+
+// UnlockAfterReading unlocks database access after reading operations.
+func (dbo *DatabaseObject) UnlockAfterReading() {
+	dbo.guard.RUnlock()
+}
+
+// LockForWriting locks database access for writing operations.
+func (dbo *DatabaseObject) LockForWriting() {
+	dbo.guard.Lock()
+}
+
+// UnlockAfterWriting unlocks database access after writing operations.
+func (dbo *DatabaseObject) UnlockAfterWriting() {
+	dbo.guard.Unlock()
 }
