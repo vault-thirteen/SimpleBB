@@ -99,14 +99,7 @@ func (srv *Server) registerUserStep2(p *am.RegisterUserParams) (result *am.Regis
 
 	if !ok {
 		// Verification code can not be guessed.
-
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
 
 		// Delete the pre-registered user.
 		err = srv.dbo.DeletePreRegUserIfNotApprovedByEmail(p.Email)
@@ -186,14 +179,7 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 	}
 
 	if !ok {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
 		return nil, &js.Error{Code: RpcErrorCode_RegisterUser_VerificationCodeIsNotValid, Message: RpcErrorMsg_RegisterUser_VerificationCodeIsNotValid}
 	}
 
@@ -232,14 +218,7 @@ func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (r
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, p.Email, p.Auth.UserIPAB)
 		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
 	}
 
@@ -312,13 +291,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if areUserActiveSessionsPresent {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -335,13 +308,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if areUserActivePreSessionsPresent {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -444,13 +411,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if areUserActiveSessionsPresent {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -467,13 +428,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if areNoUserActivePreSessionsPresent {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -497,13 +452,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if preSession.UserId != userId {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -514,13 +463,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if !p.Auth.UserIPAB.Equal(preSession.UserIPAB) {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -540,13 +483,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 		}
 
 		if !ccr.IsSuccess {
-			// Report the incident.
-			if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-				err = srv.dbo.SaveIncident(am.IncidentType_CaptchaAnswerMismatch, p.Email, p.Auth.UserIPAB)
-				if err != nil {
-					return nil, srv.databaseError(err)
-				}
-			}
+			srv.incidentManager.ReportIncident(am.IncidentType_CaptchaAnswerMismatch, p.Email, p.Auth.UserIPAB)
 
 			err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 			if err != nil {
@@ -570,14 +507,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	if err != nil {
 		// The error may occur when not enough data is provided.
 		// Such an error is counted as a bad password.
-
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_PasswordMismatch, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_PasswordMismatch, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -595,13 +525,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if !ok {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_PasswordMismatch, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_PasswordMismatch, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -703,13 +627,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if areUserActiveSessionsPresent {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -726,13 +644,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if areNoUserActivePreSessionsPresent {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -756,13 +668,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if preSession.UserId != userId {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -773,13 +679,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if !p.Auth.UserIPAB.Equal(preSession.UserIPAB) {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -798,14 +698,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	if !ok {
 		// Verification code can not be guessed.
-
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+		srv.incidentManager.ReportIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
 
 		// Delete the pre-session on error to avoid brute force checks.
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
@@ -970,14 +863,7 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
 	}
 
@@ -1019,14 +905,7 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
 	}
 
@@ -1054,14 +933,7 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
 	}
 
@@ -1089,14 +961,7 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
 	}
 
@@ -1150,14 +1015,7 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, jerr 
 
 	// Check permissions.
 	if !thisUserData.User.IsModerator {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
 	}
 
@@ -1195,14 +1053,7 @@ func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult,
 
 	// Check permissions.
 	if !thisUserData.User.IsModerator {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
 	}
 

@@ -28,4 +28,5 @@ const (
 	MsgPingingCaptchaModule             = "Pinging the Captcha Module ..."
 	MsgPingingAcmModule                 = "Pinging the ACM Module ..."
 	MsgJunkCleanerHasStopped            = "Junk cleaner has stopped"
+	MsgIncidentManagerHasStopped        = "Incident manager has stopped"
 )

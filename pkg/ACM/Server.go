@@ -14,6 +14,7 @@ import (
 
 	js "github.com/osamingo/jsonrpc/v2"
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/dbo"
+	"github.com/vault-thirteen/SimpleBB/pkg/ACM/im"
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/km"
 	as "github.com/vault-thirteen/SimpleBB/pkg/ACM/settings"
 	rc "github.com/vault-thirteen/SimpleBB/pkg/RCS/client"
@@ -77,6 +78,9 @@ type Server struct {
 
 	// Diagnostic data.
 	diag *cdd.DiagnosticData
+
+	// Incident manager.
+	incidentManager *im.IncidentManager
 }
 
 func NewServer(stn *as.Settings) (srv *Server, err error) {
@@ -150,6 +154,11 @@ func NewServer(stn *as.Settings) (srv *Server, err error) {
 		return nil, err
 	}
 
+	err = srv.initIncidentManager(srv.dbo)
+	if err != nil {
+		return nil, err
+	}
+
 	return srv, nil
 }
 
@@ -169,6 +178,11 @@ func (srv *Server) Start() (err error) {
 	go srv.listenForDbErrors()
 	go srv.runScheduler()
 
+	err = srv.incidentManager.Start()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -186,6 +200,11 @@ func (srv *Server) Stop() (err error) {
 	close(srv.dbErrors)
 
 	srv.subRoutines.Wait()
+
+	err = srv.incidentManager.Stop()
+	if err != nil {
+		return err
+	}
 
 	err = srv.dbo.Fin()
 	if err != nil {
@@ -408,6 +427,12 @@ func (srv *Server) initJwtKeyMaker() (err error) {
 
 func (srv *Server) initDiagnosticData() (err error) {
 	srv.diag = &cdd.DiagnosticData{}
+
+	return nil
+}
+
+func (srv *Server) initIncidentManager(dbo *dbo.DatabaseObject) (err error) {
+	srv.incidentManager = im.NewIncidentManager(srv.settings.SystemSettings.IsTableOfIncidentsUsed, dbo)
 
 	return nil
 }

@@ -1,5 +1,10 @@
 package models
 
+import (
+	"net"
+	"time"
+)
+
 const (
 	IncidentType_IllegalAccessAttempt     = 1
 	IncidentType_FakeToken                = 2
@@ -9,5 +14,13 @@ const (
 	IncidentType_CaptchaAnswerMismatch    = 6
 	IncidentType_PasswordMismatch         = 7
 )
+
+type Incident struct {
+	Id      uint
+	Time    time.Time
+	Type    IncidentType
+	Email   string
+	UserIPA net.IP
+}
 
 type IncidentType byte

@@ -61,26 +61,13 @@ func (srv *Server) checkForNetworkError(err error) {
 // this error.
 func (srv *Server) mustBeAuthUserIPA(auth *cm.Auth) (jerr *js.Error) {
 	if auth == nil {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.dbo.SaveIncidentWithoutUserIPA(am.IncidentType_IllegalAccessAttempt, "")
-			if err != nil {
-				return srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", nil)
 		return &js.Error{Code: c.RpcErrorCode_MalformedRequest, Message: c.RpcErrorMsg_MalformedRequest}
 	}
 
 	if len(auth.UserIPA) == 0 {
 		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.dbo.SaveIncidentWithoutUserIPA(am.IncidentType_IllegalAccessAttempt, "")
-			if err != nil {
-				return srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", nil)
 		return &js.Error{Code: c.RpcErrorCode_MalformedRequest, Message: c.RpcErrorMsg_MalformedRequest}
 	}
 
@@ -102,14 +89,7 @@ func (srv *Server) mustBeNoAuthToken(auth *cm.Auth) (jerr *js.Error) {
 	}
 
 	if len(auth.Token) > 0 {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
-			if err != nil {
-				return srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
 		return &js.Error{Code: RpcErrorCode_ThisActionIsNotForLoggedUsers, Message: RpcErrorMsg_ThisActionIsNotForLoggedUsers}
 	}
 
@@ -127,31 +107,15 @@ func (srv *Server) mustBeAnAuthToken(auth *cm.Auth) (ud *am.UserData, jerr *js.E
 	}
 
 	if len(auth.Token) == 0 {
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err := srv.dbo.SaveIncident(am.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
-
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
 		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
 	}
 
 	var err error
 	ud, err = srv.getUserDataByAuthToken(auth.Token, auth.UserIPAB)
 	if err != nil {
-		jerr = &js.Error{Code: c.RpcErrorCode_GetUserDataByAuthToken, Message: fmt.Sprintf(c.RpcErrorMsgF_GetUserDataByAuthToken, err.Error())}
-
-		// Report the incident.
-		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-			err = srv.dbo.SaveIncident(am.IncidentType_FakeToken, "", auth.UserIPAB)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
-
-		return nil, jerr
+		srv.incidentManager.ReportIncident(am.IncidentType_FakeToken, "", auth.UserIPAB)
+		return nil, &js.Error{Code: c.RpcErrorCode_GetUserDataByAuthToken, Message: fmt.Sprintf(c.RpcErrorMsgF_GetUserDataByAuthToken, err.Error())}
 	}
 
 	return ud, nil
