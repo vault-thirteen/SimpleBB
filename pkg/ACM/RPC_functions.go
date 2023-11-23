@@ -2,6 +2,7 @@ package acm
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -448,7 +449,19 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	var preSession *am.PreSession
 	preSession, err = srv.dbo.GetUserPreSessionByRequestId(p.RequestId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			// Request Id code can not be guessed.
+			srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+
+			err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
+			if err != nil {
+				return nil, srv.databaseError(err)
+			}
+
+			return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserPreSessionIsNotFound, Message: RpcErrorMsg_LogUserIn_UserPreSessionIsNotFound}
+		} else {
+			return nil, srv.databaseError(err)
+		}
 	}
 
 	if preSession.UserId != userId {
@@ -664,7 +677,19 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	var preSession *am.PreSession
 	preSession, err = srv.dbo.GetUserPreSessionByRequestId(p.RequestId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			// Request Id code can not be guessed.
+			srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+
+			err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
+			if err != nil {
+				return nil, srv.databaseError(err)
+			}
+
+			return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserPreSessionIsNotFound, Message: RpcErrorMsg_LogUserIn_UserPreSessionIsNotFound}
+		} else {
+			return nil, srv.databaseError(err)
+		}
 	}
 
 	if preSession.UserId != userId {
