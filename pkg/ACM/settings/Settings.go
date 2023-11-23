@@ -53,16 +53,16 @@ type DbSettings struct {
 	User       string `json:"user"`
 	Password   string `json:"password"`
 
-	// Database structure and initialization settings.
-	TableNamePrefix        string   `json:"tableNamePrefix"`
-	TablesToInit           []string `json:"tablesToInit"`
-	TableInitScriptsFolder string   `json:"tableInitScriptsFolder"`
-
 	// Various specific MySQL settings.
 	AllowNativePasswords bool              `json:"allowNativePasswords"`
 	CheckConnLiveness    bool              `json:"checkConnLiveness"`
 	MaxAllowedPacket     int               `json:"maxAllowedPacket"`
 	Params               map[string]string `json:"params"`
+
+	// Database structure and initialization settings.
+	TableNamePrefix        string   `json:"tableNamePrefix"`
+	TablesToInit           []string `json:"tablesToInit"`
+	TableInitScriptsFolder string   `json:"tableInitScriptsFolder"`
 }
 
 // SystemSettings are system settings.

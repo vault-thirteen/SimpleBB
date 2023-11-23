@@ -18,9 +18,7 @@
     "maxAllowedPacket": 1000000000,
     "params": {
       "parseTime": "true"
-    }
-  },
-  "system": {
+    },
     "tableNamePrefix": "v1",
     "tablesToInit": [
       "Sections",
@@ -28,7 +26,9 @@
       "Threads",
       "Messages"
     ],
-    "tableInitScriptsFolder": "sql\\MM\\table_init",
+    "tableInitScriptsFolder": "sql\\MM\\table_init"
+  },
+  "system": {
     "messageEditTime": 300,
     "pageSize": 20,
     "newThreadsAtTop": true,

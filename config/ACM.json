@@ -18,11 +18,7 @@
     "maxAllowedPacket": 1000000000,
     "params": {
       "parseTime": "true"
-    }
-  },
-  "system": {
-    "siteName": "Test Site",
-    "siteDomain": "example.org",
+    },
     "tableNamePrefix": "v1",
     "tablesToInit": [
       "PreRegisteredUsers",
@@ -31,7 +27,11 @@
       "Sessions",
       "Incidents"
     ],
-    "tableInitScriptsFolder": "sql\\ACM\\table_init",
+    "tableInitScriptsFolder": "sql\\ACM\\table_init"
+  },
+  "system": {
+    "siteName": "Test Site",
+    "siteDomain": "example.org",
     "verificationCodeLength": 16,
     "emailVerificationUrlPath": "/ev",
     "userNameMaxLenInBytes": 255,
