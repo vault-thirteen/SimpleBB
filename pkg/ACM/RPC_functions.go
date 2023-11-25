@@ -47,7 +47,7 @@ func (srv *Server) registerUserStep1(p *am.RegisterUserParams) (result *am.Regis
 	// Check that client's e-mail address is not used.
 	isAddrFree, err := srv.isUserEmailAddressFree(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if !isAddrFree {
@@ -57,7 +57,7 @@ func (srv *Server) registerUserStep1(p *am.RegisterUserParams) (result *am.Regis
 	// Add the client to a list of pre-registered users.
 	err = srv.dbo.InsertPreRegisteredUser(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	// Send an e-mail message with a verification code.
@@ -70,7 +70,7 @@ func (srv *Server) registerUserStep1(p *am.RegisterUserParams) (result *am.Regis
 	// Attach the verification code to the user.
 	err = srv.dbo.AttachVerificationCodeToPreRegUser(p.Email, verificationCode)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	err = srv.sendVerificationCodeForReg(p.Email, verificationCode)
@@ -95,7 +95,7 @@ func (srv *Server) registerUserStep2(p *am.RegisterUserParams) (result *am.Regis
 	// Check the verification code.
 	ok, err := srv.dbo.CheckRegVerificationCode(p.Email, p.VerificationCode)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if !ok {
@@ -105,7 +105,7 @@ func (srv *Server) registerUserStep2(p *am.RegisterUserParams) (result *am.Regis
 		// Delete the pre-registered user.
 		err = srv.dbo.DeletePreRegUserIfNotApprovedByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_RegisterUser_VerificationCodeIsNotValid, Message: RpcErrorMsg_RegisterUser_VerificationCodeIsNotValid}
@@ -114,7 +114,7 @@ func (srv *Server) registerUserStep2(p *am.RegisterUserParams) (result *am.Regis
 	// Mark the client as verified by e-mail address.
 	err = srv.dbo.ApproveUserByEmail(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	return &am.RegisterUserResult{NextStep: 3}, nil
@@ -148,7 +148,7 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 
 	ok, err := srv.isUserNameFree(p.Name)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if !ok {
@@ -176,7 +176,7 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 	// Check the verification code.
 	ok, err = srv.dbo.CheckRegVerificationCode(p.Email, p.VerificationCode)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if !ok {
@@ -187,7 +187,7 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 	// Set user's name and password.
 	err = srv.dbo.SetPreRegUserData(p.Email, p.VerificationCode, p.Name, pwdBytes)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if srv.settings.SystemSettings.IsAdminApprovalRequired {
@@ -196,12 +196,12 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 
 	err = srv.dbo.ApprovePreRegUser(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	err = srv.dbo.RegisterPreRegUser(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	return &am.RegisterUserResult{NextStep: 0}, nil
@@ -230,12 +230,12 @@ func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (r
 
 	err := srv.dbo.ApprovePreRegUser(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	err = srv.dbo.RegisterPreRegUser(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	return &am.ApproveAndRegisterUserResult{OK: true}, nil
@@ -273,7 +273,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	var err error
 	canUserLogIn, err = srv.canUserLogIn(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if !canUserLogIn {
@@ -282,13 +282,13 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	err = srv.dbo.DeleteAbandonedPreSessions()
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	var areUserActiveSessionsPresent bool
 	areUserActiveSessionsPresent, err = srv.hasUserActiveSessions(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if areUserActiveSessionsPresent {
@@ -296,7 +296,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserIsAlreadyLoggedIn, Message: RpcErrorMsg_LogUserIn_UserIsAlreadyLoggedIn}
@@ -305,7 +305,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	var areUserActivePreSessionsPresent bool
 	areUserActivePreSessionsPresent, err = srv.hasUserPreSessions(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if areUserActivePreSessionsPresent {
@@ -313,7 +313,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserHasAlreadyStartedToLogIn, Message: RpcErrorMsg_LogUserIn_UserHasAlreadyStartedToLogIn}
@@ -322,7 +322,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	var userId uint
 	userId, err = srv.dbo.GetUserIdByEmail(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	var requestId string
@@ -340,7 +340,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	var isCaptchaNeeded bool
 	isCaptchaNeeded, err = srv.isCaptchaNeeded(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	// Create a captcha if needed.
@@ -360,7 +360,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	err = srv.dbo.CreatePreliminarySession(userId, requestId, p.Auth.UserIPAB, pwdSalt, isCaptchaNeeded, captchaId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	result = &am.LogUserInResult{NextStep: 2, RequestId: requestId, AuthDataBytes: pwdSalt}
@@ -393,7 +393,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	var err error
 	canUserLogIn, err = srv.canUserLogIn(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if !canUserLogIn {
@@ -402,13 +402,13 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	err = srv.dbo.DeleteAbandonedPreSessions()
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	var areUserActiveSessionsPresent bool
 	areUserActiveSessionsPresent, err = srv.hasUserActiveSessions(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if areUserActiveSessionsPresent {
@@ -416,7 +416,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserIsAlreadyLoggedIn, Message: RpcErrorMsg_LogUserIn_UserIsAlreadyLoggedIn}
@@ -425,7 +425,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	var areNoUserActivePreSessionsPresent bool
 	areNoUserActivePreSessionsPresent, err = srv.hasNoUserPreSessions(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if areNoUserActivePreSessionsPresent {
@@ -433,7 +433,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserHasNotStartedToLogIn, Message: RpcErrorMsg_LogUserIn_UserHasNotStartedToLogIn}
@@ -442,7 +442,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	var userId uint
 	userId, err = srv.dbo.GetUserIdByEmail(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	// Check the Request ID and IP address.
@@ -455,12 +455,12 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 			err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 			if err != nil {
-				return nil, srv.databaseError(err)
+				return nil, c.DatabaseError(err, srv.dbErrors)
 			}
 
 			return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserPreSessionIsNotFound, Message: RpcErrorMsg_LogUserIn_UserPreSessionIsNotFound}
 		} else {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 	}
 
@@ -469,7 +469,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserPreSessionIsNotFound, Message: RpcErrorMsg_LogUserIn_UserPreSessionIsNotFound}
@@ -480,7 +480,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserPreSessionIsNotFound, Message: RpcErrorMsg_LogUserIn_UserPreSessionIsNotFound}
@@ -500,14 +500,14 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 			err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 			if err != nil {
-				return nil, srv.databaseError(err)
+				return nil, c.DatabaseError(err, srv.dbErrors)
 			}
 
 			// When captcha guess is wrong, we delete the preliminary session
 			// to start the process from the first step.
 			err = srv.dbo.DeletePreliminarySessionByRequestId(preSession.RequestId)
 			if err != nil {
-				return nil, srv.databaseError(err)
+				return nil, c.DatabaseError(err, srv.dbErrors)
 			}
 
 			return nil, &js.Error{Code: RpcErrorCode_LogUserIn_CaptchaAnswerIsWrong, Message: RpcErrorMsg_LogUserIn_CaptchaAnswerIsWrong}
@@ -524,14 +524,14 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		// When password is wrong, we delete the preliminary session
 		// to start the process from the first step.
 		err = srv.dbo.DeletePreliminarySessionByRequestId(preSession.RequestId)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_PasswordCheckError, Message: fmt.Sprintf(RpcErrorMsgF_LogUserIn_PasswordCheckError, err.Error())}
@@ -542,14 +542,14 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		// When password is wrong, we delete the preliminary session to start
 		// the process from the first step.
 		err = srv.dbo.DeletePreliminarySessionByRequestId(preSession.RequestId)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_PasswordIsWrong, Message: RpcErrorMsg_LogUserIn_PasswordIsWrong}
@@ -561,12 +561,12 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	// required and the answer was correct.
 	err = srv.dbo.SetUserPreSessionCaptchaFlags(userId, preSession.RequestId, true)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	err = srv.dbo.SetUserPreSessionPasswordFlag(userId, preSession.RequestId, true)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	// Create a new Request ID for the next step.
@@ -578,7 +578,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	err = srv.dbo.UpdatePreSessionRequestId(userId, preSession.RequestId, step3requestId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	// Verification by E-mail.
@@ -590,7 +590,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	err = srv.dbo.AttachVerificationCodeToPreSession(userId, step3requestId, verificationCode)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	err = srv.sendVerificationCodeForLogIn(p.Email, verificationCode)
@@ -621,7 +621,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	var err error
 	canUserLogIn, err = srv.canUserLogIn(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if !canUserLogIn {
@@ -630,13 +630,13 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	err = srv.dbo.DeleteAbandonedPreSessions()
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	var areUserActiveSessionsPresent bool
 	areUserActiveSessionsPresent, err = srv.hasUserActiveSessions(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if areUserActiveSessionsPresent {
@@ -644,7 +644,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserIsAlreadyLoggedIn, Message: RpcErrorMsg_LogUserIn_UserIsAlreadyLoggedIn}
@@ -653,7 +653,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	var areNoUserActivePreSessionsPresent bool
 	areNoUserActivePreSessionsPresent, err = srv.hasNoUserPreSessions(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if areNoUserActivePreSessionsPresent {
@@ -661,7 +661,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserHasNotStartedToLogIn, Message: RpcErrorMsg_LogUserIn_UserHasNotStartedToLogIn}
@@ -670,7 +670,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	var userId uint
 	userId, err = srv.dbo.GetUserIdByEmail(p.Email)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	// Check the Request ID and IP address.
@@ -683,12 +683,12 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 			err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 			if err != nil {
-				return nil, srv.databaseError(err)
+				return nil, c.DatabaseError(err, srv.dbErrors)
 			}
 
 			return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserPreSessionIsNotFound, Message: RpcErrorMsg_LogUserIn_UserPreSessionIsNotFound}
 		} else {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 	}
 
@@ -697,7 +697,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserPreSessionIsNotFound, Message: RpcErrorMsg_LogUserIn_UserPreSessionIsNotFound}
@@ -708,7 +708,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_UserPreSessionIsNotFound, Message: RpcErrorMsg_LogUserIn_UserPreSessionIsNotFound}
@@ -718,7 +718,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	var ok bool
 	ok, err = srv.dbo.CheckLogInVerificationCode(p.RequestId, p.VerificationCode)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if !ok {
@@ -728,14 +728,14 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 		// Delete the pre-session on error to avoid brute force checks.
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		// When password is wrong, we delete the preliminary session to start
 		// the process from the first step.
 		err = srv.dbo.DeletePreliminarySessionByRequestId(preSession.RequestId)
 		if err != nil {
-			return nil, srv.databaseError(err)
+			return nil, c.DatabaseError(err, srv.dbErrors)
 		}
 
 		return nil, &js.Error{Code: RpcErrorCode_LogUserIn_VerificationCodeIsWrong, Message: RpcErrorMsg_LogUserIn_VerificationCodeIsWrong}
@@ -744,19 +744,19 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	// Set verification flags.
 	err = srv.dbo.SetUserPreSessionVerificationFlag(userId, preSession.RequestId, true)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	// Create a normal session and delete the preliminary one.
 	var sessionId int64
 	sessionId, err = srv.dbo.CreateUserSession(userId, p.Auth.UserIPAB)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	err = srv.dbo.DeletePreliminarySessionByRequestId(preSession.RequestId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	var tokenString string
@@ -782,7 +782,7 @@ func (srv *Server) logUserOut(p *am.LogUserOutParams) (result *am.LogUserOutResu
 
 	err := srv.dbo.DeleteUserSession(thisUserData.Session.Id, thisUserData.User.Id, thisUserData.Session.UserIPAB)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	return &am.LogUserOutResult{OK: true}, nil
@@ -802,7 +802,7 @@ func (srv *Server) getListOfLoggedUsers(p *am.GetListOfLoggedUsersParams) (resul
 	var err error
 	result.LoggedUserIds, err = srv.dbo.GetListOfLoggedUsers()
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	return result, nil
@@ -829,7 +829,7 @@ func (srv *Server) isUserLoggedIn(p *am.IsUserLoggedInParams) (result *am.IsUser
 	var n int
 	n, err = srv.dbo.CountUserSessionsByUserId(p.UserId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if n == 1 {
@@ -862,7 +862,7 @@ func (srv *Server) getUserRoles(p *am.GetUserRolesParams) (result *am.GetUserRol
 	var roles *cm.UserRoles
 	roles, err = srv.dbo.GetUserRolesById(p.UserId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 	if roles == nil {
 		return nil, &js.Error{Code: RpcErrorCode_UserIsNotFound, Message: RpcErrorMsg_UserIsNotFound}
@@ -904,7 +904,7 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 	var userParameters *cm.UserParameters
 	userParameters, err = srv.dbo.ViewUserParametersById(p.UserId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 	if userParameters == nil {
 		return nil, &js.Error{Code: RpcErrorCode_UserIsNotFound, Message: RpcErrorMsg_UserIsNotFound}
@@ -940,7 +940,7 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 
 	err := srv.dbo.SetUserRoleAuthor(p.UserId, p.IsRoleEnabled)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	return &am.SetUserRoleAuthorResult{OK: true}, nil
@@ -968,7 +968,7 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 
 	err := srv.dbo.SetUserRoleWriter(p.UserId, p.IsRoleEnabled)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	return &am.SetUserRoleWriterResult{OK: true}, nil
@@ -996,7 +996,7 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 
 	err := srv.dbo.SetUserRoleReader(p.UserId, p.IsRoleEnabled)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	return &am.SetUserRoleReaderResult{OK: true}, nil
@@ -1050,17 +1050,17 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, jerr 
 
 	err := srv.dbo.SetUserRoleCanLogIn(p.UserId, false)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	err = srv.dbo.UpdateUserBanTime(p.UserId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	err = srv.dbo.DeleteUserSessionByUserId(p.UserId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	return &am.BanUserResult{OK: true}, nil
@@ -1088,7 +1088,7 @@ func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult,
 
 	err := srv.dbo.SetUserRoleCanLogIn(p.UserId, true)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	return &am.UnbanUserResult{OK: true}, nil

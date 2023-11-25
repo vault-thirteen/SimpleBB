@@ -53,7 +53,7 @@ type Server struct {
 	subRoutines *sync.WaitGroup
 	mustStop    *atomic.Bool
 	httpErrors  chan error
-	dbErrors    chan error
+	dbErrors    *chan error
 
 	// Database Object.
 	dbo *dbo.DatabaseObject
@@ -89,14 +89,16 @@ func NewServer(stn *as.Settings) (srv *Server, err error) {
 		return nil, err
 	}
 
+	dbErrorsChannel := make(chan error, c.DbErrorsChannelSize)
+
 	srv = &Server{
 		settings:        stn,
 		listenDsn:       net.JoinHostPort(stn.HttpsSettings.Host, strconv.FormatUint(uint64(stn.HttpsSettings.Port), 10)),
-		mustBeStopped:   make(chan bool, 2),
+		mustBeStopped:   make(chan bool, c.MustBeStoppedChannelSize),
 		subRoutines:     new(sync.WaitGroup),
 		mustStop:        new(atomic.Bool),
-		httpErrors:      make(chan error, 8),
-		dbErrors:        make(chan error, 8),
+		httpErrors:      make(chan error, c.HttpErrorsChannelSize),
+		dbErrors:        &dbErrorsChannel,
 		jsonRpcHandlers: js.NewMethodRepository(),
 	}
 	srv.mustStop.Store(false)
@@ -197,7 +199,7 @@ func (srv *Server) Stop() (err error) {
 	}
 
 	close(srv.httpErrors)
-	close(srv.dbErrors)
+	close(*srv.dbErrors)
 
 	srv.subRoutines.Wait()
 
@@ -240,7 +242,7 @@ func (srv *Server) listenForDbErrors() {
 	defer srv.subRoutines.Done()
 
 	var err error
-	for dbErr := range srv.dbErrors {
+	for dbErr := range *srv.dbErrors {
 		// When a network error occurs, it may be followed by numerous other
 		// errors. If we try to fix each of them, we can make a flood. So,
 		// we make a smart thing here.

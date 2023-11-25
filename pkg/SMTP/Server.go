@@ -53,10 +53,10 @@ func NewServer(stn *ss.Settings) (srv *Server, err error) {
 	srv = &Server{
 		settings:        stn,
 		listenDsn:       net.JoinHostPort(stn.HttpSettings.Host, strconv.FormatUint(uint64(stn.HttpSettings.Port), 10)),
-		mustBeStopped:   make(chan bool, 2),
+		mustBeStopped:   make(chan bool, c.MustBeStoppedChannelSize),
 		subRoutines:     new(sync.WaitGroup),
 		mustStop:        new(atomic.Bool),
-		httpErrors:      make(chan error, 8),
+		httpErrors:      make(chan error, c.HttpErrorsChannelSize),
 		jsonRpcHandlers: js.NewMethodRepository(),
 	}
 	srv.mustStop.Store(false)

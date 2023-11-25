@@ -2,9 +2,7 @@ package mm
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"log"
 	"net"
 	"sync"
 
@@ -16,27 +14,6 @@ import (
 )
 
 // Auxiliary functions used in RPC functions.
-
-const (
-	ErrFDBError = "DB error: %s"
-)
-
-// databaseError checks the database error and returns the JSON RPC error.
-func (srv *Server) databaseError(err error) (jerr *js.Error) {
-	srv.checkForNetworkError(err)
-	log.Println(fmt.Sprintf(ErrFDBError, err.Error()))
-	return &js.Error{Code: c.RpcErrorCode_DatabaseError, Message: c.RpcErrorMsg_DatabaseError}
-}
-
-// checkForNetworkError informs the system about database network errors.
-func (srv *Server) checkForNetworkError(err error) {
-	var nerr net.Error
-	isNetworkError := errors.As(err, &nerr)
-
-	if isNetworkError {
-		srv.dbErrors <- nerr
-	}
-}
 
 // mustBeAnAuthToken ensures that an authorization token is present and is
 // valid. If the token is absent or invalid, an error is returned and the caller

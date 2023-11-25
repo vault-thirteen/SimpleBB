@@ -25,37 +25,6 @@ import (
 
 // Auxiliary functions used in RPC functions.
 
-const (
-	EmailAndVerificationCodeSeparator = ":"
-)
-
-const (
-	ErrDecodeEmailWithVerificationCode = "e-mail with verification code decoding error"
-	ErrCaptchaAnswerIsNotSet           = "answer is not set"
-	ErrFPasswordIsNotAllowed           = "password is not allowed: %s" // Template.
-	ErrUnsupportedRCSMode              = "unsupported RCS mode"
-	ErrFakeJWToken                     = "fake JWT token"
-	ErrFDBError                        = "DB error: %s"
-	ErrFMakeVerificationLink           = "makeVerificationLink: %v. E-mail: %s, VC: %s."
-)
-
-// databaseError checks the database error and returns the JSON RPC error.
-func (srv *Server) databaseError(err error) (jerr *js.Error) {
-	srv.checkForNetworkError(err)
-	log.Println(fmt.Sprintf(ErrFDBError, err.Error()))
-	return &js.Error{Code: c.RpcErrorCode_DatabaseError, Message: c.RpcErrorMsg_DatabaseError}
-}
-
-// checkForNetworkError informs the system about database network errors.
-func (srv *Server) checkForNetworkError(err error) {
-	var nerr net.Error
-	isNetworkError := errors.As(err, &nerr)
-
-	if isNetworkError {
-		srv.dbErrors <- nerr
-	}
-}
-
 // mustBeAuthUserIPA ensures that user's IP address is set. If it is not set,
 // an error is returned and the caller of this function must stop and return
 // this error.
@@ -193,14 +162,14 @@ func (srv *Server) makeVerificationLink(email string, code string) (href string)
 
 	xemail, xcode, err := decodeEmailWithVerificationCode(x)
 	if (err != nil) || (xemail != email) || (xcode != code) {
-		log.Println(fmt.Sprintf(ErrFMakeVerificationLink, err, email, code))
+		log.Println(fmt.Sprintf(c.ErrFMakeVerificationLink, err, email, code))
 	}
 
 	return "https://" + srv.settings.SystemSettings.SiteDomain + srv.settings.SystemSettings.EmailVerificationUrlPath + "/" + "?x=" + x
 }
 
 func encodeEmailWithVerificationCode(email string, code string) (x string) {
-	return base64.RawURLEncoding.EncodeToString([]byte(email + EmailAndVerificationCodeSeparator + code))
+	return base64.RawURLEncoding.EncodeToString([]byte(email + c.EmailAndVerificationCodeSeparator + code))
 }
 
 func decodeEmailWithVerificationCode(x string) (email string, code string, err error) {
@@ -210,9 +179,9 @@ func decodeEmailWithVerificationCode(x string) (email string, code string, err e
 		return "", "", err
 	}
 
-	parts := strings.Split(string(buf), EmailAndVerificationCodeSeparator)
+	parts := strings.Split(string(buf), c.EmailAndVerificationCodeSeparator)
 	if len(parts) != 2 {
-		return "", "", errors.New(ErrDecodeEmailWithVerificationCode)
+		return "", "", errors.New(c.ErrDecodeEmailWithVerificationCode)
 	}
 
 	return parts[0], parts[1], nil
@@ -221,7 +190,7 @@ func decodeEmailWithVerificationCode(x string) (email string, code string, err e
 func isPasswordAllowed(password string) (err error) {
 	_, err = bpp.IsPasswordAllowed(password)
 	if err != nil {
-		return fmt.Errorf(ErrFPasswordIsNotAllowed, err.Error())
+		return fmt.Errorf(c.ErrFPasswordIsNotAllowed, err.Error())
 	}
 
 	return nil
@@ -325,7 +294,7 @@ func (srv *Server) createCaptcha() (result *rm.CreateCaptchaResult, err error) {
 	}
 
 	if result.IsImageDataReturned {
-		return nil, errors.New(ErrUnsupportedRCSMode)
+		return nil, errors.New(c.ErrUnsupportedRCSMode)
 	}
 
 	return result, nil
@@ -345,7 +314,7 @@ func (srv *Server) checkCaptcha(captchaId string, answer string) (result *rm.Che
 	var params = rm.CheckCaptchaParams{TaskId: captchaId}
 
 	if len(answer) == 0 {
-		return nil, errors.New(ErrCaptchaAnswerIsNotSet)
+		return nil, errors.New(c.ErrCaptchaAnswerIsNotSet)
 	}
 
 	params.Value, err = num.ParseUint(answer)
@@ -394,19 +363,19 @@ func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (us
 
 	userData.User, err = srv.dbo.GetUserById(userId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if userData.User == nil {
-		return nil, errors.New(ErrFakeJWToken)
+		return nil, errors.New(c.ErrFakeJWToken)
 	}
 
 	if userData.User.Id != userId {
-		return nil, errors.New(ErrFakeJWToken)
+		return nil, errors.New(c.ErrFakeJWToken)
 	}
 
 	if !userData.User.CanLogIn {
-		return nil, errors.New(ErrFakeJWToken)
+		return nil, errors.New(c.ErrFakeJWToken)
 	}
 
 	// Attach special user roles from settings.
@@ -415,19 +384,19 @@ func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (us
 
 	userData.Session, err = srv.dbo.GetSessionByUserId(userId)
 	if err != nil {
-		return nil, srv.databaseError(err)
+		return nil, c.DatabaseError(err, srv.dbErrors)
 	}
 
 	if userData.Session == nil {
-		return nil, errors.New(ErrFakeJWToken)
+		return nil, errors.New(c.ErrFakeJWToken)
 	}
 
 	if userData.Session.Id != sessionId {
-		return nil, errors.New(ErrFakeJWToken)
+		return nil, errors.New(c.ErrFakeJWToken)
 	}
 
 	if !userIPAB.Equal(userData.Session.UserIPAB) {
-		return nil, errors.New(ErrFakeJWToken)
+		return nil, errors.New(c.ErrFakeJWToken)
 	}
 
 	return userData, nil
