@@ -48,9 +48,9 @@ const (
 	DbPsid_GetSectionChildTypeById      = 38
 )
 
-func (dbo *DatabaseObject) prepareStatements() (err error) {
+func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	var q string
-	qs := make([]string, 0)
+	qs = make([]string, 0)
 
 	// 0.
 	q = fmt.Sprintf(`SELECT Id, Parent, ChildType, Children, Name, CreatorUserId, CreatorTime, EditorUserId, EditorTime FROM %s;`, dbo.tableNames.Sections)
@@ -208,22 +208,9 @@ func (dbo *DatabaseObject) prepareStatements() (err error) {
 	q = fmt.Sprintf(`SELECT ChildType FROM %s WHERE Id = ?;`, dbo.tableNames.Sections)
 	qs = append(qs, q)
 
-	dbo.preparedStatementQueries = make([]string, 0, len(qs))
-	for _, q = range qs {
-		dbo.preparedStatementQueries = append(dbo.preparedStatementQueries, q)
-	}
-	qs = nil
+	return qs
+}
 
-	dbo.preparedStatements = make([]*sql.Stmt, 0, len(dbo.preparedStatementQueries))
-	var st *sql.Stmt
-	for _, psq := range dbo.preparedStatementQueries {
-		st, err = dbo.db.Prepare(psq)
-		if err != nil {
-			return err
-		}
-
-		dbo.preparedStatements = append(dbo.preparedStatements, st)
-	}
-
-	return nil
+func (dbo *DatabaseObject) GetPreparedStatementByIndex(i int) (ps *sql.Stmt) {
+	return dbo.DatabaseObject.PreparedStatement(i)
 }

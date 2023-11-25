@@ -55,9 +55,9 @@ const (
 	DbPsid_UpdateUserBanTime                    = 45
 )
 
-func (dbo *DatabaseObject) prepareStatements() (err error) {
+func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	var q string
-	qs := make([]string, 0)
+	qs = make([]string, 0)
 
 	// 0.
 	q = fmt.Sprintf(`SELECT (SELECT COUNT(Email) FROM %s WHERE Email = ?) + (SELECT COUNT(Email) FROM %s WHERE Email = ?) AS n;`, dbo.tableNames.Users, dbo.tableNames.PreRegisteredUsers)
@@ -243,26 +243,9 @@ func (dbo *DatabaseObject) prepareStatements() (err error) {
 	q = fmt.Sprintf(`UPDATE %s SET BanTime = Now() WHERE Id = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
-	dbo.preparedStatementQueries = make([]string, 0, len(qs))
-	for _, q = range qs {
-		dbo.preparedStatementQueries = append(dbo.preparedStatementQueries, q)
-	}
-	qs = nil
-
-	dbo.preparedStatements = make([]*sql.Stmt, 0, len(dbo.preparedStatementQueries))
-	var st *sql.Stmt
-	for _, psq := range dbo.preparedStatementQueries {
-		st, err = dbo.db.Prepare(psq)
-		if err != nil {
-			return err
-		}
-
-		dbo.preparedStatements = append(dbo.preparedStatements, st)
-	}
-
-	return nil
+	return qs
 }
 
 func (dbo *DatabaseObject) GetPreparedStatementByIndex(i int) (ps *sql.Stmt) {
-	return dbo.preparedStatements[i]
+	return dbo.DatabaseObject.PreparedStatement(i)
 }

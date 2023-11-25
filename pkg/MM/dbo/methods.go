@@ -9,39 +9,40 @@ import (
 
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	ul "github.com/vault-thirteen/SimpleBB/pkg/UidList"
+	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 )
 
 func (dbo *DatabaseObject) CountForumsById(forumId uint) (n int, err error) {
-	err = dbo.preparedStatements[DbPsid_CountForumsById].QueryRow(forumId).Scan(&n)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_CountForumsById).QueryRow(forumId).Scan(&n)
 	if err != nil {
-		return CountOnError, err
+		return cdbo.CountOnError, err
 	}
 
 	return n, nil
 }
 
 func (dbo *DatabaseObject) CountRootSections() (n int, err error) {
-	err = dbo.preparedStatements[DbPsid_CountRootSections].QueryRow().Scan(&n)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_CountRootSections).QueryRow().Scan(&n)
 	if err != nil {
-		return CountOnError, err
+		return cdbo.CountOnError, err
 	}
 
 	return n, nil
 }
 
 func (dbo *DatabaseObject) CountSectionsById(sectionId uint) (n int, err error) {
-	err = dbo.preparedStatements[DbPsid_CountSectionsById].QueryRow(sectionId).Scan(&n)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_CountSectionsById).QueryRow(sectionId).Scan(&n)
 	if err != nil {
-		return CountOnError, err
+		return cdbo.CountOnError, err
 	}
 
 	return n, nil
 }
 
 func (dbo *DatabaseObject) CountThreadsById(threadId uint) (n int, err error) {
-	err = dbo.preparedStatements[DbPsid_CountThreadsById].QueryRow(threadId).Scan(&n)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_CountThreadsById).QueryRow(threadId).Scan(&n)
 	if err != nil {
-		return CountOnError, err
+		return cdbo.CountOnError, err
 	}
 
 	return n, nil
@@ -49,7 +50,7 @@ func (dbo *DatabaseObject) CountThreadsById(threadId uint) (n int, err error) {
 
 func (dbo *DatabaseObject) DeleteForumById(forumId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_DeleteForumById].Exec(forumId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_DeleteForumById).Exec(forumId)
 	if err != nil {
 		return err
 	}
@@ -61,7 +62,7 @@ func (dbo *DatabaseObject) DeleteForumById(forumId uint) (err error) {
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -69,7 +70,7 @@ func (dbo *DatabaseObject) DeleteForumById(forumId uint) (err error) {
 
 func (dbo *DatabaseObject) DeleteMessageById(messageId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_DeleteMessageById].Exec(messageId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_DeleteMessageById).Exec(messageId)
 	if err != nil {
 		return err
 	}
@@ -81,7 +82,7 @@ func (dbo *DatabaseObject) DeleteMessageById(messageId uint) (err error) {
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -89,7 +90,7 @@ func (dbo *DatabaseObject) DeleteMessageById(messageId uint) (err error) {
 
 func (dbo *DatabaseObject) DeleteSectionById(sectionId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_DeleteSectionById].Exec(sectionId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_DeleteSectionById).Exec(sectionId)
 	if err != nil {
 		return err
 	}
@@ -101,7 +102,7 @@ func (dbo *DatabaseObject) DeleteSectionById(sectionId uint) (err error) {
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -109,7 +110,7 @@ func (dbo *DatabaseObject) DeleteSectionById(sectionId uint) (err error) {
 
 func (dbo *DatabaseObject) DeleteThreadById(threadId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_DeleteThreadById].Exec(threadId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_DeleteThreadById).Exec(threadId)
 	if err != nil {
 		return err
 	}
@@ -121,7 +122,7 @@ func (dbo *DatabaseObject) DeleteThreadById(threadId uint) (err error) {
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -129,7 +130,7 @@ func (dbo *DatabaseObject) DeleteThreadById(threadId uint) (err error) {
 
 func (dbo *DatabaseObject) GetForumById(forumId uint) (forum *mm.Forum, err error) {
 	forum = mm.NewForum()
-	err = dbo.preparedStatements[DbPsid_GetForumById].QueryRow(forumId).Scan(
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetForumById).QueryRow(forumId).Scan(
 		&forum.Id,
 		&forum.SectionId,
 		&forum.Name,
@@ -147,9 +148,9 @@ func (dbo *DatabaseObject) GetForumById(forumId uint) (forum *mm.Forum, err erro
 }
 
 func (dbo *DatabaseObject) GetForumSectionById(forumId uint) (sectionId uint, err error) {
-	err = dbo.preparedStatements[DbPsid_GetForumSectionById].QueryRow(forumId).Scan(&sectionId)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetForumSectionById).QueryRow(forumId).Scan(&sectionId)
 	if err != nil {
-		return IdOnError, err
+		return cdbo.IdOnError, err
 	}
 
 	return sectionId, nil
@@ -157,7 +158,7 @@ func (dbo *DatabaseObject) GetForumSectionById(forumId uint) (sectionId uint, er
 
 func (dbo *DatabaseObject) GetForumThreadsById(forumId uint) (threads *ul.UidList, err error) {
 	threads = ul.New()
-	err = dbo.preparedStatements[DbPsid_GetForumThreadsById].QueryRow(forumId).Scan(threads)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetForumThreadsById).QueryRow(forumId).Scan(threads)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +168,7 @@ func (dbo *DatabaseObject) GetForumThreadsById(forumId uint) (threads *ul.UidLis
 
 func (dbo *DatabaseObject) GetMessageById(messageId uint) (message *mm.Message, err error) {
 	message = mm.NewMessage()
-	err = dbo.preparedStatements[DbPsid_GetMessageById].QueryRow(messageId).Scan(
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetMessageById).QueryRow(messageId).Scan(
 		&message.Id,
 		&message.ThreadId,
 		&message.Text,
@@ -185,18 +186,18 @@ func (dbo *DatabaseObject) GetMessageById(messageId uint) (message *mm.Message, 
 
 func (dbo *DatabaseObject) GetMessageCreatorAndTimeById(messageId uint) (creatorUserId uint, ToC time.Time, ToE *time.Time, err error) {
 	// N.B.: ToC can not be null, but ToE can be null !
-	err = dbo.preparedStatements[DbPsid_GetMessageCreatorAndTimeById].QueryRow(messageId).Scan(&creatorUserId, &ToC, &ToE)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetMessageCreatorAndTimeById).QueryRow(messageId).Scan(&creatorUserId, &ToC, &ToE)
 	if err != nil {
-		return IdOnError, time.Time{}, nil, err
+		return cdbo.IdOnError, time.Time{}, nil, err
 	}
 
 	return creatorUserId, ToC, ToE, nil
 }
 
 func (dbo *DatabaseObject) GetMessageThreadById(messageId uint) (thread uint, err error) {
-	err = dbo.preparedStatements[DbPsid_GetMessageThreadById].QueryRow(messageId).Scan(&thread)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetMessageThreadById).QueryRow(messageId).Scan(&thread)
 	if err != nil {
-		return IdOnError, err
+		return cdbo.IdOnError, err
 	}
 
 	return thread, nil
@@ -204,7 +205,7 @@ func (dbo *DatabaseObject) GetMessageThreadById(messageId uint) (thread uint, er
 
 func (dbo *DatabaseObject) GetSectionById(sectionId uint) (section *mm.Section, err error) {
 	section = mm.NewSection()
-	err = dbo.preparedStatements[DbPsid_GetSectionById].QueryRow(sectionId).Scan(
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetSectionById).QueryRow(sectionId).Scan(
 		&section.Id,
 		&section.Parent,
 		&section.ChildType,
@@ -223,7 +224,7 @@ func (dbo *DatabaseObject) GetSectionById(sectionId uint) (section *mm.Section, 
 }
 
 func (dbo *DatabaseObject) GetSectionChildTypeById(sectionId uint) (childType byte, err error) {
-	err = dbo.preparedStatements[DbPsid_GetSectionChildTypeById].QueryRow(sectionId).Scan(&childType)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetSectionChildTypeById).QueryRow(sectionId).Scan(&childType)
 	if err != nil {
 		return 0, err
 	}
@@ -233,7 +234,7 @@ func (dbo *DatabaseObject) GetSectionChildTypeById(sectionId uint) (childType by
 
 func (dbo *DatabaseObject) GetSectionChildrenById(sectionId uint) (children *ul.UidList, err error) {
 	children = ul.New()
-	err = dbo.preparedStatements[DbPsid_GetSectionChildrenById].QueryRow(sectionId).Scan(children)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetSectionChildrenById).QueryRow(sectionId).Scan(children)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +244,7 @@ func (dbo *DatabaseObject) GetSectionChildrenById(sectionId uint) (children *ul.
 
 func (dbo *DatabaseObject) GetSectionParentById(sectionId uint) (parent *uint, err error) {
 	parent = new(uint)
-	err = dbo.preparedStatements[DbPsid_GetSectionParentById].QueryRow(sectionId).Scan(&parent)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetSectionParentById).QueryRow(sectionId).Scan(&parent)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +254,7 @@ func (dbo *DatabaseObject) GetSectionParentById(sectionId uint) (parent *uint, e
 
 func (dbo *DatabaseObject) GetThreadById(threadId uint) (thread *mm.Thread, err error) {
 	thread = mm.NewThread()
-	err = dbo.preparedStatements[DbPsid_GetThreadByIdM].QueryRow(threadId).Scan(
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetThreadByIdM).QueryRow(threadId).Scan(
 		&thread.Id,
 		&thread.ForumId,
 		&thread.Name,
@@ -271,9 +272,9 @@ func (dbo *DatabaseObject) GetThreadById(threadId uint) (thread *mm.Thread, err 
 }
 
 func (dbo *DatabaseObject) GetThreadForumById(threadId uint) (forum uint, err error) {
-	err = dbo.preparedStatements[DbPsid_GetThreadForumById].QueryRow(threadId).Scan(&forum)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetThreadForumById).QueryRow(threadId).Scan(&forum)
 	if err != nil {
-		return IdOnError, err
+		return cdbo.IdOnError, err
 	}
 
 	return forum, nil
@@ -281,7 +282,7 @@ func (dbo *DatabaseObject) GetThreadForumById(threadId uint) (forum uint, err er
 
 func (dbo *DatabaseObject) GetThreadMessagesById(threadId uint) (messages *ul.UidList, err error) {
 	messages = ul.New()
-	err = dbo.preparedStatements[DbPsid_GetThreadMessagesById].QueryRow(threadId).Scan(messages)
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetThreadMessagesById).QueryRow(threadId).Scan(messages)
 	if err != nil {
 		return nil, err
 	}
@@ -291,14 +292,14 @@ func (dbo *DatabaseObject) GetThreadMessagesById(threadId uint) (messages *ul.Ui
 
 func (dbo *DatabaseObject) InsertNewForum(sectionId uint, name string, creatorUserId uint) (lastInsertedId int64, err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_InsertNewForum].Exec(sectionId, name, creatorUserId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_InsertNewForum).Exec(sectionId, name, creatorUserId)
 	if err != nil {
-		return LastInsertedIdOnError, err
+		return cdbo.LastInsertedIdOnError, err
 	}
 
 	lastInsertedId, err = result.LastInsertId()
 	if err != nil {
-		return LastInsertedIdOnError, err
+		return cdbo.LastInsertedIdOnError, err
 	}
 
 	return lastInsertedId, nil
@@ -306,14 +307,14 @@ func (dbo *DatabaseObject) InsertNewForum(sectionId uint, name string, creatorUs
 
 func (dbo *DatabaseObject) InsertNewMessage(parentThread uint, messageText string, creatorUserId uint) (lastInsertedId int64, err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_InsertNewMessage].Exec(parentThread, messageText, creatorUserId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_InsertNewMessage).Exec(parentThread, messageText, creatorUserId)
 	if err != nil {
-		return LastInsertedIdOnError, err
+		return cdbo.LastInsertedIdOnError, err
 	}
 
 	lastInsertedId, err = result.LastInsertId()
 	if err != nil {
-		return LastInsertedIdOnError, err
+		return cdbo.LastInsertedIdOnError, err
 	}
 
 	return lastInsertedId, nil
@@ -321,14 +322,14 @@ func (dbo *DatabaseObject) InsertNewMessage(parentThread uint, messageText strin
 
 func (dbo *DatabaseObject) InsertNewSection(parent *uint, name string, creatorUserId uint) (lastInsertedId int64, err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_InsertNewSection].Exec(parent, name, creatorUserId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_InsertNewSection).Exec(parent, name, creatorUserId)
 	if err != nil {
-		return LastInsertedIdOnError, err
+		return cdbo.LastInsertedIdOnError, err
 	}
 
 	lastInsertedId, err = result.LastInsertId()
 	if err != nil {
-		return LastInsertedIdOnError, err
+		return cdbo.LastInsertedIdOnError, err
 	}
 
 	return lastInsertedId, nil
@@ -336,14 +337,14 @@ func (dbo *DatabaseObject) InsertNewSection(parent *uint, name string, creatorUs
 
 func (dbo *DatabaseObject) InsertNewThread(parentForum uint, threadName string, creatorUserId uint) (lastInsertedId int64, err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_InsertNewThread].Exec(parentForum, threadName, creatorUserId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_InsertNewThread).Exec(parentForum, threadName, creatorUserId)
 	if err != nil {
-		return LastInsertedIdOnError, err
+		return cdbo.LastInsertedIdOnError, err
 	}
 
 	lastInsertedId, err = result.LastInsertId()
 	if err != nil {
-		return LastInsertedIdOnError, err
+		return cdbo.LastInsertedIdOnError, err
 	}
 
 	return lastInsertedId, nil
@@ -353,7 +354,7 @@ func (dbo *DatabaseObject) ReadForums() (forums []mm.Forum, err error) {
 	forums = make([]mm.Forum, 0)
 
 	var rows *sql.Rows
-	rows, err = dbo.preparedStatements[DbPsid_ReadForums].Query()
+	rows, err = dbo.DatabaseObject.PreparedStatement(DbPsid_ReadForums).Query()
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +392,7 @@ func (dbo *DatabaseObject) ReadMessagesById(messageIds ul.UidList) (messages []m
 	}
 
 	var rows *sql.Rows
-	rows, err = dbo.db.Query(query)
+	rows, err = dbo.DatabaseObject.DB().Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +423,7 @@ func (dbo *DatabaseObject) ReadSections() (sections []mm.Section, err error) {
 	sections = make([]mm.Section, 0)
 
 	var rows *sql.Rows
-	rows, err = dbo.preparedStatements[DbPsid_ReadSections].Query()
+	rows, err = dbo.DatabaseObject.PreparedStatement(DbPsid_ReadSections).Query()
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +462,7 @@ func (dbo *DatabaseObject) ReadThreadsById(threadIds ul.UidList) (threads []mm.T
 	}
 
 	var rows *sql.Rows
-	rows, err = dbo.db.Query(query)
+	rows, err = dbo.DB().Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -491,7 +492,7 @@ func (dbo *DatabaseObject) ReadThreadsById(threadIds ul.UidList) (threads []mm.T
 
 func (dbo *DatabaseObject) SetForumNameById(forumId uint, name string, editorUserId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetForumNameById].Exec(name, editorUserId, forumId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetForumNameById).Exec(name, editorUserId, forumId)
 	if err != nil {
 		return err
 	}
@@ -503,7 +504,7 @@ func (dbo *DatabaseObject) SetForumNameById(forumId uint, name string, editorUse
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -511,7 +512,7 @@ func (dbo *DatabaseObject) SetForumNameById(forumId uint, name string, editorUse
 
 func (dbo *DatabaseObject) SetForumSectionById(forumId uint, sectionId uint, editorUserId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetForumSectionById].Exec(sectionId, editorUserId, forumId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetForumSectionById).Exec(sectionId, editorUserId, forumId)
 	if err != nil {
 		return err
 	}
@@ -523,7 +524,7 @@ func (dbo *DatabaseObject) SetForumSectionById(forumId uint, sectionId uint, edi
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -531,7 +532,7 @@ func (dbo *DatabaseObject) SetForumSectionById(forumId uint, sectionId uint, edi
 
 func (dbo *DatabaseObject) SetForumThreadsById(forumId uint, threads *ul.UidList) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetForumThreadsById].Exec(threads, forumId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetForumThreadsById).Exec(threads, forumId)
 	if err != nil {
 		return err
 	}
@@ -543,7 +544,7 @@ func (dbo *DatabaseObject) SetForumThreadsById(forumId uint, threads *ul.UidList
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -551,7 +552,7 @@ func (dbo *DatabaseObject) SetForumThreadsById(forumId uint, threads *ul.UidList
 
 func (dbo *DatabaseObject) SetMessageTextById(messageId uint, text string, editorUserId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetMessageTextById].Exec(text, editorUserId, messageId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetMessageTextById).Exec(text, editorUserId, messageId)
 	if err != nil {
 		return err
 	}
@@ -563,7 +564,7 @@ func (dbo *DatabaseObject) SetMessageTextById(messageId uint, text string, edito
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -571,7 +572,7 @@ func (dbo *DatabaseObject) SetMessageTextById(messageId uint, text string, edito
 
 func (dbo *DatabaseObject) SetMessageThreadById(messageId uint, thread uint, editorUserId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetMessageThreadById].Exec(thread, editorUserId, messageId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetMessageThreadById).Exec(thread, editorUserId, messageId)
 	if err != nil {
 		return err
 	}
@@ -583,7 +584,7 @@ func (dbo *DatabaseObject) SetMessageThreadById(messageId uint, thread uint, edi
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -591,7 +592,7 @@ func (dbo *DatabaseObject) SetMessageThreadById(messageId uint, thread uint, edi
 
 func (dbo *DatabaseObject) SetSectionChildTypeById(sectionId uint, childType byte) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetSectionChildTypeById].Exec(childType, sectionId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetSectionChildTypeById).Exec(childType, sectionId)
 	if err != nil {
 		return err
 	}
@@ -603,7 +604,7 @@ func (dbo *DatabaseObject) SetSectionChildTypeById(sectionId uint, childType byt
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -611,7 +612,7 @@ func (dbo *DatabaseObject) SetSectionChildTypeById(sectionId uint, childType byt
 
 func (dbo *DatabaseObject) SetSectionChildrenById(sectionId uint, children *ul.UidList) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetSectionChildrenById].Exec(children, sectionId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetSectionChildrenById).Exec(children, sectionId)
 	if err != nil {
 		return err
 	}
@@ -623,7 +624,7 @@ func (dbo *DatabaseObject) SetSectionChildrenById(sectionId uint, children *ul.U
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -631,7 +632,7 @@ func (dbo *DatabaseObject) SetSectionChildrenById(sectionId uint, children *ul.U
 
 func (dbo *DatabaseObject) SetSectionNameById(sectionId uint, name string, editorUserId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetSectionNameById].Exec(name, editorUserId, sectionId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetSectionNameById).Exec(name, editorUserId, sectionId)
 	if err != nil {
 		return err
 	}
@@ -643,7 +644,7 @@ func (dbo *DatabaseObject) SetSectionNameById(sectionId uint, name string, edito
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -651,7 +652,7 @@ func (dbo *DatabaseObject) SetSectionNameById(sectionId uint, name string, edito
 
 func (dbo *DatabaseObject) SetSectionParentById(sectionId uint, parent uint, editorUserId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetSectionParentById].Exec(parent, editorUserId, sectionId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetSectionParentById).Exec(parent, editorUserId, sectionId)
 	if err != nil {
 		return err
 	}
@@ -663,7 +664,7 @@ func (dbo *DatabaseObject) SetSectionParentById(sectionId uint, parent uint, edi
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -671,7 +672,7 @@ func (dbo *DatabaseObject) SetSectionParentById(sectionId uint, parent uint, edi
 
 func (dbo *DatabaseObject) SetThreadForumById(threadId uint, forum uint, editorUserId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetThreadForumById].Exec(forum, editorUserId, threadId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetThreadForumById).Exec(forum, editorUserId, threadId)
 	if err != nil {
 		return err
 	}
@@ -683,7 +684,7 @@ func (dbo *DatabaseObject) SetThreadForumById(threadId uint, forum uint, editorU
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -691,7 +692,7 @@ func (dbo *DatabaseObject) SetThreadForumById(threadId uint, forum uint, editorU
 
 func (dbo *DatabaseObject) SetThreadMessagesById(threadId uint, messages *ul.UidList) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetThreadMessagesById].Exec(messages, threadId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetThreadMessagesById).Exec(messages, threadId)
 	if err != nil {
 		return err
 	}
@@ -703,7 +704,7 @@ func (dbo *DatabaseObject) SetThreadMessagesById(threadId uint, messages *ul.Uid
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
@@ -711,7 +712,7 @@ func (dbo *DatabaseObject) SetThreadMessagesById(threadId uint, messages *ul.Uid
 
 func (dbo *DatabaseObject) SetThreadNameById(threadId uint, name string, editorUserId uint) (err error) {
 	var result sql.Result
-	result, err = dbo.preparedStatements[DbPsid_SetThreadNameById].Exec(name, editorUserId, threadId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetThreadNameById).Exec(name, editorUserId, threadId)
 	if err != nil {
 		return err
 	}
@@ -723,7 +724,7 @@ func (dbo *DatabaseObject) SetThreadNameById(threadId uint, name string, editorU
 	}
 
 	if ra != 1 {
-		return fmt.Errorf(ErrFRowsAffectedCount, 1, ra)
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	return nil
