@@ -40,7 +40,7 @@ type Server struct {
 	// Settings.
 	settings *as.Settings
 
-	// HTTP server.
+	// HTTPS server.
 	listenDsn  string
 	httpServer *http.Server
 
@@ -91,7 +91,7 @@ func NewServer(stn *as.Settings) (srv *Server, err error) {
 
 	srv = &Server{
 		settings:        stn,
-		listenDsn:       net.JoinHostPort(stn.HttpSettings.Host, strconv.FormatUint(uint64(stn.HttpSettings.Port), 10)),
+		listenDsn:       net.JoinHostPort(stn.HttpsSettings.Host, strconv.FormatUint(uint64(stn.HttpsSettings.Port), 10)),
 		mustBeStopped:   make(chan bool, 2),
 		subRoutines:     new(sync.WaitGroup),
 		mustStop:        new(atomic.Bool),
@@ -118,7 +118,7 @@ func NewServer(stn *as.Settings) (srv *Server, err error) {
 		return nil, err
 	}
 
-	// HTTP Server.
+	// HTTPS Server.
 	srv.httpServer = &http.Server{
 		Addr:    srv.listenDsn,
 		Handler: http.Handler(http.HandlerFunc(srv.httpRouter)),
@@ -217,7 +217,7 @@ func (srv *Server) Stop() (err error) {
 func (srv *Server) startHttpServer() {
 	go func() {
 		var listenError error
-		listenError = srv.httpServer.ListenAndServeTLS(srv.settings.HttpSettings.CertFile, srv.settings.HttpSettings.KeyFile)
+		listenError = srv.httpServer.ListenAndServeTLS(srv.settings.HttpsSettings.CertFile, srv.settings.HttpsSettings.KeyFile)
 
 		if (listenError != nil) && (!errors.Is(listenError, http.ErrServerClosed)) {
 			srv.httpErrors <- listenError
@@ -293,12 +293,12 @@ func (srv *Server) runScheduler() {
 
 		// Every minute.
 		if tc%60 == 0 {
-			err = srv.clearPreRegUsersTableM()
+			err = srv.clearPreRegUsersTable()
 			if err != nil {
 				log.Println(err)
 			}
 
-			err = srv.clearSessionsM()
+			err = srv.clearSessions()
 			if err != nil {
 				log.Println(err)
 			}
@@ -325,11 +325,7 @@ func (srv *Server) httpRouter(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (srv *Server) initVerificationCodeGenerator() (err error) {
-	symbols := []rune{
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-		'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-	}
+	symbols := c.MakeSymbolsNumbersAndCapitalLatinLetters()
 
 	srv.vcg, err = rp.NewGenerator(srv.settings.SystemSettings.VerificationCodeLength, symbols)
 	if err != nil {
@@ -398,11 +394,7 @@ func (srv *Server) initCaptchaServiceClient() (err error) {
 }
 
 func (srv *Server) initRequestIdGenerator() (err error) {
-	symbols := []rune{
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-		'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-	}
+	symbols := c.MakeSymbolsNumbersAndCapitalLatinLetters()
 
 	srv.ridg, err = rp.NewGenerator(srv.settings.SystemSettings.LogInRequestIdLength, symbols)
 	if err != nil {

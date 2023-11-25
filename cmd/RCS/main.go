@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	ServiceName                  = "SMTP Module"
+	ServiceName                  = "Captcha Module"
 	ConfigurationFilePathDefault = "RCS.json"
 )
 

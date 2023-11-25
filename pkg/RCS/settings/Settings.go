@@ -4,12 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-)
 
-const (
-	ErrFileIsNotSet   = "file is not set"
-	ErrHttpSetting    = "error in HTTP server setting"
-	ErrCaptchaSetting = "error in captcha setting"
+	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
 
 // Settings is Server's settings.
@@ -22,10 +19,7 @@ type Settings struct {
 }
 
 // HttpSettings are settings of an HTTP server for incoming requests.
-type HttpSettings struct {
-	Host string `json:"host"`
-	Port uint16 `json:"port"`
-}
+type HttpSettings = cs.HttpSettings
 
 // CaptchaSettings are parameters of the captcha.
 type CaptchaSettings struct {
@@ -84,31 +78,35 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 }
 
 func (stn *Settings) Check() (err error) {
-	if len(stn.FilePath) == 0 {
-		return errors.New(ErrFileIsNotSet)
+	err = cs.CheckSettingsFilePath(stn.FilePath)
+	if err != nil {
+		return err
 	}
 
-	if (len(stn.HttpSettings.Host) == 0) || (stn.HttpSettings.Port == 0) {
-		return errors.New(ErrHttpSetting)
+	// HTTP.
+	err = cs.CheckHttpSettings(stn.HttpSettings)
+	if err != nil {
+		return err
 	}
 
+	// Captcha.
 	if stn.CaptchaSettings.StoreImages == true {
 		if len(stn.CaptchaSettings.ImagesFolder) == 0 {
-			return errors.New(ErrHttpSetting)
+			return errors.New(c.MsgCaptchaSettingError)
 		}
 	}
 	if (stn.CaptchaSettings.ImageWidth == 0) || (stn.CaptchaSettings.ImageHeight == 0) {
-		return errors.New(ErrCaptchaSetting)
+		return errors.New(c.MsgCaptchaSettingError)
 	}
 	if stn.CaptchaSettings.ImageTTLSec == 0 {
-		return errors.New(ErrCaptchaSetting)
+		return errors.New(c.MsgCaptchaSettingError)
 	}
 	if stn.CaptchaSettings.UseHttpServerForImages == true {
 		if (len(stn.CaptchaSettings.HttpServerHost) == 0) || (stn.CaptchaSettings.HttpServerPort == 0) {
-			return errors.New(ErrHttpSetting)
+			return errors.New(c.MsgCaptchaSettingError)
 		}
 		if len(stn.CaptchaSettings.HttpServerName) == 0 {
-			return errors.New(ErrHttpSetting)
+			return errors.New(c.MsgCaptchaSettingError)
 		}
 	}
 

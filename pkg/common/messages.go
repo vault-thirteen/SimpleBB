@@ -29,4 +29,12 @@ const (
 	MsgPingingAcmModule                 = "Pinging the ACM Module ..."
 	MsgJunkCleanerHasStopped            = "Junk cleaner has stopped"
 	MsgIncidentManagerHasStopped        = "Incident manager has stopped"
+	MsgFileIsNotSet                     = "file is not set"
+	MsgHttpSettingError                 = "error in HTTP server setting"
+	MsgHttpsSettingError                = "error in HTTPS server setting"
+	MsgDbSettingError                   = "error in database server setting"
+	MsgSystemSettingError               = "error in system setting"
+	MsgSmtpSettingError                 = "error in SMTP module setting"
+	MsgCaptchaSettingError              = "error in captcha service setting"
+	MsgACMSettingError                  = "error is ACM module setting"
 )

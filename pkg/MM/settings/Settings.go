@@ -3,18 +3,10 @@ package s
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	"golang.org/x/term"
-)
-
-const (
-	ErrFileIsNotSet = "file is not set"
-	ErrHttpSetting  = "error in HTTP server setting"
-	ErrDbSetting    = "error in database server setting"
-	ErrACMSetting   = "error is ACM module setting"
+	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
 
 // Settings is Server's settings.
@@ -22,43 +14,17 @@ type Settings struct {
 	// Path to the file with these settings.
 	FilePath string `json:"-"`
 
-	HttpSettings   `json:"http"`
+	HttpsSettings  `json:"https"`
 	DbSettings     `json:"db"`
 	SystemSettings `json:"system"`
 	ACMSettings    `json:"acm"`
 }
 
-// HttpSettings are settings of an HTTP server for incoming requests.
-type HttpSettings struct {
-	Host     string `json:"host"`
-	Port     uint16 `json:"port"`
-	CertFile string `json:"certFile"`
-	KeyFile  string `json:"keyFile"`
-}
+// HttpsSettings are settings of an HTTPS server for incoming requests.
+type HttpsSettings = cs.HttpsSettings
 
-// DbSettings are parameters of the Database. When a password is not set, it is
-// taken from the stdin.
-type DbSettings struct {
-	// Access settings.
-	DriverName string `json:"driverName"`
-	Net        string `json:"net"`
-	Host       string `json:"host"`
-	Port       uint16 `json:"port"`
-	DBName     string `json:"dbName"`
-	User       string `json:"user"`
-	Password   string `json:"password"`
-
-	// Various specific MySQL settings.
-	AllowNativePasswords bool              `json:"allowNativePasswords"`
-	CheckConnLiveness    bool              `json:"checkConnLiveness"`
-	MaxAllowedPacket     int               `json:"maxAllowedPacket"`
-	Params               map[string]string `json:"params"`
-
-	// Database structure and initialization settings.
-	TableNamePrefix        string   `json:"tableNamePrefix"`
-	TablesToInit           []string `json:"tablesToInit"`
-	TableInitScriptsFolder string   `json:"tableInitScriptsFolder"`
-}
+// DbSettings are parameters of the Database.
+type DbSettings = cs.DbSettings
 
 // SystemSettings are system settings.
 type SystemSettings struct {
@@ -108,7 +74,7 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 	}
 
 	if len(stn.Password) == 0 {
-		stn.DbSettings.Password, err = getPasswordFromStdin()
+		stn.DbSettings.Password, err = cs.GetPasswordFromStdin(c.MsgEnterDatabasePassword)
 		if err != nil {
 			return stn, err
 		}
@@ -118,48 +84,30 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 }
 
 func (stn *Settings) Check() (err error) {
-	if len(stn.FilePath) == 0 {
-		return errors.New(ErrFileIsNotSet)
+	err = cs.CheckSettingsFilePath(stn.FilePath)
+	if err != nil {
+		return err
 	}
 
-	// HTTP.
-	if (len(stn.HttpSettings.Host) == 0) || (stn.HttpSettings.Port == 0) {
-		return errors.New(ErrHttpSetting)
-	}
-	if (len(stn.HttpSettings.CertFile) == 0) || (len(stn.HttpSettings.KeyFile) == 0) {
-		return errors.New(ErrHttpSetting)
+	// HTTPS.
+	err = cs.CheckHttpsSettings(stn.HttpsSettings)
+	if err != nil {
+		return err
 	}
 
 	// DB.
-	if (len(stn.DbSettings.DriverName) == 0) || (len(stn.DbSettings.Net) == 0) {
-		return errors.New(ErrDbSetting)
-	}
-	if (len(stn.DbSettings.Host) == 0) || (stn.DbSettings.Port == 0) {
-		return errors.New(ErrDbSetting)
-	}
-	if (len(stn.DbSettings.DBName) == 0) || (len(stn.DbSettings.User) == 0) {
-		return errors.New(ErrDbSetting)
+	err = cs.CheckDatabaseSettings(stn.DbSettings)
+	if err != nil {
+		return err
 	}
 
 	// ACM.
 	if (len(stn.ACMSettings.Host) == 0) || (stn.ACMSettings.Port == 0) {
-		return errors.New(ErrACMSetting)
+		return errors.New(c.MsgACMSettingError)
 	}
 	if len(stn.ACMSettings.Path) == 0 {
-		return errors.New(ErrACMSetting)
+		return errors.New(c.MsgACMSettingError)
 	}
 
 	return nil
-}
-
-func getPasswordFromStdin() (pwd string, err error) {
-	fmt.Println(c.MsgEnterDatabasePassword)
-
-	var buf []byte
-	buf, err = term.ReadPassword(int(os.Stdin.Fd()))
-	if err != nil {
-		return "", err
-	}
-
-	return string(buf), nil
 }

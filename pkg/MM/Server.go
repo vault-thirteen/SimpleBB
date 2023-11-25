@@ -70,7 +70,7 @@ func NewServer(stn *s.Settings) (srv *Server, err error) {
 
 	srv = &Server{
 		settings:        stn,
-		listenDsn:       net.JoinHostPort(stn.HttpSettings.Host, strconv.FormatUint(uint64(stn.HttpSettings.Port), 10)),
+		listenDsn:       net.JoinHostPort(stn.HttpsSettings.Host, strconv.FormatUint(uint64(stn.HttpsSettings.Port), 10)),
 		mustBeStopped:   make(chan bool, 2),
 		subRoutines:     new(sync.WaitGroup),
 		mustStop:        new(atomic.Bool),
@@ -156,7 +156,7 @@ func (srv *Server) Stop() (err error) {
 func (srv *Server) startHttpServer() {
 	go func() {
 		var listenError error
-		listenError = srv.httpServer.ListenAndServeTLS(srv.settings.HttpSettings.CertFile, srv.settings.HttpSettings.KeyFile)
+		listenError = srv.httpServer.ListenAndServeTLS(srv.settings.HttpsSettings.CertFile, srv.settings.HttpsSettings.KeyFile)
 
 		if (listenError != nil) && (!errors.Is(listenError, http.ErrServerClosed)) {
 			srv.httpErrors <- listenError

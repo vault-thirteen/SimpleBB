@@ -6,7 +6,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/dbo"
 )
 
-func (srv *Server) clearPreRegUsersTableM() (err error) {
+func (srv *Server) clearPreRegUsersTable() (err error) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
@@ -20,7 +20,7 @@ func (srv *Server) clearPreRegUsersTableM() (err error) {
 	return nil
 }
 
-func (srv *Server) clearSessionsM() (err error) {
+func (srv *Server) clearSessions() (err error) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 

@@ -3,17 +3,10 @@ package settings
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	"golang.org/x/term"
-)
-
-const (
-	ErrFileIsNotSet = "file is not set"
-	ErrHttpSetting  = "error in HTTP server setting"
-	ErrSmtpSetting  = "error in SMTP server setting"
+	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
 
 // Settings is Server's settings.
@@ -26,10 +19,7 @@ type Settings struct {
 }
 
 // HttpSettings are settings of an HTTP server for incoming requests.
-type HttpSettings struct {
-	Host string `json:"host"`
-	Port uint16 `json:"port"`
-}
+type HttpSettings = cs.HttpSettings
 
 // SmtpSettings are parameters of the SMTP server used for sending e-mail
 // messages. When a password is not set, it is taken from the stdin.
@@ -62,7 +52,7 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 	}
 
 	if len(stn.Password) == 0 {
-		stn.SmtpSettings.Password, err = getPasswordFromStdin()
+		stn.SmtpSettings.Password, err = cs.GetPasswordFromStdin(c.MsgEnterSmtpPassword)
 		if err != nil {
 			return stn, err
 		}
@@ -72,32 +62,24 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 }
 
 func (stn *Settings) Check() (err error) {
-	if len(stn.FilePath) == 0 {
-		return errors.New(ErrFileIsNotSet)
+	err = cs.CheckSettingsFilePath(stn.FilePath)
+	if err != nil {
+		return err
 	}
 
-	if (len(stn.HttpSettings.Host) == 0) || (stn.HttpSettings.Port == 0) {
-		return errors.New(ErrHttpSetting)
+	// HTTP.
+	err = cs.CheckHttpSettings(stn.HttpSettings)
+	if err != nil {
+		return err
 	}
 
+	// SMTP.
 	if (len(stn.SmtpSettings.Host) == 0) || (stn.SmtpSettings.Port == 0) {
-		return errors.New(ErrSmtpSetting)
+		return errors.New(c.MsgSmtpSettingError)
 	}
 	if (len(stn.SmtpSettings.User) == 0) || (len(stn.SmtpSettings.UserAgent) == 0) {
-		return errors.New(ErrSmtpSetting)
+		return errors.New(c.MsgSmtpSettingError)
 	}
 
 	return nil
-}
-
-func getPasswordFromStdin() (pwd string, err error) {
-	fmt.Println(c.MsgEnterSmtpPassword)
-
-	var buf []byte
-	buf, err = term.ReadPassword(int(os.Stdin.Fd()))
-	if err != nil {
-		return "", err
-	}
-
-	return string(buf), nil
 }

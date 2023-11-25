@@ -6,11 +6,15 @@ import (
 
 type RequestId = uint
 
+// Ping.
+
 type PingParams struct{}
 
 type PingResult struct {
 	OK bool `json:"ok"`
 }
+
+// User registration.
 
 type RegisterUserParams struct {
 	cm.CommonParams
@@ -55,6 +59,8 @@ type ApproveAndRegisterUserResult struct {
 
 	OK bool `json:"ok"`
 }
+
+// Logging in and out.
 
 type LogUserInParams struct {
 	cm.CommonParams
@@ -137,6 +143,8 @@ type IsUserLoggedInResult struct {
 	IsUserLoggedIn bool `json:"isUserLoggedIn"`
 }
 
+// User properties.
+
 type GetUserRolesParams struct {
 	cm.CommonParams
 
@@ -202,6 +210,19 @@ type SetUserRoleReaderResult struct {
 	OK bool `json:"ok"`
 }
 
+type GetSelfRolesParams struct {
+	cm.CommonParams
+}
+
+type GetSelfRolesResult struct {
+	cm.CommonResult
+
+	UserId uint `json:"userId"`
+	cm.UserRoles
+}
+
+// User banning.
+
 type BanUserParams struct {
 	cm.CommonParams
 
@@ -226,16 +247,7 @@ type UnbanUserResult struct {
 	OK bool `json:"ok"`
 }
 
-type GetSelfRolesParams struct {
-	cm.CommonParams
-}
-
-type GetSelfRolesResult struct {
-	cm.CommonResult
-
-	UserId uint `json:"userId"`
-	cm.UserRoles
-}
+// Other.
 
 type ShowDiagnosticDataParams struct{}
 
