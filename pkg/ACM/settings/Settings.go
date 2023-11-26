@@ -35,8 +35,8 @@ type SystemSettings struct {
 	SiteDomain             string `json:"siteDomain"`
 	VerificationCodeLength int    `json:"verificationCodeLength"`
 
-	// This path is used only for composition of e-mail messages.
-	// It must be synchronized with settings of the Gateway Module.
+	// ACM module uses this path for composition of e-mail messages.
+	// This setting must be synchronized with settings of the Gateway module.
 	EmailVerificationUrlPath string `json:"emailVerificationUrlPath"`
 
 	UserNameMaxLenInBytes     uint `json:"userNameMaxLenInBytes"`
@@ -47,8 +47,11 @@ type SystemSettings struct {
 	LogInTryTimeout           uint `json:"logInTryTimeout"`
 	PreSessionExpirationTime  uint `json:"preSessionExpirationTime"`
 	SessionMaxDuration        uint `json:"sessionMaxDuration"`
-	IsTableOfIncidentsUsed    bool `json:"isTableOfIncidentsUsed"`
-	IsDebugMode               bool `json:"isDebugMode"`
+
+	// This setting must be synchronized with settings of the Gateway module.
+	IsTableOfIncidentsUsed bool `json:"isTableOfIncidentsUsed"`
+
+	IsDebugMode bool `json:"isDebugMode"`
 }
 
 // SmtpModuleSettings are settings of an SMTP Module.
