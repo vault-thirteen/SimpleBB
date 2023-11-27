@@ -29,8 +29,8 @@ github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/f
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.1-0.20190311161405-34c6fa2dc709/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
-github.com/valord577/mailx v0.3.20220208 h1:h5B6DrWANVQBRQ5iz0fxwjaMkFIsF8Y4MhuKMyVZgs4=
-github.com/valord577/mailx v0.3.20220208/go.mod h1:aGgPawsLOerLCxf7XU9jnke7B0lyp5Bl5JhsufWBwS0=
+github.com/valord577/mailx v0.4.20231124 h1:AC5fhAUOv5SzVtoOke2vxRoCRzZHA10VBNbaGOvvbUg=
+github.com/valord577/mailx v0.4.20231124/go.mod h1:aGgPawsLOerLCxf7XU9jnke7B0lyp5Bl5JhsufWBwS0=
 github.com/vault-thirteen/BytePackedPassword v0.2.1 h1:33FIAtsOnwrm+64VBvvxV02a9IBckQGim/W59IU6rN8=
 github.com/vault-thirteen/BytePackedPassword v0.2.1/go.mod h1:D2YRJu/4dytF2UB80JJuinP3+L9anNEUdknf3zFdpLo=
 github.com/vault-thirteen/RingCaptcha v0.5.0 h1:68eT0lxYJbFkzIKDay2rieTrdIczoMNhNFnVQe9D9MM=
