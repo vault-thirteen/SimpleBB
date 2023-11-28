@@ -8,10 +8,10 @@ require (
 	github.com/osamingo/jsonrpc/v2 v2.4.2
 	github.com/valord577/mailx v0.4.20231124
 	github.com/vault-thirteen/BytePackedPassword v0.2.2
-	github.com/vault-thirteen/RingCaptcha v0.5.0
+	github.com/vault-thirteen/RingCaptcha v0.5.1
 	github.com/vault-thirteen/SQL v0.6.0
 	github.com/vault-thirteen/Versioneer v0.10.0
-	github.com/vault-thirteen/auxie v0.15.0
+	github.com/vault-thirteen/auxie v0.15.2
 	github.com/vault-thirteen/errorz v1.2.0
 	github.com/vault-thirteen/tester v1.2.0
 	github.com/ybbus/jsonrpc/v3 v3.1.5
