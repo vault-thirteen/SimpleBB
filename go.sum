@@ -35,8 +35,8 @@ github.com/vault-thirteen/BytePackedPassword v0.2.2 h1:05pk1ZE7FvIs+A7O7y36tzyyo
 github.com/vault-thirteen/BytePackedPassword v0.2.2/go.mod h1:YkmKOS/gf5biWgdlsaQ9ByWHLHTDWP2do6oLDqI9VUo=
 github.com/vault-thirteen/RingCaptcha v0.5.1 h1:SCmb5RP7Cw8De8AVNvm3u88VOgVKGMtUTg7kNQDiVIE=
 github.com/vault-thirteen/RingCaptcha v0.5.1/go.mod h1:EM2+xbC1dB396rqcQosLyjfyS56fst4kcnB7mLG1AUQ=
-github.com/vault-thirteen/SQL v0.6.0 h1:5I+rdPYHYCtRQcLChHUsD5SE6Vr1y/H/n7jU0aB60qw=
-github.com/vault-thirteen/SQL v0.6.0/go.mod h1:N2WR7nxXBDhpqqaMBDxzVIBskD0u9RJJkOyKu2YyisY=
+github.com/vault-thirteen/SQL v0.6.1 h1:+Yid7qaPUz7pjkLxb0KMfYsZ+5XyZ9W3uRVXHx8UrJg=
+github.com/vault-thirteen/SQL v0.6.1/go.mod h1:kOV/iR/LagZCu9p/UqLQDMYI+72cTVBxYnWYh8qSHY4=
 github.com/vault-thirteen/VCS v0.6.0 h1:MIwABcandZw1po3d9lJtEymxw0UoTNhr1//ZYtMwnf8=
 github.com/vault-thirteen/VCS v0.6.0/go.mod h1:DfqpsSZvoiVXbob74JuatGAoM2NeVv4v2EHcRHVznKU=
 github.com/vault-thirteen/Versioneer v0.10.0 h1:H3I+qZi5YdAq2lbe2Pp/1LrpwDlEs/hKfEbAkCvKN+s=
