@@ -37,10 +37,10 @@ github.com/vault-thirteen/RingCaptcha v0.5.1 h1:SCmb5RP7Cw8De8AVNvm3u88VOgVKGMtU
 github.com/vault-thirteen/RingCaptcha v0.5.1/go.mod h1:EM2+xbC1dB396rqcQosLyjfyS56fst4kcnB7mLG1AUQ=
 github.com/vault-thirteen/SQL v0.6.1 h1:+Yid7qaPUz7pjkLxb0KMfYsZ+5XyZ9W3uRVXHx8UrJg=
 github.com/vault-thirteen/SQL v0.6.1/go.mod h1:kOV/iR/LagZCu9p/UqLQDMYI+72cTVBxYnWYh8qSHY4=
-github.com/vault-thirteen/VCS v0.6.0 h1:MIwABcandZw1po3d9lJtEymxw0UoTNhr1//ZYtMwnf8=
-github.com/vault-thirteen/VCS v0.6.0/go.mod h1:DfqpsSZvoiVXbob74JuatGAoM2NeVv4v2EHcRHVznKU=
-github.com/vault-thirteen/Versioneer v0.10.0 h1:H3I+qZi5YdAq2lbe2Pp/1LrpwDlEs/hKfEbAkCvKN+s=
-github.com/vault-thirteen/Versioneer v0.10.0/go.mod h1:6aPZ7vxOvOySmt3fQp1U7xCe1T5H9EuSJYQPOBboxg4=
+github.com/vault-thirteen/VCS v0.6.1 h1:F2KZ9yEs4qLnf07LDiLNmY/kbtX+354ULVML3zNUspc=
+github.com/vault-thirteen/VCS v0.6.1/go.mod h1:/QbKAlyw+hjlpW7415kPCQQ0lM/+BgQMI3wlakeHByQ=
+github.com/vault-thirteen/Versioneer v0.10.1 h1:P4XYrQ0hzltu9hWSgDUTs/fUgAmtrNnKdWPvOwzVPXs=
+github.com/vault-thirteen/Versioneer v0.10.1/go.mod h1:dibpTEx4sgVhGm2hld/R64m1cEGZmtfHj+K1cvxTKAA=
 github.com/vault-thirteen/auxie v0.15.2 h1:BElKHMiCJ+jOBwbmq6/OryOg91FyFjFhyAayhs2ZNDo=
 github.com/vault-thirteen/auxie v0.15.2/go.mod h1:svYzCFdNE9W2xf5uuT9SqX4iFDqN+NjdLlvsBLpDV8Q=
 github.com/vault-thirteen/errorz v1.2.0 h1:i2w9yHqYrsqOWyVPVMeEfv1TIATULW8PxnRGhySeyZ8=
