@@ -13,6 +13,7 @@ import (
 	js "github.com/osamingo/jsonrpc/v2"
 	rc "github.com/vault-thirteen/RingCaptcha"
 	rs "github.com/vault-thirteen/SimpleBB/pkg/RCS/settings"
+	"github.com/vault-thirteen/SimpleBB/pkg/avm"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cdd "github.com/vault-thirteen/SimpleBB/pkg/common/DiagnosticData"
 )
@@ -33,6 +34,7 @@ type Server struct {
 	subRoutines *sync.WaitGroup
 	mustStop    *atomic.Bool
 	httpErrors  chan error
+	ssp         *avm.SSP
 
 	// Captcha manager.
 	captchaManager *rc.CaptchaManager
@@ -57,6 +59,7 @@ func NewServer(stn *rs.Settings) (srv *Server, err error) {
 		subRoutines:     new(sync.WaitGroup),
 		mustStop:        new(atomic.Bool),
 		httpErrors:      make(chan error, c.HttpErrorsChannelSize),
+		ssp:             avm.NewSSP(),
 		jsonRpcHandlers: js.NewMethodRepository(),
 	}
 	srv.mustStop.Store(false)
@@ -98,16 +101,34 @@ func (srv *Server) GetStopChannel() *chan bool {
 }
 
 func (srv *Server) Start() (err error) {
+	srv.ssp.Lock()
+	defer srv.ssp.Unlock()
+
+	err = srv.ssp.BeginStart()
+	if err != nil {
+		return err
+	}
+
 	srv.startHttpServer()
 
 	srv.subRoutines.Add(2)
 	go srv.listenForHttpErrors()
 	go srv.clearJunk()
 
+	srv.ssp.CompleteStart()
+
 	return nil
 }
 
 func (srv *Server) Stop() (err error) {
+	srv.ssp.Lock()
+	defer srv.ssp.Unlock()
+
+	err = srv.ssp.BeginStop()
+	if err != nil {
+		return err
+	}
+
 	srv.mustStop.Store(true)
 
 	ctx, cf := context.WithTimeout(context.Background(), time.Minute)
@@ -125,6 +146,8 @@ func (srv *Server) Stop() (err error) {
 	if err != nil {
 		return err
 	}
+
+	srv.ssp.CompleteStop()
 
 	return nil
 }

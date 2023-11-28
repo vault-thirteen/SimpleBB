@@ -6,7 +6,6 @@ import (
 	"log"
 	"net"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/dbo"
@@ -14,6 +13,7 @@ import (
 	s "github.com/vault-thirteen/SimpleBB/pkg/ACM/settings"
 	gc "github.com/vault-thirteen/SimpleBB/pkg/GWM/client"
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
+	"github.com/vault-thirteen/SimpleBB/pkg/avm"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
 )
@@ -22,13 +22,8 @@ const (
 	TaskChannelSize = 4
 )
 
-const (
-	ErrAlreadyStarted = "incident manager is already started"
-	ErrAlreadyStopped = "incident manager is already stopped"
-)
-
 type IncidentManager struct {
-	isWorking              atomic.Bool
+	ssp                    *avm.SSP
 	wg                     *sync.WaitGroup
 	tasks                  chan *am.Incident
 	isTableOfIncidentsUsed bool
@@ -46,6 +41,7 @@ func NewIncidentManager(
 	blockTimePerIncident *s.BlockTimePerIncident,
 ) (im *IncidentManager) {
 	im = &IncidentManager{
+		ssp:                      avm.NewSSP(),
 		wg:                       new(sync.WaitGroup),
 		tasks:                    make(chan *am.Incident, TaskChannelSize),
 		isTableOfIncidentsUsed:   isTableOfIncidentsUsed,
@@ -53,8 +49,6 @@ func NewIncidentManager(
 		gwmClient:                gwmClient,
 		blockTimePerIncidentType: initBlockTimePerIncidentType(blockTimePerIncident),
 	}
-
-	im.isWorking.Store(false)
 
 	return im
 }
@@ -74,13 +68,18 @@ func initBlockTimePerIncidentType(blockTimePerIncident *s.BlockTimePerIncident) 
 
 // Start starts the incident manager.
 func (im *IncidentManager) Start() (err error) {
-	if im.isWorking.Load() {
-		return errors.New(ErrAlreadyStarted)
+	im.ssp.Lock()
+	defer im.ssp.Unlock()
+
+	err = im.ssp.BeginStart()
+	if err != nil {
+		return err
 	}
 
 	im.wg.Add(1)
 	go im.run()
-	im.isWorking.Store(true)
+
+	im.ssp.CompleteStart()
 
 	return nil
 }
@@ -111,13 +110,18 @@ func (im *IncidentManager) run() {
 
 // Stop stops the incident manager.
 func (im *IncidentManager) Stop() (err error) {
-	if !im.isWorking.Load() {
-		return errors.New(ErrAlreadyStopped)
+	im.ssp.Lock()
+	defer im.ssp.Unlock()
+
+	err = im.ssp.BeginStop()
+	if err != nil {
+		return err
 	}
 
 	close(im.tasks)
 	im.wg.Wait()
-	im.isWorking.Store(false)
+
+	im.ssp.CompleteStop()
 
 	return nil
 }

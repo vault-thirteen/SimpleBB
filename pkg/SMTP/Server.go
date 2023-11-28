@@ -12,6 +12,7 @@ import (
 
 	js "github.com/osamingo/jsonrpc/v2"
 	ss "github.com/vault-thirteen/SimpleBB/pkg/SMTP/settings"
+	"github.com/vault-thirteen/SimpleBB/pkg/avm"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cdd "github.com/vault-thirteen/SimpleBB/pkg/common/DiagnosticData"
 )
@@ -32,6 +33,7 @@ type Server struct {
 	subRoutines *sync.WaitGroup
 	mustStop    *atomic.Bool
 	httpErrors  chan error
+	ssp         *avm.SSP
 
 	// Mailer.
 	mailer      *Mailer
@@ -57,6 +59,7 @@ func NewServer(stn *ss.Settings) (srv *Server, err error) {
 		subRoutines:     new(sync.WaitGroup),
 		mustStop:        new(atomic.Bool),
 		httpErrors:      make(chan error, c.HttpErrorsChannelSize),
+		ssp:             avm.NewSSP(),
 		jsonRpcHandlers: js.NewMethodRepository(),
 	}
 	srv.mustStop.Store(false)
@@ -94,15 +97,33 @@ func (srv *Server) GetStopChannel() *chan bool {
 }
 
 func (srv *Server) Start() (err error) {
+	srv.ssp.Lock()
+	defer srv.ssp.Unlock()
+
+	err = srv.ssp.BeginStart()
+	if err != nil {
+		return err
+	}
+
 	srv.startHttpServer()
 
 	srv.subRoutines.Add(1)
 	go srv.listenForHttpErrors()
 
+	srv.ssp.CompleteStart()
+
 	return nil
 }
 
 func (srv *Server) Stop() (err error) {
+	srv.ssp.Lock()
+	defer srv.ssp.Unlock()
+
+	err = srv.ssp.BeginStop()
+	if err != nil {
+		return err
+	}
+
 	srv.mustStop.Store(true)
 
 	ctx, cf := context.WithTimeout(context.Background(), time.Minute)
@@ -115,6 +136,8 @@ func (srv *Server) Stop() (err error) {
 	close(srv.httpErrors)
 
 	srv.subRoutines.Wait()
+
+	srv.ssp.CompleteStop()
 
 	return nil
 }

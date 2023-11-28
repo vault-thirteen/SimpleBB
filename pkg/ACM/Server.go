@@ -23,6 +23,7 @@ import (
 	rm "github.com/vault-thirteen/SimpleBB/pkg/RCS/models"
 	sc "github.com/vault-thirteen/SimpleBB/pkg/SMTP/client"
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SMTP/models"
+	"github.com/vault-thirteen/SimpleBB/pkg/avm"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cdd "github.com/vault-thirteen/SimpleBB/pkg/common/DiagnosticData"
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
@@ -47,6 +48,7 @@ type Server struct {
 	mustStop    *atomic.Bool
 	httpErrors  chan error
 	dbErrors    *chan error
+	ssp         *avm.SSP
 
 	// Database Object.
 	dbo *dbo.DatabaseObject
@@ -95,6 +97,7 @@ func NewServer(stn *as.Settings) (srv *Server, err error) {
 		mustStop:        new(atomic.Bool),
 		httpErrors:      make(chan error, c.HttpErrorsChannelSize),
 		dbErrors:        &dbErrorsChannel,
+		ssp:             avm.NewSSP(),
 		jsonRpcHandlers: js.NewMethodRepository(),
 	}
 	srv.mustStop.Store(false)
@@ -180,6 +183,14 @@ func (srv *Server) GetStopChannel() *chan bool {
 }
 
 func (srv *Server) Start() (err error) {
+	srv.ssp.Lock()
+	defer srv.ssp.Unlock()
+
+	err = srv.ssp.BeginStart()
+	if err != nil {
+		return err
+	}
+
 	srv.startHttpServer()
 
 	srv.subRoutines.Add(3)
@@ -192,10 +203,20 @@ func (srv *Server) Start() (err error) {
 		return err
 	}
 
+	srv.ssp.CompleteStart()
+
 	return nil
 }
 
 func (srv *Server) Stop() (err error) {
+	srv.ssp.Lock()
+	defer srv.ssp.Unlock()
+
+	err = srv.ssp.BeginStop()
+	if err != nil {
+		return err
+	}
+
 	srv.mustStop.Store(true)
 
 	ctx, cf := context.WithTimeout(context.Background(), time.Minute)
@@ -219,6 +240,8 @@ func (srv *Server) Stop() (err error) {
 	if err != nil {
 		return err
 	}
+
+	srv.ssp.CompleteStop()
 
 	return nil
 }

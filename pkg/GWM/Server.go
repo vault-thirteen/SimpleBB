@@ -3,6 +3,7 @@ package acm
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	js "github.com/osamingo/jsonrpc/v2"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/dbo"
 	gs "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
+	"github.com/vault-thirteen/SimpleBB/pkg/avm"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cdd "github.com/vault-thirteen/SimpleBB/pkg/common/DiagnosticData"
 )
@@ -40,6 +42,7 @@ type Server struct {
 	mustStop    *atomic.Bool
 	httpErrors  chan error
 	dbErrors    *chan error
+	ssp         *avm.SSP
 
 	// Database Object.
 	dbo *dbo.DatabaseObject
@@ -68,9 +71,16 @@ func NewServer(stn *gs.Settings) (srv *Server, err error) {
 		mustStop:        new(atomic.Bool),
 		httpErrors:      make(chan error, c.HttpErrorsChannelSize),
 		dbErrors:        &dbErrorsChannel,
+		ssp:             avm.NewSSP(),
 		jsonRpcHandlers: js.NewMethodRepository(),
 	}
 	srv.mustStop.Store(false)
+
+	if srv.settings.SystemSettings.IsFirewallUsed {
+		fmt.Println(c.MsgFirewallIsEnabled)
+	} else {
+		fmt.Println(c.MsgFirewallIsDisabled)
+	}
 
 	err = srv.initJsonRpcHandlers()
 	if err != nil {
@@ -118,6 +128,14 @@ func (srv *Server) GetStopChannel() *chan bool {
 }
 
 func (srv *Server) Start() (err error) {
+	srv.ssp.Lock()
+	defer srv.ssp.Unlock()
+
+	err = srv.ssp.BeginStart()
+	if err != nil {
+		return err
+	}
+
 	srv.startHttpServerInt()
 	srv.startHttpServerExt()
 
@@ -126,10 +144,20 @@ func (srv *Server) Start() (err error) {
 	go srv.listenForDbErrors()
 	go srv.runScheduler()
 
+	srv.ssp.CompleteStart()
+
 	return nil
 }
 
 func (srv *Server) Stop() (err error) {
+	srv.ssp.Lock()
+	defer srv.ssp.Unlock()
+
+	err = srv.ssp.BeginStop()
+	if err != nil {
+		return err
+	}
+
 	srv.mustStop.Store(true)
 
 	ctxInt, cfInt := context.WithTimeout(context.Background(), time.Minute)
@@ -155,6 +183,8 @@ func (srv *Server) Stop() (err error) {
 	if err != nil {
 		return err
 	}
+
+	srv.ssp.CompleteStop()
 
 	return nil
 }

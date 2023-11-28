@@ -47,4 +47,6 @@ const (
 	MsgPingAttempt                      = "."
 	MsgIncidentsTableIsEnabled          = "Incidents table is enabled"
 	MsgIncidentsTableIsDisabled         = "Incidents table is disabled"
+	MsgFirewallIsEnabled                = "Firewall is enabled"
+	MsgFirewallIsDisabled               = "Firewall is disabled"
 )
