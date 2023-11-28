@@ -5,8 +5,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	bpp "github.com/vault-thirteen/BytePackedPassword"
 	"log"
+
+	bpp "github.com/vault-thirteen/BytePackedPassword"
 )
 
 const (

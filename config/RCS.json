@@ -5,10 +5,10 @@
   },
   "captcha": {
     "storeImages": true,
-    "imagesFolder": "img",
+    "imagesFolder": "rcs_img",
     "imageWidth": 256,
     "imageHeight": 256,
-    "imageTTLSec": 60,
+    "imageTTLSec": 120,
     "clearImagesFolderAtStart": true,
     "useHttpServerForImages": true,
     "httpServerHost": "localhost",

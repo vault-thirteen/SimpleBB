@@ -16,10 +16,10 @@
     "port": 3306,
     "dbName": "test3",
     "user": "test3",
-    "password": "",
+    "password": "test3",
     "allowNativePasswords": true,
     "checkConnLiveness": true,
-    "maxAllowedPacket": 1000000000,
+    "maxAllowedPacket": 64000000,
     "params": {
       "parseTime": "true"
     },
