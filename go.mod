@@ -7,7 +7,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.1.0
 	github.com/osamingo/jsonrpc/v2 v2.4.2
 	github.com/valord577/mailx v0.4.20231124
-	github.com/vault-thirteen/BytePackedPassword v0.2.1
+	github.com/vault-thirteen/BytePackedPassword v0.2.2
 	github.com/vault-thirteen/RingCaptcha v0.5.0
 	github.com/vault-thirteen/SQL v0.6.0
 	github.com/vault-thirteen/Versioneer v0.10.0
@@ -28,7 +28,7 @@ require (
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/vault-thirteen/VCS v0.6.0 // indirect
 	github.com/vault-thirteen/header v1.4.0 // indirect
-	golang.org/x/crypto v0.15.0 // indirect
+	golang.org/x/crypto v0.16.0 // indirect
 	golang.org/x/image v0.14.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 )
