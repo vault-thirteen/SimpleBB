@@ -21,12 +21,13 @@ type Settings struct {
 	CaptchaServiceSettings `json:"captcha"`
 	JWTSettings            `json:"jwt"`
 	UserRoleSettings       `json:"role"`
+	GatewayModuleSettings  `json:"gw"`
 }
 
 // HttpsSettings are settings of an HTTPS server for incoming requests.
 type HttpsSettings = cs.HttpsSettings
 
-// DbSettings are parameters of the Database.
+// DbSettings are parameters of the database.
 type DbSettings = cs.DbSettings
 
 // SystemSettings are system settings.
@@ -51,10 +52,24 @@ type SystemSettings struct {
 	// This setting must be synchronized with settings of the Gateway module.
 	IsTableOfIncidentsUsed bool `json:"isTableOfIncidentsUsed"`
 
+	// This setting is used only when a table of incidents is enabled.
+	BlockTimePerIncident BlockTimePerIncident `json:"blockTimePerIncident"`
+
 	IsDebugMode bool `json:"isDebugMode"`
 }
 
-// SmtpModuleSettings are settings of an SMTP Module.
+// BlockTimePerIncident is block time in seconds for each type of incident.
+type BlockTimePerIncident struct {
+	IllegalAccessAttempt     uint `json:"illegalAccessAttempt"`
+	FakeToken                uint `json:"fakeToken"`
+	VerificationCodeMismatch uint `json:"verificationCodeMismatch"`
+	DoubleLogInAttempt       uint `json:"doubleLogInAttempt"`
+	PreSessionHacking        uint `json:"preSessionHacking"`
+	CaptchaAnswerMismatch    uint `json:"captchaAnswerMismatch"`
+	PasswordMismatch         uint `json:"passwordMismatch"`
+}
+
+// SmtpModuleSettings are settings of an SMTP module.
 type SmtpModuleSettings struct {
 	Host                        string `json:"host"`
 	Port                        uint16 `json:"port"`
@@ -64,7 +79,7 @@ type SmtpModuleSettings struct {
 	MessageBodyTemplateForLogIn string `json:"messageBodyTemplateForLogIn"`
 }
 
-// CaptchaServiceSettings are settings of a Captcha Service.
+// CaptchaServiceSettings are settings of a Captcha service.
 type CaptchaServiceSettings struct {
 	// RPC Server.
 	RpcHost string `json:"rpcHost"`
@@ -77,7 +92,7 @@ type CaptchaServiceSettings struct {
 	ImgPath string `json:"imgPath"`
 }
 
-// JWTSettings are settings for JSON Web Tokens.
+// JWTSettings are settings for JSON web tokens.
 type JWTSettings struct {
 	PrivateKeyFilePath string `json:"privateKeyFilePath"`
 	PublicKeyFilePath  string `json:"publicKeyFilePath"`
@@ -91,6 +106,13 @@ type UserRoleSettings struct {
 
 	// List of IDs of users having an administrator role.
 	AdministratorIds []uint `json:"administratorIds"`
+}
+
+// GatewayModuleSettings are settings of a Gateway module.
+type GatewayModuleSettings struct {
+	Host string `json:"host"`
+	Port uint16 `json:"port"`
+	Path string `json:"path"`
 }
 
 func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
@@ -151,6 +173,30 @@ func (stn *Settings) Check() (err error) {
 	if len(stn.SystemSettings.EmailVerificationUrlPath) == 0 {
 		return errors.New(c.MsgSystemSettingError)
 	}
+	if stn.SystemSettings.IsTableOfIncidentsUsed {
+		if stn.SystemSettings.BlockTimePerIncident.IllegalAccessAttempt == 0 {
+			return errors.New(c.MsgSystemSettingError)
+		}
+		if stn.SystemSettings.BlockTimePerIncident.FakeToken == 0 {
+			return errors.New(c.MsgSystemSettingError)
+		}
+		if stn.SystemSettings.BlockTimePerIncident.VerificationCodeMismatch == 0 {
+			return errors.New(c.MsgSystemSettingError)
+		}
+		// DoubleLogInAttempt may be zero, thus it is not checked.
+		//if stn.SystemSettings.BlockTimePerIncident.DoubleLogInAttempt == 0 {
+		//	return errors.New(c.MsgSystemSettingError)
+		//}
+		if stn.SystemSettings.BlockTimePerIncident.PreSessionHacking == 0 {
+			return errors.New(c.MsgSystemSettingError)
+		}
+		if stn.SystemSettings.BlockTimePerIncident.CaptchaAnswerMismatch == 0 {
+			return errors.New(c.MsgSystemSettingError)
+		}
+		if stn.SystemSettings.BlockTimePerIncident.PasswordMismatch == 0 {
+			return errors.New(c.MsgSystemSettingError)
+		}
+	}
 
 	// SMTP.
 	if (len(stn.SmtpModuleSettings.Host) == 0) || (stn.SmtpModuleSettings.Port == 0) {
@@ -178,6 +224,14 @@ func (stn *Settings) Check() (err error) {
 	}
 	if len(stn.CaptchaServiceSettings.ImgPath) == 0 {
 		return errors.New(c.MsgCaptchaSettingError)
+	}
+
+	// Gateway module.
+	if (len(stn.GatewayModuleSettings.Host) == 0) || (stn.GatewayModuleSettings.Port == 0) {
+		return errors.New(c.MsgGatewaySettingError)
+	}
+	if len(stn.GatewayModuleSettings.Path) == 0 {
+		return errors.New(c.MsgGatewaySettingError)
 	}
 
 	return nil

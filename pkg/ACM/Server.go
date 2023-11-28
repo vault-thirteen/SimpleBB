@@ -17,6 +17,8 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/im"
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/km"
 	as "github.com/vault-thirteen/SimpleBB/pkg/ACM/settings"
+	gc "github.com/vault-thirteen/SimpleBB/pkg/GWM/client"
+	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	rc "github.com/vault-thirteen/SimpleBB/pkg/RCS/client"
 	rm "github.com/vault-thirteen/SimpleBB/pkg/RCS/models"
 	sc "github.com/vault-thirteen/SimpleBB/pkg/SMTP/client"
@@ -25,15 +27,6 @@ import (
 	cdd "github.com/vault-thirteen/SimpleBB/pkg/common/DiagnosticData"
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
 	rp "github.com/vault-thirteen/auxie/rpofs"
-)
-
-const (
-	DbReconnectCoolDownPeriodSec = 15
-)
-
-const (
-	ErrSmtpModuleIsBroken     = "SMTP module is broken"
-	ErrCaptchaServiceIsBroken = "captcha service is broken"
 )
 
 type Server struct {
@@ -81,6 +74,9 @@ type Server struct {
 
 	// Incident manager.
 	incidentManager *im.IncidentManager
+
+	// Gateway module client.
+	gwmClient *cc.Client
 }
 
 func NewServer(stn *as.Settings) (srv *Server, err error) {
@@ -156,7 +152,18 @@ func NewServer(stn *as.Settings) (srv *Server, err error) {
 		return nil, err
 	}
 
-	err = srv.initIncidentManager(srv.dbo)
+	if stn.SystemSettings.IsTableOfIncidentsUsed {
+		fmt.Println(c.MsgIncidentsTableIsEnabled)
+
+		err = srv.initGWModuleClient()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		fmt.Println(c.MsgIncidentsTableIsDisabled)
+	}
+
+	err = srv.initIncidentManager()
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +277,7 @@ func (srv *Server) listenForDbErrors() {
 				break
 			}
 
-			time.Sleep(time.Second * DbReconnectCoolDownPeriodSec)
+			time.Sleep(time.Second * c.DbReconnectCoolDownPeriodSec)
 		}
 	}
 
@@ -358,7 +365,7 @@ func (srv *Server) initSmtpModuleClient() (err error) {
 	}
 
 	if !result.OK {
-		return errors.New(ErrSmtpModuleIsBroken)
+		return errors.New(c.MsgSmtpModuleIsBroken)
 	}
 
 	fmt.Println(c.MsgOK)
@@ -387,7 +394,7 @@ func (srv *Server) initCaptchaServiceClient() (err error) {
 	}
 
 	if !result.OK {
-		return errors.New(ErrCaptchaServiceIsBroken)
+		return errors.New(c.MsgCaptchaServiceIsBroken)
 	}
 
 	fmt.Println(c.MsgOK)
@@ -425,8 +432,51 @@ func (srv *Server) initDiagnosticData() (err error) {
 	return nil
 }
 
-func (srv *Server) initIncidentManager(dbo *dbo.DatabaseObject) (err error) {
-	srv.incidentManager = im.NewIncidentManager(srv.settings.SystemSettings.IsTableOfIncidentsUsed, dbo)
+func (srv *Server) initGWModuleClient() (err error) {
+	srv.gwmClient, err = sc.NewClient(
+		srv.settings.GatewayModuleSettings.Host,
+		srv.settings.GatewayModuleSettings.Port,
+		srv.settings.GatewayModuleSettings.Path,
+	)
+	if err != nil {
+		return err
+	}
+
+	var params = gm.PingParams{}
+	var result gm.PingResult
+
+	fmt.Print(c.MsgPingingGatewayModule)
+
+	// While several services are inter-dependent, we make several attempts to
+	// ping the Gateway module.
+	for i := 1; i <= c.ServicePingAttemptsCount; i++ {
+		err = srv.gwmClient.MakeRequest(context.Background(), &result, gc.FuncPing, params)
+		if err == nil {
+			break
+		}
+
+		fmt.Print(c.MsgPingAttempt)
+
+		if i < c.ServicePingAttemptsCount {
+			time.Sleep(time.Second * time.Duration(c.ServiceNextPingAttemptDelaySec))
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if !result.OK {
+		return errors.New(c.MsgGatewayModuleIsBroken)
+	}
+
+	fmt.Println(c.MsgOK)
+
+	return nil
+}
+
+func (srv *Server) initIncidentManager() (err error) {
+	srv.incidentManager = im.NewIncidentManager(srv.settings.SystemSettings.IsTableOfIncidentsUsed, srv.dbo, srv.gwmClient, &srv.settings.SystemSettings.BlockTimePerIncident)
 
 	return nil
 }

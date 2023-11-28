@@ -17,6 +17,11 @@ const (
 	ErrFUidIsNotFound              = "uid is not found: %v"
 )
 
+const (
+	ListItemSeparator = ","
+	StringOnError     = ""
+)
+
 // UidList is a list unique identifiers.
 //
 // The main purpose of this list is to store a chronological order of all added
@@ -205,23 +210,23 @@ func (ul *UidList) Value() (dv driver.Value, err error) {
 
 func (ul *UidList) ValuesString() (values string, err error) {
 	if ul == nil {
-		return "", nil
+		return StringOnError, nil
 	}
 
 	if len(*ul) == 0 {
-		return "", nil
+		return StringOnError, nil
 	}
 
 	var sb = strings.Builder{}
 	iLast := len(*ul) - 1
 	for i, uid := range *ul {
 		if i < iLast {
-			_, err = sb.WriteString(strconv.FormatUint(uint64(uid), 10) + ",")
+			_, err = sb.WriteString(strconv.FormatUint(uint64(uid), 10) + ListItemSeparator)
 		} else {
 			_, err = sb.WriteString(strconv.FormatUint(uint64(uid), 10))
 		}
 		if err != nil {
-			return "", err
+			return StringOnError, err
 		}
 	}
 

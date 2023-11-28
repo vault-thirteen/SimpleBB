@@ -18,10 +18,6 @@ import (
 	cdd "github.com/vault-thirteen/SimpleBB/pkg/common/DiagnosticData"
 )
 
-const (
-	DbReconnectCoolDownPeriodSec = 15
-)
-
 type Server struct {
 	// Settings.
 	settings *gs.Settings
@@ -228,7 +224,7 @@ func (srv *Server) listenForDbErrors() {
 				break
 			}
 
-			time.Sleep(time.Second * DbReconnectCoolDownPeriodSec)
+			time.Sleep(time.Second * c.DbReconnectCoolDownPeriodSec)
 		}
 	}
 

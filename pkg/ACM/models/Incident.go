@@ -1,18 +1,14 @@
 package models
 
 import (
+	"errors"
 	"net"
 	"time"
 )
 
 const (
-	IncidentType_IllegalAccessAttempt     = 1
-	IncidentType_FakeToken                = 2
-	IncidentType_VerificationCodeMismatch = 3
-	IncidentType_DoubleLogInAttempt       = 4
-	IncidentType_PreSessionHacking        = 5
-	IncidentType_CaptchaAnswerMismatch    = 6
-	IncidentType_PasswordMismatch         = 7
+	ErrIncidentIsNotSet  = "incident is not set"
+	ErrIncidentTypeError = "incident type error"
 )
 
 type Incident struct {
@@ -23,4 +19,14 @@ type Incident struct {
 	UserIPA net.IP
 }
 
-type IncidentType byte
+func CheckIncident(inc *Incident) (err error) {
+	if inc == nil {
+		return errors.New(ErrIncidentIsNotSet)
+	}
+
+	if !inc.Type.IsValid() {
+		return errors.New(ErrIncidentTypeError)
+	}
+
+	return nil
+}

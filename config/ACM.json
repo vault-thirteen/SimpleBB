@@ -43,7 +43,16 @@
     "preSessionExpirationTime": 300,
     "sessionMaxDuration": 86400,
     "isTableOfIncidentsUsed": true,
-    "isDebugMode": false
+    "isDebugMode": false,
+    "blockTimePerIncident": {
+      "illegalAccessAttempt": 60,
+      "fakeToken": 60,
+      "verificationCodeMismatch": 60,
+      "doubleLogInAttempt": 0,
+      "preSessionHacking": 300,
+      "captchaAnswerMismatch": 60,
+      "passwordMismatch": 60
+    }
   },
   "smtp": {
     "host": "localhost",
@@ -69,5 +78,10 @@
   "role": {
     "moderatorIds": [],
     "administratorIds": []
+  },
+  "gw": {
+    "host": "localhost",
+    "port": 2006,
+    "path": "/"
   }
 }

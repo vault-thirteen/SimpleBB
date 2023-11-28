@@ -22,14 +22,6 @@ import (
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
 )
 
-const (
-	DbReconnectCoolDownPeriodSec = 15
-)
-
-const (
-	ErrACMModuleIsBroken = "ACM module is broken"
-)
-
 type Server struct {
 	// Settings.
 	settings *s.Settings
@@ -209,7 +201,7 @@ func (srv *Server) listenForDbErrors() {
 				break
 			}
 
-			time.Sleep(time.Second * DbReconnectCoolDownPeriodSec)
+			time.Sleep(time.Second * c.DbReconnectCoolDownPeriodSec)
 		}
 	}
 
@@ -241,7 +233,7 @@ func (srv *Server) initACMServiceClient() (err error) {
 	}
 
 	if !result.OK {
-		return errors.New(ErrACMModuleIsBroken)
+		return errors.New(c.MsgACMModuleIsBroken)
 	}
 
 	fmt.Println(c.MsgOK)
