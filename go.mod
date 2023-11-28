@@ -15,7 +15,7 @@ require (
 	github.com/vault-thirteen/errorz v1.2.0
 	github.com/vault-thirteen/tester v1.2.0
 	github.com/ybbus/jsonrpc/v3 v3.1.5
-	golang.org/x/term v0.14.0
+	golang.org/x/term v0.15.0
 )
 
 require (
@@ -30,5 +30,5 @@ require (
 	github.com/vault-thirteen/header v1.4.0 // indirect
 	golang.org/x/crypto v0.15.0 // indirect
 	golang.org/x/image v0.14.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 )
