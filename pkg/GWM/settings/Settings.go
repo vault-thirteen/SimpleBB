@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	ClientIPAddressSource_Direct = 1
-	ClientIPAddressSource_XFF    = 2
+	ClientIPAddressSource_Direct       = 1
+	ClientIPAddressSource_CustomHeader = 2
 )
 
 const (
@@ -50,14 +50,17 @@ type SystemSettings struct {
 	// This setting must be synchronized with settings of the ACM module.
 	IsFirewallUsed bool `json:"isFirewallUsed"`
 
-	// Where to search for client's IP address.
-	// '1' means that IP address is taken directly from the client's address of
-	// the request; '2' means that IP address is taken from the
-	// 'X-Forwarded-For' HTTP header. For most users the first variant is the
-	// most suitable. The second variant may be used if you are proxying
-	// requests of your clients somewhere inside your own network
+	// ClientIPAddressSource setting selects where to search for client's IP
+	// address. '1' means that IP address is taken directly from the client's
+	// address of the HTTP request; '2' means that IP address is taken from the
+	// custom HTTP header which is configured by the ClientIPAddressHeader
+	// setting. One of the most common examples of a custom header may be the
+	// 'X-Forwarded-For' HTTP header. For most users the first variant ('1') is
+	// the most suitable. The second variant ('2') may be used if you are
+	// proxying requests of your clients somewhere inside your own network
 	// infrastructure, such as via a load balancer or with a reverse proxy.
-	ClientIPAddressSource byte `json:"clientIPAddressSource"`
+	ClientIPAddressSource byte   `json:"clientIPAddressSource"`
+	ClientIPAddressHeader string `json:"clientIPAddressHeader"`
 }
 
 func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
@@ -121,8 +124,16 @@ func (stn *Settings) Check() (err error) {
 	if len(stn.SystemSettings.EmailVerificationUrlPath) == 0 {
 		return errors.New(c.MsgSystemSettingError)
 	}
-	if (stn.SystemSettings.ClientIPAddressSource < 1) || (stn.SystemSettings.ClientIPAddressSource > 2) {
+	if stn.SystemSettings.ClientIPAddressSource < ClientIPAddressSource_Direct {
 		return errors.New(c.MsgSystemSettingError)
+	}
+	if stn.SystemSettings.ClientIPAddressSource > ClientIPAddressSource_CustomHeader {
+		return errors.New(c.MsgSystemSettingError)
+	}
+	if stn.SystemSettings.ClientIPAddressSource == ClientIPAddressSource_CustomHeader {
+		if len(stn.SystemSettings.ClientIPAddressHeader) == 0 {
+			return errors.New(c.MsgSystemSettingError)
+		}
 	}
 
 	return nil

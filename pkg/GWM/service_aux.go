@@ -16,10 +16,6 @@ import (
 // Auxiliary functions used in service functions.
 
 const (
-	HttpHeaderXForwardedFor = "X-Forwarded-For"
-)
-
-const (
 	ErrNotEnoughDataInAddress = "not enough data in address"
 	ErrFMultipleHeaders       = "multiple headers: %s"
 	ErrFHeaderIsNotFound      = "header is not found: %s"
@@ -63,8 +59,8 @@ func (srv *Server) getClientIPAddress(req *http.Request) (cipa string, err error
 
 		return host, nil
 
-	case s.ClientIPAddressSource_XFF:
-		host, err = getSingleHeader(req, HttpHeaderXForwardedFor)
+	case s.ClientIPAddressSource_CustomHeader:
+		host, err = getSingleHeader(req, srv.settings.SystemSettings.ClientIPAddressHeader)
 		if err != nil {
 			return "", err
 		}

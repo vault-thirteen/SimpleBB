@@ -34,6 +34,7 @@
     "siteDomain": "example.org",
     "emailVerificationUrlPath": "/ev",
     "isFirewallUsed": true,
-    "clientIPAddressSource": 1
+    "clientIPAddressSource": 1,
+    "clientIPAddressHeader": "X-Forwarded-For"
   }
 }
