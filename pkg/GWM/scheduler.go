@@ -1,4 +1,4 @@
-package acm
+package gwm
 
 import (
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/dbo"

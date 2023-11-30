@@ -20,6 +20,7 @@ import (
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SMTP/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	n "github.com/vault-thirteen/SimpleBB/pkg/net"
 	num "github.com/vault-thirteen/auxie/number"
 )
 
@@ -40,9 +41,10 @@ func (srv *Server) mustBeAuthUserIPA(auth *cm.Auth) (jerr *js.Error) {
 		return &js.Error{Code: c.RpcErrorCode_MalformedRequest, Message: c.RpcErrorMsg_MalformedRequest}
 	}
 
-	auth.UserIPAB = net.ParseIP(auth.UserIPA)
-	if auth.UserIPAB == nil {
-		return &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, c.ErrNetParseIP)}
+	var err error
+	auth.UserIPAB, err = n.ParseIPA(auth.UserIPA)
+	if err != nil {
+		return &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}
 	}
 
 	return nil

@@ -33,6 +33,7 @@
     "siteName": "Test Site",
     "siteDomain": "example.org",
     "emailVerificationUrlPath": "/ev",
-    "isFirewallUsed": true
+    "isFirewallUsed": true,
+    "clientIPAddressSource": 1
   }
 }

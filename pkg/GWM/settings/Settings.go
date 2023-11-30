@@ -9,6 +9,15 @@ import (
 	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
 
+const (
+	ClientIPAddressSource_Direct = 1
+	ClientIPAddressSource_XFF    = 2
+)
+
+const (
+	ErrUnknownClientIPAddressSource = "unknown client IP address source"
+)
+
 // Settings is Server's settings.
 type Settings struct {
 	// Path to the file with these settings.
@@ -40,6 +49,15 @@ type SystemSettings struct {
 
 	// This setting must be synchronized with settings of the ACM module.
 	IsFirewallUsed bool `json:"isFirewallUsed"`
+
+	// Where to search for client's IP address.
+	// '1' means that IP address is taken directly from the client's address of
+	// the request; '2' means that IP address is taken from the
+	// 'X-Forwarded-For' HTTP header. For most users the first variant is the
+	// most suitable. The second variant may be used if you are proxying
+	// requests of your clients somewhere inside your own network
+	// infrastructure, such as via a load balancer or with a reverse proxy.
+	ClientIPAddressSource byte `json:"clientIPAddressSource"`
 }
 
 func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
@@ -101,6 +119,9 @@ func (stn *Settings) Check() (err error) {
 		return errors.New(c.MsgSystemSettingError)
 	}
 	if len(stn.SystemSettings.EmailVerificationUrlPath) == 0 {
+		return errors.New(c.MsgSystemSettingError)
+	}
+	if (stn.SystemSettings.ClientIPAddressSource < 1) || (stn.SystemSettings.ClientIPAddressSource > 2) {
 		return errors.New(c.MsgSystemSettingError)
 	}
 

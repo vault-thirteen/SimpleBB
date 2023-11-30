@@ -18,7 +18,6 @@ const (
 )
 
 const (
-	ErrNetParseIP                      = "net.ParseIP error" // Golang's built-in parser does not return an error. What a shame again.
 	ErrDecodeEmailWithVerificationCode = "e-mail with verification code decoding error"
 	ErrCaptchaAnswerIsNotSet           = "answer is not set"
 	ErrFPasswordIsNotAllowed           = "password is not allowed: %s" // Template.

@@ -3,7 +3,6 @@ package mm
 import (
 	"context"
 	"fmt"
-	"net"
 	"sync"
 
 	js "github.com/osamingo/jsonrpc/v2"
@@ -11,6 +10,7 @@ import (
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	"github.com/vault-thirteen/SimpleBB/pkg/net"
 )
 
 // Auxiliary functions used in RPC functions.
@@ -51,9 +51,10 @@ func (srv *Server) mustBeAuthUserIPA(auth *cm.Auth) (jerr *js.Error) {
 		return &js.Error{Code: c.RpcErrorCode_MalformedRequest, Message: c.RpcErrorMsg_MalformedRequest}
 	}
 
-	auth.UserIPAB = net.ParseIP(auth.UserIPA)
-	if auth.UserIPAB == nil {
-		return &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, c.ErrNetParseIP)}
+	var err error
+	auth.UserIPAB, err = net.ParseIPA(auth.UserIPA)
+	if err != nil {
+		return &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}
 	}
 
 	return nil

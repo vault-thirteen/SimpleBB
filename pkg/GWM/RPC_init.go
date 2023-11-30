@@ -1,4 +1,4 @@
-package acm
+package gwm
 
 import (
 	gc "github.com/vault-thirteen/SimpleBB/pkg/GWM/client"

@@ -1,12 +1,12 @@
-package acm
+package gwm
 
 import (
 	"fmt"
-	"net"
 
 	js "github.com/osamingo/jsonrpc/v2"
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	"github.com/vault-thirteen/SimpleBB/pkg/net"
 )
 
 // RPC functions.
@@ -28,13 +28,12 @@ func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockI
 		return nil, &js.Error{Code: RpcErrorCode_BlockTimeIsNotSet, Message: RpcErrorMsg_BlockTimeIsNotSet}
 	}
 
-	userIPAB := net.ParseIP(p.UserIPA)
-	if userIPAB == nil {
-		return nil, &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, c.ErrNetParseIP)}
+	userIPAB, err := net.ParseIPA(p.UserIPA)
+	if err != nil {
+		return nil, &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}
 	}
 
 	// Search for an existing record.
-	var err error
 	var n int
 	n, err = srv.dbo.CountBlocksByIPAddress(userIPAB)
 	if err != nil {
@@ -70,13 +69,12 @@ func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *g
 		return nil, &js.Error{Code: RpcErrorCode_IPAddressIsNotSet, Message: RpcErrorMsg_IPAddressIsNotSet}
 	}
 
-	userIPAB := net.ParseIP(p.UserIPA)
-	if userIPAB == nil {
-		return nil, &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, c.ErrNetParseIP)}
+	userIPAB, err := net.ParseIPA(p.UserIPA)
+	if err != nil {
+		return nil, &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}
 	}
 
 	// Search for an existing record.
-	var err error
 	var n int
 	n, err = srv.dbo.CountBlocksByIPAddress(userIPAB)
 	if err != nil {

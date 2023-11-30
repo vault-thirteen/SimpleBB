@@ -1,4 +1,4 @@
-package acm
+package gwm
 
 import (
 	"context"
@@ -308,6 +308,20 @@ func (srv *Server) httpRouterInt(rw http.ResponseWriter, req *http.Request) {
 
 // HTTP router for external requests.
 func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
+	// Firewall.
+	if srv.settings.SystemSettings.IsFirewallUsed {
+		ok, err := srv.isIPAddressAllowed(req)
+		if err != nil {
+			srv.processInternalError(rw, err)
+			return
+		}
+
+		if !ok {
+			srv.processBlockedClient(rw)
+			return
+		}
+	}
+
 	//TODO
 }
 
