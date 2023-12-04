@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/golang-jwt/jwt/v5 v5.1.0
+	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/osamingo/jsonrpc/v2 v2.4.2
 	github.com/valord577/mailx v0.4.20231124
 	github.com/vault-thirteen/BytePackedPassword v0.2.2
