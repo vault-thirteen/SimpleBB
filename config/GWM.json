@@ -1,0 +1,42 @@
+{
+  "intHttp": {
+    "host": "localhost",
+    "port": 2006
+  },
+  "extHttps": {
+    "host": "localhost",
+    "port": 2000,
+    "certFile": "cert\\GWM\\server-cert.pem",
+    "keyFile": "cert\\GWM\\server-key.pem"
+  },
+  "db": {
+    "driverName": "mysql",
+    "net": "tcp",
+    "host": "192.168.88.250",
+    "port": 3306,
+    "dbName": "test3",
+    "user": "test3",
+    "password": "test3",
+    "allowNativePasswords": true,
+    "checkConnLiveness": true,
+    "maxAllowedPacket": 64000000,
+    "params": {
+      "parseTime": "true"
+    },
+    "tableNamePrefix": "v1",
+    "tablesToInit": [
+      "IPAddresses"
+    ],
+    "tableInitScriptsFolder": "sql\\GWM\\table_init"
+  },
+  "system": {
+    "siteName": "Test Site",
+    "siteDomain": "example.org",
+    "isFirewallUsed": true,
+    "clientIPAddressSource": 1,
+    "clientIPAddressHeader": "X-Forwarded-For",
+    "isFrontEndEnabled": true,
+    "frontEndPath": "/",
+    "apiPath": "/api/"
+  }
+}
