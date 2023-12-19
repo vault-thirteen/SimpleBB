@@ -255,11 +255,26 @@ func (srv *Server) initACMServiceClient() (err error) {
 		return err
 	}
 
-	fmt.Print(c.MsgPingingAcmModule)
-
 	var params = am.PingParams{}
 	var result am.PingResult
-	err = srv.acmServiceClient.MakeRequest(context.Background(), &result, ac.FuncPing, params)
+
+	fmt.Print(c.MsgPingingAcmModule)
+
+	// While several services are inter-dependent, we make several attempts to
+	// ping the ACM module.
+	for i := 1; i <= c.ServicePingAttemptsCount; i++ {
+		err = srv.acmServiceClient.MakeRequest(context.Background(), &result, ac.FuncPing, params)
+		if err == nil {
+			break
+		}
+
+		fmt.Print(c.MsgPingAttempt)
+
+		if i < c.ServicePingAttemptsCount {
+			time.Sleep(time.Second * time.Duration(c.ServiceNextPingAttemptDelaySec))
+		}
+	}
+
 	if err != nil {
 		return err
 	}

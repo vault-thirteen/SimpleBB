@@ -37,6 +37,7 @@
     "clientIPAddressHeader": "X-Forwarded-For",
     "isFrontEndEnabled": true,
     "frontEndPath": "/",
-    "apiPath": "/api/"
+    "apiPath": "/api/",
+    "isDebugMode": false
   }
 }

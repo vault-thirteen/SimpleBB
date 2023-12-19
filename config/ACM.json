@@ -48,7 +48,6 @@
     "emailChangeExpirationTime": 300,
     "actionTryTimeout": 60,
     "isTableOfIncidentsUsed": true,
-    "isDebugMode": false,
     "blockTimePerIncident": {
       "illegalAccessAttempt": 60,
       "fakeToken": 60,
@@ -59,7 +58,8 @@
       "passwordMismatch": 60,
       "passwordChangeHacking": 300,
       "emailChangeHacking": 300
-    }
+    },
+    "isDebugMode": false
   },
   "smtp": {
     "host": "localhost",

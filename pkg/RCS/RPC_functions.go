@@ -14,6 +14,7 @@ import (
 func (srv *Server) createCaptcha() (result *rm.CreateCaptchaResult, jerr *js.Error) {
 	ccResponse, err := srv.captchaManager.CreateCaptcha()
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: RpcErrorCode_CreateError, Message: fmt.Sprintf(RpcErrorMsgF_CreateError, err.Error())}
 	}
 
@@ -42,6 +43,7 @@ func (srv *Server) checkCaptcha(p *rm.CheckCaptchaParams) (result *rm.CheckCaptc
 
 	resp, err := srv.captchaManager.CheckCaptcha(&rc.CheckCaptchaRequest{TaskId: p.TaskId, Value: p.Value})
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: RpcErrorCode_CheckError, Message: fmt.Sprintf(RpcErrorMsgF_CheckError, err.Error())}
 	}
 

@@ -10,7 +10,6 @@ import (
 
 	"github.com/vault-thirteen/MIME"
 	s "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
-	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	netty "github.com/vault-thirteen/SimpleBB/pkg/net"
 	hh "github.com/vault-thirteen/auxie/http-helper"
 	"github.com/vault-thirteen/header"
@@ -40,7 +39,7 @@ func (srv *Server) isIPAddressAllowed(req *http.Request) (ok bool, err error) {
 	var n int
 	n, err = srv.dbo.CountBlocksByIPAddress(ipa)
 	if err != nil {
-		return false, c.DatabaseError(err, srv.dbErrors)
+		return false, srv.databaseError(err)
 	}
 
 	if n == 0 {

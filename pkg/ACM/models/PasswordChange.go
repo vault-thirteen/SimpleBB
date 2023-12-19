@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"net"
 	"time"
 
@@ -58,7 +59,11 @@ func NewPasswordChangeFromScannableSource(src cm.IScannable) (pc *PasswordChange
 		&pc.NewPassword,
 	)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	return pc, nil

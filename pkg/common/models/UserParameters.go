@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"database/sql"
+	"errors"
+	"time"
+)
 
 type UserParameters struct {
 	Id           uint      `json:"id"`
@@ -38,7 +42,11 @@ func NewUserParametersFromScannableSource(src IScannable) (up *UserParameters, e
 		&up.LastBadActionTime,
 	)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	return up, nil

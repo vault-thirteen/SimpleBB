@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"net/mail"
 	"time"
@@ -23,6 +24,25 @@ import (
 )
 
 // Auxiliary functions used in RPC functions.
+
+// logError logs error if debug mode is enabled.
+func (srv *Server) logError(err error) {
+	if srv.settings.SystemSettings.IsDebugMode {
+		log.Println(err)
+	}
+}
+
+// databaseError processes the database error and returns a JSON RPC error.
+func (srv *Server) databaseError(err error) (jerr *js.Error) {
+	if c.IsNetworkError(err) {
+		log.Println(fmt.Sprintf(c.ErrFDatabaseNetwork, err.Error()))
+		*(srv.dbErrors) <- err
+	} else {
+		srv.logError(err)
+	}
+
+	return &js.Error{Code: c.RpcErrorCode_DatabaseError, Message: c.RpcErrorMsg_DatabaseError}
+}
 
 // Token-related functions.
 
@@ -44,6 +64,7 @@ func (srv *Server) mustBeAuthUserIPA(auth *cm.Auth) (jerr *js.Error) {
 	var err error
 	auth.UserIPAB, err = nt.ParseIPA(auth.UserIPA)
 	if err != nil {
+		srv.logError(err)
 		return &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}
 	}
 
@@ -85,6 +106,7 @@ func (srv *Server) mustBeAnAuthToken(auth *cm.Auth) (ud *am.UserData, jerr *js.E
 	var err error
 	ud, err = srv.getUserDataByAuthToken(auth.Token, auth.UserIPAB)
 	if err != nil {
+		srv.logError(err)
 		srv.incidentManager.ReportIncident(am.IncidentType_FakeToken, "", auth.UserIPAB)
 		return nil, &js.Error{Code: c.RpcErrorCode_GetUserDataByAuthToken, Message: fmt.Sprintf(c.RpcErrorMsgF_GetUserDataByAuthToken, err.Error())}
 	}
@@ -106,7 +128,7 @@ func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (us
 
 	userData.User, err = srv.dbo.GetUserById(userId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if userData.User == nil {
@@ -127,7 +149,7 @@ func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (us
 
 	userData.Session, err = srv.dbo.GetSessionByUserId(userId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if userData.Session == nil {
@@ -147,42 +169,60 @@ func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (us
 
 // Other functions.
 
-func (srv *Server) checkCaptcha(captchaId string, answer string) (result *rm.CheckCaptchaResult, err error) {
+func (srv *Server) checkCaptcha(captchaId string, answer string) (result *rm.CheckCaptchaResult, jerr *js.Error) {
 	var params = rm.CheckCaptchaParams{TaskId: captchaId}
+	var err error
 
 	if len(answer) == 0 {
-		return nil, errors.New(c.ErrCaptchaAnswerIsNotSet)
+		err = errors.New(c.ErrCaptchaAnswerIsNotSet)
+	}
+	if err != nil {
+		srv.logError(err)
+		return nil, &js.Error{Code: RpcErrorCode_RCS_CheckCaptcha, Message: fmt.Sprintf(RpcErrorMsgF_RCS_CheckCaptcha, err.Error())}
 	}
 
 	params.Value, err = num.ParseUint(answer)
 	if err != nil {
-		return nil, err
+		srv.logError(err)
+		return nil, &js.Error{Code: RpcErrorCode_RCS_CheckCaptcha, Message: fmt.Sprintf(RpcErrorMsgF_RCS_CheckCaptcha, err.Error())}
 	}
 
 	result = &rm.CheckCaptchaResult{}
 
 	err = srv.captchaServiceClient.MakeRequest(context.Background(), result, rc.FuncCheckCaptcha, params)
 	if err != nil {
-		return nil, err
+		srv.logError(err)
+		return nil, &js.Error{Code: RpcErrorCode_RCS_CheckCaptcha, Message: fmt.Sprintf(RpcErrorMsgF_RCS_CheckCaptcha, err.Error())}
 	}
 
 	return result, nil
 }
 
-func (srv *Server) checkPassword(userId uint, salt []byte, userKey []byte) (ok bool, err error) {
-	var pwd []byte
+func (srv *Server) checkPassword(userId uint, salt []byte, userKey []byte) (ok bool, jerr *js.Error) {
+	var pwd *[]byte
+	var err error
 	pwd, err = srv.dbo.GetUserPasswordById(userId)
 	if err != nil {
-		return false, err
+		return false, srv.databaseError(err)
+	}
+	if pwd == nil {
+		return false, nil
 	}
 
 	var pwdRunes []rune
-	pwdRunes, err = bpp.UnpackBytes(pwd)
+	pwdRunes, err = bpp.UnpackBytes(*pwd)
 	if err != nil {
-		return false, err
+		srv.logError(err)
+		return false, &js.Error{Code: RpcErrorCode_PasswordCheckError, Message: fmt.Sprintf(RpcErrorMsgF_PasswordCheckError, err.Error())}
 	}
 
-	return bpp.CheckHashKey(string(pwdRunes), salt, userKey)
+	ok, err = bpp.CheckHashKey(string(pwdRunes), salt, userKey)
+	if err != nil {
+		srv.logError(err)
+		return false, &js.Error{Code: RpcErrorCode_PasswordCheckError, Message: fmt.Sprintf(RpcErrorMsgF_PasswordCheckError, err.Error())}
+	}
+
+	return ok, nil
 }
 
 func (srv *Server) countEmailChangesByUserId(userId uint) (emailChangesCount int, err error) {

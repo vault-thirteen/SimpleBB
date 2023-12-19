@@ -2,7 +2,6 @@ package smtp
 
 import (
 	"fmt"
-
 	js "github.com/osamingo/jsonrpc/v2"
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SMTP/models"
 )
@@ -15,6 +14,7 @@ func (srv *Server) sendEmailMessage(recipient, subject, message string) (result 
 
 	err := srv.mailer.SendMail([]string{recipient}, subject, message)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: RpcErrorCode_MailerError, Message: fmt.Sprintf(RpcErrorMsgF_MailerError, err.Error())}
 	}
 

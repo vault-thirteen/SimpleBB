@@ -4,7 +4,6 @@ package dbo
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -465,13 +464,7 @@ func (dbo *DatabaseObject) DeleteSessionByUserId(userId uint) (err error) {
 
 func (dbo *DatabaseObject) GetEmailChangeByRequestId(requestId string) (ecr *am.EmailChange, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetEmailChangeByRequestId).QueryRow(requestId)
-
-	ecr, err = am.NewEmailChangeFromScannableSource(row)
-	if err != nil {
-		return nil, err
-	}
-
-	return ecr, nil
+	return am.NewEmailChangeFromScannableSource(row)
 }
 
 func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []uint, err error) {
@@ -490,73 +483,27 @@ func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []uint, err error) {
 		}
 	}()
 
-	var userId uint
-	for rows.Next() {
-		err = rows.Scan(&userId)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return userIds, nil // No rows.
-			} else {
-				return nil, err
-			}
-		}
-
-		userIds = append(userIds, userId)
-	}
-
-	return userIds, nil
+	return cm.NewArrayFromScannableSource[uint](rows)
 }
 
 func (dbo *DatabaseObject) GetPasswordChangeByRequestId(requestId string) (pcr *am.PasswordChange, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetPasswordChangeByRequestId).QueryRow(requestId)
-
-	pcr, err = am.NewPasswordChangeFromScannableSource(row)
-	if err != nil {
-		return nil, err
-	}
-
-	return pcr, nil
+	return am.NewPasswordChangeFromScannableSource(row)
 }
 
 func (dbo *DatabaseObject) GetPreSessionByRequestId(requestId string) (preSession *am.PreSession, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetPreSessionByRequestId).QueryRow(requestId)
-
-	preSession, err = am.NewPreSessionFromScannableSource(row)
-	if err != nil {
-		return nil, err
-	}
-
-	return preSession, nil
+	return am.NewPreSessionFromScannableSource(row)
 }
 
 func (dbo *DatabaseObject) GetSessionByUserId(userId uint) (session *am.Session, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetSessionByUserId).QueryRow(userId)
-
-	session, err = am.NewSessionFromScannableSource(row)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil // No rows.
-		} else {
-			return nil, err
-		}
-	}
-
-	return session, nil
+	return am.NewSessionFromScannableSource(row)
 }
 
 func (dbo *DatabaseObject) GetUserById(userId uint) (user *am.User, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserById).QueryRow(userId)
-
-	user, err = am.NewUserFromScannableSource(row)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil // No rows.
-		} else {
-			return nil, err
-		}
-	}
-
-	return user, nil
+	return am.NewUserFromScannableSource(row)
 }
 
 func (dbo *DatabaseObject) GetUserIdByEmail(email string) (id uint, err error) {
@@ -588,28 +535,14 @@ func (dbo *DatabaseObject) GetUserLastBadLogInTimeByEmail(email string) (lastBad
 	return u.LastBadLogInTime, nil
 }
 
-func (dbo *DatabaseObject) GetUserPasswordById(userId uint) (password []byte, err error) {
-	err = dbo.PreparedStatement(DbPsid_GetUserPasswordById).QueryRow(userId).Scan(&password)
-	if err != nil {
-		return nil, err
-	}
-
-	return password, nil
+func (dbo *DatabaseObject) GetUserPasswordById(userId uint) (password *[]byte, err error) {
+	row := dbo.PreparedStatement(DbPsid_GetUserPasswordById).QueryRow(userId)
+	return cm.NewValueFromScannableSource[[]byte](row)
 }
 
 func (dbo *DatabaseObject) GetUserRolesById(userId uint) (roles *cm.UserRoles, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserRolesById).QueryRow(userId)
-
-	roles, err = cm.NewUserRolesFromScannableSource(row)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		} else {
-			return nil, err
-		}
-	}
-
-	return roles, nil
+	return cm.NewUserRolesFromScannableSource(row)
 }
 
 func (dbo *DatabaseObject) InsertPreRegisteredUser(email string) (err error) {
@@ -1108,15 +1041,5 @@ func (dbo *DatabaseObject) UpdateUserLastBadLogInTimeByEmail(email string) (err 
 
 func (dbo *DatabaseObject) ViewUserParametersById(userId uint) (userParameters *cm.UserParameters, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserParametersById).QueryRow(userId)
-
-	userParameters, err = cm.NewUserParametersFromScannableSource(row)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		} else {
-			return nil, err
-		}
-	}
-
-	return userParameters, nil
+	return cm.NewUserParametersFromScannableSource(row)
 }

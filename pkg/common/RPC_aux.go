@@ -3,8 +3,6 @@ package common
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log"
 	"net"
 
 	js "github.com/osamingo/jsonrpc/v2"
@@ -18,6 +16,7 @@ const (
 	ErrFPasswordIsNotAllowed = "password is not allowed: %s" // Template.
 	ErrUnsupportedRCSMode    = "unsupported RCS mode"
 	ErrFakeJWToken           = "fake JWT token"
+	ErrFDatabaseNetwork      = "database network error: %v" // Template.
 )
 
 func GetRequestId(c context.Context) (rid am.RequestId, jerr *js.Error) {
@@ -29,19 +28,8 @@ func GetRequestId(c context.Context) (rid am.RequestId, jerr *js.Error) {
 	return rid, nil
 }
 
-// DatabaseError checks the database error and returns the JSON RPC error.
-func DatabaseError(err error, dbErrorsChan *chan error) (jerr *js.Error) {
-	CheckForNetworkError(err, dbErrorsChan)
-	log.Println(fmt.Sprintf(MsgFDBError, err.Error()))
-	return &js.Error{Code: RpcErrorCode_DatabaseError, Message: RpcErrorMsg_DatabaseError}
-}
-
-// CheckForNetworkError informs the system about database network errors.
-func CheckForNetworkError(err error, dbErrorsChan *chan error) {
+// IsNetworkError checks if an error is a network error.
+func IsNetworkError(err error) (isNetworkError bool) {
 	var nerr net.Error
-	isNetworkError := errors.As(err, &nerr)
-
-	if isNetworkError {
-		*dbErrorsChan <- nerr
-	}
+	return errors.As(err, &nerr)
 }

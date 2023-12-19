@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"net"
 	"time"
 
@@ -53,7 +54,11 @@ func NewPreSessionFromScannableSource(src cm.IScannable) (ps *PreSession, err er
 		&ps.IsVerifiedByEmail,
 	)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	return ps, nil

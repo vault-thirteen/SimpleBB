@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql"
+	"errors"
 	"net"
 	"time"
 
@@ -30,7 +32,11 @@ func NewSessionFromScannableSource(src cm.IScannable) (s *Session, err error) {
 		&s.UserIPAB,
 	)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	return s, nil

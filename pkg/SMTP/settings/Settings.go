@@ -14,12 +14,18 @@ type Settings struct {
 	// Path to the file with these settings.
 	FilePath string `json:"-"`
 
-	HttpSettings `json:"http"`
-	SmtpSettings `json:"smtp"`
+	HttpSettings   `json:"http"`
+	SystemSettings `json:"system"`
+	SmtpSettings   `json:"smtp"`
 }
 
 // HttpSettings are settings of an HTTP server for incoming requests.
 type HttpSettings = cs.HttpSettings
+
+// SystemSettings are system settings.
+type SystemSettings struct {
+	IsDebugMode bool `json:"isDebugMode"`
+}
 
 // SmtpSettings are parameters of the SMTP server used for sending e-mail
 // messages. When a password is not set, it is taken from the stdin.

@@ -30,6 +30,7 @@ func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockI
 
 	userIPAB, err := net.ParseIPA(p.UserIPA)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}
 	}
 
@@ -37,19 +38,19 @@ func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockI
 	var n int
 	n, err = srv.dbo.CountBlocksByIPAddress(userIPAB)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Insert a new record when none is found, or update an existing block.
 	if n == 0 {
 		err = srv.dbo.InsertBlock(userIPAB, p.BlockTimeSec)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 	} else {
 		err = srv.dbo.IncreaseBlockDuration(userIPAB, p.BlockTimeSec)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 	}
 
@@ -71,6 +72,7 @@ func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *g
 
 	userIPAB, err := net.ParseIPA(p.UserIPA)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}
 	}
 
@@ -78,7 +80,7 @@ func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *g
 	var n int
 	n, err = srv.dbo.CountBlocksByIPAddress(userIPAB)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	return &gm.IsIPAddressBlockedResult{IsBlocked: n > 0}, nil

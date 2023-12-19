@@ -61,6 +61,7 @@ type SystemSettings struct {
 	IsFrontEndEnabled bool   `json:"isFrontEndEnabled"`
 	FrontEndPath      string `json:"frontEndPath"`
 	ApiPath           string `json:"apiPath"`
+	IsDebugMode       bool   `json:"isDebugMode"`
 }
 
 func NewSettingsFromFile(filePath string) (stn *Settings, err error) {

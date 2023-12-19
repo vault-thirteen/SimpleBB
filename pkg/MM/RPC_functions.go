@@ -45,7 +45,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	if p.Parent == nil {
 		n, err = srv.dbo.CountRootSections()
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 
 		if n > 0 {
@@ -55,7 +55,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 		var insertedSectionId int64
 		insertedSectionId, err = srv.dbo.InsertNewSection(p.Parent, p.Name, userRoles.UserId)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 
 		result = &mm.AddSectionResult{
@@ -69,7 +69,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	// Ensure that a parent exists.
 	n, err = srv.dbo.CountSectionsById(*p.Parent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -80,7 +80,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	var childType byte
 	childType, err = srv.dbo.GetSectionChildTypeById(*p.Parent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if childType == mm.ChildTypeForum {
@@ -90,7 +90,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	if childType == mm.ChildTypeNone {
 		err = srv.dbo.SetSectionChildTypeById(*p.Parent, mm.ChildTypeSection)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 	}
 
@@ -98,23 +98,24 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	var parentChildren *ul.UidList
 	parentChildren, err = srv.dbo.GetSectionChildrenById(*p.Parent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	var insertedSectionId int64
 	insertedSectionId, err = srv.dbo.InsertNewSection(p.Parent, p.Name, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = parentChildren.AddItem(uint(insertedSectionId), false)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetSectionChildrenById(*p.Parent, parentChildren)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.AddSectionResult{
@@ -152,7 +153,7 @@ func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.
 	var err error
 	err = srv.dbo.SetSectionNameById(p.SectionId, p.Name, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ChangeSectionNameResult{
@@ -192,7 +193,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	var err error
 	oldParent, err = srv.dbo.GetSectionParentById(p.SectionId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if oldParent == nil {
@@ -202,7 +203,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	var n int
 	n, err = srv.dbo.CountSectionsById(*oldParent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -212,7 +213,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	// Ensure that a new parent exists.
 	n, err = srv.dbo.CountSectionsById(p.Parent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -223,7 +224,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	var childType byte
 	childType, err = srv.dbo.GetSectionChildTypeById(p.Parent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if childType == mm.ChildTypeForum {
@@ -233,55 +234,57 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	if childType == mm.ChildTypeNone {
 		err = srv.dbo.SetSectionChildTypeById(p.Parent, mm.ChildTypeSection)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 	}
 
 	// Update the moved section.
 	err = srv.dbo.SetSectionParentById(p.SectionId, p.Parent, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Update the new link.
 	var childrenR *ul.UidList
 	childrenR, err = srv.dbo.GetSectionChildrenById(p.Parent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = childrenR.AddItem(p.SectionId, false)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetSectionChildrenById(p.Parent, childrenR)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Update the old link.
 	var childrenL *ul.UidList
 	childrenL, err = srv.dbo.GetSectionChildrenById(*oldParent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = childrenL.RemoveItem(p.SectionId)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetSectionChildrenById(*oldParent, childrenL)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Clear the child type if the old parent becomes empty.
 	if childrenL.Size() == 0 {
 		err = srv.dbo.SetSectionChildTypeById(*oldParent, mm.ChildTypeNone)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 	}
 
@@ -318,7 +321,7 @@ func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResu
 	var err error
 	section, err = srv.dbo.GetSectionById(p.SectionId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.GetSectionResult{
@@ -354,7 +357,7 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 	var err error
 	section, err = srv.dbo.GetSectionById(p.SectionId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	var isRootSection = false
@@ -372,24 +375,25 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 		var linkSections *ul.UidList
 		linkSections, err = srv.dbo.GetSectionChildrenById(*section.Parent)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 
 		err = linkSections.RemoveItem(p.SectionId)
 		if err != nil {
+			srv.logError(err)
 			return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 		}
 
 		err = srv.dbo.SetSectionChildrenById(*section.Parent, linkSections)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 
 		// Clear the child type if the old parent becomes empty.
 		if linkSections.Size() == 0 {
 			err = srv.dbo.SetSectionChildTypeById(*section.Parent, mm.ChildTypeNone)
 			if err != nil {
-				return nil, c.DatabaseError(err, srv.dbErrors)
+				return nil, srv.databaseError(err)
 			}
 		}
 	}
@@ -397,7 +401,7 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 	// Delete the section.
 	err = srv.dbo.DeleteSectionById(p.SectionId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.DeleteSectionResult{
@@ -437,7 +441,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 	// Ensure that a section exists.
 	n, err := srv.dbo.CountSectionsById(p.SectionId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -448,7 +452,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 	var childType byte
 	childType, err = srv.dbo.GetSectionChildTypeById(p.SectionId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if childType == mm.ChildTypeSection {
@@ -458,7 +462,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 	if childType == mm.ChildTypeNone {
 		err = srv.dbo.SetSectionChildTypeById(p.SectionId, mm.ChildTypeForum)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 	}
 
@@ -466,23 +470,24 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 	var parentChildren *ul.UidList
 	parentChildren, err = srv.dbo.GetSectionChildrenById(p.SectionId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	var insertedForumId int64
 	insertedForumId, err = srv.dbo.InsertNewForum(p.SectionId, p.Name, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = parentChildren.AddItem(uint(insertedForumId), false)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetSectionChildrenById(p.SectionId, parentChildren)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.AddForumResult{
@@ -520,7 +525,7 @@ func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.Chan
 	var err error
 	err = srv.dbo.SetForumNameById(p.ForumId, p.Name, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ChangeForumNameResult{
@@ -560,13 +565,13 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	var err error
 	oldParent, err = srv.dbo.GetForumSectionById(p.ForumId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	var n int
 	n, err = srv.dbo.CountSectionsById(oldParent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -576,7 +581,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	// Ensure that a new section exists.
 	n, err = srv.dbo.CountSectionsById(p.SectionId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -587,7 +592,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	var childType byte
 	childType, err = srv.dbo.GetSectionChildTypeById(p.SectionId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if childType == mm.ChildTypeSection {
@@ -597,55 +602,57 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	if childType == mm.ChildTypeNone {
 		err = srv.dbo.SetSectionChildTypeById(p.SectionId, mm.ChildTypeForum)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 	}
 
 	// Update the moved forum.
 	err = srv.dbo.SetForumSectionById(p.ForumId, p.SectionId, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Update the new link.
 	var childrenR *ul.UidList
 	childrenR, err = srv.dbo.GetSectionChildrenById(p.SectionId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = childrenR.AddItem(p.ForumId, false)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetSectionChildrenById(p.SectionId, childrenR)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Update the old link.
 	var childrenL *ul.UidList
 	childrenL, err = srv.dbo.GetSectionChildrenById(oldParent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = childrenL.RemoveItem(p.ForumId)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetSectionChildrenById(oldParent, childrenL)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Clear the child type if the old section becomes empty.
 	if childrenL.Size() == 0 {
 		err = srv.dbo.SetSectionChildTypeById(oldParent, mm.ChildTypeNone)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 	}
 
@@ -682,7 +689,7 @@ func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, je
 	var err error
 	forum, err = srv.dbo.GetForumById(p.ForumId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.GetForumResult{
@@ -718,7 +725,7 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 	var err error
 	forum, err = srv.dbo.GetForumById(p.ForumId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Check for threads.
@@ -730,31 +737,32 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 	var linkChildren *ul.UidList
 	linkChildren, err = srv.dbo.GetSectionChildrenById(forum.SectionId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = linkChildren.RemoveItem(p.ForumId)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetSectionChildrenById(forum.SectionId, linkChildren)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Clear the child type if the old parent becomes empty.
 	if linkChildren.Size() == 0 {
 		err = srv.dbo.SetSectionChildTypeById(forum.SectionId, mm.ChildTypeNone)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 	}
 
 	// Delete the forum.
 	err = srv.dbo.DeleteForumById(p.ForumId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.DeleteForumResult{
@@ -796,7 +804,7 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 	var n int
 	n, err = srv.dbo.CountForumsById(p.ForumId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -807,23 +815,24 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 	var parentThreads *ul.UidList
 	parentThreads, err = srv.dbo.GetForumThreadsById(p.ForumId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	var insertedThreadId int64
 	insertedThreadId, err = srv.dbo.InsertNewThread(p.ForumId, p.Name, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = parentThreads.AddItem(uint(insertedThreadId), srv.settings.SystemSettings.NewThreadsAtTop)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetForumThreadsById(p.ForumId, parentThreads)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.AddThreadResult{
@@ -861,7 +870,7 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 	var err error
 	err = srv.dbo.SetThreadNameById(p.ThreadId, p.Name, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ChangeThreadNameResult{
@@ -901,13 +910,13 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	var err error
 	oldParent, err = srv.dbo.GetThreadForumById(p.ThreadId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	var n int
 	n, err = srv.dbo.CountForumsById(oldParent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -917,7 +926,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	// Ensure that a new parent exists.
 	n, err = srv.dbo.CountForumsById(p.ForumId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -927,41 +936,43 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	// Update the moved thread.
 	err = srv.dbo.SetThreadForumById(p.ThreadId, p.ForumId, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Update the new link.
 	var threadsR *ul.UidList
 	threadsR, err = srv.dbo.GetForumThreadsById(p.ForumId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = threadsR.AddItem(p.ThreadId, false)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetForumThreadsById(p.ForumId, threadsR)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Update the old link.
 	var threadsL *ul.UidList
 	threadsL, err = srv.dbo.GetForumThreadsById(oldParent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = threadsL.RemoveItem(p.ThreadId)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetForumThreadsById(oldParent, threadsL)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ChangeThreadForumResult{
@@ -997,7 +1008,7 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 	var err error
 	thread, err = srv.dbo.GetThreadById(p.ThreadId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.GetThreadResult{
@@ -1033,7 +1044,7 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 	var err error
 	thread, err = srv.dbo.GetThreadById(p.ThreadId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Check for children.
@@ -1045,23 +1056,24 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 	var linkThreads *ul.UidList
 	linkThreads, err = srv.dbo.GetForumThreadsById(thread.ForumId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = linkThreads.RemoveItem(p.ThreadId)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetForumThreadsById(thread.ForumId, linkThreads)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Delete the thread.
 	err = srv.dbo.DeleteThreadById(p.ThreadId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.DeleteThreadResult{
@@ -1103,7 +1115,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 	var n int
 	n, err = srv.dbo.CountThreadsById(p.ThreadId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -1114,7 +1126,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 	var parentMessages *ul.UidList
 	parentMessages, err = srv.dbo.GetThreadMessagesById(p.ThreadId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	messageTextChecksum := srv.getMessageTextChecksum(p.Text)
@@ -1122,17 +1134,18 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 	var insertedMessageId int64
 	insertedMessageId, err = srv.dbo.InsertNewMessage(p.ThreadId, p.Text, messageTextChecksum, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = parentMessages.AddItem(uint(insertedMessageId), false)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetThreadMessagesById(p.ThreadId, parentMessages)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Update thread's position if needed.
@@ -1140,24 +1153,25 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 		var messageThread *mm.Thread
 		messageThread, err = srv.dbo.GetThreadById(p.ThreadId)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 
 		var threads *ul.UidList
 		threads, err = srv.dbo.GetForumThreadsById(messageThread.ForumId)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 
 		if threads.Size() > 1 {
 			err = threads.RaiseItem(p.ThreadId)
 			if err != nil {
+				srv.logError(err)
 				return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 			}
 
 			err = srv.dbo.SetForumThreadsById(messageThread.ForumId, threads)
 			if err != nil {
-				return nil, c.DatabaseError(err, srv.dbErrors)
+				return nil, srv.databaseError(err)
 			}
 		}
 	}
@@ -1193,7 +1207,7 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 			var err error
 			creatorUserId, ToC, ToE, err = srv.dbo.GetMessageCreatorAndTimeById(p.MessageId)
 			if err != nil {
-				return nil, c.DatabaseError(err, srv.dbErrors)
+				return nil, srv.databaseError(err)
 			}
 
 			if userRoles.UserId == creatorUserId {
@@ -1229,7 +1243,7 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 	var err error
 	err = srv.dbo.SetMessageTextById(p.MessageId, p.Text, messageTextChecksum, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ChangeMessageTextResult{
@@ -1269,13 +1283,13 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	var err error
 	oldParent, err = srv.dbo.GetMessageThreadById(p.MessageId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	var n int
 	n, err = srv.dbo.CountThreadsById(oldParent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -1285,7 +1299,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	// Ensure that a new parent exists.
 	n, err = srv.dbo.CountThreadsById(p.ThreadId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	if n == 0 {
@@ -1295,41 +1309,43 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	// Update the moved message.
 	err = srv.dbo.SetMessageThreadById(p.MessageId, p.ThreadId, userRoles.UserId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Update the new link.
 	var messagesR *ul.UidList
 	messagesR, err = srv.dbo.GetThreadMessagesById(p.ThreadId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = messagesR.AddItem(p.MessageId, false)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetThreadMessagesById(p.ThreadId, messagesR)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Update the old link.
 	var messagesL *ul.UidList
 	messagesL, err = srv.dbo.GetThreadMessagesById(oldParent)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = messagesL.RemoveItem(p.MessageId)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetThreadMessagesById(oldParent, messagesL)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ChangeMessageThreadResult{
@@ -1365,7 +1381,7 @@ func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResu
 	var err error
 	message, err = srv.dbo.GetMessageById(p.MessageId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.GetMessageResult{
@@ -1401,30 +1417,31 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 	var err error
 	message, err = srv.dbo.GetMessageById(p.MessageId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Update the link.
 	var linkMessages *ul.UidList
 	linkMessages, err = srv.dbo.GetThreadMessagesById(message.ThreadId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	err = linkMessages.RemoveItem(p.MessageId)
 	if err != nil {
+		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
 	}
 
 	err = srv.dbo.SetThreadMessagesById(message.ThreadId, linkMessages)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Delete the message.
 	err = srv.dbo.DeleteMessageById(p.MessageId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.DeleteMessageResult{
@@ -1462,7 +1479,7 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 	var err error
 	thread, err = srv.dbo.GetThreadById(p.ThreadId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	tam := mm.NewThreadAndMessages(thread)
@@ -1472,7 +1489,7 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 	if tam.MessageIds != nil {
 		tam.Messages, err = srv.dbo.ReadMessagesById(*tam.MessageIds)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 	}
 
@@ -1513,7 +1530,7 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 	var err error
 	thread, err = srv.dbo.GetThreadById(p.ThreadId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	tamop := mm.NewThreadAndMessages(thread)
@@ -1532,7 +1549,7 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 		if tamop.MessageIds.Size() > 0 {
 			tamop.Messages, err = srv.dbo.ReadMessagesById(*tamop.MessageIds)
 			if err != nil {
-				return nil, c.DatabaseError(err, srv.dbErrors)
+				return nil, srv.databaseError(err)
 			}
 		}
 	}
@@ -1570,7 +1587,7 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 	var err error
 	forum, err = srv.dbo.GetForumById(p.ForumId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	fat := mm.NewForumAndThreads(forum)
@@ -1580,7 +1597,7 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 	if fat.ThreadIds != nil {
 		fat.Threads, err = srv.dbo.ReadThreadsById(*forum.Threads)
 		if err != nil {
-			return nil, c.DatabaseError(err, srv.dbErrors)
+			return nil, srv.databaseError(err)
 		}
 	}
 
@@ -1621,7 +1638,7 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 	var err error
 	forum, err = srv.dbo.GetForumById(p.ForumId)
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	fatop := mm.NewForumAndThreads(forum)
@@ -1640,7 +1657,7 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 		if fatop.ThreadIds.Size() > 0 {
 			fatop.Threads, err = srv.dbo.ReadThreadsById(*fatop.ThreadIds)
 			if err != nil {
-				return nil, c.DatabaseError(err, srv.dbErrors)
+				return nil, srv.databaseError(err)
 			}
 		}
 	}
@@ -1673,14 +1690,14 @@ func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (res
 	var err error
 	sections, err = srv.dbo.ReadSections()
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	// Read all the forums.
 	var forums []mm.Forum
 	forums, err = srv.dbo.ReadForums()
 	if err != nil {
-		return nil, c.DatabaseError(err, srv.dbErrors)
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ListSectionsAndForumsResult{
@@ -1719,6 +1736,7 @@ func (srv *Server) doTest(p *mm.TestParams) (result *mm.TestResult, jerr *js.Err
 
 	for err := range errChan {
 		if err != nil {
+			srv.logError(err)
 			return nil, &js.Error{Code: RpcErrorCode_TestError, Message: fmt.Sprintf(RpcErrorMsgF_TestError, err.Error())}
 		}
 	}

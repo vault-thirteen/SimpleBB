@@ -15,11 +15,17 @@ type Settings struct {
 	FilePath string `json:"-"`
 
 	HttpSettings    `json:"http"`
+	SystemSettings  `json:"system"`
 	CaptchaSettings `json:"captcha"`
 }
 
 // HttpSettings are settings of an HTTP server for incoming requests.
 type HttpSettings = cs.HttpSettings
+
+// SystemSettings are system settings.
+type SystemSettings struct {
+	IsDebugMode bool `json:"isDebugMode"`
+}
 
 // CaptchaSettings are parameters of the captcha.
 type CaptchaSettings struct {

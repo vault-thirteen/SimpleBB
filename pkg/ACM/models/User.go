@@ -21,6 +21,9 @@ func NewUserFromScannableSource(src cm.IScannable) (u *User, err error) {
 	if err != nil {
 		return nil, err
 	}
+	if up == nil {
+		return nil, nil
+	}
 
 	//u.Password = "" // Password is never shown.
 	u.UserParameters = *up

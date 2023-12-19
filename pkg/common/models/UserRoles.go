@@ -1,5 +1,10 @@
 package models
 
+import (
+	"database/sql"
+	"errors"
+)
+
 type UserRoles struct {
 	IsAdministrator bool `json:"isAdministrator"`
 	IsModerator     bool `json:"isModerator"`
@@ -23,7 +28,11 @@ func NewUserRolesFromScannableSource(src IScannable) (ur *UserRoles, err error) 
 		&ur.CanLogIn,
 	)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	return ur, nil

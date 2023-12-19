@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"net"
 	"time"
 
@@ -66,7 +67,11 @@ func NewEmailChangeFromScannableSource(src cm.IScannable) (ec *EmailChange, err 
 		&ec.IsVerifiedByNewEmail,
 	)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	return ec, nil
