@@ -12,7 +12,7 @@ require (
 	github.com/vault-thirteen/RingCaptcha v0.6.0
 	github.com/vault-thirteen/SQL v0.6.1
 	github.com/vault-thirteen/Versioneer v0.10.1
-	github.com/vault-thirteen/auxie v0.16.1
+	github.com/vault-thirteen/auxie v0.18.1
 	github.com/vault-thirteen/errorz v1.2.0
 	github.com/vault-thirteen/header v1.4.0
 	github.com/vault-thirteen/tester v1.2.0
