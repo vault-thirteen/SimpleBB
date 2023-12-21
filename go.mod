@@ -7,12 +7,12 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/osamingo/jsonrpc/v2 v2.4.2
 	github.com/valord577/mailx v0.4.20231124
-	github.com/vault-thirteen/BytePackedPassword v0.3.1
+	github.com/vault-thirteen/BytePackedPassword v0.3.2
 	github.com/vault-thirteen/MIME v1.12.0
 	github.com/vault-thirteen/RingCaptcha v0.6.0
 	github.com/vault-thirteen/SQL v0.6.1
 	github.com/vault-thirteen/Versioneer v0.10.1
-	github.com/vault-thirteen/auxie v0.16.1
+	github.com/vault-thirteen/auxie v0.18.1
 	github.com/vault-thirteen/errorz v1.2.0
 	github.com/vault-thirteen/header v1.4.0
 	github.com/vault-thirteen/tester v1.2.0
