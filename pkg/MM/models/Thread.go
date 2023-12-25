@@ -1,0 +1,52 @@
+package models
+
+import (
+	ul "github.com/vault-thirteen/SimpleBB/pkg/UidList"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+)
+
+type Thread struct {
+	// Identifier of this thread.
+	Id uint `json:"id"`
+
+	// Identifier of a forum containing this thread.
+	ForumId uint `json:"forumId"`
+
+	// Name of this thread.
+	Name string `json:"name"`
+
+	// List of identifiers of messages of this thread.
+	Messages *ul.UidList `json:"messages"`
+
+	// Thread meta-data.
+	EventData
+}
+
+func NewThread() (thr *Thread) {
+	return &Thread{
+		EventData: EventData{
+			Creator: &EventParameters{},
+			Editor:  &OptionalEventParameters{},
+		},
+	}
+}
+
+func NewThreadFromScannableSource(src cm.IScannable) (thr *Thread, err error) {
+	thr = NewThread()
+
+	err = src.Scan(
+		&thr.Id,
+		&thr.ForumId,
+		&thr.Name,
+		&thr.Messages,
+		&thr.Creator.UserId,
+		&thr.Creator.Time,
+		&thr.Editor.UserId,
+		&thr.Editor.Time,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return thr, nil
+}
