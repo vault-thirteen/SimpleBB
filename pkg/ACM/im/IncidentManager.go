@@ -182,9 +182,9 @@ func (im *IncidentManager) informGateway(inc *am.Incident) (err error) {
 		UserIPA:      inc.UserIPA.String(),
 		BlockTimeSec: blockTime,
 	}
-	var result gm.BlockIPAddressResult
 
-	err = im.gwmClient.MakeRequest(context.Background(), &result, gc.FuncBlockIPAddress, params)
+	var result = new(gm.BlockIPAddressResult)
+	err = im.gwmClient.MakeRequest(context.Background(), result, gc.FuncBlockIPAddress, params)
 	if err == nil {
 		return err
 	}

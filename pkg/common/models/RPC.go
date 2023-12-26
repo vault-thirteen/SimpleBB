@@ -9,7 +9,7 @@ type CommonParams struct {
 
 type CommonResult struct {
 	// Time taken to perform the request, in milliseconds.
-	TimeSpent int64 `json:"timeSpent"`
+	TimeSpent int64 `json:"timeSpent,omitempty"`
 }
 
 // Auth is authorisation data.

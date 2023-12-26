@@ -1,6 +1,7 @@
 package gwm
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -14,6 +15,7 @@ import (
 	"github.com/vault-thirteen/auxie/MIME"
 	"github.com/vault-thirteen/auxie/header"
 	hh "github.com/vault-thirteen/auxie/http-helper"
+	jc "github.com/ybbus/jsonrpc/v3"
 )
 
 // Auxiliary functions used in service functions.
@@ -22,6 +24,8 @@ const (
 	ErrNotEnoughDataInAddress = "not enough data in address"
 	ErrFMultipleHeaders       = "multiple headers: %s"
 	ErrFHeaderIsNotFound      = "header is not found: %s"
+	ErrFUnknownRpcErrorCode   = "unknown RPC error code: %v"
+	ErrTypeCast               = "type cast error"
 )
 
 func (srv *Server) isIPAddressAllowed(req *http.Request) (ok bool, clientIPA string, err error) {
@@ -104,11 +108,6 @@ func getSingleHeader(req *http.Request, headerName string) (h string, err error)
 	return headers[0], nil
 }
 
-func (srv *Server) processInternalError(rw http.ResponseWriter, err error) {
-	log.Println(err.Error())
-	rw.WriteHeader(http.StatusInternalServerError)
-}
-
 func (srv *Server) processBlockedClient(rw http.ResponseWriter) {
 	rw.WriteHeader(http.StatusForbidden)
 }
@@ -129,7 +128,8 @@ func (srv *Server) processNotAcceptable(rw http.ResponseWriter) {
 	rw.WriteHeader(http.StatusNotAcceptable)
 }
 
-func (srv *Server) processInternalServerError(rw http.ResponseWriter) {
+func (srv *Server) processInternalServerError(rw http.ResponseWriter, err error) {
+	srv.logError(err)
 	rw.WriteHeader(http.StatusInternalServerError)
 }
 
@@ -164,10 +164,50 @@ func (srv *Server) checkClientSupportForJson(req *http.Request) (ok bool, err er
 	return false, nil
 }
 
+func (srv *Server) getAcmHttpStatusCodeByRpcErrorCode(rpcErrorCode int) (httpStatusCode int, err error) {
+	var ok bool
+	httpStatusCode, ok = srv.acmHttpStatusCodesByRpcErrorCode[rpcErrorCode]
+	if !ok {
+		return 0, fmt.Errorf(ErrFUnknownRpcErrorCode, rpcErrorCode)
+	}
+
+	return httpStatusCode, nil
+}
+
+func (srv *Server) processRpcError(rw http.ResponseWriter, jerr *jc.RPCError) {
+	var httpStatusCode int
+	var err error
+	httpStatusCode, err = srv.getAcmHttpStatusCodeByRpcErrorCode(jerr.Code)
+	if err != nil {
+		srv.processInternalServerError(rw, err)
+		return
+	}
+
+	switch httpStatusCode {
+	case http.StatusInternalServerError:
+		srv.processInternalServerError(rw, err)
+		return
+	}
+
+	rw.WriteHeader(httpStatusCode)
+	srv.respondWithPlainText(rw, jerr.Message)
+	return
+}
+
 func (srv *Server) respondWithPlainText(rw http.ResponseWriter, text string) {
 	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_TextPlain)
 
 	_, err := rw.Write([]byte(text))
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+}
+
+func (srv *Server) respondWithJsonObject(rw http.ResponseWriter, obj any) {
+	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_ApplicationJson)
+
+	err := json.NewEncoder(rw).Encode(obj)
 	if err != nil {
 		log.Println(err.Error())
 		return

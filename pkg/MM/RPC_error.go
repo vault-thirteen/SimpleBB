@@ -6,29 +6,31 @@ package mm
 
 // Codes.
 const (
-	RpcErrorCode_SectionNameIsNotSet      = 1
-	RpcErrorCode_RootSectionAlreadyExists = 2
-	RpcErrorCode_SectionIsNotFound        = 3
-	RpcErrorCode_SectionIdIsNotSet        = 4
-	RpcErrorCode_SectionHasChildren       = 5
-	RpcErrorCode_RootSectionCanNotBeMoved = 6
-	RpcErrorCode_ForumNameIsNotSet        = 7
-	RpcErrorCode_ForumIsNotFound          = 8
-	RpcErrorCode_ForumIdIsNotSet          = 9
-	RpcErrorCode_ForumHasThreads          = 10
-	RpcErrorCode_ThreadNameIsNotSet       = 11
-	RpcErrorCode_ThreadIdIsNotSet         = 12
-	RpcErrorCode_ThreadIsNotFound         = 13
-	RpcErrorCode_ThreadIsNotEmpty         = 14
-	RpcErrorCode_MessageTextIsNotSet      = 15
-	RpcErrorCode_MessageIdIsNotSet        = 16
-	RpcErrorCode_IncompatibleChildType    = 17
-	RpcErrorCode_PageIsNotSet             = 18
-	RpcErrorCode_TestError                = 19
+	RpcErrorCode_Exception                = 1
+	RpcErrorCode_SectionNameIsNotSet      = 2
+	RpcErrorCode_RootSectionAlreadyExists = 3
+	RpcErrorCode_SectionIsNotFound        = 4
+	RpcErrorCode_SectionIdIsNotSet        = 5
+	RpcErrorCode_SectionHasChildren       = 6
+	RpcErrorCode_RootSectionCanNotBeMoved = 7
+	RpcErrorCode_ForumNameIsNotSet        = 8
+	RpcErrorCode_ForumIsNotFound          = 9
+	RpcErrorCode_ForumIdIsNotSet          = 10
+	RpcErrorCode_ForumHasThreads          = 11
+	RpcErrorCode_ThreadNameIsNotSet       = 12
+	RpcErrorCode_ThreadIdIsNotSet         = 13
+	RpcErrorCode_ThreadIsNotFound         = 14
+	RpcErrorCode_ThreadIsNotEmpty         = 15
+	RpcErrorCode_MessageTextIsNotSet      = 16
+	RpcErrorCode_MessageIdIsNotSet        = 17
+	RpcErrorCode_IncompatibleChildType    = 18
+	RpcErrorCode_PageIsNotSet             = 19
+	RpcErrorCode_TestError                = 20
 )
 
 // Messages.
 const (
+	RpcErrorMsg_Exception                = "exception"
 	RpcErrorMsg_SectionNameIsNotSet      = "section name is not set"
 	RpcErrorMsg_RootSectionAlreadyExists = "root section already exists"
 	RpcErrorMsg_SectionIsNotFound        = "section is not found"

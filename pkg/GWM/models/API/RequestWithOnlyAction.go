@@ -1,10 +1,10 @@
-package models
+package api
 
 import "encoding/json"
 
-// ApiRequestWithOnlyAction is a data set for an API request received from a
+// RequestWithOnlyAction is a data set for an API request received from a
 // client in JSON format. This data is later mixed with additional client data.
-type ApiRequestWithOnlyAction struct {
+type RequestWithOnlyAction struct {
 	// Action is a name of the function which a client wants to perform.
 	Action string `json:"action"`
 

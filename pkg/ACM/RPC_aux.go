@@ -187,8 +187,7 @@ func (srv *Server) checkCaptcha(captchaId string, answer string) (result *rm.Che
 		return nil, &js.Error{Code: RpcErrorCode_RCS_CheckCaptcha, Message: fmt.Sprintf(RpcErrorMsgF_RCS_CheckCaptcha, err.Error())}
 	}
 
-	result = &rm.CheckCaptchaResult{}
-
+	result = new(rm.CheckCaptchaResult)
 	err = srv.rcsServiceClient.MakeRequest(context.Background(), result, rc.FuncCheckCaptcha, params)
 	if err != nil {
 		srv.logError(err)
@@ -299,8 +298,8 @@ func (srv *Server) countPasswordChangesByUserId(userId uint) (passwordChangesCou
 
 func (srv *Server) createCaptcha() (result *rm.CreateCaptchaResult, err error) {
 	var params = rm.CreateCaptchaParams{}
-	result = &rm.CreateCaptchaResult{}
 
+	result = new(rm.CreateCaptchaResult)
 	err = srv.rcsServiceClient.MakeRequest(context.Background(), result, rc.FuncCreateCaptcha, params)
 	if err != nil {
 		return nil, err
@@ -409,7 +408,7 @@ func (srv *Server) isEmailOfUserValid(email string) (isEmailValid bool) {
 func isPasswordAllowed(password string) (err error) {
 	_, err = bpp.IsPasswordAllowed(password)
 	if err != nil {
-		return fmt.Errorf(c.ErrFPasswordIsNotAllowed, err.Error())
+		return fmt.Errorf(c.ErrFBadPassword, err.Error())
 	}
 
 	return nil
@@ -448,9 +447,8 @@ func (srv *Server) sendVerificationCodeForReg(email string, code string) (err er
 
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
 
-	var result sm.SendMessageResult
-
-	err = srv.smtpServiceClient.MakeRequest(context.Background(), &result, sc.FuncSendMessage, params)
+	var result = new(sm.SendMessageResult)
+	err = srv.smtpServiceClient.MakeRequest(context.Background(), result, sc.FuncSendMessage, params)
 	if err != nil {
 		return err
 	}
@@ -465,9 +463,8 @@ func (srv *Server) sendVerificationCodeForLogIn(email string, code string) (err 
 
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
 
-	var result sm.SendMessageResult
-
-	err = srv.smtpServiceClient.MakeRequest(context.Background(), &result, sc.FuncSendMessage, params)
+	var result = new(sm.SendMessageResult)
+	err = srv.smtpServiceClient.MakeRequest(context.Background(), result, sc.FuncSendMessage, params)
 	if err != nil {
 		return err
 	}
@@ -482,9 +479,8 @@ func (srv *Server) sendVerificationCodeForEmailChange(email string, code string)
 
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
 
-	var result sm.SendMessageResult
-
-	err = srv.smtpServiceClient.MakeRequest(context.Background(), &result, sc.FuncSendMessage, params)
+	var result = new(sm.SendMessageResult)
+	err = srv.smtpServiceClient.MakeRequest(context.Background(), result, sc.FuncSendMessage, params)
 	if err != nil {
 		return err
 	}
@@ -499,9 +495,8 @@ func (srv *Server) sendVerificationCodeForPwdChange(email string, code string) (
 
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
 
-	var result sm.SendMessageResult
-
-	err = srv.smtpServiceClient.MakeRequest(context.Background(), &result, sc.FuncSendMessage, params)
+	var result = new(sm.SendMessageResult)
+	err = srv.smtpServiceClient.MakeRequest(context.Background(), result, sc.FuncSendMessage, params)
 	if err != nil {
 		return err
 	}

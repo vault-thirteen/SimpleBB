@@ -13,7 +13,7 @@ import (
 
 const (
 	ErrCaptchaAnswerIsNotSet = "answer is not set"
-	ErrFPasswordIsNotAllowed = "password is not allowed: %s" // Template.
+	ErrFBadPassword          = "bad password: %s" // Template.
 	ErrUnsupportedRCSMode    = "unsupported RCS mode"
 	ErrFakeJWToken           = "fake JWT token"
 	ErrFDatabaseNetwork      = "database network error: %v" // Template.

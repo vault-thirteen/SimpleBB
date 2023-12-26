@@ -93,7 +93,7 @@ func (srv *Server) getUserSelfRoles(auth *cm.Auth) (userRoles *am.GetSelfRolesRe
 		},
 	}
 
-	userRoles = &am.GetSelfRolesResult{}
+	userRoles = new(am.GetSelfRolesResult)
 	err = srv.acmServiceClient.MakeRequest(context.Background(), userRoles, ac.FuncGetSelfRoles, params)
 	if err != nil {
 		return nil, err
@@ -106,8 +106,9 @@ func (srv *Server) doTestA(wg *sync.WaitGroup, errChan chan error) {
 	defer wg.Done()
 
 	var ap = am.TestParams{}
-	var ar = am.TestResult{}
-	err := srv.acmServiceClient.MakeRequest(context.Background(), &ar, ac.FuncTest, ap)
+
+	var ar = new(am.TestResult)
+	err := srv.acmServiceClient.MakeRequest(context.Background(), ar, ac.FuncTest, ap)
 	if err != nil {
 		errChan <- err
 	}

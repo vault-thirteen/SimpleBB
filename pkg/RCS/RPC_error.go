@@ -6,14 +6,16 @@ package rcs
 
 // Codes.
 const (
-	RpcErrorCode_TaskIdIsNotSet = 1
-	RpcErrorCode_AnswerIsNotSet = 2
-	RpcErrorCode_CheckError     = 3
-	RpcErrorCode_CreateError    = 4
+	RpcErrorCode_Exception      = 1
+	RpcErrorCode_TaskIdIsNotSet = 2
+	RpcErrorCode_AnswerIsNotSet = 3
+	RpcErrorCode_CheckError     = 4
+	RpcErrorCode_CreateError    = 5
 )
 
 // Messages.
 const (
+	RpcErrorMsg_Exception      = "exception"
 	RpcErrorMsg_TaskIdIsNotSet = "task ID is not set"
 	RpcErrorMsg_AnswerIsNotSet = "answer is not set"
 	RpcErrorMsgF_CheckError    = "check error: %s"

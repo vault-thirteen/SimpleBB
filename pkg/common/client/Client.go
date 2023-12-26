@@ -128,17 +128,18 @@ func (cli *Client) MakeRequest(ctx context.Context, out any, method string, para
 }
 
 func (cli *Client) Ping(verbose bool) (err error) {
-	var params = cm.PingParams{}
-	var result cm.PingResult
+	// While several services are inter-dependent, we make several attempts to
+	// ping the module.
 
 	if verbose {
 		fmt.Print(fmt.Sprintf(c.MsgFPingingModule, cli.shortName))
 	}
 
-	// While several services are inter-dependent, we make several attempts to
-	// ping the module.
+	var params = cm.PingParams{}
+
+	var result = new(cm.PingResult)
 	for i := 1; i <= c.ServicePingAttemptsCount; i++ {
-		err = cli.MakeRequest(context.Background(), &result, FuncPing, params)
+		err = cli.MakeRequest(context.Background(), result, FuncPing, params)
 		if err == nil {
 			break
 		}

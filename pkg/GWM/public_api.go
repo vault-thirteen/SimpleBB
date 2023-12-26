@@ -6,11 +6,14 @@ import (
 	"net/http"
 
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
+	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 
 const (
 	ApiFunctionName_GetProductVersion = "getProductVersion"
+	ApiFunctionName_RegisterUser      = "registerUser"
+	//TODO
 )
 
 func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, clientIPA string) {
@@ -34,19 +37,19 @@ func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, cl
 	var reqBody []byte
 	reqBody, err = io.ReadAll(req.Body)
 	if err != nil {
-		srv.processInternalServerError(rw)
+		srv.processInternalServerError(rw, err)
 		return
 	}
 
 	// Check the action.
-	var arwoa gm.ApiRequestWithOnlyAction
+	var arwoa api.RequestWithOnlyAction
 	err = json.Unmarshal(reqBody, &arwoa)
 	if err != nil {
 		srv.processBadRequest(rw)
 		return
 	}
 
-	var handler gm.ApiRequestHandler
+	var handler api.RequestHandler
 	handler, ok = srv.apiHandlers[arwoa.Action]
 	if !ok {
 		srv.processPageNotFound(rw)
@@ -60,7 +63,7 @@ func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, cl
 		return
 	}
 
-	var ar = &gm.ApiRequest{
+	var ar = &api.Request{
 		Action:     arwoa.Action,
 		Parameters: arwoa.Parameters,
 		Authorisation: &cm.Auth{

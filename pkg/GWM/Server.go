@@ -13,8 +13,9 @@ import (
 	"time"
 
 	js "github.com/osamingo/jsonrpc/v2"
+	a "github.com/vault-thirteen/SimpleBB/pkg/ACM"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/dbo"
-	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
+	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
 	gs "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
 	"github.com/vault-thirteen/SimpleBB/pkg/avm"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
@@ -37,7 +38,7 @@ type Server struct {
 	listenDsnExt     string
 	httpServerExt    *http.Server
 	apiFunctionNames []string
-	apiHandlers      map[string]gm.ApiRequestHandler
+	apiHandlers      map[string]api.RequestHandler
 
 	// Channel for an external controller. When a message comes from this
 	// channel, a controller must stop this server. The server does not stop
@@ -63,6 +64,9 @@ type Server struct {
 	// Clients for external services.
 	acmServiceClient *cc.Client
 	mmServiceClient  *cc.Client
+
+	// Mapping of HTTP status codes by RPC error code for various services.
+	acmHttpStatusCodesByRpcErrorCode map[int]int
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -131,6 +135,11 @@ func NewServer(s cm.ISettings) (srv *Server, err error) {
 	}
 
 	err = srv.initDiagnosticData()
+	if err != nil {
+		return nil, err
+	}
+
+	err = srv.initStatusCodeMapper()
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +352,7 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 		var err error
 		ok, clientIPA, err = srv.isIPAddressAllowed(req)
 		if err != nil {
-			srv.processInternalError(rw, err)
+			srv.processInternalServerError(rw, err)
 			return
 		}
 
@@ -372,6 +381,12 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 
 func (srv *Server) initDiagnosticData() (err error) {
 	srv.diag = &cdd.DiagnosticData{}
+
+	return nil
+}
+
+func (srv *Server) initStatusCodeMapper() (err error) {
+	srv.acmHttpStatusCodesByRpcErrorCode = a.GetMapOfHttpStatusCodesByRpcErrorCodes()
 
 	return nil
 }
@@ -429,8 +444,10 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_GetProductVersion,
 	}
 
-	srv.apiHandlers = map[string]gm.ApiRequestHandler{
+	srv.apiHandlers = map[string]api.RequestHandler{
 		ApiFunctionName_GetProductVersion: srv.GetProductVersion,
+		ApiFunctionName_RegisterUser:      srv.RegisterUser,
+		//TODO
 	}
 
 	return nil

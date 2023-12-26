@@ -31,6 +31,7 @@ ECHO 1. ACM Module
 :: Build the ACM module (service).
 CD "%exe_dir%\%acm_folder%"
 go build
+IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
 MOVE "%acm_folder%.exe" ".\..\..\%build_dir%\"
 CD ".\..\..\"
 
@@ -48,6 +49,7 @@ ECHO 2. Gateway Module
 :: Build the Gateway module (service).
 CD "%exe_dir%\%gw_folder%"
 go build
+IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
 MOVE "%gw_folder%.exe" ".\..\..\%build_dir%\"
 CD ".\..\..\"
 
@@ -65,6 +67,7 @@ ECHO 3. Message Module
 :: Build the Message module (service).
 CD "%exe_dir%\%mm_folder%"
 go build
+IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
 MOVE "%mm_folder%.exe" ".\..\..\%build_dir%\"
 CD ".\..\..\"
 
@@ -83,6 +86,7 @@ ECHO 4. Captcha Module
 :: Build the Captcha module (service).
 CD "%exe_dir%\%captcha_folder%"
 go build
+IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
 MOVE "%captcha_folder%.exe" ".\..\..\%build_dir%\"
 CD ".\..\..\"
 
@@ -96,6 +100,7 @@ ECHO 5. SMTP Module
 :: Build the SMTP module (service).
 CD "%exe_dir%\%smtp_folder%"
 go build
+IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
 MOVE "%smtp_folder%.exe" ".\..\..\%build_dir%\"
 CD ".\..\..\"
 
@@ -109,6 +114,7 @@ ECHO 6. Auxiliary tools
 ECHO 6.1. Argon tool
 CD "%tool_folder%\%argon2_tool_folder%"
 go build
+IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
 MOVE "%argon2_tool_folder%.exe" ".\..\..\%build_dir%\%tool_folder%\"
 CD ".\..\..\"
 
@@ -116,5 +122,8 @@ CD ".\..\..\"
 ECHO 6.2. JWT tool
 CD "%tool_folder%\%jwt_tool_folder%"
 go build
+IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
 MOVE "%jwt_tool_folder%.exe" ".\..\..\%build_dir%\%tool_folder%\"
 CD ".\..\..\"
+
+ECHO SUCCESSFUL BUILD

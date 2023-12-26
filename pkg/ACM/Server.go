@@ -135,12 +135,12 @@ func NewServer(s cm.ISettings) (srv *Server, err error) {
 		return nil, err
 	}
 
-	err = srv.initIncidentManager()
+	err = srv.createClientsForExternalServices()
 	if err != nil {
 		return nil, err
 	}
 
-	err = srv.createClientsForExternalServices()
+	err = srv.initIncidentManager()
 	if err != nil {
 		return nil, err
 	}
@@ -467,6 +467,8 @@ func (srv *Server) initDiagnosticData() (err error) {
 	return nil
 }
 
+// This method uses the GWM service client as an argument, thus it should be
+// called after initialisation of all external service clients.
 func (srv *Server) initIncidentManager() (err error) {
 	srv.incidentManager = im.NewIncidentManager(srv.settings.SystemSettings.IsTableOfIncidentsUsed, srv.dbo, srv.gwmServiceClient, &srv.settings.SystemSettings.BlockTimePerIncident)
 

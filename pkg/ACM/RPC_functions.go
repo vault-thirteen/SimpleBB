@@ -173,7 +173,7 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 	err = isPasswordAllowed(p.Password)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: RpcErrorCode_PasswordError, Message: fmt.Sprintf(RpcErrorMsgF_PasswordError, err.Error())}
+		return nil, &js.Error{Code: RpcErrorCode_PasswordIsNotValid, Message: fmt.Sprintf(RpcErrorMsgF_PasswordIsNotValid, err.Error())}
 	}
 
 	var pwdBytes []byte
@@ -1291,7 +1291,7 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 	err = isPasswordAllowed(p.NewPassword)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: RpcErrorCode_PasswordError, Message: fmt.Sprintf(RpcErrorMsgF_PasswordError, err.Error())}
+		return nil, &js.Error{Code: RpcErrorCode_PasswordIsNotValid, Message: fmt.Sprintf(RpcErrorMsgF_PasswordIsNotValid, err.Error())}
 	}
 
 	pc.NewPassword, err = bpp.PackSymbols([]rune(p.NewPassword))

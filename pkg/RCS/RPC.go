@@ -5,6 +5,9 @@ package rcs
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"log"
+	"runtime/debug"
 	"time"
 
 	js "github.com/osamingo/jsonrpc/v2"
@@ -17,7 +20,15 @@ type PingHandler struct {
 	Server *Server
 }
 
-func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (any, *js.Error) {
+func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
+	defer func() {
+		x := recover()
+		if x != nil {
+			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
+			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
+		}
+	}()
+
 	h.Server.diag.IncTotalRequestsCount()
 	result := rm.PingResult{OK: true}
 	h.Server.diag.IncSuccessfulRequestsCount()
@@ -30,7 +41,15 @@ type CreateCaptchaHandler struct {
 	Server *Server
 }
 
-func (h CreateCaptchaHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (any, *js.Error) {
+func (h CreateCaptchaHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
+	defer func() {
+		x := recover()
+		if x != nil {
+			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
+			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
+		}
+	}()
+
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
@@ -52,12 +71,20 @@ type CheckCaptchaHandler struct {
 	Server *Server
 }
 
-func (h CheckCaptchaHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h CheckCaptchaHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
+	defer func() {
+		x := recover()
+		if x != nil {
+			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
+			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
+		}
+	}()
+
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
 	var p rm.CheckCaptchaParams
-	jerr := js.Unmarshal(params, &p)
+	jerr = js.Unmarshal(params, &p)
 	if jerr != nil {
 		return nil, jerr
 	}
@@ -83,7 +110,15 @@ type ShowDiagnosticDataHandler struct {
 	Server *Server
 }
 
-func (h ShowDiagnosticDataHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (any, *js.Error) {
+func (h ShowDiagnosticDataHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
+	defer func() {
+		x := recover()
+		if x != nil {
+			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
+			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
+		}
+	}()
+
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 

@@ -5,6 +5,9 @@ package gwm
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"log"
+	"runtime/debug"
 	"time"
 
 	js "github.com/osamingo/jsonrpc/v2"
@@ -17,7 +20,15 @@ type PingHandler struct {
 	Server *Server
 }
 
-func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (any, *js.Error) {
+func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
+	defer func() {
+		x := recover()
+		if x != nil {
+			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
+			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
+		}
+	}()
+
 	h.Server.diag.IncTotalRequestsCount()
 	result := gm.PingResult{OK: true}
 	h.Server.diag.IncSuccessfulRequestsCount()
@@ -30,12 +41,20 @@ type BlockIPAddressHandler struct {
 	Server *Server
 }
 
-func (h BlockIPAddressHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h BlockIPAddressHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
+	defer func() {
+		x := recover()
+		if x != nil {
+			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
+			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
+		}
+	}()
+
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
 	var p gm.BlockIPAddressParams
-	jerr := js.Unmarshal(params, &p)
+	jerr = js.Unmarshal(params, &p)
 	if jerr != nil {
 		return nil, jerr
 	}
@@ -59,12 +78,20 @@ type IsIPAddressBlockedHandler struct {
 	Server *Server
 }
 
-func (h IsIPAddressBlockedHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (any, *js.Error) {
+func (h IsIPAddressBlockedHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
+	defer func() {
+		x := recover()
+		if x != nil {
+			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
+			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
+		}
+	}()
+
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
 	var p gm.IsIPAddressBlockedParams
-	jerr := js.Unmarshal(params, &p)
+	jerr = js.Unmarshal(params, &p)
 	if jerr != nil {
 		return nil, jerr
 	}
@@ -90,7 +117,15 @@ type ShowDiagnosticDataHandler struct {
 	Server *Server
 }
 
-func (h ShowDiagnosticDataHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (any, *js.Error) {
+func (h ShowDiagnosticDataHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
+	defer func() {
+		x := recover()
+		if x != nil {
+			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
+			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
+		}
+	}()
+
 	h.Server.diag.IncTotalRequestsCount()
 	var timeStart = time.Now()
 
