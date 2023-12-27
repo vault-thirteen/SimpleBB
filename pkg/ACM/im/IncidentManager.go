@@ -14,9 +14,9 @@ import (
 	s "github.com/vault-thirteen/SimpleBB/pkg/ACM/settings"
 	gc "github.com/vault-thirteen/SimpleBB/pkg/GWM/client"
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
-	"github.com/vault-thirteen/SimpleBB/pkg/avm"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
 )
 

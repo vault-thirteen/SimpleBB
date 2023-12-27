@@ -1,6 +1,8 @@
 package models
 
-import ul "github.com/vault-thirteen/SimpleBB/pkg/UidList"
+import (
+	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+)
 
 type ThreadAndMessages struct {
 	// Thread parameters.

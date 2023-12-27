@@ -6,7 +6,7 @@ import (
 	js "github.com/osamingo/jsonrpc/v2"
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	"github.com/vault-thirteen/SimpleBB/pkg/net"
+	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 )
 
 // RPC functions.
@@ -28,7 +28,7 @@ func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockI
 		return nil, &js.Error{Code: RpcErrorCode_BlockTimeIsNotSet, Message: RpcErrorMsg_BlockTimeIsNotSet}
 	}
 
-	userIPAB, err := net.ParseIPA(p.UserIPA)
+	userIPAB, err := cn.ParseIPA(p.UserIPA)
 	if err != nil {
 		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}
@@ -70,7 +70,7 @@ func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *g
 		return nil, &js.Error{Code: RpcErrorCode_IPAddressIsNotSet, Message: RpcErrorMsg_IPAddressIsNotSet}
 	}
 
-	userIPAB, err := net.ParseIPA(p.UserIPA)
+	userIPAB, err := cn.ParseIPA(p.UserIPA)
 	if err != nil {
 		srv.logError(err)
 		return nil, &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}

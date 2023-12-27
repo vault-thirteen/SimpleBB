@@ -2,6 +2,7 @@ package smtp
 
 import (
 	"fmt"
+
 	js "github.com/osamingo/jsonrpc/v2"
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SMTP/models"
 )

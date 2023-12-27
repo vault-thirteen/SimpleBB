@@ -13,9 +13,9 @@ import (
 
 	js "github.com/osamingo/jsonrpc/v2"
 	ss "github.com/vault-thirteen/SimpleBB/pkg/SMTP/settings"
-	"github.com/vault-thirteen/SimpleBB/pkg/avm"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cdd "github.com/vault-thirteen/SimpleBB/pkg/common/DiagnosticData"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 

@@ -14,9 +14,9 @@ import (
 	js "github.com/osamingo/jsonrpc/v2"
 	rc "github.com/vault-thirteen/RingCaptcha"
 	rs "github.com/vault-thirteen/SimpleBB/pkg/RCS/settings"
-	"github.com/vault-thirteen/SimpleBB/pkg/avm"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cdd "github.com/vault-thirteen/SimpleBB/pkg/common/DiagnosticData"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
-	ul "github.com/vault-thirteen/SimpleBB/pkg/UidList"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 )
 

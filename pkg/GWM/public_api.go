@@ -7,6 +7,7 @@ import (
 
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
+	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 
@@ -23,7 +24,7 @@ func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, cl
 	}
 
 	// Check accepted MIME types.
-	ok, err := srv.checkClientSupportForJson(req)
+	ok, err := ch.CheckClientSupportForJson(req)
 	if err != nil {
 		srv.processBadRequest(rw)
 		return

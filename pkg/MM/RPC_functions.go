@@ -9,8 +9,8 @@ import (
 	js "github.com/osamingo/jsonrpc/v2"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
-	ul "github.com/vault-thirteen/SimpleBB/pkg/UidList"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 )
 
 // RPC functions.

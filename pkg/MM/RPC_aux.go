@@ -12,7 +12,7 @@ import (
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
-	"github.com/vault-thirteen/SimpleBB/pkg/net"
+	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 )
 
 // Auxiliary functions used in RPC functions.
@@ -51,7 +51,7 @@ func (srv *Server) mustBeAuthUserIPA(auth *cm.Auth) (jerr *js.Error) {
 	}
 
 	var err error
-	auth.UserIPAB, err = net.ParseIPA(auth.UserIPA)
+	auth.UserIPAB, err = cn.ParseIPA(auth.UserIPA)
 	if err != nil {
 		srv.logError(err)
 		return &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}

@@ -19,7 +19,7 @@ import (
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
-	nt "github.com/vault-thirteen/SimpleBB/pkg/net"
+	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 	num "github.com/vault-thirteen/auxie/number"
 )
 
@@ -62,7 +62,7 @@ func (srv *Server) mustBeAuthUserIPA(auth *cm.Auth) (jerr *js.Error) {
 	}
 
 	var err error
-	auth.UserIPAB, err = nt.ParseIPA(auth.UserIPA)
+	auth.UserIPAB, err = cn.ParseIPA(auth.UserIPA)
 	if err != nil {
 		srv.logError(err)
 		return &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}

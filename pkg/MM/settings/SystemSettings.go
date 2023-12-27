@@ -2,6 +2,7 @@ package s
 
 import (
 	"errors"
+
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 )
 
