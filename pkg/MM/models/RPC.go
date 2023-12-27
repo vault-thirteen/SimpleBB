@@ -1,18 +1,18 @@
 package models
 
 import (
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 // Ping.
 
-type PingParams = cm.PingParams
-type PingResult = cm.PingResult
+type PingParams = cmr.PingParams
+type PingResult = cmr.PingResult
 
 // Section.
 
 type AddSectionParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// Identifier of a parent section containing this section.
 	// Null means that this section is a root section.
@@ -24,14 +24,14 @@ type AddSectionParams struct {
 }
 
 type AddSectionResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	// ID of the created section.
 	SectionId uint `json:"sectionId"`
 }
 
 type ChangeSectionNameParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// Identifier of a section.
 	SectionId uint `json:"sectionId"`
@@ -41,13 +41,13 @@ type ChangeSectionNameParams struct {
 }
 
 type ChangeSectionNameResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type ChangeSectionParentParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// Identifier of a section.
 	SectionId uint `json:"sectionId"`
@@ -57,31 +57,31 @@ type ChangeSectionParentParams struct {
 }
 
 type ChangeSectionParentResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type GetSectionParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	SectionId uint `json:"sectionId"`
 }
 
 type GetSectionResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	Section *Section `json:"section"`
 }
 
 type DeleteSectionParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	SectionId uint `json:"sectionId"`
 }
 
 type DeleteSectionResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
@@ -89,7 +89,7 @@ type DeleteSectionResult struct {
 // Forum.
 
 type AddForumParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// Identifier of a section containing this forum.
 	SectionId uint `json:"sectionId"`
@@ -99,14 +99,14 @@ type AddForumParams struct {
 }
 
 type AddForumResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	// ID of the created forum.
 	ForumId uint `json:"forumId"`
 }
 
 type ChangeForumNameParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	ForumId uint `json:"forumId"`
 
@@ -115,13 +115,13 @@ type ChangeForumNameParams struct {
 }
 
 type ChangeForumNameResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type ChangeForumSectionParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// Identifier of this forum.
 	ForumId uint `json:"forumId"`
@@ -131,31 +131,31 @@ type ChangeForumSectionParams struct {
 }
 
 type ChangeForumSectionResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type GetForumParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	ForumId uint `json:"forumId"`
 }
 
 type GetForumResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	Forum *Forum `json:"forum"`
 }
 
 type DeleteForumParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	ForumId uint `json:"forumId"`
 }
 
 type DeleteForumResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
@@ -163,7 +163,7 @@ type DeleteForumResult struct {
 // Thread.
 
 type AddThreadParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// ID of a forum containing this thread.
 	ForumId uint `json:"forumId"`
@@ -173,14 +173,14 @@ type AddThreadParams struct {
 }
 
 type AddThreadResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	// ID of the created forum.
 	ThreadId uint `json:"threadId"`
 }
 
 type ChangeThreadNameParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	ThreadId uint `json:"threadId"`
 
@@ -189,13 +189,13 @@ type ChangeThreadNameParams struct {
 }
 
 type ChangeThreadNameResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type ChangeThreadForumParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	ThreadId uint `json:"threadId"`
 
@@ -204,31 +204,31 @@ type ChangeThreadForumParams struct {
 }
 
 type ChangeThreadForumResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type GetThreadParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	ThreadId uint `json:"threadId"`
 }
 
 type GetThreadResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	Thread *Thread `json:"thread"`
 }
 
 type DeleteThreadParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	ThreadId uint `json:"threadId"`
 }
 
 type DeleteThreadResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
@@ -236,7 +236,7 @@ type DeleteThreadResult struct {
 // Message.
 
 type AddMessageParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// ID of a thread containing this message.
 	ThreadId uint `json:"threadId"`
@@ -246,14 +246,14 @@ type AddMessageParams struct {
 }
 
 type AddMessageResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	// ID of the created message.
 	MessageId uint `json:"messageId"`
 }
 
 type ChangeMessageTextParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	MessageId uint `json:"messageId"`
 
@@ -262,13 +262,13 @@ type ChangeMessageTextParams struct {
 }
 
 type ChangeMessageTextResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type ChangeMessageThreadParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	MessageId uint `json:"messageId"`
 
@@ -277,31 +277,31 @@ type ChangeMessageThreadParams struct {
 }
 
 type ChangeMessageThreadResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type GetMessageParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	MessageId uint `json:"messageId"`
 }
 
 type GetMessageResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	Message *Message `json:"message"`
 }
 
 type DeleteMessageParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	MessageId uint `json:"messageId"`
 }
 
 type DeleteMessageResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
@@ -309,61 +309,61 @@ type DeleteMessageResult struct {
 // Composite objects.
 
 type ListThreadAndMessagesParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	ThreadId uint `json:"threadId"`
 }
 
 type ListThreadAndMessagesResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	ThreadAndMessages *ThreadAndMessages `json:"tam"`
 }
 
 type ListThreadAndMessagesOnPageParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	ThreadId uint `json:"threadId"`
 	Page     uint `json:"page"`
 }
 
 type ListThreadAndMessagesOnPageResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	ThreadAndMessagesOnPage *ThreadAndMessages `json:"tamop"`
 }
 
 type ListForumAndThreadsParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	ForumId uint `json:"forumId"`
 }
 
 type ListForumAndThreadsResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	ForumAndThreads *ForumAndThreads `json:"fat"`
 }
 
 type ListForumAndThreadsOnPageParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	ForumId uint `json:"forumId"`
 	Page    uint `json:"page"`
 }
 
 type ListForumAndThreadsOnPageResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	ForumAndThreadsOnPage *ForumAndThreads `json:"fatop"`
 }
 
 type ListSectionsAndForumsParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 }
 
 type ListSectionsAndForumsResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	SectionsAndForums *SectionsAndForums `json:"saf"`
 }
@@ -373,7 +373,7 @@ type ListSectionsAndForumsResult struct {
 type ShowDiagnosticDataParams struct{}
 
 type ShowDiagnosticDataResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	TotalRequestsCount      uint64 `json:"totalRequestsCount"`
 	SuccessfulRequestsCount uint64 `json:"successfulRequestsCount"`
@@ -384,5 +384,5 @@ type TestParams struct {
 }
 
 type TestResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 }

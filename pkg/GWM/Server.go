@@ -445,8 +445,9 @@ func (srv *Server) initApiFunctions() (err error) {
 	}
 
 	srv.apiHandlers = map[string]api.RequestHandler{
-		ApiFunctionName_GetProductVersion: srv.GetProductVersion,
-		ApiFunctionName_RegisterUser:      srv.RegisterUser,
+		ApiFunctionName_GetProductVersion:      srv.GetProductVersion,
+		ApiFunctionName_RegisterUser:           srv.RegisterUser,
+		ApiFunctionName_ApproveAndRegisterUser: srv.ApproveAndRegisterUser,
 		//TODO
 	}
 

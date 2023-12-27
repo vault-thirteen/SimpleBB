@@ -2,19 +2,20 @@ package models
 
 import (
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 type RequestId = uint
 
 // Ping.
 
-type PingParams = cm.PingParams
-type PingResult = cm.PingResult
+type PingParams = cmr.PingParams
+type PingResult = cmr.PingResult
 
 // User registration.
 
 type RegisterUserParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// Step number.
 	StepN byte `json:"stepN"`
@@ -37,7 +38,7 @@ type RegisterUserParams struct {
 }
 
 type RegisterUserResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	// Next required step.
 	// If set to zero, no further step is required.
@@ -45,14 +46,14 @@ type RegisterUserResult struct {
 }
 
 type ApproveAndRegisterUserParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// E-mail address of an approved user.
 	Email string `json:"email"`
 }
 
 type ApproveAndRegisterUserResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
@@ -60,7 +61,7 @@ type ApproveAndRegisterUserResult struct {
 // Logging in and out.
 
 type LogUserInParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// Step number.
 	StepN byte `json:"stepN"`
@@ -89,7 +90,7 @@ type LogUserInParams struct {
 }
 
 type LogUserInResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	// Next required step.
 	// If set to zero, no further step is required.
@@ -108,33 +109,33 @@ type LogUserInResult struct {
 }
 
 type LogUserOutParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 }
 
 type LogUserOutResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type GetListOfLoggedUsersParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 }
 
 type GetListOfLoggedUsersResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	LoggedUserIds []uint `json:"loggedUserIds"`
 }
 
 type IsUserLoggedInParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	UserId uint `json:"userId"`
 }
 
 type IsUserLoggedInResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	UserId         uint `json:"userId"`
 	IsUserLoggedIn bool `json:"isUserLoggedIn"`
@@ -143,7 +144,7 @@ type IsUserLoggedInResult struct {
 // Various actions.
 
 type ChangePasswordParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// Step number.
 	StepN byte `json:"stepN"`
@@ -171,7 +172,7 @@ type ChangePasswordParams struct {
 }
 
 type ChangePasswordResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	// Next required step.
 	// If set to zero, no further step is required.
@@ -186,7 +187,7 @@ type ChangePasswordResult struct {
 }
 
 type ChangeEmailParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// Step number.
 	StepN byte `json:"stepN"`
@@ -218,7 +219,7 @@ type ChangeEmailParams struct {
 }
 
 type ChangeEmailResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	// Next required step.
 	// If set to zero, no further step is required.
@@ -235,76 +236,76 @@ type ChangeEmailResult struct {
 // User properties.
 
 type GetUserRolesParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	UserId uint `json:"userId"`
 }
 
 type GetUserRolesResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	UserId uint `json:"userId"`
 	cm.UserRoles
 }
 
 type ViewUserParametersParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	UserId uint `json:"userId"`
 }
 
 type ViewUserParametersResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	UserId uint `json:"userId"`
 	cm.UserParameters
 }
 
 type SetUserRoleAuthorParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	UserId        uint `json:"userId"`
 	IsRoleEnabled bool `json:"isRoleEnabled"`
 }
 
 type SetUserRoleAuthorResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type SetUserRoleWriterParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	UserId        uint `json:"userId"`
 	IsRoleEnabled bool `json:"isRoleEnabled"`
 }
 
 type SetUserRoleWriterResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type SetUserRoleReaderParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	UserId        uint `json:"userId"`
 	IsRoleEnabled bool `json:"isRoleEnabled"`
 }
 
 type SetUserRoleReaderResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type GetSelfRolesParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 }
 
 type GetSelfRolesResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	UserId uint `json:"userId"`
 	cm.UserRoles
@@ -313,25 +314,25 @@ type GetSelfRolesResult struct {
 // User banning.
 
 type BanUserParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	UserId uint `json:"userId"`
 }
 
 type BanUserResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type UnbanUserParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	UserId uint `json:"userId"`
 }
 
 type UnbanUserResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
@@ -341,7 +342,7 @@ type UnbanUserResult struct {
 type ShowDiagnosticDataParams struct{}
 
 type ShowDiagnosticDataResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	TotalRequestsCount      uint64 `json:"totalRequestsCount"`
 	SuccessfulRequestsCount uint64 `json:"successfulRequestsCount"`
@@ -350,5 +351,5 @@ type ShowDiagnosticDataResult struct {
 type TestParams struct{}
 
 type TestResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 }

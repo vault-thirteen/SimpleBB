@@ -11,7 +11,7 @@ import (
 	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 )
 
@@ -41,7 +41,7 @@ func (srv *Server) databaseError(err error) (jerr *js.Error) {
 // mustBeAuthUserIPA ensures that user's IP address is set. If it is not set,
 // an error is returned and the caller of this function must stop and return
 // this error.
-func (srv *Server) mustBeAuthUserIPA(auth *cm.Auth) (jerr *js.Error) {
+func (srv *Server) mustBeAuthUserIPA(auth *cmr.Auth) (jerr *js.Error) {
 	if auth == nil {
 		return &js.Error{Code: c.RpcErrorCode_MalformedRequest, Message: c.RpcErrorMsg_MalformedRequest}
 	}
@@ -64,7 +64,7 @@ func (srv *Server) mustBeAuthUserIPA(auth *cm.Auth) (jerr *js.Error) {
 // valid. If the token is absent or invalid, an error is returned and the caller
 // of this function must stop and return this error. User data is returned when
 // token is valid.
-func (srv *Server) mustBeAnAuthToken(auth *cm.Auth) (userRoles *am.GetSelfRolesResult, jerr *js.Error) {
+func (srv *Server) mustBeAnAuthToken(auth *cmr.Auth) (userRoles *am.GetSelfRolesResult, jerr *js.Error) {
 	jerr = srv.mustBeAuthUserIPA(auth)
 	if jerr != nil {
 		return nil, jerr
@@ -86,9 +86,9 @@ func (srv *Server) mustBeAnAuthToken(auth *cm.Auth) (userRoles *am.GetSelfRolesR
 
 // Other functions.
 
-func (srv *Server) getUserSelfRoles(auth *cm.Auth) (userRoles *am.GetSelfRolesResult, err error) {
+func (srv *Server) getUserSelfRoles(auth *cmr.Auth) (userRoles *am.GetSelfRolesResult, err error) {
 	var params = am.GetSelfRolesParams{
-		CommonParams: cm.CommonParams{
+		CommonParams: cmr.CommonParams{
 			Auth: auth,
 		},
 	}

@@ -35,6 +35,7 @@ func (srv *Server) processInternalServerError(rw http.ResponseWriter, err error)
 	rw.WriteHeader(http.StatusInternalServerError)
 }
 
+// TODO: Change this when other modules are used.
 func (srv *Server) processRpcError(rw http.ResponseWriter, jerr *jc.RPCError) {
 	var httpStatusCode int
 	var err error

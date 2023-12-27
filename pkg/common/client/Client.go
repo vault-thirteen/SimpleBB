@@ -11,7 +11,7 @@ import (
 	"time"
 
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 	jc "github.com/ybbus/jsonrpc/v3"
 )
@@ -135,9 +135,9 @@ func (cli *Client) Ping(verbose bool) (err error) {
 		fmt.Print(fmt.Sprintf(c.MsgFPingingModule, cli.shortName))
 	}
 
-	var params = cm.PingParams{}
+	var params = cmr.PingParams{}
 
-	var result = new(cm.PingResult)
+	var result = new(cmr.PingResult)
 	for i := 1; i <= c.ServicePingAttemptsCount; i++ {
 		err = cli.MakeRequest(context.Background(), result, FuncPing, params)
 		if err == nil {

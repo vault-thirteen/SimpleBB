@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 // Request is an API request model. It is a mixture of client data with a data
@@ -10,5 +10,5 @@ import (
 type Request struct {
 	Action        string
 	Parameters    any
-	Authorisation *models.Auth
+	Authorisation *cmr.Auth
 }

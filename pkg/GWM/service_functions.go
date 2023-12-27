@@ -9,7 +9,7 @@ import (
 	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	jc "github.com/ybbus/jsonrpc/v3"
 )
 
@@ -35,13 +35,57 @@ func (srv *Server) RegisterUser(ar *api.Request, rw http.ResponseWriter, _ *http
 		return
 	}
 
-	p.CommonParams = cm.CommonParams{
+	p.CommonParams = cmr.CommonParams{
 		Auth: ar.Authorisation,
 	}
 
 	var result = new(am.RegisterUserResult)
 	var jerr *jc.RPCError
 	err = srv.acmServiceClient.MakeRequest(context.Background(), result, ac.FuncRegisterUser, p)
+	if err != nil {
+		jerr, ok = err.(*jc.RPCError)
+		if !ok {
+			err = errors.New(ErrTypeCast)
+			srv.processInternalServerError(rw, err)
+			return
+		}
+
+		srv.processRpcError(rw, jerr)
+		return
+	}
+
+	result.CommonResult.TimeSpent = 0
+	var response = &api.Response{
+		Action: ar.Action,
+		Result: result,
+	}
+	srv.respondWithJsonObject(rw, response)
+	return
+}
+
+func (srv *Server) ApproveAndRegisterUser(ar *api.Request, rw http.ResponseWriter, _ *http.Request) {
+	var err error
+	rawParameters, ok := ar.Parameters.(json.RawMessage)
+	if !ok {
+		err = errors.New(ErrTypeCast)
+		srv.processInternalServerError(rw, err)
+		return
+	}
+
+	var p am.ApproveAndRegisterUserParams
+	err = json.Unmarshal(rawParameters, &p)
+	if err != nil {
+		srv.processBadRequest(rw)
+		return
+	}
+
+	p.CommonParams = cmr.CommonParams{
+		Auth: ar.Authorisation,
+	}
+
+	var result = new(am.ApproveAndRegisterUserResult)
+	var jerr *jc.RPCError
+	err = srv.acmServiceClient.MakeRequest(context.Background(), result, ac.FuncApproveAndRegisterUser, p)
 	if err != nil {
 		jerr, ok = err.(*jc.RPCError)
 		if !ok {

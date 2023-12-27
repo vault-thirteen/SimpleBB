@@ -8,12 +8,13 @@ import (
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
 	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 const (
-	ApiFunctionName_GetProductVersion = "getProductVersion"
-	ApiFunctionName_RegisterUser      = "registerUser"
+	ApiFunctionName_GetProductVersion      = "getProductVersion"
+	ApiFunctionName_RegisterUser           = "registerUser"
+	ApiFunctionName_ApproveAndRegisterUser = "approveAndRegisterUser"
 	//TODO
 )
 
@@ -67,7 +68,7 @@ func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, cl
 	var ar = &api.Request{
 		Action:     arwoa.Action,
 		Parameters: arwoa.Parameters,
-		Authorisation: &cm.Auth{
+		Authorisation: &cmr.Auth{
 			UserIPA: clientIPA,
 		},
 	}

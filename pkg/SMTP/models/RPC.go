@@ -1,13 +1,13 @@
 package models
 
 import (
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 // Ping.
 
-type PingParams = cm.PingParams
-type PingResult = cm.PingResult
+type PingParams = cmr.PingParams
+type PingResult = cmr.PingResult
 
 // Message.
 
@@ -18,7 +18,7 @@ type SendMessageParams struct {
 }
 
 type SendMessageResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 }
 
 // Other.
@@ -26,7 +26,7 @@ type SendMessageResult struct {
 type ShowDiagnosticDataParams struct{}
 
 type ShowDiagnosticDataResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	TotalRequestsCount      uint64 `json:"totalRequestsCount"`
 	SuccessfulRequestsCount uint64 `json:"successfulRequestsCount"`

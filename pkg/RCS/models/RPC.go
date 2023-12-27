@@ -1,20 +1,20 @@
 package models
 
 import (
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 // Ping.
 
-type PingParams = cm.PingParams
-type PingResult = cm.PingResult
+type PingParams = cmr.PingParams
+type PingResult = cmr.PingResult
 
 // Captcha.
 
 type CreateCaptchaParams struct{}
 
 type CreateCaptchaResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	TaskId              string `json:"taskId"`
 	ImageFormat         string `json:"imageFormat"`
@@ -28,7 +28,7 @@ type CheckCaptchaParams struct {
 }
 
 type CheckCaptchaResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	TaskId    string `json:"taskId"`
 	IsSuccess bool   `json:"isSuccess"`
@@ -39,7 +39,7 @@ type CheckCaptchaResult struct {
 type ShowDiagnosticDataParams struct{}
 
 type ShowDiagnosticDataResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	TotalRequestsCount      uint64 `json:"totalRequestsCount"`
 	SuccessfulRequestsCount uint64 `json:"successfulRequestsCount"`

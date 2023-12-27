@@ -1,20 +1,20 @@
 package models
 
 import (
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 type RequestId = uint
 
 // Ping.
 
-type PingParams = cm.PingParams
-type PingResult = cm.PingResult
+type PingParams = cmr.PingParams
+type PingResult = cmr.PingResult
 
 // IP address list.
 
 type BlockIPAddressParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// IP address of a client to block.
 	UserIPA string `json:"userIPA"`
@@ -27,20 +27,20 @@ type BlockIPAddressParams struct {
 }
 
 type BlockIPAddressResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	OK bool `json:"ok"`
 }
 
 type IsIPAddressBlockedParams struct {
-	cm.CommonParams
+	cmr.CommonParams
 
 	// IP address of a client to check.
 	UserIPA string `json:"userIPA"`
 }
 
 type IsIPAddressBlockedResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	IsBlocked bool `json:"isBlocked"`
 }
@@ -50,7 +50,7 @@ type IsIPAddressBlockedResult struct {
 type ShowDiagnosticDataParams struct{}
 
 type ShowDiagnosticDataResult struct {
-	cm.CommonResult
+	cmr.CommonResult
 
 	TotalRequestsCount      uint64 `json:"totalRequestsCount"`
 	SuccessfulRequestsCount uint64 `json:"successfulRequestsCount"`
