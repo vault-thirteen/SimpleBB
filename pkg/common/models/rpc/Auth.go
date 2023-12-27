@@ -2,16 +2,6 @@ package rpc
 
 import "net"
 
-type CommonParams struct {
-	// Authorisation data.
-	Auth *Auth `json:"auth"`
-}
-
-type CommonResult struct {
-	// Time taken to perform the request, in milliseconds.
-	TimeSpent int64 `json:"timeSpent,omitempty"`
-}
-
 // Auth is authorisation data.
 // This field must always be set for all requests except 'Ping'.
 type Auth struct {
@@ -26,10 +16,4 @@ type Auth struct {
 	// Authorisation token.
 	// This field is set for all requests of a logged user.
 	Token string `json:"token"`
-}
-
-type PingParams struct{}
-
-type PingResult struct {
-	OK bool `json:"ok"`
 }

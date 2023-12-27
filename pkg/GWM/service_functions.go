@@ -54,7 +54,7 @@ func (srv *Server) RegisterUser(ar *api.Request, rw http.ResponseWriter, _ *http
 		return
 	}
 
-	result.CommonResult.TimeSpent = 0
+	result.CommonResult.Clear()
 	var response = &api.Response{
 		Action: ar.Action,
 		Result: result,
@@ -98,7 +98,7 @@ func (srv *Server) ApproveAndRegisterUser(ar *api.Request, rw http.ResponseWrite
 		return
 	}
 
-	result.CommonResult.TimeSpent = 0
+	result.CommonResult.Clear()
 	var response = &api.Response{
 		Action: ar.Action,
 		Result: result,
