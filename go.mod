@@ -1,6 +1,8 @@
 module github.com/vault-thirteen/SimpleBB
 
-go 1.20
+go 1.21
+
+toolchain go1.21.5
 
 require (
 	github.com/go-sql-driver/mysql v1.7.1
@@ -9,7 +11,7 @@ require (
 	github.com/valord577/mailx v0.5.20231221
 	github.com/vault-thirteen/BytePackedPassword v0.3.4
 	github.com/vault-thirteen/RingCaptcha v0.6.2
-	github.com/vault-thirteen/auxie v0.21.0
+	github.com/vault-thirteen/auxie v0.22.0
 	github.com/ybbus/jsonrpc/v3 v3.1.5
 	golang.org/x/term v0.15.0
 )

@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	s "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
-	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
+	hh "github.com/vault-thirteen/auxie/http-helper"
 )
 
 // Auxiliary functions used in service functions.
@@ -56,7 +56,7 @@ func (srv *Server) getClientIPAddress(req *http.Request) (cipa string, err error
 		return host, nil
 
 	case s.ClientIPAddressSource_CustomHeader:
-		host, err = ch.GetSingleHeader(req, srv.settings.SystemSettings.ClientIPAddressHeader)
+		host, err = hh.GetSingleHttpHeader(req, srv.settings.SystemSettings.ClientIPAddressHeader)
 		if err != nil {
 			return "", err
 		}
