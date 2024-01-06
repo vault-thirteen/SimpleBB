@@ -10,6 +10,7 @@ import (
 	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
@@ -47,7 +48,7 @@ func (srv *Server) RegisterUser(ar *api.Request, rw http.ResponseWriter, _ *http
 		return
 	}
 	if re != nil {
-		srv.processRpcError(rw, re)
+		srv.processRpcError(app.ModuleId_ACM, re, rw)
 		return
 	}
 
@@ -88,7 +89,7 @@ func (srv *Server) ApproveAndRegisterUser(ar *api.Request, rw http.ResponseWrite
 		return
 	}
 	if re != nil {
-		srv.processRpcError(rw, re)
+		srv.processRpcError(app.ModuleId_ACM, re, rw)
 		return
 	}
 

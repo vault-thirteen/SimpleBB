@@ -23,3 +23,11 @@ const (
 	ServiceShortName_RCS  = "RCS"
 	ServiceShortName_SMTP = "SMTP"
 )
+
+const (
+	ModuleId_ACM  = 1
+	ModuleId_GWM  = 2
+	ModuleId_MM   = 3
+	ModuleId_RCS  = 4
+	ModuleId_SMTP = 5
+)

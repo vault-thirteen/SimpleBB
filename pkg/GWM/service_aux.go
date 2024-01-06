@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	s "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 	hh "github.com/vault-thirteen/auxie/http-helper"
 )
@@ -69,8 +70,7 @@ func (srv *Server) getClientIPAddress(req *http.Request) (cipa string, err error
 	}
 }
 
-// TODO
-func (srv *Server) getHttpStatusCodeByRpcErrorCode(rpcErrorCode int) (httpStatusCode int, err error) {
+func (srv *Server) getHttpStatusCodeByRpcErrorCode(moduleId byte, rpcErrorCode int) (httpStatusCode int, err error) {
 	var ok bool
 
 	httpStatusCode, ok = srv.commonHttpStatusCodesByRpcErrorCode[rpcErrorCode]
@@ -78,10 +78,12 @@ func (srv *Server) getHttpStatusCodeByRpcErrorCode(rpcErrorCode int) (httpStatus
 		return httpStatusCode, nil
 	}
 
-	httpStatusCode, ok = srv.acmHttpStatusCodesByRpcErrorCode[rpcErrorCode]
-	if ok {
-		return httpStatusCode, nil
-
+	switch moduleId {
+	case app.ModuleId_ACM:
+		httpStatusCode, ok = srv.acmHttpStatusCodesByRpcErrorCode[rpcErrorCode]
+		if ok {
+			return httpStatusCode, nil
+		}
 	}
 
 	return 0, fmt.Errorf(ErrFUnknownRpcErrorCode, rpcErrorCode)

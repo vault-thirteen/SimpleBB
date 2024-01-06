@@ -35,12 +35,12 @@ func (srv *Server) processInternalServerError(rw http.ResponseWriter, err error)
 	rw.WriteHeader(http.StatusInternalServerError)
 }
 
-// processRpcError turns RPC error codes of other services (which are
-// non-gateway modules) into an HTTP response with an error.
-func (srv *Server) processRpcError(rw http.ResponseWriter, re *jrm1.RpcError) {
+// processRpcError turns codes of RPC errors returned by modules into an HTTP
+// response with an error.
+func (srv *Server) processRpcError(moduleId byte, re *jrm1.RpcError, rw http.ResponseWriter) {
 	var httpStatusCode int
 	var err error
-	httpStatusCode, err = srv.getHttpStatusCodeByRpcErrorCode(re.Code.Int())
+	httpStatusCode, err = srv.getHttpStatusCodeByRpcErrorCode(moduleId, re.Code.Int())
 	if err != nil {
 		srv.processInternalServerError(rw, err)
 		return
