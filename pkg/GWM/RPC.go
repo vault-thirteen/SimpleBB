@@ -46,7 +46,7 @@ func (srv *Server) initRpc() (err error) {
 
 // Ping.
 
-func (srv *Server) Ping(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+func (srv *Server) Ping(_ *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
 	return gm.PingResult{OK: true}, nil
 }
 
