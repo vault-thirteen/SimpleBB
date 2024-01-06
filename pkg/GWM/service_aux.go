@@ -33,14 +33,15 @@ func (srv *Server) isIPAddressAllowed(req *http.Request) (ok bool, clientIPA str
 	var n int
 	n, err = srv.dbo.CountBlocksByIPAddress(ipa)
 	if err != nil {
-		return false, "", srv.databaseError(err)
+		re := srv.databaseError(err)
+		return false, "", re.AsError()
 	}
 
-	if n == 0 {
-		return true, clientIPA, nil
+	if n != 0 {
+		return false, clientIPA, nil
 	}
 
-	return false, clientIPA, nil
+	return true, clientIPA, nil
 }
 
 func (srv *Server) getClientIPAddress(req *http.Request) (cipa string, err error) {
@@ -68,12 +69,20 @@ func (srv *Server) getClientIPAddress(req *http.Request) (cipa string, err error
 	}
 }
 
-func (srv *Server) getAcmHttpStatusCodeByRpcErrorCode(rpcErrorCode int) (httpStatusCode int, err error) {
+// TODO
+func (srv *Server) getHttpStatusCodeByRpcErrorCode(rpcErrorCode int) (httpStatusCode int, err error) {
 	var ok bool
-	httpStatusCode, ok = srv.acmHttpStatusCodesByRpcErrorCode[rpcErrorCode]
-	if !ok {
-		return 0, fmt.Errorf(ErrFUnknownRpcErrorCode, rpcErrorCode)
+
+	httpStatusCode, ok = srv.commonHttpStatusCodesByRpcErrorCode[rpcErrorCode]
+	if ok {
+		return httpStatusCode, nil
 	}
 
-	return httpStatusCode, nil
+	httpStatusCode, ok = srv.acmHttpStatusCodesByRpcErrorCode[rpcErrorCode]
+	if ok {
+		return httpStatusCode, nil
+
+	}
+
+	return 0, fmt.Errorf(ErrFUnknownRpcErrorCode, rpcErrorCode)
 }

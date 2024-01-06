@@ -3,1039 +3,517 @@ package mm
 // RPC handlers.
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-	"log"
-	"runtime/debug"
-	"time"
 
-	js "github.com/osamingo/jsonrpc/v2"
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
+	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
+
+func (srv *Server) initRpc() (err error) {
+	rpcDurationFieldName := cs.RpcDurationFieldName
+	rpcRequestIdFieldName := cs.RpcRequestIdFieldName
+
+	ps := &jrm1.ProcessorSettings{
+		CatchExceptions:    true,
+		LogExceptions:      true,
+		CountRequests:      true,
+		DurationFieldName:  &rpcDurationFieldName,
+		RequestIdFieldName: &rpcRequestIdFieldName,
+	}
+
+	srv.js, err = jrm1.NewProcessor(ps)
+	if err != nil {
+		return err
+	}
+
+	fns := []jrm1.RpcFunction{
+		srv.Ping,
+		srv.AddSection,
+		srv.ChangeSectionName,
+		srv.ChangeSectionParent,
+		srv.GetSection,
+		srv.DeleteSection,
+		srv.AddForum,
+		srv.ChangeForumName,
+		srv.ChangeForumSection,
+		srv.GetForum,
+		srv.DeleteForum,
+		srv.AddThread,
+		srv.ChangeThreadName,
+		srv.ChangeThreadForum,
+		srv.GetThread,
+		srv.DeleteThread,
+		srv.AddMessage,
+		srv.ChangeMessageText,
+		srv.ChangeMessageThread,
+		srv.GetMessage,
+		srv.DeleteMessage,
+		srv.ListThreadAndMessages,
+		srv.ListThreadAndMessagesOnPage,
+		srv.ListForumAndThreads,
+		srv.ListForumAndThreadsOnPage,
+		srv.ListSectionsAndForums,
+		srv.ShowDiagnosticData,
+		srv.Test,
+	}
+
+	for _, fn := range fns {
+		err = srv.js.AddFunc(fn)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 // Ping.
 
-type PingHandler struct {
-	Server *Server
-}
-
-func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	result := mm.PingResult{OK: true}
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+func (srv *Server) Ping(_ *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	return mm.PingResult{OK: true}, nil
 }
 
 // Section.
 
-type AddSectionHandler struct {
-	Server *Server
+func (srv *Server) AddSection(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.AddSectionParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.AddSectionResult
+	r, re = srv.addSection(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h AddSectionHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.AddSectionParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ChangeSectionName(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ChangeSectionNameParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.AddSectionResult
-	result, jerr = h.Server.addSection(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.ChangeSectionNameResult
+	r, re = srv.changeSectionName(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type ChangeSectionNameHandler struct {
-	Server *Server
+func (srv *Server) ChangeSectionParent(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ChangeSectionParentParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.ChangeSectionParentResult
+	r, re = srv.changeSectionParent(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h ChangeSectionNameHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ChangeSectionNameParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) GetSection(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.GetSectionParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.ChangeSectionNameResult
-	result, jerr = h.Server.changeSectionName(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.GetSectionResult
+	r, re = srv.getSection(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type ChangeSectionParentHandler struct {
-	Server *Server
-}
-
-func (h ChangeSectionParentHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ChangeSectionParentParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) DeleteSection(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.DeleteSectionParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.ChangeSectionParentResult
-	result, jerr = h.Server.changeSectionParent(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.DeleteSectionResult
+	r, re = srv.deleteSection(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type GetSectionHandler struct {
-	Server *Server
-}
-
-func (h GetSectionHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.GetSectionParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.GetSectionResult
-	result, jerr = h.Server.getSection(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type DeleteSectionHandler struct {
-	Server *Server
-}
-
-func (h DeleteSectionHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.DeleteSectionParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.DeleteSectionResult
-	result, jerr = h.Server.deleteSection(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // Forum.
 
-type AddForumHandler struct {
-	Server *Server
+func (srv *Server) AddForum(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.AddForumParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.AddForumResult
+	r, re = srv.addForum(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h AddForumHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.AddForumParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ChangeForumName(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ChangeForumNameParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.AddForumResult
-	result, jerr = h.Server.addForum(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.ChangeForumNameResult
+	r, re = srv.changeForumName(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type ChangeForumNameHandler struct {
-	Server *Server
+func (srv *Server) ChangeForumSection(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ChangeForumSectionParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.ChangeForumSectionResult
+	r, re = srv.changeForumSection(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h ChangeForumNameHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ChangeForumNameParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) GetForum(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.GetForumParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.ChangeForumNameResult
-	result, jerr = h.Server.changeForumName(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.GetForumResult
+	r, re = srv.getForum(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type ChangeForumSectionHandler struct {
-	Server *Server
-}
-
-func (h ChangeForumSectionHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ChangeForumSectionParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) DeleteForum(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.DeleteForumParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.ChangeForumSectionResult
-	result, jerr = h.Server.changeForumSection(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.DeleteForumResult
+	r, re = srv.deleteForum(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type GetForumHandler struct {
-	Server *Server
-}
-
-func (h GetForumHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.GetForumParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.GetForumResult
-	result, jerr = h.Server.getForum(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type DeleteForumHandler struct {
-	Server *Server
-}
-
-func (h DeleteForumHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.DeleteForumParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.DeleteForumResult
-	result, jerr = h.Server.deleteForum(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // Thread.
 
-type AddThreadHandler struct {
-	Server *Server
+func (srv *Server) AddThread(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.AddThreadParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.AddThreadResult
+	r, re = srv.addThread(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h AddThreadHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.AddThreadParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ChangeThreadName(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ChangeThreadNameParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.AddThreadResult
-	result, jerr = h.Server.addThread(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.ChangeThreadNameResult
+	r, re = srv.changeThreadName(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type ChangeThreadNameHandler struct {
-	Server *Server
+func (srv *Server) ChangeThreadForum(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ChangeThreadForumParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.ChangeThreadForumResult
+	r, re = srv.changeThreadForum(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h ChangeThreadNameHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ChangeThreadNameParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) GetThread(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.GetThreadParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.ChangeThreadNameResult
-	result, jerr = h.Server.changeThreadName(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.GetThreadResult
+	r, re = srv.getThread(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type ChangeThreadForumHandler struct {
-	Server *Server
-}
-
-func (h ChangeThreadForumHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ChangeThreadForumParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) DeleteThread(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.DeleteThreadParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.ChangeThreadForumResult
-	result, jerr = h.Server.changeThreadForum(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.DeleteThreadResult
+	r, re = srv.deleteThread(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type GetThreadHandler struct {
-	Server *Server
-}
-
-func (h GetThreadHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.GetThreadParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.GetThreadResult
-	result, jerr = h.Server.getThread(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type DeleteThreadHandler struct {
-	Server *Server
-}
-
-func (h DeleteThreadHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.DeleteThreadParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.DeleteThreadResult
-	result, jerr = h.Server.deleteThread(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // Message.
 
-type AddMessageHandler struct {
-	Server *Server
+func (srv *Server) AddMessage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.AddMessageParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.AddMessageResult
+	r, re = srv.addMessage(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h AddMessageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.AddMessageParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ChangeMessageText(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ChangeMessageTextParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.AddMessageResult
-	result, jerr = h.Server.addMessage(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.ChangeMessageTextResult
+	r, re = srv.changeMessageText(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type ChangeMessageTextHandler struct {
-	Server *Server
+func (srv *Server) ChangeMessageThread(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ChangeMessageThreadParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.ChangeMessageThreadResult
+	r, re = srv.changeMessageThread(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h ChangeMessageTextHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ChangeMessageTextParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) GetMessage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.GetMessageParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.ChangeMessageTextResult
-	result, jerr = h.Server.changeMessageText(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.GetMessageResult
+	r, re = srv.getMessage(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type ChangeMessageThreadHandler struct {
-	Server *Server
-}
-
-func (h ChangeMessageThreadHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ChangeMessageThreadParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) DeleteMessage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.DeleteMessageParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.ChangeMessageThreadResult
-	result, jerr = h.Server.changeMessageThread(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.DeleteMessageResult
+	r, re = srv.deleteMessage(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type GetMessageHandler struct {
-	Server *Server
-}
-
-func (h GetMessageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.GetMessageParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.GetMessageResult
-	result, jerr = h.Server.getMessage(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type DeleteMessageHandler struct {
-	Server *Server
-}
-
-func (h DeleteMessageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.DeleteMessageParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.DeleteMessageResult
-	result, jerr = h.Server.deleteMessage(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // Composite objects.
 
-type ListThreadAndMessagesHandler struct {
-	Server *Server
+func (srv *Server) ListThreadAndMessages(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ListThreadAndMessagesParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.ListThreadAndMessagesResult
+	r, re = srv.listThreadAndMessages(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h ListThreadAndMessagesHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ListThreadAndMessagesParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ListThreadAndMessagesOnPage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ListThreadAndMessagesOnPageParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.ListThreadAndMessagesResult
-	result, jerr = h.Server.listThreadAndMessages(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.ListThreadAndMessagesOnPageResult
+	r, re = srv.listThreadAndMessagesOnPage(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type ListThreadAndMessagesOnPageHandler struct {
-	Server *Server
+func (srv *Server) ListForumAndThreads(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ListForumAndThreadsParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.ListForumAndThreadsResult
+	r, re = srv.listForumAndThreads(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h ListThreadAndMessagesOnPageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ListThreadAndMessagesOnPageParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ListForumAndThreadsOnPage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ListForumAndThreadsOnPageParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.ListThreadAndMessagesOnPageResult
-	result, jerr = h.Server.listThreadAndMessagesOnPage(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.ListForumAndThreadsOnPageResult
+	r, re = srv.listForumAndThreadsOnPage(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type ListForumAndThreadsHandler struct {
-	Server *Server
-}
-
-func (h ListForumAndThreadsHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ListForumAndThreadsParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ListSectionsAndForums(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ListSectionsAndForumsParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *mm.ListForumAndThreadsResult
-	result, jerr = h.Server.listForumAndThreads(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *mm.ListSectionsAndForumsResult
+	r, re = srv.listSectionsAndForums(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type ListForumAndThreadsOnPageHandler struct {
-	Server *Server
-}
-
-func (h ListForumAndThreadsOnPageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ListForumAndThreadsOnPageParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.ListForumAndThreadsOnPageResult
-	result, jerr = h.Server.listForumAndThreadsOnPage(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type ListSectionsAndForumsHandler struct {
-	Server *Server
-}
-
-func (h ListSectionsAndForumsHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.ListSectionsAndForumsParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.ListSectionsAndForumsResult
-	result, jerr = h.Server.listSectionsAndForums(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // Other.
 
-type ShowDiagnosticDataHandler struct {
-	Server *Server
+func (srv *Server) ShowDiagnosticData(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ShowDiagnosticDataParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.ShowDiagnosticDataResult
+	r, re = srv.showDiagnosticData()
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h ShowDiagnosticDataHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var result *mm.ShowDiagnosticDataResult
-	result, jerr = h.Server.showDiagnosticData()
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) Test(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.TestParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
+	var r *mm.TestResult
+	r, re = srv.test(p)
+	if re != nil {
+		return nil, re
 	}
 
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type TestHandler struct {
-	Server *Server
-}
-
-func (h TestHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p mm.TestParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *mm.TestResult
-	result, jerr = h.Server.doTest(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }

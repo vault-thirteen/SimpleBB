@@ -12,6 +12,11 @@ const (
 	ErrSettingsFileIsNotSet = "settings file is not set"
 )
 
+const (
+	RpcDurationFieldName  = "dur"
+	RpcRequestIdFieldName = "rid"
+)
+
 func GetPasswordFromStdin(hint string) (pwd string, err error) {
 	fmt.Println(hint)
 

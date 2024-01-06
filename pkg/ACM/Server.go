@@ -12,13 +12,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	js "github.com/osamingo/jsonrpc/v2"
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/dbo"
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/im"
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/km"
 	as "github.com/vault-thirteen/SimpleBB/pkg/ACM/settings"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	cdd "github.com/vault-thirteen/SimpleBB/pkg/common/DiagnosticData"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
@@ -50,8 +49,8 @@ type Server struct {
 	// Database Object.
 	dbo *dbo.DatabaseObject
 
-	// JSON-RPC handlers.
-	jsonRpcHandlers *js.MethodRepository
+	// JSON-RPC server.
+	js *jrm1.Processor
 
 	// Verification code generator.
 	vcg *rp.Generator
@@ -66,9 +65,6 @@ type Server struct {
 
 	// JWT key maker.
 	jwtkm *km.KeyMaker
-
-	// Diagnostic data.
-	diag *cdd.DiagnosticData
 
 	// Incident manager.
 	incidentManager *im.IncidentManager
@@ -85,19 +81,19 @@ func NewServer(s cm.ISettings) (srv *Server, err error) {
 	dbErrorsChannel := make(chan error, c.DbErrorsChannelSize)
 
 	srv = &Server{
-		settings:        stn,
-		listenDsn:       net.JoinHostPort(stn.HttpsSettings.Host, strconv.FormatUint(uint64(stn.HttpsSettings.Port), 10)),
-		mustBeStopped:   make(chan bool, c.MustBeStoppedChannelSize),
-		subRoutines:     new(sync.WaitGroup),
-		mustStop:        new(atomic.Bool),
-		httpErrors:      make(chan error, c.HttpErrorsChannelSize),
-		dbErrors:        &dbErrorsChannel,
-		ssp:             avm.NewSSP(),
-		jsonRpcHandlers: js.NewMethodRepository(),
+		settings:      stn,
+		listenDsn:     net.JoinHostPort(stn.HttpsSettings.Host, strconv.FormatUint(uint64(stn.HttpsSettings.Port), 10)),
+		mustBeStopped: make(chan bool, c.MustBeStoppedChannelSize),
+		subRoutines:   new(sync.WaitGroup),
+		mustStop:      new(atomic.Bool),
+		httpErrors:    make(chan error, c.HttpErrorsChannelSize),
+		dbErrors:      &dbErrorsChannel,
+		ssp:           avm.NewSSP(),
 	}
 	srv.mustStop.Store(false)
 
-	err = srv.initJsonRpcHandlers()
+	// RPC server.
+	err = srv.initRpc()
 	if err != nil {
 		return nil, err
 	}
@@ -141,11 +137,6 @@ func NewServer(s cm.ISettings) (srv *Server, err error) {
 	}
 
 	err = srv.initIncidentManager()
-	if err != nil {
-		return nil, err
-	}
-
-	err = srv.initDiagnosticData()
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +338,7 @@ func (srv *Server) runScheduler() {
 }
 
 func (srv *Server) httpRouter(rw http.ResponseWriter, req *http.Request) {
-	srv.jsonRpcHandlers.ServeHTTP(rw, req)
+	srv.js.ServeHTTP(rw, req)
 }
 
 func (srv *Server) initVerificationCodeGenerator() (err error) {
@@ -457,12 +448,6 @@ func (srv *Server) initJwtKeyMaker() (err error) {
 	if err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func (srv *Server) initDiagnosticData() (err error) {
-	srv.diag = &cdd.DiagnosticData{}
 
 	return nil
 }

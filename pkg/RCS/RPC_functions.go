@@ -4,18 +4,18 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	js "github.com/osamingo/jsonrpc/v2"
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	rc "github.com/vault-thirteen/RingCaptcha"
 	rm "github.com/vault-thirteen/SimpleBB/pkg/RCS/models"
 )
 
 // RPC functions.
 
-func (srv *Server) createCaptcha() (result *rm.CreateCaptchaResult, jerr *js.Error) {
+func (srv *Server) createCaptcha() (result *rm.CreateCaptchaResult, re *jrm1.RpcError) {
 	ccResponse, err := srv.captchaManager.CreateCaptcha()
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: RpcErrorCode_CreateError, Message: fmt.Sprintf(RpcErrorMsgF_CreateError, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_CreateError, fmt.Sprintf(RpcErrorMsgF_CreateError, err.Error()), nil)
 	}
 
 	result = &rm.CreateCaptchaResult{
@@ -31,20 +31,20 @@ func (srv *Server) createCaptcha() (result *rm.CreateCaptchaResult, jerr *js.Err
 	return result, nil
 }
 
-func (srv *Server) checkCaptcha(p *rm.CheckCaptchaParams) (result *rm.CheckCaptchaResult, jerr *js.Error) {
+func (srv *Server) checkCaptcha(p *rm.CheckCaptchaParams) (result *rm.CheckCaptchaResult, re *jrm1.RpcError) {
 	// Check parameters.
 	if len(p.TaskId) == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_TaskIdIsNotSet, Message: RpcErrorMsg_TaskIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_TaskIdIsNotSet, RpcErrorMsg_TaskIdIsNotSet, nil)
 	}
 
 	if p.Value == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_AnswerIsNotSet, Message: RpcErrorMsg_AnswerIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_AnswerIsNotSet, RpcErrorMsg_AnswerIsNotSet, nil)
 	}
 
 	resp, err := srv.captchaManager.CheckCaptcha(&rc.CheckCaptchaRequest{TaskId: p.TaskId, Value: p.Value})
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: RpcErrorCode_CheckError, Message: fmt.Sprintf(RpcErrorMsgF_CheckError, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_CheckError, fmt.Sprintf(RpcErrorMsgF_CheckError, err.Error()), nil)
 	}
 
 	result = &rm.CheckCaptchaResult{
@@ -55,11 +55,9 @@ func (srv *Server) checkCaptcha(p *rm.CheckCaptchaParams) (result *rm.CheckCaptc
 	return result, nil
 }
 
-func (srv *Server) showDiagnosticData() (result *rm.ShowDiagnosticDataResult, jerr *js.Error) {
-	result = &rm.ShowDiagnosticDataResult{
-		TotalRequestsCount:      srv.diag.GetTotalRequestsCount(),
-		SuccessfulRequestsCount: srv.diag.GetSuccessfulRequestsCount(),
-	}
+func (srv *Server) showDiagnosticData() (result *rm.ShowDiagnosticDataResult, re *jrm1.RpcError) {
+	result = &rm.ShowDiagnosticDataResult{}
+	result.TotalRequestsCount, result.SuccessfulRequestsCount = srv.js.GetRequestsCount()
 
 	return result, nil
 }

@@ -3,706 +3,364 @@ package acm
 // RPC handlers.
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-	"log"
-	"runtime/debug"
-	"time"
 
-	js "github.com/osamingo/jsonrpc/v2"
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
+	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
+
+func (srv *Server) initRpc() (err error) {
+	rpcDurationFieldName := cs.RpcDurationFieldName
+	rpcRequestIdFieldName := cs.RpcRequestIdFieldName
+
+	ps := &jrm1.ProcessorSettings{
+		CatchExceptions:    true,
+		LogExceptions:      true,
+		CountRequests:      true,
+		DurationFieldName:  &rpcDurationFieldName,
+		RequestIdFieldName: &rpcRequestIdFieldName,
+	}
+
+	srv.js, err = jrm1.NewProcessor(ps)
+	if err != nil {
+		return err
+	}
+
+	fns := []jrm1.RpcFunction{
+		srv.Ping,
+		srv.RegisterUser,
+		srv.ApproveAndRegisterUser,
+		srv.LogUserIn,
+		srv.LogUserOut,
+		srv.GetListOfLoggedUsers,
+		srv.IsUserLoggedIn,
+		srv.ChangePassword,
+		srv.ChangeEmail,
+		srv.GetUserRoles,
+		srv.ViewUserParameters,
+		srv.SetUserRoleAuthor,
+		srv.SetUserRoleWriter,
+		srv.SetUserRoleReader,
+		srv.GetSelfRoles,
+		srv.BanUser,
+		srv.UnbanUser,
+		srv.ShowDiagnosticData,
+		srv.Test,
+	}
+
+	for _, fn := range fns {
+		err = srv.js.AddFunc(fn)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 // Ping.
 
-type PingHandler struct {
-	Server *Server
-}
-
-func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	result := am.PingResult{OK: true}
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+func (srv *Server) Ping(_ *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	return am.PingResult{OK: true}, nil
 }
 
 // User registration.
 
-type RegisterUserHandler struct {
-	Server *Server
+func (srv *Server) RegisterUser(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.RegisterUserParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.RegisterUserResult
+	r, re = srv.registerUser(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h RegisterUserHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.RegisterUserParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ApproveAndRegisterUser(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.ApproveAndRegisterUserParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *am.RegisterUserResult
-	result, jerr = h.Server.registerUser(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *am.ApproveAndRegisterUserResult
+	r, re = srv.approveAndRegisterUser(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type ApproveAndRegisterUserHandler struct {
-	Server *Server
-}
-
-func (h ApproveAndRegisterUserHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.ApproveAndRegisterUserParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *am.ApproveAndRegisterUserResult
-	result, jerr = h.Server.approveAndRegisterUser(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // Logging in and out.
 
-type LogUserInHandler struct {
-	Server *Server
+func (srv *Server) LogUserIn(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.LogUserInParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.LogUserInResult
+	r, re = srv.logUserIn(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h LogUserInHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.LogUserInParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) LogUserOut(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.LogUserOutParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *am.LogUserInResult
-	result, jerr = h.Server.logUserIn(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *am.LogUserOutResult
+	r, re = srv.logUserOut(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type LogUserOutHandler struct {
-	Server *Server
+func (srv *Server) GetListOfLoggedUsers(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.GetListOfLoggedUsersParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.GetListOfLoggedUsersResult
+	r, re = srv.getListOfLoggedUsers(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h LogUserOutHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.LogUserOutParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) IsUserLoggedIn(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.IsUserLoggedInParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *am.LogUserOutResult
-	result, jerr = h.Server.logUserOut(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *am.IsUserLoggedInResult
+	r, re = srv.isUserLoggedIn(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type GetListOfLoggedUsersHandler struct {
-	Server *Server
-}
-
-func (h GetListOfLoggedUsersHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.GetListOfLoggedUsersParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *am.GetListOfLoggedUsersResult
-	result, jerr = h.Server.getListOfLoggedUsers(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type IsUserLoggedInHandler struct {
-	Server *Server
-}
-
-func (h IsUserLoggedInHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.IsUserLoggedInParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *am.IsUserLoggedInResult
-	result, jerr = h.Server.isUserLoggedIn(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // Various actions.
 
-type ChangePasswordHandler struct {
-	Server *Server
+func (srv *Server) ChangePassword(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.ChangePasswordParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.ChangePasswordResult
+	r, re = srv.changePassword(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h ChangePasswordHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.ChangePasswordParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ChangeEmail(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.ChangeEmailParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *am.ChangePasswordResult
-	result, jerr = h.Server.changePassword(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *am.ChangeEmailResult
+	r, re = srv.changeEmail(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type ChangeEmailHandler struct {
-	Server *Server
-}
-
-func (h ChangeEmailHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.ChangeEmailParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *am.ChangeEmailResult
-	result, jerr = h.Server.changeEmail(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // User properties.
 
-type GetUserRolesHandler struct {
-	Server *Server
+func (srv *Server) GetUserRoles(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.GetUserRolesParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.GetUserRolesResult
+	r, re = srv.getUserRoles(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h GetUserRolesHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.GetUserRolesParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ViewUserParameters(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.ViewUserParametersParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *am.GetUserRolesResult
-	result, jerr = h.Server.getUserRoles(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *am.ViewUserParametersResult
+	r, re = srv.viewUserParameters(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type ViewUserParametersHandler struct {
-	Server *Server
+func (srv *Server) SetUserRoleAuthor(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.SetUserRoleAuthorParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.SetUserRoleAuthorResult
+	r, re = srv.setUserRoleAuthor(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h ViewUserParametersHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.ViewUserParametersParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) SetUserRoleWriter(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.SetUserRoleWriterParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *am.ViewUserParametersResult
-	result, jerr = h.Server.viewUserParameters(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *am.SetUserRoleWriterResult
+	r, re = srv.setUserRoleWriter(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
-type SetUserRoleAuthorHandler struct {
-	Server *Server
+func (srv *Server) SetUserRoleReader(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.SetUserRoleReaderParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.SetUserRoleReaderResult
+	r, re = srv.setUserRoleReader(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h SetUserRoleAuthorHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.SetUserRoleAuthorParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) GetSelfRoles(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.GetSelfRolesParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *am.SetUserRoleAuthorResult
-	result, jerr = h.Server.setUserRoleAuthor(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *am.GetSelfRolesResult
+	r, re = srv.getSelfRoles(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type SetUserRoleWriterHandler struct {
-	Server *Server
-}
-
-func (h SetUserRoleWriterHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.SetUserRoleWriterParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *am.SetUserRoleWriterResult
-	result, jerr = h.Server.setUserRoleWriter(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type SetUserRoleReaderHandler struct {
-	Server *Server
-}
-
-func (h SetUserRoleReaderHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.SetUserRoleReaderParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *am.SetUserRoleReaderResult
-	result, jerr = h.Server.setUserRoleReader(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type GetSelfRolesHandler struct {
-	Server *Server
-}
-
-func (h GetSelfRolesHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.GetSelfRolesParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *am.GetSelfRolesResult
-	result, jerr = h.Server.getSelfRoles(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // User banning.
 
-type BanUserHandler struct {
-	Server *Server
+func (srv *Server) BanUser(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.BanUserParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.BanUserResult
+	r, re = srv.banUser(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h BanUserHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.BanUserParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) UnbanUser(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.UnbanUserParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var result *am.BanUserResult
-	result, jerr = h.Server.banUser(&p)
-	if jerr != nil {
-		return nil, jerr
+	var r *am.UnbanUserResult
+	r, re = srv.unbanUser(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type UnbanUserHandler struct {
-	Server *Server
-}
-
-func (h UnbanUserHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.UnbanUserParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *am.UnbanUserResult
-	result, jerr = h.Server.unbanUser(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // Other.
 
-type ShowDiagnosticDataHandler struct {
-	Server *Server
+func (srv *Server) ShowDiagnosticData(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.ShowDiagnosticDataParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.ShowDiagnosticDataResult
+	r, re = srv.showDiagnosticData()
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h ShowDiagnosticDataHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var result *am.ShowDiagnosticDataResult
-	result, jerr = h.Server.showDiagnosticData()
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) Test(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.TestParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
+	var r *am.TestResult
+	r, re = srv.test(p)
+	if re != nil {
+		return nil, re
 	}
 
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type TestHandler struct {
-	Server *Server
-}
-
-func (h TestHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p am.TestParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *am.TestResult
-	result, jerr = h.Server.doTest(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }

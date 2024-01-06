@@ -3,135 +3,101 @@ package rcs
 // RPC handlers.
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-	"log"
-	"runtime/debug"
-	"time"
 
-	js "github.com/osamingo/jsonrpc/v2"
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	rm "github.com/vault-thirteen/SimpleBB/pkg/RCS/models"
+	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
+
+func (srv *Server) initRpc() (err error) {
+	rpcDurationFieldName := cs.RpcDurationFieldName
+	rpcRequestIdFieldName := cs.RpcRequestIdFieldName
+
+	ps := &jrm1.ProcessorSettings{
+		CatchExceptions:    true,
+		LogExceptions:      true,
+		CountRequests:      true,
+		DurationFieldName:  &rpcDurationFieldName,
+		RequestIdFieldName: &rpcRequestIdFieldName,
+	}
+
+	srv.js, err = jrm1.NewProcessor(ps)
+	if err != nil {
+		return err
+	}
+
+	fns := []jrm1.RpcFunction{
+		srv.Ping,
+		srv.CreateCaptcha,
+		srv.CheckCaptcha,
+		srv.ShowDiagnosticData,
+	}
+
+	for _, fn := range fns {
+		err = srv.js.AddFunc(fn)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 // Ping.
 
-type PingHandler struct {
-	Server *Server
-}
-
-func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	result := rm.PingResult{OK: true}
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+func (srv *Server) Ping(_ *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	return rm.PingResult{OK: true}, nil
 }
 
 // Captcha.
 
-type CreateCaptchaHandler struct {
-	Server *Server
+func (srv *Server) CreateCaptcha(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *rm.CreateCaptchaParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *rm.CreateCaptchaResult
+	r, re = srv.createCaptcha()
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
 }
 
-func (h CreateCaptchaHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	result, jerr := h.Server.createCaptcha()
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) CheckCaptcha(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *rm.CheckCaptchaParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
+	var r *rm.CheckCaptchaResult
+	r, re = srv.checkCaptcha(p)
+	if re != nil {
+		return nil, re
 	}
 
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
-}
-
-type CheckCaptchaHandler struct {
-	Server *Server
-}
-
-func (h CheckCaptchaHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p rm.CheckCaptchaParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var result *rm.CheckCaptchaResult
-	result, jerr = h.Server.checkCaptcha(&p)
-	if jerr != nil {
-		return nil, jerr
-	}
-
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // Other.
 
-type ShowDiagnosticDataHandler struct {
-	Server *Server
-}
-
-func (h ShowDiagnosticDataHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	result, jerr := h.Server.showDiagnosticData()
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ShowDiagnosticData(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *rm.ShowDiagnosticDataParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
+	var r *rm.ShowDiagnosticDataResult
+	r, re = srv.showDiagnosticData()
+	if re != nil {
+		return nil, re
 	}
 
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }

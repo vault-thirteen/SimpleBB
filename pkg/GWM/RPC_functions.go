@@ -3,7 +3,7 @@ package gwm
 import (
 	"fmt"
 
-	js "github.com/osamingo/jsonrpc/v2"
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
@@ -11,27 +11,27 @@ import (
 
 // RPC functions.
 
-func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockIPAddressResult, jerr *js.Error) {
+func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockIPAddressResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	if !srv.settings.SystemSettings.IsFirewallUsed {
-		return nil, &js.Error{Code: RpcErrorCode_FirewallIsDisabled, Message: RpcErrorMsg_FirewallIsDisabled}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_FirewallIsDisabled, RpcErrorMsg_FirewallIsDisabled, nil)
 	}
 
 	// Check parameters.
 	if len(p.UserIPA) == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_IPAddressIsNotSet, Message: RpcErrorMsg_IPAddressIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IPAddressIsNotSet, RpcErrorMsg_IPAddressIsNotSet, nil)
 	}
 
 	if p.BlockTimeSec == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_BlockTimeIsNotSet, Message: RpcErrorMsg_BlockTimeIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_BlockTimeIsNotSet, RpcErrorMsg_BlockTimeIsNotSet, nil)
 	}
 
 	userIPAB, err := cn.ParseIPA(p.UserIPA)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_IPAddressError, fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error()), nil)
 	}
 
 	// Search for an existing record.
@@ -57,23 +57,23 @@ func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockI
 	return &gm.BlockIPAddressResult{OK: true}, nil
 }
 
-func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *gm.IsIPAddressBlockedResult, jerr *js.Error) {
+func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *gm.IsIPAddressBlockedResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
 	if !srv.settings.SystemSettings.IsFirewallUsed {
-		return nil, &js.Error{Code: RpcErrorCode_FirewallIsDisabled, Message: RpcErrorMsg_FirewallIsDisabled}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_FirewallIsDisabled, RpcErrorMsg_FirewallIsDisabled, nil)
 	}
 
 	// Check parameters.
 	if len(p.UserIPA) == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_IPAddressIsNotSet, Message: RpcErrorMsg_IPAddressIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IPAddressIsNotSet, RpcErrorMsg_IPAddressIsNotSet, nil)
 	}
 
 	userIPAB, err := cn.ParseIPA(p.UserIPA)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_IPAddressError, fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error()), nil)
 	}
 
 	// Search for an existing record.
@@ -86,11 +86,9 @@ func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *g
 	return &gm.IsIPAddressBlockedResult{IsBlocked: n > 0}, nil
 }
 
-func (srv *Server) showDiagnosticData() (result *gm.ShowDiagnosticDataResult, jerr *js.Error) {
-	result = &gm.ShowDiagnosticDataResult{
-		TotalRequestsCount:      srv.diag.GetTotalRequestsCount(),
-		SuccessfulRequestsCount: srv.diag.GetSuccessfulRequestsCount(),
-	}
+func (srv *Server) showDiagnosticData() (result *gm.ShowDiagnosticDataResult, re *jrm1.RpcError) {
+	result = &gm.ShowDiagnosticDataResult{}
+	result.TotalRequestsCount, result.SuccessfulRequestsCount = srv.js.GetRequestsCount()
 
 	return result, nil
 }

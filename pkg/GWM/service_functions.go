@@ -6,11 +6,11 @@ import (
 	"errors"
 	"net/http"
 
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
-	jc "github.com/ybbus/jsonrpc/v3"
 )
 
 // Service functions.
@@ -40,17 +40,14 @@ func (srv *Server) RegisterUser(ar *api.Request, rw http.ResponseWriter, _ *http
 	}
 
 	var result = new(am.RegisterUserResult)
-	var jerr *jc.RPCError
-	err = srv.acmServiceClient.MakeRequest(context.Background(), result, ac.FuncRegisterUser, p)
+	var re *jrm1.RpcError
+	re, err = srv.acmServiceClient.MakeRequest(context.Background(), ac.FuncRegisterUser, p, result)
 	if err != nil {
-		jerr, ok = err.(*jc.RPCError)
-		if !ok {
-			err = errors.New(ErrTypeCast)
-			srv.processInternalServerError(rw, err)
-			return
-		}
-
-		srv.processRpcError(rw, jerr)
+		srv.processInternalServerError(rw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(rw, re)
 		return
 	}
 
@@ -84,17 +81,14 @@ func (srv *Server) ApproveAndRegisterUser(ar *api.Request, rw http.ResponseWrite
 	}
 
 	var result = new(am.ApproveAndRegisterUserResult)
-	var jerr *jc.RPCError
-	err = srv.acmServiceClient.MakeRequest(context.Background(), result, ac.FuncApproveAndRegisterUser, p)
+	var re *jrm1.RpcError
+	re, err = srv.acmServiceClient.MakeRequest(context.Background(), ac.FuncApproveAndRegisterUser, p, result)
 	if err != nil {
-		jerr, ok = err.(*jc.RPCError)
-		if !ok {
-			err = errors.New(ErrTypeCast)
-			srv.processInternalServerError(rw, err)
-			return
-		}
-
-		srv.processRpcError(rw, jerr)
+		srv.processInternalServerError(rw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(rw, re)
 		return
 	}
 

@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/dbo"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	s "github.com/vault-thirteen/SimpleBB/pkg/ACM/settings"
@@ -184,11 +185,14 @@ func (im *IncidentManager) informGateway(inc *am.Incident) (err error) {
 	}
 
 	var result = new(gm.BlockIPAddressResult)
-	err = im.gwmClient.MakeRequest(context.Background(), result, gc.FuncBlockIPAddress, params)
-	if err == nil {
+	var re *jrm1.RpcError
+	re, err = im.gwmClient.MakeRequest(context.Background(), gc.FuncBlockIPAddress, params, result)
+	if err != nil {
 		return err
 	}
-
+	if re != nil {
+		return re.AsError()
+	}
 	if !result.OK {
 		return errors.New(fmt.Sprintf(c.MsgFModuleIsBroken, app.ServiceShortName_GWM))
 	}
