@@ -27,7 +27,5 @@ type ShowDiagnosticDataParams struct{}
 
 type ShowDiagnosticDataResult struct {
 	cmr.CommonResult
-
-	TotalRequestsCount      uint64 `json:"totalRequestsCount"`
-	SuccessfulRequestsCount uint64 `json:"successfulRequestsCount"`
+	cmr.RequestsCount
 }

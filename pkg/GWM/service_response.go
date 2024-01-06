@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
 	"github.com/vault-thirteen/auxie/header"
-	jc "github.com/ybbus/jsonrpc/v3"
 )
 
 func (srv *Server) processBlockedClient(rw http.ResponseWriter) {
@@ -35,11 +35,12 @@ func (srv *Server) processInternalServerError(rw http.ResponseWriter, err error)
 	rw.WriteHeader(http.StatusInternalServerError)
 }
 
-// TODO: Change this when other modules are used.
-func (srv *Server) processRpcError(rw http.ResponseWriter, jerr *jc.RPCError) {
+// processRpcError turns RPC error codes of other services (which are
+// non-gateway modules) into an HTTP response with an error.
+func (srv *Server) processRpcError(rw http.ResponseWriter, re *jrm1.RpcError) {
 	var httpStatusCode int
 	var err error
-	httpStatusCode, err = srv.getAcmHttpStatusCodeByRpcErrorCode(jerr.Code)
+	httpStatusCode, err = srv.getHttpStatusCodeByRpcErrorCode(re.Code.Int())
 	if err != nil {
 		srv.processInternalServerError(rw, err)
 		return
@@ -52,7 +53,7 @@ func (srv *Server) processRpcError(rw http.ResponseWriter, jerr *jc.RPCError) {
 	}
 
 	rw.WriteHeader(httpStatusCode)
-	srv.respondWithPlainText(rw, jerr.Message)
+	srv.respondWithPlainText(rw, re.AsError().Error())
 	return
 }
 

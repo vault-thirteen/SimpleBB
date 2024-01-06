@@ -11,10 +11,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	js "github.com/osamingo/jsonrpc/v2"
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	ss "github.com/vault-thirteen/SimpleBB/pkg/SMTP/settings"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	cdd "github.com/vault-thirteen/SimpleBB/pkg/common/DiagnosticData"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
@@ -41,11 +40,8 @@ type Server struct {
 	mailer      *Mailer
 	mailerGuard sync.Mutex
 
-	// JSON-RPC handlers.
-	jsonRpcHandlers *js.MethodRepository
-
-	// Diagnostic data.
-	diag *cdd.DiagnosticData
+	// JSON-RPC server.
+	js *jrm1.Processor
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -57,28 +53,23 @@ func NewServer(s cm.ISettings) (srv *Server, err error) {
 	}
 
 	srv = &Server{
-		settings:        stn,
-		listenDsn:       net.JoinHostPort(stn.HttpSettings.Host, strconv.FormatUint(uint64(stn.HttpSettings.Port), 10)),
-		mustBeStopped:   make(chan bool, c.MustBeStoppedChannelSize),
-		subRoutines:     new(sync.WaitGroup),
-		mustStop:        new(atomic.Bool),
-		httpErrors:      make(chan error, c.HttpErrorsChannelSize),
-		ssp:             avm.NewSSP(),
-		jsonRpcHandlers: js.NewMethodRepository(),
+		settings:      stn,
+		listenDsn:     net.JoinHostPort(stn.HttpSettings.Host, strconv.FormatUint(uint64(stn.HttpSettings.Port), 10)),
+		mustBeStopped: make(chan bool, c.MustBeStoppedChannelSize),
+		subRoutines:   new(sync.WaitGroup),
+		mustStop:      new(atomic.Bool),
+		httpErrors:    make(chan error, c.HttpErrorsChannelSize),
+		ssp:           avm.NewSSP(),
 	}
 	srv.mustStop.Store(false)
 
-	err = srv.initJsonRpcHandlers()
+	// RPC server.
+	err = srv.initRpc()
 	if err != nil {
 		return nil, err
 	}
 
 	err = srv.initMailer()
-	if err != nil {
-		return nil, err
-	}
-
-	err = srv.initDiagnosticData()
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +160,7 @@ func (srv *Server) listenForHttpErrors() {
 }
 
 func (srv *Server) httpRouter(rw http.ResponseWriter, req *http.Request) {
-	srv.jsonRpcHandlers.ServeHTTP(rw, req)
+	srv.js.ServeHTTP(rw, req)
 }
 
 func (srv *Server) initMailer() (err error) {
@@ -183,12 +174,6 @@ func (srv *Server) initMailer() (err error) {
 	if err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func (srv *Server) initDiagnosticData() (err error) {
-	srv.diag = &cdd.DiagnosticData{}
 
 	return nil
 }

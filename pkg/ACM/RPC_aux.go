@@ -9,8 +9,8 @@ import (
 	"net/mail"
 	"time"
 
-	js "github.com/osamingo/jsonrpc/v2"
 	bpp "github.com/vault-thirteen/BytePackedPassword"
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	rc "github.com/vault-thirteen/SimpleBB/pkg/RCS/client"
 	rm "github.com/vault-thirteen/SimpleBB/pkg/RCS/models"
@@ -27,13 +27,21 @@ import (
 
 // logError logs error if debug mode is enabled.
 func (srv *Server) logError(err error) {
+	if err == nil {
+		return
+	}
+
 	if srv.settings.SystemSettings.IsDebugMode {
 		log.Println(err)
 	}
 }
 
 // databaseError processes the database error and returns a JSON RPC error.
-func (srv *Server) databaseError(err error) (jerr *js.Error) {
+func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
+	if err == nil {
+		return nil
+	}
+
 	if c.IsNetworkError(err) {
 		log.Println(fmt.Sprintf(c.ErrFDatabaseNetwork, err.Error()))
 		*(srv.dbErrors) <- err
@@ -41,7 +49,7 @@ func (srv *Server) databaseError(err error) (jerr *js.Error) {
 		srv.logError(err)
 	}
 
-	return &js.Error{Code: c.RpcErrorCode_DatabaseError, Message: c.RpcErrorMsg_DatabaseError}
+	return jrm1.NewRpcErrorByUser(c.RpcErrorCode_DatabaseError, c.RpcErrorMsg_DatabaseError, err)
 }
 
 // Token-related functions.
@@ -49,23 +57,23 @@ func (srv *Server) databaseError(err error) (jerr *js.Error) {
 // mustBeAuthUserIPA ensures that user's IP address is set. If it is not set,
 // an error is returned and the caller of this function must stop and return
 // this error.
-func (srv *Server) mustBeAuthUserIPA(auth *cmr.Auth) (jerr *js.Error) {
+func (srv *Server) mustBeAuthUserIPA(auth *cmr.Auth) (re *jrm1.RpcError) {
 	if auth == nil {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", nil)
-		return &js.Error{Code: c.RpcErrorCode_MalformedRequest, Message: c.RpcErrorMsg_MalformedRequest}
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_MalformedRequest, c.RpcErrorMsg_MalformedRequest, nil)
 	}
 
 	if len(auth.UserIPA) == 0 {
 		// Report the incident.
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", nil)
-		return &js.Error{Code: c.RpcErrorCode_MalformedRequest, Message: c.RpcErrorMsg_MalformedRequest}
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_MalformedRequest, c.RpcErrorMsg_MalformedRequest, nil)
 	}
 
 	var err error
 	auth.UserIPAB, err = cn.ParseIPA(auth.UserIPA)
 	if err != nil {
 		srv.logError(err)
-		return &js.Error{Code: c.RpcErrorCode_IPAddressError, Message: fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error())}
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_IPAddressError, fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error()), nil)
 	}
 
 	return nil
@@ -74,15 +82,15 @@ func (srv *Server) mustBeAuthUserIPA(auth *cmr.Auth) (jerr *js.Error) {
 // mustBeNoAuthToken ensures that an authorisation token is not present. If the
 // token is present, an error is returned and the caller of this function must
 // stop and return this error.
-func (srv *Server) mustBeNoAuthToken(auth *cmr.Auth) (jerr *js.Error) {
-	jerr = srv.mustBeAuthUserIPA(auth)
-	if jerr != nil {
-		return jerr
+func (srv *Server) mustBeNoAuthToken(auth *cmr.Auth) (re *jrm1.RpcError) {
+	re = srv.mustBeAuthUserIPA(auth)
+	if re != nil {
+		return re
 	}
 
 	if len(auth.Token) > 0 {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
-		return &js.Error{Code: RpcErrorCode_ThisActionIsNotForLoggedUsers, Message: RpcErrorMsg_ThisActionIsNotForLoggedUsers}
+		return jrm1.NewRpcErrorByUser(RpcErrorCode_ThisActionIsNotForLoggedUsers, RpcErrorMsg_ThisActionIsNotForLoggedUsers, nil)
 	}
 
 	return nil
@@ -92,23 +100,21 @@ func (srv *Server) mustBeNoAuthToken(auth *cmr.Auth) (jerr *js.Error) {
 // valid. If the token is absent or invalid, an error is returned and the caller
 // of this function must stop and return this error. User data is returned when
 // token is valid.
-func (srv *Server) mustBeAnAuthToken(auth *cmr.Auth) (ud *am.UserData, jerr *js.Error) {
-	jerr = srv.mustBeAuthUserIPA(auth)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) mustBeAnAuthToken(auth *cmr.Auth) (ud *am.UserData, re *jrm1.RpcError) {
+	re = srv.mustBeAuthUserIPA(auth)
+	if re != nil {
+		return nil, re
 	}
 
 	if len(auth.Token) == 0 {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
-	var err error
-	ud, err = srv.getUserDataByAuthToken(auth.Token, auth.UserIPAB)
-	if err != nil {
-		srv.logError(err)
+	ud, re = srv.getUserDataByAuthToken(auth.Token, auth.UserIPAB)
+	if re != nil {
 		srv.incidentManager.ReportIncident(am.IncidentType_FakeToken, "", auth.UserIPAB)
-		return nil, &js.Error{Code: c.RpcErrorCode_GetUserDataByAuthToken, Message: fmt.Sprintf(c.RpcErrorMsgF_GetUserDataByAuthToken, err.Error())}
+		return nil, re
 	}
 
 	return ud, nil
@@ -116,12 +122,10 @@ func (srv *Server) mustBeAnAuthToken(auth *cmr.Auth) (ud *am.UserData, jerr *js.
 
 // getUserDataByAuthToken validates the token and returns information about the
 // When 'userData' is set (not null), all its fields are also set (not null).
-func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (userData *am.UserData, err error) {
-	var userId uint
-	var sessionId uint
-	userId, sessionId, err = srv.jwtkm.ValidateToken(authToken)
+func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (userData *am.UserData, re *jrm1.RpcError) {
+	userId, sessionId, err := srv.jwtkm.ValidateToken(authToken)
 	if err != nil {
-		return nil, err
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InvalidToken, c.RpcErrorMsg_InvalidToken, err)
 	}
 
 	userData = am.NewUserData()
@@ -132,15 +136,15 @@ func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (us
 	}
 
 	if userData.User == nil {
-		return nil, errors.New(c.ErrFakeJWToken)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InvalidToken, c.RpcErrorMsg_InvalidToken, nil)
 	}
 
 	if userData.User.Id != userId {
-		return nil, errors.New(c.ErrFakeJWToken)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InvalidToken, c.RpcErrorMsg_InvalidToken, nil)
 	}
 
 	if !userData.User.CanLogIn {
-		return nil, errors.New(c.ErrFakeJWToken)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InvalidToken, c.RpcErrorMsg_InvalidToken, nil)
 	}
 
 	// Attach special user roles from settings.
@@ -153,15 +157,15 @@ func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (us
 	}
 
 	if userData.Session == nil {
-		return nil, errors.New(c.ErrFakeJWToken)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InvalidToken, c.RpcErrorMsg_InvalidToken, nil)
 	}
 
 	if userData.Session.Id != sessionId {
-		return nil, errors.New(c.ErrFakeJWToken)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InvalidToken, c.RpcErrorMsg_InvalidToken, nil)
 	}
 
 	if !userIPAB.Equal(userData.Session.UserIPAB) {
-		return nil, errors.New(c.ErrFakeJWToken)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InvalidToken, c.RpcErrorMsg_InvalidToken, nil)
 	}
 
 	return userData, nil
@@ -169,7 +173,7 @@ func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (us
 
 // Other functions.
 
-func (srv *Server) checkCaptcha(captchaId string, answer string) (result *rm.CheckCaptchaResult, jerr *js.Error) {
+func (srv *Server) checkCaptcha(captchaId string, answer string) (result *rm.CheckCaptchaResult, re *jrm1.RpcError) {
 	var params = rm.CheckCaptchaParams{TaskId: captchaId}
 	var err error
 
@@ -178,26 +182,29 @@ func (srv *Server) checkCaptcha(captchaId string, answer string) (result *rm.Che
 	}
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: RpcErrorCode_RCS_CheckCaptcha, Message: fmt.Sprintf(RpcErrorMsgF_RCS_CheckCaptcha, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RCS_CheckCaptcha, fmt.Sprintf(RpcErrorMsgF_RCS_CheckCaptcha, err.Error()), nil)
 	}
 
 	params.Value, err = num.ParseUint(answer)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: RpcErrorCode_RCS_CheckCaptcha, Message: fmt.Sprintf(RpcErrorMsgF_RCS_CheckCaptcha, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RCS_CheckCaptcha, fmt.Sprintf(RpcErrorMsgF_RCS_CheckCaptcha, err.Error()), nil)
 	}
 
 	result = new(rm.CheckCaptchaResult)
-	err = srv.rcsServiceClient.MakeRequest(context.Background(), result, rc.FuncCheckCaptcha, params)
+	re, err = srv.rcsServiceClient.MakeRequest(context.Background(), rc.FuncCheckCaptcha, params, result)
+	if (err == nil) && (re != nil) {
+		err = re.AsError()
+	}
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: RpcErrorCode_RCS_CheckCaptcha, Message: fmt.Sprintf(RpcErrorMsgF_RCS_CheckCaptcha, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RCS_CheckCaptcha, fmt.Sprintf(RpcErrorMsgF_RCS_CheckCaptcha, err.Error()), nil)
 	}
 
 	return result, nil
 }
 
-func (srv *Server) checkPassword(userId uint, salt []byte, userKey []byte) (ok bool, jerr *js.Error) {
+func (srv *Server) checkPassword(userId uint, salt []byte, userKey []byte) (ok bool, re *jrm1.RpcError) {
 	var pwd *[]byte
 	var err error
 	pwd, err = srv.dbo.GetUserPasswordById(userId)
@@ -212,13 +219,13 @@ func (srv *Server) checkPassword(userId uint, salt []byte, userKey []byte) (ok b
 	pwdRunes, err = bpp.UnpackBytes(*pwd)
 	if err != nil {
 		srv.logError(err)
-		return false, &js.Error{Code: RpcErrorCode_PasswordCheckError, Message: fmt.Sprintf(RpcErrorMsgF_PasswordCheckError, err.Error())}
+		return false, jrm1.NewRpcErrorByUser(RpcErrorCode_PasswordCheckError, fmt.Sprintf(RpcErrorMsgF_PasswordCheckError, err.Error()), nil)
 	}
 
 	ok, err = bpp.CheckHashKey(string(pwdRunes), salt, userKey)
 	if err != nil {
 		srv.logError(err)
-		return false, &js.Error{Code: RpcErrorCode_PasswordCheckError, Message: fmt.Sprintf(RpcErrorMsgF_PasswordCheckError, err.Error())}
+		return false, jrm1.NewRpcErrorByUser(RpcErrorCode_PasswordCheckError, fmt.Sprintf(RpcErrorMsgF_PasswordCheckError, err.Error()), nil)
 	}
 
 	return ok, nil
@@ -300,9 +307,13 @@ func (srv *Server) createCaptcha() (result *rm.CreateCaptchaResult, err error) {
 	var params = rm.CreateCaptchaParams{}
 
 	result = new(rm.CreateCaptchaResult)
-	err = srv.rcsServiceClient.MakeRequest(context.Background(), result, rc.FuncCreateCaptcha, params)
+	var re *jrm1.RpcError
+	re, err = srv.rcsServiceClient.MakeRequest(context.Background(), rc.FuncCreateCaptcha, params, result)
 	if err != nil {
 		return nil, err
+	}
+	if re != nil {
+		return nil, re.AsError()
 	}
 
 	if result.IsImageDataReturned {
@@ -448,9 +459,13 @@ func (srv *Server) sendVerificationCodeForReg(email string, code string) (err er
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
 
 	var result = new(sm.SendMessageResult)
-	err = srv.smtpServiceClient.MakeRequest(context.Background(), result, sc.FuncSendMessage, params)
+	var re *jrm1.RpcError
+	re, err = srv.smtpServiceClient.MakeRequest(context.Background(), sc.FuncSendMessage, params, result)
 	if err != nil {
 		return err
+	}
+	if re != nil {
+		return re.AsError()
 	}
 
 	return nil
@@ -464,9 +479,13 @@ func (srv *Server) sendVerificationCodeForLogIn(email string, code string) (err 
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
 
 	var result = new(sm.SendMessageResult)
-	err = srv.smtpServiceClient.MakeRequest(context.Background(), result, sc.FuncSendMessage, params)
+	var re *jrm1.RpcError
+	re, err = srv.smtpServiceClient.MakeRequest(context.Background(), sc.FuncSendMessage, params, result)
 	if err != nil {
 		return err
+	}
+	if re != nil {
+		return re.AsError()
 	}
 
 	return nil
@@ -480,9 +499,13 @@ func (srv *Server) sendVerificationCodeForEmailChange(email string, code string)
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
 
 	var result = new(sm.SendMessageResult)
-	err = srv.smtpServiceClient.MakeRequest(context.Background(), result, sc.FuncSendMessage, params)
+	var re *jrm1.RpcError
+	re, err = srv.smtpServiceClient.MakeRequest(context.Background(), sc.FuncSendMessage, params, result)
 	if err != nil {
 		return err
+	}
+	if re != nil {
+		return re.AsError()
 	}
 
 	return nil
@@ -496,9 +519,13 @@ func (srv *Server) sendVerificationCodeForPwdChange(email string, code string) (
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
 
 	var result = new(sm.SendMessageResult)
-	err = srv.smtpServiceClient.MakeRequest(context.Background(), result, sc.FuncSendMessage, params)
+	var re *jrm1.RpcError
+	re, err = srv.smtpServiceClient.MakeRequest(context.Background(), sc.FuncSendMessage, params, result)
 	if err != nil {
 		return err
+	}
+	if re != nil {
+		return re.AsError()
 	}
 
 	return nil

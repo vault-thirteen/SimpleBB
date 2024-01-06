@@ -3,104 +3,84 @@ package smtp
 // RPC handlers.
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-	"log"
-	"runtime/debug"
-	"time"
 
-	js "github.com/osamingo/jsonrpc/v2"
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SMTP/models"
+	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
+
+func (srv *Server) initRpc() (err error) {
+	rpcDurationFieldName := cs.RpcDurationFieldName
+	rpcRequestIdFieldName := cs.RpcRequestIdFieldName
+
+	ps := &jrm1.ProcessorSettings{
+		CatchExceptions:    true,
+		LogExceptions:      true,
+		CountRequests:      true,
+		DurationFieldName:  &rpcDurationFieldName,
+		RequestIdFieldName: &rpcRequestIdFieldName,
+	}
+
+	srv.js, err = jrm1.NewProcessor(ps)
+	if err != nil {
+		return err
+	}
+
+	fns := []jrm1.RpcFunction{
+		srv.Ping,
+		srv.SendMessage,
+		srv.ShowDiagnosticData,
+	}
+
+	for _, fn := range fns {
+		err = srv.js.AddFunc(fn)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 // Ping.
 
-type PingHandler struct {
-	Server *Server
-}
-
-func (h PingHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	result := sm.PingResult{OK: true}
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+func (srv *Server) Ping(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	return sm.PingResult{OK: true}, nil
 }
 
 // Message.
 
-type SendMessageHandler struct {
-	Server *Server
-}
-
-func (h SendMessageHandler) ServeJSONRPC(_ context.Context, params *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	var p sm.SendMessageParams
-	jerr = js.Unmarshal(params, &p)
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) SendMessage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *sm.SendMessageParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	result, jerr := h.Server.sendEmailMessage(p.Recipient, p.Subject, p.Message)
-	if jerr != nil {
-		return nil, jerr
+	var r *sm.SendMessageResult
+	r, re = srv.sendMessage(p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
-	}
-
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }
 
 // Other.
 
-type ShowDiagnosticDataHandler struct {
-	Server *Server
-}
-
-func (h ShowDiagnosticDataHandler) ServeJSONRPC(_ context.Context, _ *json.RawMessage) (resp any, jerr *js.Error) {
-	defer func() {
-		x := recover()
-		if x != nil {
-			log.Println(fmt.Sprintf("%v, %s", x, string(debug.Stack())))
-			jerr = &js.Error{Code: RpcErrorCode_Exception, Message: RpcErrorMsg_Exception}
-		}
-	}()
-
-	h.Server.diag.IncTotalRequestsCount()
-	var timeStart = time.Now()
-
-	result, jerr := h.Server.showDiagnosticData()
-	if jerr != nil {
-		return nil, jerr
+func (srv *Server) ShowDiagnosticData(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *sm.ShowDiagnosticDataParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
 	}
 
-	var taskDuration = time.Now().Sub(timeStart).Milliseconds()
-	if result != nil {
-		result.TimeSpent = taskDuration
+	var r *sm.ShowDiagnosticDataResult
+	r, re = srv.showDiagnosticData()
+	if re != nil {
+		return nil, re
 	}
 
-	h.Server.diag.IncSuccessfulRequestsCount()
-	return result, nil
+	return r, nil
 }

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	js "github.com/osamingo/jsonrpc/v2"
+	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
@@ -18,24 +18,24 @@ import (
 // Section.
 
 // addSection inserts a new section as a root section or as a sub-section.
-func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResult, jerr *js.Error) {
+func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if len(p.Name) == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionNameIsNotSet, Message: RpcErrorMsg_SectionNameIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionNameIsNotSet, RpcErrorMsg_SectionNameIsNotSet, nil)
 	}
 
 	// If parent is not set, the new section is a root section.
@@ -49,7 +49,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 		}
 
 		if n > 0 {
-			return nil, &js.Error{Code: RpcErrorCode_RootSectionAlreadyExists, Message: RpcErrorMsg_RootSectionAlreadyExists}
+			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RootSectionAlreadyExists, RpcErrorMsg_RootSectionAlreadyExists, nil)
 		}
 
 		var insertedSectionId int64
@@ -73,7 +73,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIsNotFound, Message: RpcErrorMsg_SectionIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
 	}
 
 	// Check compatibility.
@@ -84,7 +84,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	}
 
 	if childType == mm.ChildTypeForum {
-		return nil, &js.Error{Code: RpcErrorCode_IncompatibleChildType, Message: RpcErrorMsg_IncompatibleChildType}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
 	if childType == mm.ChildTypeNone {
@@ -110,7 +110,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	err = parentChildren.AddItem(uint(insertedSectionId), false)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetSectionChildrenById(*p.Parent, parentChildren)
@@ -126,28 +126,28 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 }
 
 // changeSectionName renames a section.
-func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.ChangeSectionNameResult, jerr *js.Error) {
+func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.ChangeSectionNameResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.SectionId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIdIsNotSet, Message: RpcErrorMsg_SectionIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
 
 	if len(p.Name) == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionNameIsNotSet, Message: RpcErrorMsg_SectionNameIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionNameIsNotSet, RpcErrorMsg_SectionNameIsNotSet, nil)
 	}
 
 	var err error
@@ -164,28 +164,28 @@ func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.
 }
 
 // changeSectionParent moves a section from an old parent to a new parent.
-func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result *mm.ChangeSectionParentResult, jerr *js.Error) {
+func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result *mm.ChangeSectionParentResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.SectionId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIdIsNotSet, Message: RpcErrorMsg_SectionIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
 
 	if p.Parent == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIdIsNotSet, Message: RpcErrorMsg_SectionIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
 
 	// Ensure that an old parent exists.
@@ -197,7 +197,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	if oldParent == nil {
-		return nil, &js.Error{Code: RpcErrorCode_RootSectionCanNotBeMoved, Message: RpcErrorMsg_RootSectionCanNotBeMoved}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RootSectionCanNotBeMoved, RpcErrorMsg_RootSectionCanNotBeMoved, nil)
 	}
 
 	var n int
@@ -207,7 +207,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIsNotFound, Message: RpcErrorMsg_SectionIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
 	}
 
 	// Ensure that a new parent exists.
@@ -217,7 +217,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIsNotFound, Message: RpcErrorMsg_SectionIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
 	}
 
 	// Check compatibility.
@@ -228,7 +228,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	if childType == mm.ChildTypeForum {
-		return nil, &js.Error{Code: RpcErrorCode_IncompatibleChildType, Message: RpcErrorMsg_IncompatibleChildType}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
 	if childType == mm.ChildTypeNone {
@@ -254,7 +254,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	err = childrenR.AddItem(p.SectionId, false)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetSectionChildrenById(p.Parent, childrenR)
@@ -272,7 +272,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	err = childrenL.RemoveItem(p.SectionId)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetSectionChildrenById(*oldParent, childrenL)
@@ -296,24 +296,24 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 }
 
 // getSection reads a section.
-func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResult, jerr *js.Error) {
+func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.SectionId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIdIsNotSet, Message: RpcErrorMsg_SectionIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
 
 	// Read the section.
@@ -332,24 +332,24 @@ func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResu
 }
 
 // deleteSection removes a section.
-func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSectionResult, jerr *js.Error) {
+func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSectionResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.SectionId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIdIsNotSet, Message: RpcErrorMsg_SectionIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
 
 	// Read the section.
@@ -367,7 +367,7 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 
 	// Check for children.
 	if section.Children.Size() > 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionHasChildren, Message: RpcErrorMsg_SectionHasChildren}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionHasChildren, RpcErrorMsg_SectionHasChildren, nil)
 	}
 
 	// Update the link.
@@ -381,7 +381,7 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 		err = linkSections.RemoveItem(p.SectionId)
 		if err != nil {
 			srv.logError(err)
-			return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+			return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 		}
 
 		err = srv.dbo.SetSectionChildrenById(*section.Parent, linkSections)
@@ -414,28 +414,28 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 // Forum.
 
 // addForum inserts a new forum into a section.
-func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, jerr *js.Error) {
+func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.SectionId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIdIsNotSet, Message: RpcErrorMsg_SectionIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
 
 	if len(p.Name) == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumNameIsNotSet, Message: RpcErrorMsg_ForumNameIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumNameIsNotSet, RpcErrorMsg_ForumNameIsNotSet, nil)
 	}
 
 	// Ensure that a section exists.
@@ -445,7 +445,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIsNotFound, Message: RpcErrorMsg_SectionIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
 	}
 
 	// Check compatibility.
@@ -456,7 +456,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 	}
 
 	if childType == mm.ChildTypeSection {
-		return nil, &js.Error{Code: RpcErrorCode_IncompatibleChildType, Message: RpcErrorMsg_IncompatibleChildType}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
 	if childType == mm.ChildTypeNone {
@@ -482,7 +482,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 	err = parentChildren.AddItem(uint(insertedForumId), false)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetSectionChildrenById(p.SectionId, parentChildren)
@@ -498,28 +498,28 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, je
 }
 
 // changeForumName renames a forum.
-func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.ChangeForumNameResult, jerr *js.Error) {
+func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.ChangeForumNameResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ForumId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumIdIsNotSet, Message: RpcErrorMsg_ForumIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
 
 	if len(p.Name) == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumNameIsNotSet, Message: RpcErrorMsg_ForumNameIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumNameIsNotSet, RpcErrorMsg_ForumNameIsNotSet, nil)
 	}
 
 	var err error
@@ -536,28 +536,28 @@ func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.Chan
 }
 
 // changeForumSection moves a forum from an old section to a new section.
-func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *mm.ChangeForumSectionResult, jerr *js.Error) {
+func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *mm.ChangeForumSectionResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ForumId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumIdIsNotSet, Message: RpcErrorMsg_ForumIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
 
 	if p.SectionId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIdIsNotSet, Message: RpcErrorMsg_SectionIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
 
 	// Ensure that an old section exists.
@@ -575,7 +575,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIsNotFound, Message: RpcErrorMsg_SectionIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
 	}
 
 	// Ensure that a new section exists.
@@ -585,7 +585,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_SectionIsNotFound, Message: RpcErrorMsg_SectionIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
 	}
 
 	// Check compatibility.
@@ -596,7 +596,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	}
 
 	if childType == mm.ChildTypeSection {
-		return nil, &js.Error{Code: RpcErrorCode_IncompatibleChildType, Message: RpcErrorMsg_IncompatibleChildType}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
 	if childType == mm.ChildTypeNone {
@@ -622,7 +622,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	err = childrenR.AddItem(p.ForumId, false)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetSectionChildrenById(p.SectionId, childrenR)
@@ -640,7 +640,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	err = childrenL.RemoveItem(p.ForumId)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetSectionChildrenById(oldParent, childrenL)
@@ -664,24 +664,24 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 }
 
 // getForum reads a forum.
-func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, jerr *js.Error) {
+func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ForumId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumIdIsNotSet, Message: RpcErrorMsg_ForumIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
 
 	// Read the forum.
@@ -700,24 +700,24 @@ func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, je
 }
 
 // deleteForum removes a forum.
-func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumResult, jerr *js.Error) {
+func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ForumId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumIdIsNotSet, Message: RpcErrorMsg_ForumIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
 
 	// Read the forum.
@@ -730,7 +730,7 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 
 	// Check for threads.
 	if forum.Threads.Size() > 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumHasThreads, Message: RpcErrorMsg_ForumHasThreads}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumHasThreads, RpcErrorMsg_ForumHasThreads, nil)
 	}
 
 	// Update the link.
@@ -743,7 +743,7 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 	err = linkChildren.RemoveItem(p.ForumId)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetSectionChildrenById(forum.SectionId, linkChildren)
@@ -775,28 +775,28 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 // Thread.
 
 // addThread inserts a new thread into a forum.
-func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult, jerr *js.Error) {
+func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAuthor {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ForumId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumIdIsNotSet, Message: RpcErrorMsg_ForumIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
 
 	if len(p.Name) == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadNameIsNotSet, Message: RpcErrorMsg_ThreadNameIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadNameIsNotSet, RpcErrorMsg_ThreadNameIsNotSet, nil)
 	}
 
 	// Ensure that a forum exists.
@@ -808,7 +808,7 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumIsNotFound, Message: RpcErrorMsg_ForumIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
 	}
 
 	// Insert a thread and link it with its forum.
@@ -827,7 +827,7 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 	err = parentThreads.AddItem(uint(insertedThreadId), srv.settings.SystemSettings.NewThreadsAtTop)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetForumThreadsById(p.ForumId, parentThreads)
@@ -843,28 +843,28 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 }
 
 // changeThreadName renames a thread.
-func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.ChangeThreadNameResult, jerr *js.Error) {
+func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.ChangeThreadNameResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ThreadId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIdIsNotSet, Message: RpcErrorMsg_ThreadIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
 
 	if len(p.Name) == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadNameIsNotSet, Message: RpcErrorMsg_ThreadNameIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadNameIsNotSet, RpcErrorMsg_ThreadNameIsNotSet, nil)
 	}
 
 	var err error
@@ -881,28 +881,28 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 }
 
 // changeThreadForum moves a thread from an old forum to a new forum.
-func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.ChangeThreadForumResult, jerr *js.Error) {
+func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.ChangeThreadForumResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ThreadId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIdIsNotSet, Message: RpcErrorMsg_ThreadIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
 
 	if p.ForumId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumIdIsNotSet, Message: RpcErrorMsg_ForumIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
 
 	// Ensure that an old parent exists.
@@ -920,7 +920,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumIsNotFound, Message: RpcErrorMsg_ForumIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
 	}
 
 	// Ensure that a new parent exists.
@@ -930,7 +930,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumIsNotFound, Message: RpcErrorMsg_ForumIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
 	}
 
 	// Update the moved thread.
@@ -949,7 +949,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	err = threadsR.AddItem(p.ThreadId, false)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetForumThreadsById(p.ForumId, threadsR)
@@ -967,7 +967,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	err = threadsL.RemoveItem(p.ThreadId)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetForumThreadsById(oldParent, threadsL)
@@ -983,24 +983,24 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 }
 
 // getThread reads a thread.
-func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult, jerr *js.Error) {
+func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ThreadId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIdIsNotSet, Message: RpcErrorMsg_ThreadIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
 
 	// Read the thread.
@@ -1019,24 +1019,24 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 }
 
 // deleteThread removes a thread.
-func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThreadResult, jerr *js.Error) {
+func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThreadResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ThreadId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIdIsNotSet, Message: RpcErrorMsg_ThreadIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
 
 	// Read the thread.
@@ -1049,7 +1049,7 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 
 	// Check for children.
 	if thread.Messages.Size() > 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIsNotEmpty, Message: RpcErrorMsg_ThreadIsNotEmpty}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotEmpty, RpcErrorMsg_ThreadIsNotEmpty, nil)
 	}
 
 	// Update the link.
@@ -1062,7 +1062,7 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 	err = linkThreads.RemoveItem(p.ThreadId)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetForumThreadsById(thread.ForumId, linkThreads)
@@ -1086,28 +1086,28 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 // Message.
 
 // addMessage inserts a new message into a thread.
-func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResult, jerr *js.Error) {
+func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsWriter {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ThreadId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIdIsNotSet, Message: RpcErrorMsg_ThreadIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
 
 	if len(p.Text) == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_MessageTextIsNotSet, Message: RpcErrorMsg_MessageTextIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageTextIsNotSet, RpcErrorMsg_MessageTextIsNotSet, nil)
 	}
 
 	// Ensure that a parent exists.
@@ -1119,7 +1119,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIsNotFound, Message: RpcErrorMsg_ThreadIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
 	}
 
 	// Insert a message and link it with its thread.
@@ -1140,7 +1140,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 	err = parentMessages.AddItem(uint(insertedMessageId), false)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetThreadMessagesById(p.ThreadId, parentMessages)
@@ -1166,7 +1166,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 			err = threads.RaiseItem(p.ThreadId)
 			if err != nil {
 				srv.logError(err)
-				return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+				return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 			}
 
 			err = srv.dbo.SetForumThreadsById(messageThread.ForumId, threads)
@@ -1184,14 +1184,14 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 }
 
 // changeMessageText changes text of a message.
-func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.ChangeMessageTextResult, jerr *js.Error) {
+func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.ChangeMessageTextResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
@@ -1226,16 +1226,16 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 	}
 
 	if !ok {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.MessageId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_MessageIdIsNotSet, Message: RpcErrorMsg_MessageIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIdIsNotSet, RpcErrorMsg_MessageIdIsNotSet, nil)
 	}
 
 	if len(p.Text) == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_MessageTextIsNotSet, Message: RpcErrorMsg_MessageTextIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageTextIsNotSet, RpcErrorMsg_MessageTextIsNotSet, nil)
 	}
 
 	messageTextChecksum := srv.getMessageTextChecksum(p.Text)
@@ -1254,28 +1254,28 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 }
 
 // changeMessageThread moves a message from an old thread to a new thread.
-func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result *mm.ChangeMessageThreadResult, jerr *js.Error) {
+func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result *mm.ChangeMessageThreadResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.MessageId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_MessageIdIsNotSet, Message: RpcErrorMsg_MessageIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIdIsNotSet, RpcErrorMsg_MessageIdIsNotSet, nil)
 	}
 
 	if p.ThreadId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIdIsNotSet, Message: RpcErrorMsg_ThreadIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
 
 	// Ensure that an old parent exists.
@@ -1293,7 +1293,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIsNotFound, Message: RpcErrorMsg_ThreadIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
 	}
 
 	// Ensure that a new parent exists.
@@ -1303,7 +1303,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	}
 
 	if n == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIsNotFound, Message: RpcErrorMsg_ThreadIsNotFound}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
 	}
 
 	// Update the moved message.
@@ -1322,7 +1322,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	err = messagesR.AddItem(p.MessageId, false)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetThreadMessagesById(p.ThreadId, messagesR)
@@ -1340,7 +1340,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	err = messagesL.RemoveItem(p.MessageId)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetThreadMessagesById(oldParent, messagesL)
@@ -1356,24 +1356,24 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 }
 
 // getMessage reads a message.
-func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResult, jerr *js.Error) {
+func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.MessageId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_MessageIdIsNotSet, Message: RpcErrorMsg_MessageIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIdIsNotSet, RpcErrorMsg_MessageIdIsNotSet, nil)
 	}
 
 	// Read the message.
@@ -1392,24 +1392,24 @@ func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResu
 }
 
 // deleteMessage removes a message.
-func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMessageResult, jerr *js.Error) {
+func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMessageResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.MessageId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_MessageIdIsNotSet, Message: RpcErrorMsg_MessageIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIdIsNotSet, RpcErrorMsg_MessageIdIsNotSet, nil)
 	}
 
 	// Read the message.
@@ -1430,7 +1430,7 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 	err = linkMessages.RemoveItem(p.MessageId)
 	if err != nil {
 		srv.logError(err)
-		return nil, &js.Error{Code: c.RpcErrorCode_UidList, Message: fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error())}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	err = srv.dbo.SetThreadMessagesById(message.ThreadId, linkMessages)
@@ -1454,24 +1454,24 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 // Composite objects.
 
 // listThreadAndMessages reads a thread and all its messages.
-func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (result *mm.ListThreadAndMessagesResult, jerr *js.Error) {
+func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (result *mm.ListThreadAndMessagesResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ThreadId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIdIsNotSet, Message: RpcErrorMsg_ThreadIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
 
 	// Read the thread.
@@ -1501,28 +1501,28 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 }
 
 // listThreadAndMessagesOnPage reads a thread and its messages on a selected page.
-func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPageParams) (result *mm.ListThreadAndMessagesOnPageResult, jerr *js.Error) {
+func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPageParams) (result *mm.ListThreadAndMessagesOnPageResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ThreadId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ThreadIdIsNotSet, Message: RpcErrorMsg_ThreadIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
 
 	if p.Page == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_PageIsNotSet, Message: RpcErrorMsg_PageIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
 	}
 
 	// Read the thread.
@@ -1562,24 +1562,24 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 }
 
 // listForumAndThreads reads a forum and all its threads.
-func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result *mm.ListForumAndThreadsResult, jerr *js.Error) {
+func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result *mm.ListForumAndThreadsResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ForumId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumIdIsNotSet, Message: RpcErrorMsg_ForumIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
 
 	// Read the forum.
@@ -1609,28 +1609,28 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 }
 
 // listForumAndThreadsOnPage reads a forum and its threads on a selected page.
-func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPageParams) (result *mm.ListForumAndThreadsOnPageResult, jerr *js.Error) {
+func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPageParams) (result *mm.ListForumAndThreadsOnPageResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Check parameters.
 	if p.ForumId == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_ForumIdIsNotSet, Message: RpcErrorMsg_ForumIdIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
 
 	if p.Page == 0 {
-		return nil, &js.Error{Code: RpcErrorCode_PageIsNotSet, Message: RpcErrorMsg_PageIsNotSet}
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
 	}
 
 	// Read the forum.
@@ -1670,19 +1670,19 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 }
 
 // listSectionsAndForums reads all sections and forums.
-func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (result *mm.ListSectionsAndForumsResult, jerr *js.Error) {
+func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (result *mm.ListSectionsAndForumsResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
 	var userRoles *am.GetSelfRolesResult
-	userRoles, jerr = srv.mustBeAnAuthToken(p.Auth)
-	if jerr != nil {
-		return nil, jerr
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, &js.Error{Code: c.RpcErrorCode_InsufficientPermission, Message: c.RpcErrorMsg_InsufficientPermission}
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
 	}
 
 	// Read all the sections.
@@ -1712,16 +1712,14 @@ func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (res
 
 // Other.
 
-func (srv *Server) showDiagnosticData() (result *mm.ShowDiagnosticDataResult, jerr *js.Error) {
-	result = &mm.ShowDiagnosticDataResult{
-		TotalRequestsCount:      srv.diag.GetTotalRequestsCount(),
-		SuccessfulRequestsCount: srv.diag.GetSuccessfulRequestsCount(),
-	}
+func (srv *Server) showDiagnosticData() (result *mm.ShowDiagnosticDataResult, re *jrm1.RpcError) {
+	result = &mm.ShowDiagnosticDataResult{}
+	result.TotalRequestsCount, result.SuccessfulRequestsCount = srv.js.GetRequestsCount()
 
 	return result, nil
 }
 
-func (srv *Server) doTest(p *mm.TestParams) (result *mm.TestResult, jerr *js.Error) {
+func (srv *Server) test(p *mm.TestParams) (result *mm.TestResult, re *jrm1.RpcError) {
 	result = &mm.TestResult{}
 
 	var wg = new(sync.WaitGroup)
@@ -1737,7 +1735,7 @@ func (srv *Server) doTest(p *mm.TestParams) (result *mm.TestResult, jerr *js.Err
 	for err := range errChan {
 		if err != nil {
 			srv.logError(err)
-			return nil, &js.Error{Code: RpcErrorCode_TestError, Message: fmt.Sprintf(RpcErrorMsgF_TestError, err.Error())}
+			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_TestError, fmt.Sprintf(RpcErrorMsgF_TestError, err.Error()), nil)
 		}
 	}
 
