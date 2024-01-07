@@ -20,19 +20,19 @@ const (
 
 func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, clientIPA string) {
 	if req.Method != http.MethodPost {
-		srv.processMethodNotAllowed(rw)
+		srv.respondMethodNotAllowed(rw)
 		return
 	}
 
 	// Check accepted MIME types.
 	ok, err := hh.CheckBrowserSupportForJson(req)
 	if err != nil {
-		srv.processBadRequest(rw)
+		srv.respondBadRequest(rw)
 		return
 	}
 
 	if !ok {
-		srv.processNotAcceptable(rw)
+		srv.respondNotAcceptable(rw)
 		return
 	}
 
@@ -47,26 +47,26 @@ func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, cl
 	var arwoa api.RequestWithOnlyAction
 	err = json.Unmarshal(reqBody, &arwoa)
 	if err != nil {
-		srv.processBadRequest(rw)
+		srv.respondBadRequest(rw)
 		return
 	}
 
 	if arwoa.Action == nil {
-		srv.processBadRequest(rw)
+		srv.respondBadRequest(rw)
 		return
 	}
 
 	var handler api.RequestHandler
 	handler, ok = srv.apiHandlers[*arwoa.Action]
 	if !ok {
-		srv.processNotFound(rw)
+		srv.respondNotFound(rw)
 		return
 	}
 
 	var token *string
 	token, err = gm.GetToken(req)
 	if err != nil {
-		srv.processBadRequest(rw)
+		srv.respondBadRequest(rw)
 		return
 	}
 

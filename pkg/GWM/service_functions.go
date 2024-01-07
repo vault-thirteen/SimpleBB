@@ -16,8 +16,8 @@ import (
 
 // Service functions.
 
-func (srv *Server) GetProductVersion(_ *api.Request, _ *http.Request, rw http.ResponseWriter) {
-	srv.respondWithPlainText(rw, srv.settings.VersionInfo.ProgramVersionString())
+func (srv *Server) GetProductVersion(_ *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	srv.respondWithPlainText(hrw, srv.settings.VersionInfo.ProgramVersionString())
 }
 
 func (srv *Server) RegisterUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
@@ -32,7 +32,7 @@ func (srv *Server) RegisterUser(ar *api.Request, _ *http.Request, hrw http.Respo
 	var p am.RegisterUserParams
 	err = json.Unmarshal(rawParameters, &p)
 	if err != nil {
-		srv.processBadRequest(hrw)
+		srv.respondBadRequest(hrw)
 		return
 	}
 
@@ -73,7 +73,7 @@ func (srv *Server) ApproveAndRegisterUser(ar *api.Request, _ *http.Request, hrw 
 	var p am.ApproveAndRegisterUserParams
 	err = json.Unmarshal(rawParameters, &p)
 	if err != nil {
-		srv.processBadRequest(hrw)
+		srv.respondBadRequest(hrw)
 		return
 	}
 

@@ -10,7 +10,7 @@ import (
 func (srv *Server) handlePublicFrontEnd(rw http.ResponseWriter, req *http.Request) {
 	up, err := models.NewUrlParameterFromHttpRequest(req)
 	if err != nil {
-		srv.processBadRequest(rw)
+		srv.respondBadRequest(rw)
 		return
 	}
 

@@ -8,7 +8,7 @@ import (
 // set received from the client. This object is used for API function calls
 // between services.
 type Request struct {
-	Action        string
+	Action        *string
 	Parameters    any
 	Authorisation *cmr.Auth
 }

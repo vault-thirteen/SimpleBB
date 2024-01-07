@@ -4,4 +4,4 @@ import (
 	"net/http"
 )
 
-type RequestHandler = func(*Request, http.ResponseWriter, *http.Request)
+type RequestHandler = func(ar *Request, hr *http.Request, hrw http.ResponseWriter)

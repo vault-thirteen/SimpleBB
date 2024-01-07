@@ -10,33 +10,14 @@ import (
 	"github.com/vault-thirteen/auxie/header"
 )
 
-func (srv *Server) processBlockedClient(rw http.ResponseWriter) {
-	rw.WriteHeader(http.StatusForbidden)
-}
-
-func (srv *Server) processNotFound(rw http.ResponseWriter) {
-	rw.WriteHeader(http.StatusNotFound)
-}
-
-func (srv *Server) processBadRequest(rw http.ResponseWriter) {
-	rw.WriteHeader(http.StatusBadRequest)
-}
-
-func (srv *Server) processMethodNotAllowed(rw http.ResponseWriter) {
-	rw.WriteHeader(http.StatusMethodNotAllowed)
-}
-
-func (srv *Server) processNotAcceptable(rw http.ResponseWriter) {
-	rw.WriteHeader(http.StatusNotAcceptable)
-}
-
+// processInternalServerError logs the internal error and responds via HTTP.
 func (srv *Server) processInternalServerError(rw http.ResponseWriter, err error) {
 	srv.logError(err)
 	rw.WriteHeader(http.StatusInternalServerError)
 }
 
-// processRpcError turns codes of RPC errors returned by modules into an HTTP
-// response with an error.
+// processRpcError finds an appropriate HTTP status code and message text for
+// an RPC error and responds via HTTP.
 func (srv *Server) processRpcError(moduleId byte, re *jrm1.RpcError, rw http.ResponseWriter) {
 	var httpStatusCode int
 	var err error
@@ -57,6 +38,7 @@ func (srv *Server) processRpcError(moduleId byte, re *jrm1.RpcError, rw http.Res
 	return
 }
 
+// respondWithPlainText responds via HTTP with a simple text message.
 func (srv *Server) respondWithPlainText(rw http.ResponseWriter, text string) {
 	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_TextPlain)
 
@@ -67,6 +49,7 @@ func (srv *Server) respondWithPlainText(rw http.ResponseWriter, text string) {
 	}
 }
 
+// respondWithJsonObject responds via HTTP with a JSON object.
 func (srv *Server) respondWithJsonObject(rw http.ResponseWriter, obj any) {
 	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_ApplicationJson)
 
@@ -75,4 +58,24 @@ func (srv *Server) respondWithJsonObject(rw http.ResponseWriter, obj any) {
 		log.Println(err.Error())
 		return
 	}
+}
+
+func (srv *Server) respondBadRequest(rw http.ResponseWriter) {
+	rw.WriteHeader(http.StatusBadRequest)
+}
+
+func (srv *Server) respondForbidden(rw http.ResponseWriter) {
+	rw.WriteHeader(http.StatusForbidden)
+}
+
+func (srv *Server) respondNotFound(rw http.ResponseWriter) {
+	rw.WriteHeader(http.StatusNotFound)
+}
+
+func (srv *Server) respondMethodNotAllowed(rw http.ResponseWriter) {
+	rw.WriteHeader(http.StatusMethodNotAllowed)
+}
+
+func (srv *Server) respondNotAcceptable(rw http.ResponseWriter) {
+	rw.WriteHeader(http.StatusNotAcceptable)
 }

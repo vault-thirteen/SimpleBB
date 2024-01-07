@@ -349,7 +349,7 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 		}
 
 		if !ok {
-			srv.processBlockedClient(rw)
+			srv.respondForbidden(rw)
 			return
 		}
 	}
@@ -368,7 +368,7 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	srv.processNotFound(rw)
+	srv.respondNotFound(rw)
 }
 
 func (srv *Server) initStatusCodeMapper() (err error) {
