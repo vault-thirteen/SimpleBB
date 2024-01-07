@@ -51,10 +51,15 @@ func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, cl
 		return
 	}
 
+	if arwoa.Action == nil {
+		srv.processBadRequest(rw)
+		return
+	}
+
 	var handler api.RequestHandler
-	handler, ok = srv.apiHandlers[arwoa.Action]
+	handler, ok = srv.apiHandlers[*arwoa.Action]
 	if !ok {
-		srv.processPageNotFound(rw)
+		srv.processNotFound(rw)
 		return
 	}
 
@@ -77,6 +82,6 @@ func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, cl
 		ar.Authorisation.Token = *token
 	}
 
-	handler(ar, rw, req)
+	handler(ar, req, rw)
 	return
 }

@@ -14,7 +14,7 @@ func (srv *Server) processBlockedClient(rw http.ResponseWriter) {
 	rw.WriteHeader(http.StatusForbidden)
 }
 
-func (srv *Server) processPageNotFound(rw http.ResponseWriter) {
+func (srv *Server) processNotFound(rw http.ResponseWriter) {
 	rw.WriteHeader(http.StatusNotFound)
 }
 

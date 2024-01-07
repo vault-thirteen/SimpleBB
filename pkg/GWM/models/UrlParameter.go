@@ -21,6 +21,7 @@ const (
 	ErrMultipleObjectTypesRequested = "multiple object types were requested"
 )
 
+// UrlParameter is a set of URL query parameters.
 type UrlParameter struct {
 	ForumId    *uint
 	ThreadId   *uint

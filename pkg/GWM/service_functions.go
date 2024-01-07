@@ -16,23 +16,23 @@ import (
 
 // Service functions.
 
-func (srv *Server) GetProductVersion(_ *api.Request, rw http.ResponseWriter, _ *http.Request) {
+func (srv *Server) GetProductVersion(_ *api.Request, _ *http.Request, rw http.ResponseWriter) {
 	srv.respondWithPlainText(rw, srv.settings.VersionInfo.ProgramVersionString())
 }
 
-func (srv *Server) RegisterUser(ar *api.Request, rw http.ResponseWriter, _ *http.Request) {
+func (srv *Server) RegisterUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
 	rawParameters, ok := ar.Parameters.(json.RawMessage)
 	if !ok {
 		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(rw, err)
+		srv.processInternalServerError(hrw, err)
 		return
 	}
 
 	var p am.RegisterUserParams
 	err = json.Unmarshal(rawParameters, &p)
 	if err != nil {
-		srv.processBadRequest(rw)
+		srv.processBadRequest(hrw)
 		return
 	}
 
@@ -44,11 +44,11 @@ func (srv *Server) RegisterUser(ar *api.Request, rw http.ResponseWriter, _ *http
 	var re *jrm1.RpcError
 	re, err = srv.acmServiceClient.MakeRequest(context.Background(), ac.FuncRegisterUser, p, result)
 	if err != nil {
-		srv.processInternalServerError(rw, err)
+		srv.processInternalServerError(hrw, err)
 		return
 	}
 	if re != nil {
-		srv.processRpcError(app.ModuleId_ACM, re, rw)
+		srv.processRpcError(app.ModuleId_ACM, re, hrw)
 		return
 	}
 
@@ -57,23 +57,23 @@ func (srv *Server) RegisterUser(ar *api.Request, rw http.ResponseWriter, _ *http
 		Action: ar.Action,
 		Result: result,
 	}
-	srv.respondWithJsonObject(rw, response)
+	srv.respondWithJsonObject(hrw, response)
 	return
 }
 
-func (srv *Server) ApproveAndRegisterUser(ar *api.Request, rw http.ResponseWriter, _ *http.Request) {
+func (srv *Server) ApproveAndRegisterUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
 	rawParameters, ok := ar.Parameters.(json.RawMessage)
 	if !ok {
 		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(rw, err)
+		srv.processInternalServerError(hrw, err)
 		return
 	}
 
 	var p am.ApproveAndRegisterUserParams
 	err = json.Unmarshal(rawParameters, &p)
 	if err != nil {
-		srv.processBadRequest(rw)
+		srv.processBadRequest(hrw)
 		return
 	}
 
@@ -85,11 +85,11 @@ func (srv *Server) ApproveAndRegisterUser(ar *api.Request, rw http.ResponseWrite
 	var re *jrm1.RpcError
 	re, err = srv.acmServiceClient.MakeRequest(context.Background(), ac.FuncApproveAndRegisterUser, p, result)
 	if err != nil {
-		srv.processInternalServerError(rw, err)
+		srv.processInternalServerError(hrw, err)
 		return
 	}
 	if re != nil {
-		srv.processRpcError(app.ModuleId_ACM, re, rw)
+		srv.processRpcError(app.ModuleId_ACM, re, hrw)
 		return
 	}
 
@@ -98,7 +98,7 @@ func (srv *Server) ApproveAndRegisterUser(ar *api.Request, rw http.ResponseWrite
 		Action: ar.Action,
 		Result: result,
 	}
-	srv.respondWithJsonObject(rw, response)
+	srv.respondWithJsonObject(hrw, response)
 	return
 }
 

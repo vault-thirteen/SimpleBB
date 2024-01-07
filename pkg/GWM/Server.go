@@ -368,7 +368,7 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	srv.processPageNotFound(rw)
+	srv.processNotFound(rw)
 }
 
 func (srv *Server) initStatusCodeMapper() (err error) {
