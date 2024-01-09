@@ -49,7 +49,6 @@ const (
 
 // Messages.
 const (
-	RpcErrorMsg_Exception                          = "exception"
 	RpcErrorMsg_AuthChallengeResponseIsNotSet      = "authorisation challenge response is not set"
 	RpcErrorMsg_BPP_GenerateRandomSalt             = "BPP: GenerateRandomSalt error"
 	RpcErrorMsgF_BPP_PackSymbols                   = "BPP: PackSymbols error: %s" // Template.
