@@ -13,7 +13,7 @@ type EmailChange struct {
 	Id             uint
 	UserId         uint
 	TimeOfCreation time.Time
-	RequestId      string
+	RequestId      *string
 
 	// IP address of a user. B = Byte array.
 	UserIPAB net.IP
@@ -24,12 +24,12 @@ type EmailChange struct {
 	EmailChangeVerificationFlags
 
 	// Old e-mail.
-	VerificationCodeOld string
+	VerificationCodeOld *string
 	IsOldEmailSent      bool
 
 	// New e-mail.
 	NewEmail            string
-	VerificationCodeNew string
+	VerificationCodeNew *string
 	IsNewEmailSent      bool
 }
 

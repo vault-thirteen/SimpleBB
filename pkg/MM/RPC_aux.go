@@ -28,10 +28,10 @@ func (srv *Server) logError(err error) {
 	}
 }
 
-// databaseError processes the database error and returns a JSON RPC error.
-func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
+// processDatabaseError processes a database error.
+func (srv *Server) processDatabaseError(err error) {
 	if err == nil {
-		return nil
+		return
 	}
 
 	if c.IsNetworkError(err) {
@@ -41,7 +41,13 @@ func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
 		srv.logError(err)
 	}
 
-	return jrm1.NewRpcErrorByUser(c.RpcErrorCode_DatabaseError, c.RpcErrorMsg_DatabaseError, nil)
+	return
+}
+
+// databaseError processes the database error and returns an RPC error.
+func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
+	srv.processDatabaseError(err)
+	return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Database, c.RpcErrorMsg_Database, err)
 }
 
 // Token-related functions.
@@ -50,19 +56,16 @@ func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
 // an error is returned and the caller of this function must stop and return
 // this error.
 func (srv *Server) mustBeAuthUserIPA(auth *cmr.Auth) (re *jrm1.RpcError) {
-	if auth == nil {
-		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_MalformedRequest, c.RpcErrorMsg_MalformedRequest, nil)
-	}
-
-	if len(auth.UserIPA) == 0 {
-		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_MalformedRequest, c.RpcErrorMsg_MalformedRequest, nil)
+	if (auth == nil) ||
+		(len(auth.UserIPA) == 0) {
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
 
 	var err error
 	auth.UserIPAB, err = cn.ParseIPA(auth.UserIPA)
 	if err != nil {
 		srv.logError(err)
-		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_IPAddressError, fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error()), nil)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
 
 	return nil
@@ -79,14 +82,12 @@ func (srv *Server) mustBeAnAuthToken(auth *cmr.Auth) (userRoles *am.GetSelfRoles
 	}
 
 	if len(auth.Token) == 0 {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
 
-	var err error
-	userRoles, err = srv.getUserSelfRoles(auth)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_GetUserDataByAuthToken, fmt.Sprintf(c.RpcErrorMsgF_GetUserDataByAuthToken, err.Error()), nil)
+	userRoles, re = srv.getUserSelfRoles(auth)
+	if re != nil {
+		return nil, re
 	}
 
 	return userRoles, nil
@@ -94,7 +95,7 @@ func (srv *Server) mustBeAnAuthToken(auth *cmr.Auth) (userRoles *am.GetSelfRoles
 
 // Other functions.
 
-func (srv *Server) getUserSelfRoles(auth *cmr.Auth) (userRoles *am.GetSelfRolesResult, err error) {
+func (srv *Server) getUserSelfRoles(auth *cmr.Auth) (userRoles *am.GetSelfRolesResult, re *jrm1.RpcError) {
 	var params = am.GetSelfRolesParams{
 		CommonParams: cmr.CommonParams{
 			Auth: auth,
@@ -102,13 +103,14 @@ func (srv *Server) getUserSelfRoles(auth *cmr.Auth) (userRoles *am.GetSelfRolesR
 	}
 
 	userRoles = new(am.GetSelfRolesResult)
-	var re *jrm1.RpcError
+	var err error
 	re, err = srv.acmServiceClient.MakeRequest(context.Background(), ac.FuncGetSelfRoles, params, userRoles)
 	if err != nil {
-		return nil, err
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
 	}
 	if re != nil {
-		return nil, re.AsError()
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
 
 	return userRoles, nil

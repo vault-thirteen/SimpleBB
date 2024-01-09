@@ -1,8 +1,6 @@
 package gwm
 
 import (
-	"fmt"
-
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
@@ -31,7 +29,7 @@ func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockI
 	userIPAB, err := cn.ParseIPA(p.UserIPA)
 	if err != nil {
 		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_IPAddressError, fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error()), nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
 
 	// Search for an existing record.
@@ -73,7 +71,7 @@ func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *g
 	userIPAB, err := cn.ParseIPA(p.UserIPA)
 	if err != nil {
 		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_IPAddressError, fmt.Sprintf(c.RpcErrorMsgF_IPAddressError, err.Error()), nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
 
 	// Search for an existing record.

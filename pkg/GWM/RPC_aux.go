@@ -21,10 +21,10 @@ func (srv *Server) logError(err error) {
 	}
 }
 
-// databaseError processes the database error and returns it.
-func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
+// processDatabaseError processes a database error.
+func (srv *Server) processDatabaseError(err error) {
 	if err == nil {
-		return nil
+		return
 	}
 
 	if c.IsNetworkError(err) {
@@ -34,5 +34,11 @@ func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
 		srv.logError(err)
 	}
 
-	return jrm1.NewRpcErrorByUser(c.RpcErrorCode_DatabaseError, c.RpcErrorMsg_DatabaseError, err)
+	return
+}
+
+// databaseError processes the database error and returns an RPC error.
+func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
+	srv.processDatabaseError(err)
+	return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Database, c.RpcErrorMsg_Database, err)
 }

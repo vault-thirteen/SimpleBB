@@ -13,7 +13,7 @@ type PasswordChange struct {
 	Id             uint
 	UserId         uint
 	TimeOfCreation time.Time
-	RequestId      string
+	RequestId      *string
 
 	// IP address of a user. B = Byte array.
 	UserIPAB net.IP
@@ -23,7 +23,7 @@ type PasswordChange struct {
 	CaptchaId            sql.NullString
 	IsVerifiedByCaptcha  sql.NullBool
 	IsVerifiedByPassword bool
-	VerificationCode     string
+	VerificationCode     *string
 	IsEmailSent          bool
 	IsVerifiedByEmail    bool
 	NewPassword          []byte

@@ -30,7 +30,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -138,7 +138,7 @@ func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -176,7 +176,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -308,7 +308,7 @@ func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResu
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -344,7 +344,7 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -426,7 +426,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, re
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -510,7 +510,7 @@ func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.Chan
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -548,7 +548,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -676,7 +676,7 @@ func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, re
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -712,7 +712,7 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -787,7 +787,7 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 
 	// Check permissions.
 	if !userRoles.IsAuthor {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -855,7 +855,7 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -893,7 +893,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -995,7 +995,7 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -1031,7 +1031,7 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -1098,7 +1098,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 
 	// Check permissions.
 	if !userRoles.IsWriter {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -1226,7 +1226,7 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 	}
 
 	if !ok {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -1266,7 +1266,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -1368,7 +1368,7 @@ func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResu
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -1404,7 +1404,7 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 
 	// Check permissions.
 	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -1466,7 +1466,7 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -1513,7 +1513,7 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -1574,7 +1574,7 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -1621,7 +1621,7 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check parameters.
@@ -1682,7 +1682,7 @@ func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (res
 
 	// Check permissions.
 	if !userRoles.IsReader {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Read all the sections.

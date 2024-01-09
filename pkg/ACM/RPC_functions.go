@@ -41,12 +41,13 @@ func (srv *Server) registerUser(p *am.RegisterUserParams) (result *am.RegisterUs
 
 func (srv *Server) registerUserStep1(p *am.RegisterUserParams) (result *am.RegisterUserResult, re *jrm1.RpcError) {
 	// Is e-mail address valid ?
-	if !srv.isEmailOfUserValid(p.Email) {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_EmailAddressIsNotValid, RpcErrorMsg_EmailAddressIsNotValid, nil)
+	re = srv.isEmailOfUserValid(p.Email)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check that client's e-mail address is not used.
-	usersCount, err := srv.countUsersWithEmail(p.Email)
+	usersCount, err := srv.dbo.CountUsersWithEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -65,24 +66,22 @@ func (srv *Server) registerUserStep1(p *am.RegisterUserParams) (result *am.Regis
 	}
 
 	// Create a verification code.
-	var verificationCode string
-	verificationCode, err = srv.createVerificationCode()
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_VerificationCodeGenerator, RpcErrorMsg_VerificationCodeGenerator, nil)
+	var verificationCode *string
+	verificationCode, re = srv.createVerificationCode()
+	if re != nil {
+		return nil, re
 	}
 
 	// Attach the verification code to the user.
-	err = srv.dbo.AttachVerificationCodeToPreRegUser(p.Email, verificationCode)
+	err = srv.dbo.AttachVerificationCodeToPreRegUser(p.Email, *verificationCode)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Send an e-mail message with a verification code.
-	err = srv.sendVerificationCodeForReg(p.Email, verificationCode)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SmtpModule, fmt.Sprintf(RpcErrorMsgF_SmtpModule, err.Error()), nil)
+	re = srv.sendVerificationCodeForReg(p.Email, *verificationCode)
+	if re != nil {
+		return nil, re
 	}
 
 	// Confirm the email message send.
@@ -96,8 +95,9 @@ func (srv *Server) registerUserStep1(p *am.RegisterUserParams) (result *am.Regis
 
 func (srv *Server) registerUserStep2(p *am.RegisterUserParams) (result *am.RegisterUserResult, re *jrm1.RpcError) {
 	// Is e-mail address valid ?
-	if !srv.isEmailOfUserValid(p.Email) {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_EmailAddressIsNotValid, RpcErrorMsg_EmailAddressIsNotValid, nil)
+	re = srv.isEmailOfUserValid(p.Email)
+	if re != nil {
+		return nil, re
 	}
 
 	// Is verification code set ?
@@ -135,8 +135,9 @@ func (srv *Server) registerUserStep2(p *am.RegisterUserParams) (result *am.Regis
 
 func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.RegisterUserResult, re *jrm1.RpcError) {
 	// Is e-mail address valid ?
-	if !srv.isEmailOfUserValid(p.Email) {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_EmailAddressIsNotValid, RpcErrorMsg_EmailAddressIsNotValid, nil)
+	re = srv.isEmailOfUserValid(p.Email)
+	if re != nil {
+		return nil, re
 	}
 
 	// Is verification code set ?
@@ -159,7 +160,7 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_NameIsTooLong, RpcErrorMsg_NameIsTooLong, nil)
 	}
 
-	usersCount, err := srv.countUsersWithName(p.Name)
+	usersCount, err := srv.dbo.CountUsersWithName(p.Name)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -170,10 +171,9 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 	}
 
 	// Check password.
-	err = isPasswordAllowed(p.Password)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PasswordIsNotValid, fmt.Sprintf(RpcErrorMsgF_PasswordIsNotValid, err.Error()), nil)
+	re = isPasswordAllowed(p.Password)
+	if re != nil {
+		return nil, re
 	}
 
 	var pwdBytes []byte
@@ -239,12 +239,13 @@ func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (r
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, p.Email, p.Auth.UserIPAB)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Is e-mail address valid ?
-	if !srv.isEmailOfUserValid(p.Email) {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_EmailAddressIsNotValid, RpcErrorMsg_EmailAddressIsNotValid, nil)
+	re = srv.isEmailOfUserValid(p.Email)
+	if re != nil {
+		return nil, re
 	}
 
 	err := srv.dbo.ApprovePreRegUser(p.Email)
@@ -286,11 +287,12 @@ func (srv *Server) logUserIn(p *am.LogUserInParams) (result *am.LogUserInResult,
 
 func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInResult, re *jrm1.RpcError) {
 	// Is e-mail address valid ?
-	if !srv.isEmailOfUserValid(p.Email) {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_EmailAddressIsNotValid, RpcErrorMsg_EmailAddressIsNotValid, nil)
+	re = srv.isEmailOfUserValid(p.Email)
+	if re != nil {
+		return nil, re
 	}
 
-	usersCount, err := srv.countUsersWithEmailAbleToLogIn(p.Email)
+	usersCount, err := srv.dbo.CountUsersWithEmailAbleToLogIn(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -306,7 +308,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	var sessionsCount int
-	sessionsCount, err = srv.countSessionsByUserEmail(p.Email)
+	sessionsCount, err = srv.dbo.CountSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -324,7 +326,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	var preSessionsCount int
-	preSessionsCount, err = srv.countPreSessionsByUserEmail(p.Email)
+	preSessionsCount, err = srv.dbo.CountPreSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -347,11 +349,10 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, srv.databaseError(err)
 	}
 
-	var requestId string
-	requestId, err = srv.createRequestIdForLogIn()
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RequestIdGenerator, RpcErrorMsg_RequestIdGenerator, nil)
+	var requestId *string
+	requestId, re = srv.createRequestIdForLogIn()
+	if re != nil {
+		return nil, re
 	}
 
 	var pwdSalt []byte
@@ -371,10 +372,9 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	var captchaData *rm.CreateCaptchaResult
 	var captchaId sql.NullString
 	if isCaptchaNeeded {
-		captchaData, err = srv.createCaptcha()
-		if err != nil {
-			srv.logError(err)
-			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RCS_CreateCaptcha, fmt.Sprintf(RpcErrorMsgF_RCS_CreateCaptcha, err.Error()), nil)
+		captchaData, re = srv.createCaptcha()
+		if re != nil {
+			return nil, re
 		}
 
 		captchaId.Valid = true // => SQL non-NULL value.
@@ -383,12 +383,12 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 		captchaId.Valid = false // => SQL NULL value.
 	}
 
-	err = srv.dbo.CreatePreSession(userId, requestId, p.Auth.UserIPAB, pwdSalt, isCaptchaNeeded, captchaId)
+	err = srv.dbo.CreatePreSession(userId, *requestId, p.Auth.UserIPAB, pwdSalt, isCaptchaNeeded, captchaId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	result = &am.LogUserInResult{NextStep: 2, RequestId: requestId, AuthDataBytes: pwdSalt}
+	result = &am.LogUserInResult{NextStep: 2, RequestId: *requestId, AuthDataBytes: pwdSalt}
 
 	if isCaptchaNeeded {
 		result.IsCaptchaNeeded = true
@@ -402,8 +402,9 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 
 func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInResult, re *jrm1.RpcError) {
 	// Is e-mail address valid ?
-	if !srv.isEmailOfUserValid(p.Email) {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_EmailAddressIsNotValid, RpcErrorMsg_EmailAddressIsNotValid, nil)
+	re = srv.isEmailOfUserValid(p.Email)
+	if re != nil {
+		return nil, re
 	}
 
 	if len(p.RequestId) == 0 {
@@ -414,7 +415,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_AuthChallengeResponseIsNotSet, RpcErrorMsg_AuthChallengeResponseIsNotSet, nil)
 	}
 
-	usersCount, err := srv.countUsersWithEmailAbleToLogIn(p.Email)
+	usersCount, err := srv.dbo.CountUsersWithEmailAbleToLogIn(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -430,7 +431,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	var sessionsCount int
-	sessionsCount, err = srv.countSessionsByUserEmail(p.Email)
+	sessionsCount, err = srv.dbo.CountSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -448,7 +449,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	var preSessionsCount int
-	preSessionsCount, err = srv.countPreSessionsByUserEmail(p.Email)
+	preSessionsCount, err = srv.dbo.CountPreSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -584,51 +585,49 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	// Create a new Request ID for the next step.
-	var step3requestId string
-	step3requestId, err = srv.createRequestIdForLogIn()
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RequestIdGenerator, RpcErrorMsg_RequestIdGenerator, nil)
+	var step3requestId *string
+	step3requestId, re = srv.createRequestIdForLogIn()
+	if re != nil {
+		return nil, re
 	}
 
-	err = srv.dbo.UpdatePreSessionRequestId(userId, preSession.RequestId, step3requestId)
+	err = srv.dbo.UpdatePreSessionRequestId(userId, preSession.RequestId, *step3requestId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Verification by E-mail.
-	var verificationCode string
-	verificationCode, err = srv.createVerificationCode()
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_VerificationCodeGenerator, RpcErrorMsg_VerificationCodeGenerator, nil)
+	var verificationCode *string
+	verificationCode, re = srv.createVerificationCode()
+	if re != nil {
+		return nil, re
 	}
 
-	err = srv.dbo.AttachVerificationCodeToPreSession(userId, step3requestId, verificationCode)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	err = srv.sendVerificationCodeForLogIn(p.Email, verificationCode)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SmtpModule, fmt.Sprintf(RpcErrorMsgF_SmtpModule, err.Error()), nil)
-	}
-
-	err = srv.dbo.SetPreSessionEmailSendStatus(userId, step3requestId, true)
+	err = srv.dbo.AttachVerificationCodeToPreSession(userId, *step3requestId, *verificationCode)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	result = &am.LogUserInResult{NextStep: 3, RequestId: step3requestId}
+	re = srv.sendVerificationCodeForLogIn(p.Email, *verificationCode)
+	if re != nil {
+		return nil, re
+	}
+
+	err = srv.dbo.SetPreSessionEmailSendStatus(userId, *step3requestId, true)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &am.LogUserInResult{NextStep: 3, RequestId: *step3requestId}
 
 	return result, nil
 }
 
 func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInResult, re *jrm1.RpcError) {
 	// Is e-mail address valid ?
-	if !srv.isEmailOfUserValid(p.Email) {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_EmailAddressIsNotValid, RpcErrorMsg_EmailAddressIsNotValid, nil)
+	re = srv.isEmailOfUserValid(p.Email)
+	if re != nil {
+		return nil, re
 	}
 
 	if len(p.RequestId) == 0 {
@@ -639,7 +638,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_VerificationCodeIsNotSet, RpcErrorMsg_VerificationCodeIsNotSet, nil)
 	}
 
-	usersCount, err := srv.countUsersWithEmailAbleToLogIn(p.Email)
+	usersCount, err := srv.dbo.CountUsersWithEmailAbleToLogIn(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -655,7 +654,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	var sessionsCount int
-	sessionsCount, err = srv.countSessionsByUserEmail(p.Email)
+	sessionsCount, err = srv.dbo.CountSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -673,7 +672,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	var preSessionsCount int
-	preSessionsCount, err = srv.countPreSessionsByUserEmail(p.Email)
+	preSessionsCount, err = srv.dbo.CountPreSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -873,7 +872,7 @@ func (srv *Server) isUserLoggedIn(p *am.IsUserLoggedInParams) (result *am.IsUser
 		UserId: p.UserId,
 	}
 
-	sessionsCount, err := srv.countSessionsByUserId(p.UserId)
+	sessionsCount, err := srv.dbo.CountSessionsByUserId(p.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -917,7 +916,7 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 	}
 
 	// Check for duplicate request.
-	passwordChangesCount, err := srv.countPasswordChangesByUserId(ud.User.Id)
+	passwordChangesCount, err := srv.dbo.CountPasswordChangesByUserId(ud.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -939,10 +938,9 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 	}
 
 	// Check the new password.
-	err = isPasswordAllowed(p.NewPassword)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PasswordIsNotValid, fmt.Sprintf(RpcErrorMsgF_PasswordIsNotValid, err.Error()), nil)
+	re = isPasswordAllowed(p.NewPassword)
+	if re != nil {
+		return nil, re
 	}
 
 	pc.NewPassword, err = bpp.PackSymbols([]rune(p.NewPassword))
@@ -958,10 +956,9 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 	}
 
 	// Request ID.
-	pc.RequestId, err = srv.createRequestIdForPasswordChange()
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RequestIdGenerator, RpcErrorMsg_RequestIdGenerator, nil)
+	pc.RequestId, re = srv.createRequestIdForPasswordChange()
+	if re != nil {
+		return nil, re
 	}
 
 	// Password salt.
@@ -972,16 +969,14 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 	}
 
 	// Verification code.
-	pc.VerificationCode, err = srv.createVerificationCode()
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_VerificationCodeGenerator, RpcErrorMsg_VerificationCodeGenerator, nil)
+	pc.VerificationCode, re = srv.createVerificationCode()
+	if re != nil {
+		return nil, re
 	}
 
-	err = srv.sendVerificationCodeForPwdChange(ud.User.Email, pc.VerificationCode)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SmtpModule, fmt.Sprintf(RpcErrorMsgF_SmtpModule, err.Error()), nil)
+	re = srv.sendVerificationCodeForPwdChange(ud.User.Email, *pc.VerificationCode)
+	if re != nil {
+		return nil, re
 	}
 
 	// Captcha.
@@ -992,10 +987,9 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 
 	var captchaData *rm.CreateCaptchaResult
 	if pc.IsCaptchaRequired {
-		captchaData, err = srv.createCaptcha()
-		if err != nil {
-			srv.logError(err)
-			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RCS_CreateCaptcha, fmt.Sprintf(RpcErrorMsgF_RCS_CreateCaptcha, err.Error()), nil)
+		captchaData, re = srv.createCaptcha()
+		if re != nil {
+			return nil, re
 		}
 
 		pc.CaptchaId.Valid = true // => SQL non-NULL value.
@@ -1013,7 +1007,7 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 	// Response.
 	result = &am.ChangePasswordResult{
 		NextStep:      2,
-		RequestId:     pc.RequestId,
+		RequestId:     *pc.RequestId,
 		AuthDataBytes: pc.AuthDataBytes,
 	}
 
@@ -1029,7 +1023,7 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 
 func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserData) (result *am.ChangePasswordResult, re *jrm1.RpcError) {
 	// Check for duplicate request.
-	passwordChangesCount, err := srv.countPasswordChangesByUserId(ud.User.Id)
+	passwordChangesCount, err := srv.dbo.CountPasswordChangesByUserId(ud.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1075,7 +1069,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 	}
 
 	// Check the Request ID (indirectly).
-	if pcr.UserId != ud.User.Id {
+	if (pcr.UserId != ud.User.Id) || (pcr.RequestId == nil) {
 		srv.incidentManager.ReportIncident(am.IncidentType_PasswordChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
@@ -1121,7 +1115,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 
 			// When captcha guess is wrong, we delete the password change
 			// request to start the process from the first step.
-			err = srv.dbo.DeletePasswordChangeByRequestId(pcr.RequestId)
+			err = srv.dbo.DeletePasswordChangeByRequestId(*pcr.RequestId)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -1147,7 +1141,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 
 		// When password is wrong, we delete the password change request to
 		// start the process from the first step.
-		err = srv.dbo.DeletePasswordChangeByRequestId(pcr.RequestId)
+		err = srv.dbo.DeletePasswordChangeByRequestId(*pcr.RequestId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -1172,7 +1166,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 
 		// Delete the password change request on error to avoid brute force
 		// checks.
-		err = srv.dbo.DeletePasswordChangeByRequestId(pcr.RequestId)
+		err = srv.dbo.DeletePasswordChangeByRequestId(*pcr.RequestId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -1192,7 +1186,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 		pcvf.IsVerifiedByCaptcha.Valid = false // => SQL NULL value.
 	}
 
-	err = srv.dbo.SetPasswordChangeVFlags(ud.User.Id, pcr.RequestId, pcvf)
+	err = srv.dbo.SetPasswordChangeVFlags(ud.User.Id, *pcr.RequestId, pcvf)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1250,7 +1244,7 @@ func (srv *Server) changeEmailStep1(p *am.ChangeEmailParams, ud *am.UserData) (r
 	}
 
 	// Check for duplicate request.
-	emailChangesCount, err := srv.countEmailChangesByUserId(ud.User.Id)
+	emailChangesCount, err := srv.dbo.CountEmailChangesByUserId(ud.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1273,13 +1267,14 @@ func (srv *Server) changeEmailStep1(p *am.ChangeEmailParams, ud *am.UserData) (r
 
 	// Check the new e-mail address.
 	// Is e-mail address valid ?
-	if !srv.isEmailOfUserValid(ec.NewEmail) {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_EmailAddressIsNotValid, RpcErrorMsg_EmailAddressIsNotValid, nil)
+	re = srv.isEmailOfUserValid(ec.NewEmail)
+	if re != nil {
+		return nil, re
 	}
 
 	// Check that the new e-mail address is not used.
 	var usersCount int
-	usersCount, err = srv.countUsersWithEmail(ec.NewEmail)
+	usersCount, err = srv.dbo.CountUsersWithEmail(ec.NewEmail)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1290,10 +1285,9 @@ func (srv *Server) changeEmailStep1(p *am.ChangeEmailParams, ud *am.UserData) (r
 	}
 
 	// Request ID.
-	ec.RequestId, err = srv.createRequestIdForPasswordChange()
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RequestIdGenerator, RpcErrorMsg_RequestIdGenerator, nil)
+	ec.RequestId, re = srv.createRequestIdForPasswordChange()
+	if re != nil {
+		return nil, re
 	}
 
 	// Password salt.
@@ -1304,29 +1298,25 @@ func (srv *Server) changeEmailStep1(p *am.ChangeEmailParams, ud *am.UserData) (r
 	}
 
 	// Verification code for the old e-mail address.
-	ec.VerificationCodeOld, err = srv.createVerificationCode()
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_VerificationCodeGenerator, RpcErrorMsg_VerificationCodeGenerator, nil)
+	ec.VerificationCodeOld, re = srv.createVerificationCode()
+	if re != nil {
+		return nil, re
 	}
 
-	err = srv.sendVerificationCodeForEmailChange(ud.User.Email, ec.VerificationCodeOld)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SmtpModule, fmt.Sprintf(RpcErrorMsgF_SmtpModule, err.Error()), nil)
+	re = srv.sendVerificationCodeForEmailChange(ud.User.Email, *ec.VerificationCodeOld)
+	if re != nil {
+		return nil, re
 	}
 
 	// Verification code for the new e-mail address.
-	ec.VerificationCodeNew, err = srv.createVerificationCode()
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_VerificationCodeGenerator, RpcErrorMsg_VerificationCodeGenerator, nil)
+	ec.VerificationCodeNew, re = srv.createVerificationCode()
+	if re != nil {
+		return nil, re
 	}
 
-	err = srv.sendVerificationCodeForEmailChange(ec.NewEmail, ec.VerificationCodeNew)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SmtpModule, fmt.Sprintf(RpcErrorMsgF_SmtpModule, err.Error()), nil)
+	re = srv.sendVerificationCodeForEmailChange(ec.NewEmail, *ec.VerificationCodeNew)
+	if re != nil {
+		return nil, re
 	}
 
 	// Captcha.
@@ -1337,10 +1327,9 @@ func (srv *Server) changeEmailStep1(p *am.ChangeEmailParams, ud *am.UserData) (r
 
 	var captchaData *rm.CreateCaptchaResult
 	if ec.IsCaptchaRequired {
-		captchaData, err = srv.createCaptcha()
-		if err != nil {
-			srv.logError(err)
-			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RCS_CreateCaptcha, fmt.Sprintf(RpcErrorMsgF_RCS_CreateCaptcha, err.Error()), nil)
+		captchaData, re = srv.createCaptcha()
+		if re != nil {
+			return nil, re
 		}
 
 		ec.CaptchaId.Valid = true // => SQL non-NULL value.
@@ -1358,7 +1347,7 @@ func (srv *Server) changeEmailStep1(p *am.ChangeEmailParams, ud *am.UserData) (r
 	// Response.
 	result = &am.ChangeEmailResult{
 		NextStep:      2,
-		RequestId:     ec.RequestId,
+		RequestId:     *ec.RequestId,
 		AuthDataBytes: ec.AuthDataBytes,
 	}
 
@@ -1374,7 +1363,7 @@ func (srv *Server) changeEmailStep1(p *am.ChangeEmailParams, ud *am.UserData) (r
 
 func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (result *am.ChangeEmailResult, re *jrm1.RpcError) {
 	// Check for duplicate request.
-	emailChangesCount, err := srv.countEmailChangesByUserId(ud.User.Id)
+	emailChangesCount, err := srv.dbo.CountEmailChangesByUserId(ud.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1423,7 +1412,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 	}
 
 	// Check the Request ID (indirectly).
-	if ecr.UserId != ud.User.Id {
+	if (ecr.UserId != ud.User.Id) || (ecr.RequestId == nil) {
 		srv.incidentManager.ReportIncident(am.IncidentType_EmailChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
@@ -1469,7 +1458,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 
 			// When captcha guess is wrong, we delete the e-mail address change
 			// request to start the process from the first step.
-			err = srv.dbo.DeleteEmailChangeByRequestId(ecr.RequestId)
+			err = srv.dbo.DeleteEmailChangeByRequestId(*ecr.RequestId)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -1495,7 +1484,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 
 		// When password is wrong, we delete the password change request to
 		// start the process from the first step.
-		err = srv.dbo.DeleteEmailChangeByRequestId(ecr.RequestId)
+		err = srv.dbo.DeleteEmailChangeByRequestId(*ecr.RequestId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -1520,7 +1509,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 
 		// Delete the e-mail address change request on error to avoid brute
 		// force checks.
-		err = srv.dbo.DeleteEmailChangeByRequestId(ecr.RequestId)
+		err = srv.dbo.DeleteEmailChangeByRequestId(*ecr.RequestId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -1541,7 +1530,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 		ecvf.IsVerifiedByCaptcha.Valid = false // => SQL NULL value.
 	}
 
-	err = srv.dbo.SetEmailChangeVFlags(ud.User.Id, ecr.RequestId, ecvf)
+	err = srv.dbo.SetEmailChangeVFlags(ud.User.Id, *ecr.RequestId, ecvf)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1620,7 +1609,7 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	if p.UserId == 0 {
@@ -1662,7 +1651,7 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	if p.UserId == 0 {
@@ -1690,7 +1679,7 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	if p.UserId == 0 {
@@ -1718,7 +1707,7 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	if p.UserId == 0 {
@@ -1774,7 +1763,7 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, re *j
 	// Check permissions.
 	if !thisUserData.User.IsModerator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	if p.UserId == 0 {
@@ -1812,7 +1801,7 @@ func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult,
 	// Check permissions.
 	if !thisUserData.User.IsModerator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_InsufficientPermission, c.RpcErrorMsg_InsufficientPermission, nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	if p.UserId == 0 {
