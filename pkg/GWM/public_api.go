@@ -12,9 +12,26 @@ import (
 )
 
 const (
-	ApiFunctionName_GetProductVersion      = "getProductVersion"
+	ApiFunctionName_GetProductVersion = "getProductVersion"
+
+	// ACM.
 	ApiFunctionName_RegisterUser           = "registerUser"
 	ApiFunctionName_ApproveAndRegisterUser = "approveAndRegisterUser"
+	ApiFunctionName_LogUserIn              = "logUserIn"
+	ApiFunctionName_LogUserOut             = "logUserOut"
+	ApiFunctionName_GetListOfLoggedUsers   = "getListOfLoggedUsers"
+	ApiFunctionName_IsUserLoggedIn         = "isUserLoggedIn"
+	ApiFunctionName_ChangePassword         = "changePassword"
+	ApiFunctionName_ChangeEmail            = "changeEmail"
+	ApiFunctionName_GetUserRoles           = "getUserRoles"
+	ApiFunctionName_ViewUserParameters     = "viewUserParameters"
+	ApiFunctionName_SetUserRoleAuthor      = "setUserRoleAuthor"
+	ApiFunctionName_SetUserRoleWriter      = "setUserRoleWriter"
+	ApiFunctionName_SetUserRoleReader      = "setUserRoleReader"
+	ApiFunctionName_GetSelfRoles           = "getSelfRoles"
+	ApiFunctionName_BanUser                = "banUser"
+	ApiFunctionName_UnbanUser              = "unbanUser"
+
 	//TODO
 )
 

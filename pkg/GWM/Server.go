@@ -432,9 +432,26 @@ func (srv *Server) initApiFunctions() (err error) {
 	}
 
 	srv.apiHandlers = map[string]api.RequestHandler{
-		ApiFunctionName_GetProductVersion:      srv.GetProductVersion,
+		ApiFunctionName_GetProductVersion: srv.GetProductVersion,
+
+		// ACM.
 		ApiFunctionName_RegisterUser:           srv.RegisterUser,
 		ApiFunctionName_ApproveAndRegisterUser: srv.ApproveAndRegisterUser,
+		ApiFunctionName_LogUserIn:              srv.LogUserIn,
+		ApiFunctionName_LogUserOut:             srv.LogUserOut,
+		ApiFunctionName_GetListOfLoggedUsers:   srv.GetListOfLoggedUsers,
+		ApiFunctionName_IsUserLoggedIn:         srv.IsUserLoggedIn,
+		ApiFunctionName_ChangePassword:         srv.ChangePassword,
+		ApiFunctionName_ChangeEmail:            srv.ChangeEmail,
+		ApiFunctionName_GetUserRoles:           srv.GetUserRoles,
+		ApiFunctionName_ViewUserParameters:     srv.ViewUserParameters,
+		ApiFunctionName_SetUserRoleAuthor:      srv.SetUserRoleAuthor,
+		ApiFunctionName_SetUserRoleWriter:      srv.SetUserRoleWriter,
+		ApiFunctionName_SetUserRoleReader:      srv.SetUserRoleReader,
+		ApiFunctionName_GetSelfRoles:           srv.GetSelfRoles,
+		ApiFunctionName_BanUser:                srv.BanUser,
+		ApiFunctionName_UnbanUser:              srv.UnbanUser,
+
 		//TODO
 	}
 
