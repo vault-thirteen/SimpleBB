@@ -94,6 +94,7 @@ func (im *IncidentManager) run() {
 	defer im.wg.Done()
 
 	var err error
+	var re *jrm1.RpcError
 	for inc := range im.tasks {
 		if im.isTableOfIncidentsUsed {
 			err = am.CheckIncident(inc)
@@ -103,10 +104,10 @@ func (im *IncidentManager) run() {
 			}
 
 			err = im.saveIncident(inc)
-			im.logErrorIfSet(err)
+			im.logError(err)
 
-			err = im.informGateway(inc)
-			im.logErrorIfSet(err)
+			re = im.informGateway(inc)
+			im.logError(re.AsError())
 		}
 	}
 
@@ -142,7 +143,7 @@ func (im *IncidentManager) ReportIncident(itype am.IncidentType, email string, u
 	im.tasks <- incident
 }
 
-func (im *IncidentManager) logErrorIfSet(err error) {
+func (im *IncidentManager) logError(err error) {
 	if err != nil {
 		log.Println(err)
 	}
@@ -161,7 +162,7 @@ func (im *IncidentManager) saveIncident(inc *am.Incident) (err error) {
 	return nil
 }
 
-func (im *IncidentManager) informGateway(inc *am.Incident) (err error) {
+func (im *IncidentManager) informGateway(inc *am.Incident) (re *jrm1.RpcError) {
 	blockTime := im.blockTimePerIncidentType[inc.Type]
 
 	// Some incidents are only statistical.
@@ -185,16 +186,19 @@ func (im *IncidentManager) informGateway(inc *am.Incident) (err error) {
 	}
 
 	var result = new(gm.BlockIPAddressResult)
-	var re *jrm1.RpcError
+	var err error
 	re, err = im.gwmClient.MakeRequest(context.Background(), gc.FuncBlockIPAddress, params, result)
 	if err != nil {
-		return err
+		im.logError(err)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
 	}
 	if re != nil {
-		return re.AsError()
+		return re
 	}
 	if !result.OK {
-		return errors.New(fmt.Sprintf(c.MsgFModuleIsBroken, app.ServiceShortName_GWM))
+		err = errors.New(fmt.Sprintf(c.MsgFModuleIsBroken, app.ServiceShortName_GWM))
+		im.logError(err)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
 	}
 
 	return nil

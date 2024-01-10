@@ -6,12 +6,10 @@ package smtp
 
 // Codes.
 const (
-	RpcErrorCode_Exception   = 1
-	RpcErrorCode_MailerError = 2
+	RpcErrorCode_MailerError = 1
 )
 
 // Messages.
 const (
-	RpcErrorMsg_Exception    = "exception"
 	RpcErrorMsgF_MailerError = "mailer error: %s"
 )

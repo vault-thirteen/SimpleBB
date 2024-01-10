@@ -520,7 +520,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_CaptchaAnswerIsNotSet, RpcErrorMsg_CaptchaAnswerIsNotSet, nil)
 		}
 
-		// Get the correct captcha answer by its ID.
+		// Check captcha answer.
 		ccr, re = srv.checkCaptcha(preSession.CaptchaId.String, p.CaptchaAnswer)
 		if re != nil {
 			return nil, re
@@ -1099,7 +1099,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_CaptchaAnswerIsNotSet, RpcErrorMsg_CaptchaAnswerIsNotSet, nil)
 		}
 
-		// Get the correct captcha answer by its ID.
+		// Check captcha answer.
 		ccr, re = srv.checkCaptcha(pcr.CaptchaId.String, p.CaptchaAnswer)
 		if re != nil {
 			return nil, re
@@ -1442,7 +1442,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_CaptchaAnswerIsNotSet, RpcErrorMsg_CaptchaAnswerIsNotSet, nil)
 		}
 
-		// Get the correct captcha answer by its ID.
+		// Check captcha answer.
 		ccr, re = srv.checkCaptcha(ecr.CaptchaId.String, p.CaptchaAnswer)
 		if re != nil {
 			return nil, re

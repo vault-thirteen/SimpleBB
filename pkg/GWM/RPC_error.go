@@ -6,15 +6,13 @@ package gwm
 
 // Codes.
 const (
-	RpcErrorCode_Exception          = 1
-	RpcErrorCode_FirewallIsDisabled = 2
-	RpcErrorCode_IPAddressIsNotSet  = 3
-	RpcErrorCode_BlockTimeIsNotSet  = 4
+	RpcErrorCode_FirewallIsDisabled = 1
+	RpcErrorCode_IPAddressIsNotSet  = 2
+	RpcErrorCode_BlockTimeIsNotSet  = 3
 )
 
 // Messages.
 const (
-	RpcErrorMsg_Exception          = "exception"
 	RpcErrorMsg_FirewallIsDisabled = "Firewall is disabled"
 	RpcErrorMsg_IPAddressIsNotSet  = "IP address is not set"
 	RpcErrorMsg_BlockTimeIsNotSet  = "Block time is not set"
