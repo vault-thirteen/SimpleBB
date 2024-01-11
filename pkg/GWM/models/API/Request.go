@@ -1,6 +1,8 @@
 package api
 
 import (
+	"encoding/json"
+
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
@@ -9,6 +11,6 @@ import (
 // between services.
 type Request struct {
 	Action        *string
-	Parameters    any
+	Parameters    *json.RawMessage
 	Authorisation *cmr.Auth
 }
