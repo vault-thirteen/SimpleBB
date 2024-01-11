@@ -3,7 +3,6 @@ package gwm
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
@@ -13,6 +12,9 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
+
+// Unfortunately, Go language still has very poor support for generic
+// programming. The D.R.Y. principle is, thus, violated in this file.
 
 // Service functions.
 
@@ -24,15 +26,8 @@ func (srv *Server) GetProductVersion(_ *api.Request, _ *http.Request, hrw http.R
 
 func (srv *Server) RegisterUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.RegisterUserParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -65,15 +60,8 @@ func (srv *Server) RegisterUser(ar *api.Request, _ *http.Request, hrw http.Respo
 
 func (srv *Server) ApproveAndRegisterUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.ApproveAndRegisterUserParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -106,15 +94,8 @@ func (srv *Server) ApproveAndRegisterUser(ar *api.Request, _ *http.Request, hrw 
 
 func (srv *Server) LogUserIn(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.LogUserInParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -147,15 +128,8 @@ func (srv *Server) LogUserIn(ar *api.Request, _ *http.Request, hrw http.Response
 
 func (srv *Server) LogUserOut(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.LogUserOutParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -188,15 +162,8 @@ func (srv *Server) LogUserOut(ar *api.Request, _ *http.Request, hrw http.Respons
 
 func (srv *Server) GetListOfLoggedUsers(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.GetListOfLoggedUsersParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -229,15 +196,8 @@ func (srv *Server) GetListOfLoggedUsers(ar *api.Request, _ *http.Request, hrw ht
 
 func (srv *Server) IsUserLoggedIn(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.IsUserLoggedInParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -270,15 +230,8 @@ func (srv *Server) IsUserLoggedIn(ar *api.Request, _ *http.Request, hrw http.Res
 
 func (srv *Server) ChangePassword(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.ChangePasswordParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -311,15 +264,8 @@ func (srv *Server) ChangePassword(ar *api.Request, _ *http.Request, hrw http.Res
 
 func (srv *Server) ChangeEmail(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.ChangeEmailParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -352,15 +298,8 @@ func (srv *Server) ChangeEmail(ar *api.Request, _ *http.Request, hrw http.Respon
 
 func (srv *Server) GetUserRoles(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.GetUserRolesParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -393,15 +332,8 @@ func (srv *Server) GetUserRoles(ar *api.Request, _ *http.Request, hrw http.Respo
 
 func (srv *Server) ViewUserParameters(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.ViewUserParametersParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -434,15 +366,8 @@ func (srv *Server) ViewUserParameters(ar *api.Request, _ *http.Request, hrw http
 
 func (srv *Server) SetUserRoleAuthor(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.SetUserRoleAuthorParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -475,15 +400,8 @@ func (srv *Server) SetUserRoleAuthor(ar *api.Request, _ *http.Request, hrw http.
 
 func (srv *Server) SetUserRoleWriter(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.SetUserRoleWriterParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -516,15 +434,8 @@ func (srv *Server) SetUserRoleWriter(ar *api.Request, _ *http.Request, hrw http.
 
 func (srv *Server) SetUserRoleReader(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.SetUserRoleReaderParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -557,15 +468,8 @@ func (srv *Server) SetUserRoleReader(ar *api.Request, _ *http.Request, hrw http.
 
 func (srv *Server) GetSelfRoles(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.GetSelfRolesParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -598,15 +502,8 @@ func (srv *Server) GetSelfRoles(ar *api.Request, _ *http.Request, hrw http.Respo
 
 func (srv *Server) BanUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.BanUserParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return
@@ -639,15 +536,8 @@ func (srv *Server) BanUser(ar *api.Request, _ *http.Request, hrw http.ResponseWr
 
 func (srv *Server) UnbanUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
-	rawParameters, ok := ar.Parameters.(json.RawMessage)
-	if !ok {
-		err = errors.New(ErrTypeCast)
-		srv.processInternalServerError(hrw, err)
-		return
-	}
-
 	var params am.UnbanUserParams
-	err = json.Unmarshal(rawParameters, &params)
+	err = json.Unmarshal(*ar.Parameters, &params)
 	if err != nil {
 		srv.respondBadRequest(hrw)
 		return

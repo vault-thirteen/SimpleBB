@@ -68,7 +68,8 @@ func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, cl
 		return
 	}
 
-	if arwoa.Action == nil {
+	if (arwoa.Action == nil) ||
+		(arwoa.Parameters == nil) {
 		srv.respondBadRequest(rw)
 		return
 	}
