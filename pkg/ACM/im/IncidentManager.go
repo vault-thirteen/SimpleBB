@@ -107,7 +107,14 @@ func (im *IncidentManager) run() {
 			im.logError(err)
 
 			re = im.informGateway(inc)
-			im.logError(re.AsError())
+			// This is why Go language is a complete Scheiße:
+			// https://github.com/golang/go/issues/40442
+			if re != nil {
+				err = re.AsError()
+			} else {
+				err = nil
+			}
+			im.logError(err)
 		}
 	}
 

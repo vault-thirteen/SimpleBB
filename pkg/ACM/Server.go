@@ -285,6 +285,13 @@ func (srv *Server) listenForDbErrors() {
 func (srv *Server) runScheduler() {
 	defer srv.subRoutines.Done()
 
+	var funcsToRunEveryMinute = []c.ScheduledFnSimple{
+		srv.clearPreRegUsersTable,
+		srv.clearPasswordChangesTable,
+		srv.clearEmailChangesTable,
+		srv.clearSessions,
+	}
+
 	// Time counter.
 	// It counts seconds and resets every 24 hours.
 	var tc uint = 1
@@ -300,24 +307,11 @@ func (srv *Server) runScheduler() {
 
 		// Every minute.
 		if tc%60 == 0 {
-			err = srv.clearPreRegUsersTable()
-			if err != nil {
-				log.Println(err)
-			}
-
-			err = srv.clearPasswordChangesTable()
-			if err != nil {
-				log.Println(err)
-			}
-
-			err = srv.clearEmailChangesTable()
-			if err != nil {
-				log.Println(err)
-			}
-
-			err = srv.clearSessions()
-			if err != nil {
-				log.Println(err)
+			for _, fn := range funcsToRunEveryMinute {
+				err = fn()
+				if err != nil {
+					log.Println(err)
+				}
 			}
 		}
 
