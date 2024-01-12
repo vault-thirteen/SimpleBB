@@ -20,6 +20,8 @@ import (
 
 // Service functions.
 
+//TODO: Set HTTP cookie in some of the handlers.
+
 func (srv *Server) GetProductVersion(_ *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	srv.respondWithPlainText(hrw, srv.settings.VersionInfo.ProgramVersionString())
 }
