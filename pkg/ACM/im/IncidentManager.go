@@ -151,9 +151,11 @@ func (im *IncidentManager) ReportIncident(itype am.IncidentType, email string, u
 }
 
 func (im *IncidentManager) logError(err error) {
-	if err != nil {
-		log.Println(err)
+	if err == nil {
+		return
 	}
+
+	log.Println(err)
 }
 
 func (im *IncidentManager) saveIncident(inc *am.Incident) (err error) {
