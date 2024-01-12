@@ -32,7 +32,32 @@ const (
 	ApiFunctionName_BanUser                = "banUser"
 	ApiFunctionName_UnbanUser              = "unbanUser"
 
-	//TODO
+	// MM.
+	ApiFunctionName_AddSection                  = "addSection"
+	ApiFunctionName_ChangeSectionName           = "changeSectionName"
+	ApiFunctionName_ChangeSectionParent         = "changeSectionParent"
+	ApiFunctionName_GetSection                  = "getSection"
+	ApiFunctionName_DeleteSection               = "deleteSection"
+	ApiFunctionName_AddForum                    = "addForum"
+	ApiFunctionName_ChangeForumName             = "changeForumName"
+	ApiFunctionName_ChangeForumSection          = "changeForumSection"
+	ApiFunctionName_GetForum                    = "getForum"
+	ApiFunctionName_DeleteForum                 = "deleteForum"
+	ApiFunctionName_AddThread                   = "addThread"
+	ApiFunctionName_ChangeThreadName            = "changeThreadName"
+	ApiFunctionName_ChangeThreadForum           = "changeThreadForum"
+	ApiFunctionName_GetThread                   = "getThread"
+	ApiFunctionName_DeleteThread                = "deleteThread"
+	ApiFunctionName_AddMessage                  = "addMessage"
+	ApiFunctionName_ChangeMessageText           = "changeMessageText"
+	ApiFunctionName_ChangeMessageThread         = "changeMessageThread"
+	ApiFunctionName_GetMessage                  = "getMessage"
+	ApiFunctionName_DeleteMessage               = "deleteMessage"
+	ApiFunctionName_ListThreadAndMessages       = "listThreadAndMessages"
+	ApiFunctionName_ListThreadAndMessagesOnPage = "listThreadAndMessagesOnPage"
+	ApiFunctionName_ListForumAndThreads         = "listForumAndThreads"
+	ApiFunctionName_ListForumAndThreadsOnPage   = "listForumAndThreadsOnPage"
+	ApiFunctionName_ListSectionsAndForums       = "listSectionsAndForums"
 )
 
 func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, clientIPA string) {

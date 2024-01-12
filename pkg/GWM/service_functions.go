@@ -9,6 +9,8 @@ import (
 	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
+	mc "github.com/vault-thirteen/SimpleBB/pkg/MM/client"
+	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
@@ -568,4 +570,729 @@ func (srv *Server) UnbanUser(ar *api.Request, _ *http.Request, hrw http.Response
 	return
 }
 
-//TODO
+// MM.
+
+func (srv *Server) AddSection(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.AddSectionParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.AddSectionResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncAddSection, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ChangeSectionName(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ChangeSectionNameParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ChangeSectionNameResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncChangeSectionName, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ChangeSectionParent(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ChangeSectionParentParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ChangeSectionParentResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncChangeSectionParent, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) GetSection(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.GetSectionParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.GetSectionResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncGetSection, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) DeleteSection(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.DeleteSectionParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.DeleteSectionResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncDeleteSection, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) AddForum(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.AddForumParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.AddForumResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncAddForum, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ChangeForumName(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ChangeForumNameParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ChangeForumNameResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncChangeForumName, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ChangeForumSection(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ChangeForumSectionParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ChangeForumSectionResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncChangeForumSection, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) GetForum(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.GetForumParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.GetForumResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncGetForum, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) DeleteForum(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.DeleteForumParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.DeleteForumResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncDeleteForum, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) AddThread(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.AddThreadParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.AddThreadResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncAddThread, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ChangeThreadName(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ChangeThreadNameParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ChangeThreadNameResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncChangeThreadName, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ChangeThreadForum(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ChangeThreadForumParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ChangeThreadForumResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncChangeThreadForum, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) GetThread(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.GetThreadParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.GetThreadResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncGetThread, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) DeleteThread(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.DeleteThreadParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.DeleteThreadResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncDeleteThread, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) AddMessage(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.AddMessageParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.AddMessageResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncAddMessage, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ChangeMessageText(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ChangeMessageTextParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ChangeMessageTextResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncChangeMessageText, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ChangeMessageThread(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ChangeMessageThreadParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ChangeMessageThreadResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncChangeMessageThread, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) GetMessage(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.GetMessageParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.GetMessageResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncGetMessage, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) DeleteMessage(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.DeleteMessageParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.DeleteMessageResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncDeleteMessage, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ListThreadAndMessages(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ListThreadAndMessagesParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ListThreadAndMessagesResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncListThreadAndMessages, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ListThreadAndMessagesOnPage(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ListThreadAndMessagesOnPageParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ListThreadAndMessagesOnPageResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncListThreadAndMessagesOnPage, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ListForumAndThreads(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ListForumAndThreadsParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ListForumAndThreadsResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncListForumAndThreads, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ListForumAndThreadsOnPage(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ListForumAndThreadsOnPageParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ListForumAndThreadsOnPageResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncListForumAndThreadsOnPage, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) ListSectionsAndForums(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.ListSectionsAndForumsParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.ListSectionsAndForumsResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncListSectionsAndForums, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}

@@ -452,7 +452,32 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_BanUser:                srv.BanUser,
 		ApiFunctionName_UnbanUser:              srv.UnbanUser,
 
-		//TODO
+		// MM.
+		ApiFunctionName_AddSection:                  srv.AddSection,
+		ApiFunctionName_ChangeSectionName:           srv.ChangeSectionName,
+		ApiFunctionName_ChangeSectionParent:         srv.ChangeSectionParent,
+		ApiFunctionName_GetSection:                  srv.GetSection,
+		ApiFunctionName_DeleteSection:               srv.DeleteSection,
+		ApiFunctionName_AddForum:                    srv.AddForum,
+		ApiFunctionName_ChangeForumName:             srv.ChangeForumName,
+		ApiFunctionName_ChangeForumSection:          srv.ChangeForumSection,
+		ApiFunctionName_GetForum:                    srv.GetForum,
+		ApiFunctionName_DeleteForum:                 srv.DeleteForum,
+		ApiFunctionName_AddThread:                   srv.AddThread,
+		ApiFunctionName_ChangeThreadName:            srv.ChangeThreadName,
+		ApiFunctionName_ChangeThreadForum:           srv.ChangeThreadForum,
+		ApiFunctionName_GetThread:                   srv.GetThread,
+		ApiFunctionName_DeleteThread:                srv.DeleteThread,
+		ApiFunctionName_AddMessage:                  srv.AddMessage,
+		ApiFunctionName_ChangeMessageText:           srv.ChangeMessageText,
+		ApiFunctionName_ChangeMessageThread:         srv.ChangeMessageThread,
+		ApiFunctionName_GetMessage:                  srv.GetMessage,
+		ApiFunctionName_DeleteMessage:               srv.DeleteMessage,
+		ApiFunctionName_ListThreadAndMessages:       srv.ListThreadAndMessages,
+		ApiFunctionName_ListThreadAndMessagesOnPage: srv.ListThreadAndMessagesOnPage,
+		ApiFunctionName_ListForumAndThreads:         srv.ListForumAndThreads,
+		ApiFunctionName_ListForumAndThreadsOnPage:   srv.ListForumAndThreadsOnPage,
+		ApiFunctionName_ListSectionsAndForums:       srv.ListSectionsAndForums,
 	}
 
 	return nil
