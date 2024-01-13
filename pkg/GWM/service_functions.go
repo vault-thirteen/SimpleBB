@@ -17,10 +17,17 @@ import (
 
 // Unfortunately, Go language still has very poor support for generic
 // programming. The D.R.Y. principle is, thus, violated in this file.
+// All the functions in this file are created by a copy-paste method with some
+// minor exceptions. The only exceptions are listed below.
+//
+//	1. The 'LogUserIn' function has additional code which:
+// 		1.1. ignores a token;
+//		1.2. sets a token.
+//
+//	2. The 'LogUserOut' function has additional code which:
+//		2.1. clears a token.
 
 // Service functions.
-
-//TODO: Set HTTP cookie in some of the handlers.
 
 func (srv *Server) GetProductVersion(_ *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	srv.respondWithPlainText(hrw, srv.settings.VersionInfo.ProgramVersionString())
@@ -109,6 +116,10 @@ func (srv *Server) LogUserIn(ar *api.Request, _ *http.Request, hrw http.Response
 		Auth: ar.Authorisation,
 	}
 
+	// To allow a user with an outdated token to get into the system, we ignore
+	// the old token. [1.1]
+	params.CommonParams.Auth.Token = ""
+
 	var result = new(am.LogUserInResult)
 	var re *jrm1.RpcError
 	re, err = srv.acmServiceClient.MakeRequest(context.Background(), ac.FuncLogUserIn, params, result)
@@ -126,6 +137,10 @@ func (srv *Server) LogUserIn(ar *api.Request, _ *http.Request, hrw http.Response
 		Action: ar.Action,
 		Result: result,
 	}
+
+	// Save the token in HTTP cookies. [1.2]
+	srv.setTokenCookie(hrw, result.WTS)
+
 	srv.respondWithJsonObject(hrw, response)
 	return
 }
@@ -160,6 +175,10 @@ func (srv *Server) LogUserOut(ar *api.Request, _ *http.Request, hrw http.Respons
 		Action: ar.Action,
 		Result: result,
 	}
+
+	// Clear the token in HTTP cookies. [2.1]
+	srv.clearTokenCookie(hrw)
+
 	srv.respondWithJsonObject(hrw, response)
 	return
 }

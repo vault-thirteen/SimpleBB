@@ -79,3 +79,11 @@ func (srv *Server) respondMethodNotAllowed(rw http.ResponseWriter) {
 func (srv *Server) respondNotAcceptable(rw http.ResponseWriter) {
 	rw.WriteHeader(http.StatusNotAcceptable)
 }
+
+func (srv *Server) setTokenCookie(rw http.ResponseWriter, token string) {
+	//todo
+}
+
+func (srv *Server) clearTokenCookie(rw http.ResponseWriter) {
+	//todo
+}
