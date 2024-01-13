@@ -11,9 +11,20 @@ const (
 // SetCookie sets a cookie.
 // Unfortunately, Go language is so ugly that it does not allow to check
 // whether the specified cookie is already set or not.
-func SetCookie(rw http.ResponseWriter, cookie *http.Cookie) (err error) {
+func SetCookie(rw http.ResponseWriter, cookie *http.Cookie) {
 	http.SetCookie(rw, cookie)
-	return nil
+}
+
+// UnsetCookie unsets a cookie.
+func UnsetCookie(rw http.ResponseWriter, cookieName string) {
+	var c = &http.Cookie{
+		Name: cookieName,
+
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#max-agenumber
+		MaxAge: 0,
+	}
+
+	http.SetCookie(rw, c)
 }
 
 //----------------------------------------------------------------------------//

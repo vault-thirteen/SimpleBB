@@ -5,8 +5,8 @@ import (
 	"io"
 	"net/http"
 
-	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	hh "github.com/vault-thirteen/auxie/http-helper"
 )
@@ -107,7 +107,7 @@ func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, cl
 	}
 
 	var token *string
-	token, err = gm.GetToken(req)
+	token, err = cm.GetToken(req)
 	if err != nil {
 		srv.respondBadRequest(rw)
 		return

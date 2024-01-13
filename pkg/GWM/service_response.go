@@ -7,6 +7,7 @@ import (
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	"github.com/vault-thirteen/auxie/header"
 )
 
@@ -81,9 +82,18 @@ func (srv *Server) respondNotAcceptable(rw http.ResponseWriter) {
 }
 
 func (srv *Server) setTokenCookie(rw http.ResponseWriter, token string) {
-	//todo
+	var c = &http.Cookie{
+		Name:     cm.CookieName_Token,
+		Value:    token,
+		MaxAge:   int(srv.settings.SystemSettings.SessionMaxDuration),
+		SameSite: http.SameSiteStrictMode,
+		HttpOnly: true,
+		Secure:   true,
+	}
+
+	ch.SetCookie(rw, c)
 }
 
 func (srv *Server) clearTokenCookie(rw http.ResponseWriter) {
-	//todo
+	ch.UnsetCookie(rw, cm.CookieName_Token)
 }

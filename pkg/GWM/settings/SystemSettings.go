@@ -26,10 +26,11 @@ type SystemSettings struct {
 	ClientIPAddressSource byte   `json:"clientIPAddressSource"`
 	ClientIPAddressHeader string `json:"clientIPAddressHeader"`
 
-	IsFrontEndEnabled bool   `json:"isFrontEndEnabled"`
-	FrontEndPath      string `json:"frontEndPath"`
-	ApiPath           string `json:"apiPath"`
-	IsDebugMode       bool   `json:"isDebugMode"`
+	IsFrontEndEnabled  bool   `json:"isFrontEndEnabled"`
+	FrontEndPath       string `json:"frontEndPath"`
+	ApiPath            string `json:"apiPath"`
+	SessionMaxDuration uint   `json:"sessionMaxDuration"`
+	IsDebugMode        bool   `json:"isDebugMode"`
 }
 
 func (s SystemSettings) Check() (err error) {
@@ -39,7 +40,8 @@ func (s SystemSettings) Check() (err error) {
 		(s.ClientIPAddressSource > ClientIPAddressSource_CustomHeader) ||
 		(len(s.FrontEndPath) == 0) ||
 		(len(s.ApiPath) == 0) ||
-		(s.FrontEndPath == s.ApiPath) {
+		(s.FrontEndPath == s.ApiPath) ||
+		(s.SessionMaxDuration == 0) {
 		return errors.New(c.MsgSystemSettingError)
 	}
 

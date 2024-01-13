@@ -38,6 +38,7 @@
     "isFrontEndEnabled": true,
     "frontEndPath": "/",
     "apiPath": "/api/",
+    "sessionMaxDuration": 86400,
     "isDebugMode": false
   },
   "acm": {
