@@ -83,9 +83,10 @@ func (srv *Server) respondNotAcceptable(rw http.ResponseWriter) {
 
 func (srv *Server) setTokenCookie(rw http.ResponseWriter, token string) {
 	var c = &http.Cookie{
-		Name:     cm.CookieName_Token,
-		Value:    token,
-		MaxAge:   int(srv.settings.SystemSettings.SessionMaxDuration),
+		Name:   cm.CookieName_Token,
+		Value:  token,
+		MaxAge: int(srv.settings.SystemSettings.SessionMaxDuration),
+
 		SameSite: http.SameSiteStrictMode,
 		HttpOnly: true,
 		Secure:   true,
@@ -95,5 +96,15 @@ func (srv *Server) setTokenCookie(rw http.ResponseWriter, token string) {
 }
 
 func (srv *Server) clearTokenCookie(rw http.ResponseWriter) {
-	ch.UnsetCookie(rw, cm.CookieName_Token)
+	var c = &http.Cookie{
+		Name: cm.CookieName_Token,
+		//Value
+		//MaxAge
+
+		SameSite: http.SameSiteStrictMode,
+		HttpOnly: true,
+		Secure:   true,
+	}
+
+	ch.UnsetCookie(rw, c)
 }
