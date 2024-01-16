@@ -26,6 +26,12 @@ import (
 //
 //	2. The 'LogUserOut' function has additional code which:
 //		2.1. clears a token.
+//
+//	3. The 'ChangePassword' function has additional code which:
+//		3.1. clears a token.
+//
+//	4. The 'ChangeEmail' function has additional code which:
+//		4.1. clears a token.
 
 // Service functions.
 
@@ -139,7 +145,10 @@ func (srv *Server) LogUserIn(ar *api.Request, _ *http.Request, hrw http.Response
 	}
 
 	// Save the token in HTTP cookies. [1.2]
-	srv.setTokenCookie(hrw, result.WTS)
+	if result.IsWebTokenSet {
+		srv.setTokenCookie(hrw, result.WTS)
+		result.WTS = ""
+	}
 
 	srv.respondWithJsonObject(hrw, response)
 	return
@@ -281,6 +290,12 @@ func (srv *Server) ChangePassword(ar *api.Request, _ *http.Request, hrw http.Res
 		Action: ar.Action,
 		Result: result,
 	}
+
+	// Clear the token in HTTP cookies. [3.1]
+	if result.OK {
+		srv.clearTokenCookie(hrw)
+	}
+
 	srv.respondWithJsonObject(hrw, response)
 	return
 }
@@ -315,6 +330,12 @@ func (srv *Server) ChangeEmail(ar *api.Request, _ *http.Request, hrw http.Respon
 		Action: ar.Action,
 		Result: result,
 	}
+
+	// Clear the token in HTTP cookies. [4.1]
+	if result.OK {
+		srv.clearTokenCookie(hrw)
+	}
+
 	srv.respondWithJsonObject(hrw, response)
 	return
 }

@@ -105,7 +105,7 @@ type LogUserInResult struct {
 
 	// JWT key maker.
 	IsWebTokenSet bool   `json:"isWebTokenSet"`
-	WTS           string `json:"wts"` // Web token string.
+	WTS           string `json:"wts,omitempty"` // Web token string.
 }
 
 type LogUserOutParams struct {
@@ -184,6 +184,9 @@ type ChangePasswordResult struct {
 	// Captcha parameters.
 	IsCaptchaNeeded bool   `json:"isCaptchaNeeded"`
 	CaptchaId       string `json:"captchaId"`
+
+	// Success flag.
+	OK bool `json:"ok"`
 }
 
 type ChangeEmailParams struct {
@@ -231,6 +234,9 @@ type ChangeEmailResult struct {
 	// Captcha parameters.
 	IsCaptchaNeeded bool   `json:"isCaptchaNeeded"`
 	CaptchaId       string `json:"captchaId"`
+
+	// Success flag.
+	OK bool `json:"ok"`
 }
 
 // User properties.
@@ -257,7 +263,6 @@ type ViewUserParametersParams struct {
 type ViewUserParametersResult struct {
 	cmr.CommonResult
 
-	UserId uint `json:"userId"`
 	cm.UserParameters
 }
 

@@ -1210,6 +1210,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 	// Response.
 	result = &am.ChangePasswordResult{
 		NextStep: 0,
+		OK:       true,
 	}
 
 	return result, nil
@@ -1554,6 +1555,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 	// Response.
 	result = &am.ChangeEmailResult{
 		NextStep: 0,
+		OK:       true,
 	}
 
 	return result, nil
@@ -1616,9 +1618,7 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
 
-	result = &am.ViewUserParametersResult{
-		UserId: p.UserId,
-	}
+	result = &am.ViewUserParametersResult{}
 
 	var err error
 	var userParameters *cm.UserParameters
@@ -1780,6 +1780,7 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, re *j
 		return nil, srv.databaseError(err)
 	}
 
+	//TODO: Find the session before deletion.
 	err = srv.dbo.DeleteSessionByUserId(p.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
