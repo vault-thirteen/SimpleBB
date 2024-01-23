@@ -1780,10 +1780,17 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, re *j
 		return nil, srv.databaseError(err)
 	}
 
-	//TODO: Find the session before deletion.
-	err = srv.dbo.DeleteSessionByUserId(p.UserId)
+	var sessionsCount int
+	sessionsCount, err = srv.dbo.CountSessionsByUserId(p.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
+	}
+
+	if sessionsCount > 0 {
+		err = srv.dbo.DeleteSessionByUserId(p.UserId)
+		if err != nil {
+			return nil, srv.databaseError(err)
+		}
 	}
 
 	return &am.BanUserResult{OK: true}, nil
