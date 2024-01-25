@@ -384,7 +384,9 @@ func (dbo *DatabaseObject) ReadSections() (sections []mm.Section, err error) {
 			return nil, err
 		}
 
-		sections = append(sections, *section)
+		if section != nil {
+			sections = append(sections, *section)
+		}
 	}
 
 	return sections, nil

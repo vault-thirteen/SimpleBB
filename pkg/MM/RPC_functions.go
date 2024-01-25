@@ -150,7 +150,17 @@ func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionNameIsNotSet, RpcErrorMsg_SectionNameIsNotSet, nil)
 	}
 
+	var n int
 	var err error
+	n, err = srv.dbo.CountSectionsById(p.SectionId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+
 	err = srv.dbo.SetSectionNameById(p.SectionId, p.Name, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -188,9 +198,19 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
 
+	var n int
+	var err error
+	n, err = srv.dbo.CountSectionsById(p.SectionId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+
 	// Ensure that an old parent exists.
 	var oldParent *uint
-	var err error
 	oldParent, err = srv.dbo.GetSectionParentById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -200,7 +220,6 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RootSectionCanNotBeMoved, RpcErrorMsg_RootSectionCanNotBeMoved, nil)
 	}
 
-	var n int
 	n, err = srv.dbo.CountSectionsById(*oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -323,6 +342,9 @@ func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResu
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
+	if section == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
 
 	result = &mm.GetSectionResult{
 		Section: section,
@@ -358,6 +380,9 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 	section, err = srv.dbo.GetSectionById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
+	}
+	if section == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
 	}
 
 	var isRootSection = false
