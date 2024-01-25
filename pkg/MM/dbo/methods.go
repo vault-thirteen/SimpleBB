@@ -334,7 +334,9 @@ func (dbo *DatabaseObject) ReadForums() (forums []mm.Forum, err error) {
 			return nil, err
 		}
 
-		forums = append(forums, *forum)
+		if forum != nil {
+			forums = append(forums, *forum)
+		}
 	}
 
 	return forums, nil

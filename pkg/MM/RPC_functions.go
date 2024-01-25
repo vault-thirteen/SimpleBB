@@ -547,7 +547,17 @@ func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.Chan
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumNameIsNotSet, RpcErrorMsg_ForumNameIsNotSet, nil)
 	}
 
+	var n int
 	var err error
+	n, err = srv.dbo.CountForumsById(p.ForumId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
 	err = srv.dbo.SetForumNameById(p.ForumId, p.Name, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -585,15 +595,24 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
 
+	var n int
+	var err error
+	n, err = srv.dbo.CountForumsById(p.ForumId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
 	// Ensure that an old section exists.
 	var oldParent uint
-	var err error
 	oldParent, err = srv.dbo.GetForumSectionById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	var n int
 	n, err = srv.dbo.CountSectionsById(oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -717,6 +736,10 @@ func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, re
 		return nil, srv.databaseError(err)
 	}
 
+	if forum == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
 	result = &mm.GetForumResult{
 		Forum: forum,
 	}
@@ -751,6 +774,10 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 	forum, err = srv.dbo.GetForumById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
+	}
+
+	if forum == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
 	}
 
 	// Check for threads.
@@ -1615,6 +1642,10 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 		return nil, srv.databaseError(err)
 	}
 
+	if forum == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
 	fat := mm.NewForumAndThreads(forum)
 	fat.ThreadIds = forum.Threads
 
@@ -1664,6 +1695,10 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 	forum, err = srv.dbo.GetForumById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
+	}
+
+	if forum == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
 	}
 
 	fatop := mm.NewForumAndThreads(forum)
