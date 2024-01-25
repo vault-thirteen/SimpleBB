@@ -919,7 +919,17 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadNameIsNotSet, RpcErrorMsg_ThreadNameIsNotSet, nil)
 	}
 
+	var n int
 	var err error
+	n, err = srv.dbo.CountThreadsById(p.ThreadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
 	err = srv.dbo.SetThreadNameById(p.ThreadId, p.Name, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -957,15 +967,24 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
 
+	var n int
+	var err error
+	n, err = srv.dbo.CountThreadsById(p.ThreadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
 	// Ensure that an old parent exists.
 	var oldParent uint
-	var err error
 	oldParent, err = srv.dbo.GetThreadForumById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	var n int
 	n, err = srv.dbo.CountForumsById(oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -1063,6 +1082,10 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 		return nil, srv.databaseError(err)
 	}
 
+	if thread == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
 	result = &mm.GetThreadResult{
 		Thread: thread,
 	}
@@ -1097,6 +1120,10 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 	thread, err = srv.dbo.GetThreadById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
+	}
+
+	if thread == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
 	}
 
 	// Check for children.
@@ -1208,19 +1235,25 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 			return nil, srv.databaseError(err)
 		}
 
+		if messageThread == nil {
+			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+		}
+
 		var threads *ul.UidList
 		threads, err = srv.dbo.GetForumThreadsById(messageThread.ForumId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 
-		if threads.Size() > 1 {
-			err = threads.RaiseItem(p.ThreadId)
-			if err != nil {
-				srv.logError(err)
-				return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
-			}
+		var isAlreadyRaised bool
+		isAlreadyRaised, err = threads.RaiseItem(p.ThreadId)
+		if err != nil {
+			srv.logError(err)
+			return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+		}
 
+		// Update the list if it has been changed.
+		if !isAlreadyRaised {
 			err = srv.dbo.SetForumThreadsById(messageThread.ForumId, threads)
 			if err != nil {
 				return nil, srv.databaseError(err)
@@ -1290,9 +1323,19 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageTextIsNotSet, RpcErrorMsg_MessageTextIsNotSet, nil)
 	}
 
+	var n int
+	var err error
+	n, err = srv.dbo.CountMessagesById(p.MessageId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	}
+
 	messageTextChecksum := srv.getMessageTextChecksum(p.Text)
 
-	var err error
 	err = srv.dbo.SetMessageTextById(p.MessageId, p.Text, messageTextChecksum, userRoles.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -1330,15 +1373,24 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
 
+	var n int
+	var err error
+	n, err = srv.dbo.CountMessagesById(p.MessageId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	}
+
 	// Ensure that an old parent exists.
 	var oldParent uint
-	var err error
 	oldParent, err = srv.dbo.GetMessageThreadById(p.MessageId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	var n int
 	n, err = srv.dbo.CountThreadsById(oldParent)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -1436,6 +1488,10 @@ func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResu
 		return nil, srv.databaseError(err)
 	}
 
+	if message == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	}
+
 	result = &mm.GetMessageResult{
 		Message: message,
 	}
@@ -1470,6 +1526,10 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 	message, err = srv.dbo.GetMessageById(p.MessageId)
 	if err != nil {
 		return nil, srv.databaseError(err)
+	}
+
+	if message == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
 	}
 
 	// Update the link.
@@ -1534,6 +1594,10 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 		return nil, srv.databaseError(err)
 	}
 
+	if thread == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
 	tam := mm.NewThreadAndMessages(thread)
 	tam.MessageIds = thread.Messages
 
@@ -1583,6 +1647,10 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 	thread, err = srv.dbo.GetThreadById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
+	}
+
+	if thread == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
 	}
 
 	tamop := mm.NewThreadAndMessages(thread)

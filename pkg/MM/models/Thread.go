@@ -1,6 +1,9 @@
 package models
 
 import (
+	"database/sql"
+	"errors"
+
 	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
@@ -45,7 +48,11 @@ func NewThreadFromScannableSource(src cm.IScannable) (thr *Thread, err error) {
 		&thr.Editor.Time,
 	)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	return thr, nil

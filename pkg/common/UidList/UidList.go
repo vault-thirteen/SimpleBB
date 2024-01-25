@@ -134,7 +134,7 @@ func (ul *UidList) RemoveItem(uid uint) (err error) {
 }
 
 // RaiseItem moves an existing identifier to the top of the list.
-func (ul *UidList) RaiseItem(uid uint) (err error) {
+func (ul *UidList) RaiseItem(uid uint) (isAlreadyRaised bool, err error) {
 	// Find the item and check for uniqueness.
 	positions := make([]int, 0)
 	for i, x := range *ul {
@@ -143,16 +143,16 @@ func (ul *UidList) RaiseItem(uid uint) (err error) {
 		}
 	}
 	if len(positions) == 0 {
-		return fmt.Errorf(ErrFUidIsNotFound, uid)
+		return false, fmt.Errorf(ErrFUidIsNotFound, uid)
 	}
 	if len(positions) > 1 {
-		return fmt.Errorf(ErrFDuplicateUid, uid)
+		return false, fmt.Errorf(ErrFDuplicateUid, uid)
 	}
 	position := positions[0]
 
 	// Move the item to the top position.
 	if position == 0 {
-		return nil
+		return true, nil
 	}
 
 	var movedItem = (*ul)[position]
@@ -161,7 +161,7 @@ func (ul *UidList) RaiseItem(uid uint) (err error) {
 	}
 	(*ul)[0] = movedItem
 
-	return nil
+	return false, nil
 }
 
 // Scan method provides compatibility with SQL JSON data type.

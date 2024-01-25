@@ -46,6 +46,7 @@ const (
 	DbPsid_GetSectionParentById         = 36
 	DbPsid_SetSectionParentById         = 37
 	DbPsid_GetSectionChildTypeById      = 38
+	DbPsid_CountMessagesById            = 39
 )
 
 func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
@@ -206,6 +207,10 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 
 	// 38.
 	q = fmt.Sprintf(`SELECT ChildType FROM %s WHERE Id = ?;`, dbo.tableNames.Sections)
+	qs = append(qs, q)
+
+	// 39.
+	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Id = ?;`, dbo.tableNames.Messages)
 	qs = append(qs, q)
 
 	return qs

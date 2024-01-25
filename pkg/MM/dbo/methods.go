@@ -21,6 +21,15 @@ func (dbo *DatabaseObject) CountForumsById(forumId uint) (n int, err error) {
 	return n, nil
 }
 
+func (dbo *DatabaseObject) CountMessagesById(messageId uint) (n int, err error) {
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_CountMessagesById).QueryRow(messageId).Scan(&n)
+	if err != nil {
+		return cdbo.CountOnError, err
+	}
+
+	return n, nil
+}
+
 func (dbo *DatabaseObject) CountRootSections() (n int, err error) {
 	err = dbo.DatabaseObject.PreparedStatement(DbPsid_CountRootSections).QueryRow().Scan(&n)
 	if err != nil {
@@ -364,7 +373,9 @@ func (dbo *DatabaseObject) ReadMessagesById(messageIds ul.UidList) (messages []m
 			return nil, err
 		}
 
-		messages = append(messages, *msg)
+		if msg != nil {
+			messages = append(messages, *msg)
+		}
 	}
 
 	return messages, nil
@@ -416,7 +427,9 @@ func (dbo *DatabaseObject) ReadThreadsById(threadIds ul.UidList) (threads []mm.T
 			return nil, err
 		}
 
-		threads = append(threads, *thread)
+		if thread != nil {
+			threads = append(threads, *thread)
+		}
 	}
 
 	return threads, nil

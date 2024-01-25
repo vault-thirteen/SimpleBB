@@ -1,6 +1,9 @@
 package models
 
 import (
+	"database/sql"
+	"errors"
+
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 
@@ -44,7 +47,11 @@ func NewMessageFromScannableSource(src cm.IScannable) (msg *Message, err error) 
 		&msg.Editor.Time,
 	)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	return msg, nil

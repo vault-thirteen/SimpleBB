@@ -25,8 +25,9 @@ const (
 	RpcErrorCode_MessageTextIsNotSet      = 15
 	RpcErrorCode_MessageIdIsNotSet        = 16
 	RpcErrorCode_IncompatibleChildType    = 17
-	RpcErrorCode_PageIsNotSet             = 18
-	RpcErrorCode_TestError                = 19
+	RpcErrorCode_MessageIsNotFound        = 18
+	RpcErrorCode_PageIsNotSet             = 19
+	RpcErrorCode_TestError                = 20
 )
 
 // Messages.
@@ -48,6 +49,7 @@ const (
 	RpcErrorMsg_MessageTextIsNotSet      = "message text is not set"
 	RpcErrorMsg_MessageIdIsNotSet        = "message ID is not set"
 	RpcErrorMsg_IncompatibleChildType    = "incompatible child type"
+	RpcErrorMsg_MessageIsNotFound        = "message is not found"
 	RpcErrorMsg_PageIsNotSet             = "page is not set"
 	RpcErrorMsgF_TestError               = "test error: %s"
 )
@@ -76,6 +78,7 @@ func GetMapOfHttpStatusCodesByRpcErrorCodes() map[int]int {
 		RpcErrorCode_MessageTextIsNotSet:      http.StatusBadRequest,
 		RpcErrorCode_MessageIdIsNotSet:        http.StatusBadRequest,
 		RpcErrorCode_IncompatibleChildType:    http.StatusConflict,
+		RpcErrorCode_MessageIsNotFound:        http.StatusNotFound,
 		RpcErrorCode_PageIsNotSet:             http.StatusBadRequest,
 		RpcErrorCode_TestError:                http.StatusInternalServerError,
 	}
