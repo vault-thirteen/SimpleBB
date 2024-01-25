@@ -17,6 +17,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/dbo"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
 	gs "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
+	m "github.com/vault-thirteen/SimpleBB/pkg/MM"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
@@ -64,6 +65,7 @@ type Server struct {
 	// Mapping of HTTP status codes by RPC error code for various services.
 	commonHttpStatusCodesByRpcErrorCode map[int]int
 	acmHttpStatusCodesByRpcErrorCode    map[int]int
+	mmHttpStatusCodesByRpcErrorCode     map[int]int
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -378,8 +380,9 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (srv *Server) initStatusCodeMapper() (err error) {
-	srv.acmHttpStatusCodesByRpcErrorCode = a.GetMapOfHttpStatusCodesByRpcErrorCodes()
 	srv.commonHttpStatusCodesByRpcErrorCode = c.GetMapOfHttpStatusCodesByRpcErrorCodes()
+	srv.acmHttpStatusCodesByRpcErrorCode = a.GetMapOfHttpStatusCodesByRpcErrorCodes()
+	srv.mmHttpStatusCodesByRpcErrorCode = m.GetMapOfHttpStatusCodesByRpcErrorCodes()
 
 	return nil
 }

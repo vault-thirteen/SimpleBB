@@ -1,5 +1,7 @@
 package mm
 
+import "net/http"
+
 // RPC errors.
 
 // Error codes must not exceed 999.
@@ -49,3 +51,32 @@ const (
 	RpcErrorMsg_PageIsNotSet             = "page is not set"
 	RpcErrorMsgF_TestError               = "test error: %s"
 )
+
+// Unique HTTP status codes used in the map:
+// - 400 (Bad request);
+// - 404 (Not found);
+// - 409 (Conflict);
+// - 500 (Internal server error).
+func GetMapOfHttpStatusCodesByRpcErrorCodes() map[int]int {
+	return map[int]int{
+		RpcErrorCode_SectionNameIsNotSet:      http.StatusBadRequest,
+		RpcErrorCode_RootSectionAlreadyExists: http.StatusConflict,
+		RpcErrorCode_SectionIsNotFound:        http.StatusNotFound,
+		RpcErrorCode_SectionIdIsNotSet:        http.StatusBadRequest,
+		RpcErrorCode_SectionHasChildren:       http.StatusConflict,
+		RpcErrorCode_RootSectionCanNotBeMoved: http.StatusConflict,
+		RpcErrorCode_ForumNameIsNotSet:        http.StatusBadRequest,
+		RpcErrorCode_ForumIsNotFound:          http.StatusNotFound,
+		RpcErrorCode_ForumIdIsNotSet:          http.StatusBadRequest,
+		RpcErrorCode_ForumHasThreads:          http.StatusConflict,
+		RpcErrorCode_ThreadNameIsNotSet:       http.StatusBadRequest,
+		RpcErrorCode_ThreadIdIsNotSet:         http.StatusBadRequest,
+		RpcErrorCode_ThreadIsNotFound:         http.StatusNotFound,
+		RpcErrorCode_ThreadIsNotEmpty:         http.StatusConflict,
+		RpcErrorCode_MessageTextIsNotSet:      http.StatusBadRequest,
+		RpcErrorCode_MessageIdIsNotSet:        http.StatusBadRequest,
+		RpcErrorCode_IncompatibleChildType:    http.StatusConflict,
+		RpcErrorCode_PageIsNotSet:             http.StatusBadRequest,
+		RpcErrorCode_TestError:                http.StatusInternalServerError,
+	}
+}
