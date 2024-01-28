@@ -437,11 +437,60 @@ func (srv *Server) pingClientsForExternalServices() (err error) {
 
 func (srv *Server) initApiFunctions() (err error) {
 	srv.apiFunctionNames = []string{
+		// General methods of API.
 		ApiFunctionName_GetProductVersion,
+		ApiFunctionName_GetSettings,
+
+		// ACM.
+		ApiFunctionName_RegisterUser,
+		ApiFunctionName_ApproveAndRegisterUser,
+		ApiFunctionName_LogUserIn,
+		ApiFunctionName_LogUserOut,
+		ApiFunctionName_GetListOfLoggedUsers,
+		ApiFunctionName_IsUserLoggedIn,
+		ApiFunctionName_ChangePassword,
+		ApiFunctionName_ChangeEmail,
+		ApiFunctionName_GetUserRoles,
+		ApiFunctionName_ViewUserParameters,
+		ApiFunctionName_SetUserRoleAuthor,
+		ApiFunctionName_SetUserRoleWriter,
+		ApiFunctionName_SetUserRoleReader,
+		ApiFunctionName_GetSelfRoles,
+		ApiFunctionName_BanUser,
+		ApiFunctionName_UnbanUser,
+
+		// MM.
+		ApiFunctionName_AddSection,
+		ApiFunctionName_ChangeSectionName,
+		ApiFunctionName_ChangeSectionParent,
+		ApiFunctionName_GetSection,
+		ApiFunctionName_DeleteSection,
+		ApiFunctionName_AddForum,
+		ApiFunctionName_ChangeForumName,
+		ApiFunctionName_ChangeForumSection,
+		ApiFunctionName_GetForum,
+		ApiFunctionName_DeleteForum,
+		ApiFunctionName_AddThread,
+		ApiFunctionName_ChangeThreadName,
+		ApiFunctionName_ChangeThreadForum,
+		ApiFunctionName_GetThread,
+		ApiFunctionName_DeleteThread,
+		ApiFunctionName_AddMessage,
+		ApiFunctionName_ChangeMessageText,
+		ApiFunctionName_ChangeMessageThread,
+		ApiFunctionName_GetMessage,
+		ApiFunctionName_DeleteMessage,
+		ApiFunctionName_ListThreadAndMessages,
+		ApiFunctionName_ListThreadAndMessagesOnPage,
+		ApiFunctionName_ListForumAndThreads,
+		ApiFunctionName_ListForumAndThreadsOnPage,
+		ApiFunctionName_ListSectionsAndForums,
 	}
 
 	srv.apiHandlers = map[string]api.RequestHandler{
+		// General methods of API.
 		ApiFunctionName_GetProductVersion: srv.GetProductVersion,
+		ApiFunctionName_GetSettings:       srv.GetSettings,
 
 		// ACM.
 		ApiFunctionName_RegisterUser:           srv.RegisterUser,

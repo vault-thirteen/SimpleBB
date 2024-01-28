@@ -12,7 +12,9 @@ import (
 )
 
 const (
+	// General methods of API.
 	ApiFunctionName_GetProductVersion = "getProductVersion"
+	ApiFunctionName_GetSettings       = "getSettings"
 
 	// ACM.
 	ApiFunctionName_RegisterUser           = "registerUser"
