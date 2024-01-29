@@ -7,9 +7,9 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/valord577/mailx v0.5.20231221
 	github.com/vault-thirteen/BytePackedPassword v0.3.6
-	github.com/vault-thirteen/JSON-RPC-M1 v0.3.2
+	github.com/vault-thirteen/JSON-RPC-M1 v0.3.3
 	github.com/vault-thirteen/RingCaptcha v0.6.5
-	github.com/vault-thirteen/auxie v0.23.0
+	github.com/vault-thirteen/auxie v0.24.1
 	golang.org/x/term v0.16.0
 )
 
