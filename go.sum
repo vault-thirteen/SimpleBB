@@ -3,8 +3,6 @@ github.com/go-sql-driver/mysql v1.7.1 h1:lUIinVbN1DY0xBg0eMOzmmtGoHwWBbvnWubQUrt
 github.com/go-sql-driver/mysql v1.7.1/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
 github.com/golang-jwt/jwt/v5 v5.2.0 h1:d/ix8ftRUorsN+5eMIlF4T6J8CAt9rch3My2winC1Jw=
 github.com/golang-jwt/jwt/v5 v5.2.0/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
-github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
-github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
@@ -19,10 +17,10 @@ github.com/vault-thirteen/BytePackedPassword v0.3.6 h1:AmJj+dB6tpIiDcRpyj3ZqwuHW
 github.com/vault-thirteen/BytePackedPassword v0.3.6/go.mod h1:un0Wv0Lp3IgfCNM+2Q+iVXPTqfXXjS6zMwVPkbVYFRA=
 github.com/vault-thirteen/JSON-RPC-M1 v0.3.2 h1:MUsk8pPNvA5wj2gbfH7wZhXGl0ScyUXve9n8y6pR33I=
 github.com/vault-thirteen/JSON-RPC-M1 v0.3.2/go.mod h1:KV7/MvaoA+fVIByR/hjEdENn5wa9gjfzSr2Z1/MSD3A=
-github.com/vault-thirteen/RingCaptcha v0.6.5 h1:++lGB4yh3uk8b2f5I9DPdNFrrl+bJ+6BHoer2Dm2Phw=
-github.com/vault-thirteen/RingCaptcha v0.6.5/go.mod h1:200PL820LB1wyAzPaOgy1s0rpREskw+cuk7NWoTg5ys=
-github.com/vault-thirteen/auxie v0.23.0 h1:gB0iBHa/4O3N1/vPNhwjjROgDzgxARSsnJ3idjB1Aqc=
-github.com/vault-thirteen/auxie v0.23.0/go.mod h1:jlNi5ZRto40p8jMAIjt7oJD5iKmmnQE6v9uHlqT01ag=
+github.com/vault-thirteen/RingCaptcha v0.7.3 h1:Uk2lg3peNwnaF+nJnFO/abLOVWtf9fa2C/cciXV5N1A=
+github.com/vault-thirteen/RingCaptcha v0.7.3/go.mod h1:ma/f7ikLho1EiT7yCz25GvBaknuO7uPbyEs9YuMPzv4=
+github.com/vault-thirteen/auxie v0.24.1 h1:bzT3v6ifhOl8IM8rd74wKJlRXx3GkkUITjMk6YCokYE=
+github.com/vault-thirteen/auxie v0.24.1/go.mod h1:zF1Ue49fL+uasRZkSBNAzV56RNaze502WgAjN1NOkW0=
 golang.org/x/crypto v0.18.0 h1:PGVlW0xEltQnzFZ55hkuX5+KLyrMYhHld1YHO4AKcdc=
 golang.org/x/crypto v0.18.0/go.mod h1:R0j02AL6hcrfOiy9T4ZYp/rcWeMxM3L6QYxlOuEG1mg=
 golang.org/x/image v0.15.0 h1:kOELfmgrmJlw4Cdb7g/QGuB3CvDrXbqEIww/pNtNBm8=
