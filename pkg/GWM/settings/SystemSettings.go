@@ -34,7 +34,8 @@ type SystemSettings struct {
 
 	// Captcha.
 	// These settings must be synchronised with settings of the RCS module.
-	//TODO: Settings for redirecting requests for captcha images.
+	CaptchaImgServerHost string `json:"captchaImgServerHost"`
+	CaptchaImgServerPort uint16 `json:"captchaImgServerPort"`
 
 	SessionMaxDuration uint `json:"sessionMaxDuration"`
 	IsDebugMode        bool `json:"isDebugMode"`
@@ -48,6 +49,8 @@ func (s SystemSettings) Check() (err error) {
 		(len(s.ApiPath) == 0) ||
 		(len(s.CaptchaPath) == 0) ||
 		(s.ApiPath == s.CaptchaPath) ||
+		(len(s.CaptchaImgServerHost) == 0) ||
+		(s.CaptchaImgServerPort == 0) ||
 		(s.SessionMaxDuration == 0) {
 		return errors.New(c.MsgSystemSettingError)
 	}

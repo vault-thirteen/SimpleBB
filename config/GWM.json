@@ -39,6 +39,8 @@
     "frontEndPath": "/",
     "apiPath": "/api/",
     "captchaPath": "/captcha/",
+    "captchaImgServerHost": "localhost",
+    "captchaImgServerPort": 2004,
     "sessionMaxDuration": 86400,
     "isDebugMode": false
   },

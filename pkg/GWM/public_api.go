@@ -137,5 +137,5 @@ func (srv *Server) handleCaptcha(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//TODO
+	srv.captchaProxy.ServeHTTP(rw, req)
 }

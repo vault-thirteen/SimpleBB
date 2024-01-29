@@ -7,6 +7,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -61,6 +63,7 @@ type Server struct {
 	// Clients for external services.
 	acmServiceClient *cc.Client
 	mmServiceClient  *cc.Client
+	captchaProxy     *httputil.ReverseProxy
 
 	// Mapping of HTTP status codes by RPC error code for various services.
 	commonHttpStatusCodesByRpcErrorCode map[int]int
@@ -421,6 +424,16 @@ func (srv *Server) createClientsForExternalServices() (err error) {
 	if err != nil {
 		return err
 	}
+
+	// Proxy for captcha images.
+	targetAddr := cc.UrlSchemeHttp + "://" + net.JoinHostPort(srv.settings.SystemSettings.CaptchaImgServerHost, strconv.FormatUint(uint64(srv.settings.SystemSettings.CaptchaImgServerPort), 10))
+	var targetUrl *url.URL
+	targetUrl, err = url.Parse(targetAddr)
+	if err != nil {
+		return err
+	}
+
+	srv.captchaProxy = httputil.NewSingleHostReverseProxy(targetUrl)
 
 	return nil
 }

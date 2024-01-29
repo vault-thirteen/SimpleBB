@@ -21,10 +21,10 @@ github.com/vault-thirteen/Cache v0.12.4 h1:PECuq9CBtZzohVIx6G0NikrE3Tv/J4QcFqeN9
 github.com/vault-thirteen/Cache v0.12.4/go.mod h1:h4LuHhC0VPml1vwR85ED26z0erz781cqsavrMaz3t6U=
 github.com/vault-thirteen/JSON-RPC-M1 v0.3.3 h1:9yftp5zZ4Cpai+pUb5n3ew7UacZ7RLJa4VjPuoc36EE=
 github.com/vault-thirteen/JSON-RPC-M1 v0.3.3/go.mod h1:AKm+46Aon64ovX6nz0buWoEQ2clAK0yb27sRu5rtyfA=
-github.com/vault-thirteen/RingCaptcha v0.7.0 h1:wwCE91NHpvXWzhs68CYERjydXSJZdwnA4UgmwreL8qg=
-github.com/vault-thirteen/RingCaptcha v0.7.0/go.mod h1:AlJduSs1Tycy4n86Mszrxf0wLjmzlbJ5h1dRNPEiFeU=
-github.com/vault-thirteen/Simple-File-Server v0.11.0 h1:lqwsmYtAyEMG8M8eF/H/iTqLEajZeiyNZGnNGniAcFU=
-github.com/vault-thirteen/Simple-File-Server v0.11.0/go.mod h1:2WrY1wB/ams2qBzd12L9L9CBdDVXRhaLrGGJbsT37/4=
+github.com/vault-thirteen/RingCaptcha v0.7.3 h1:Uk2lg3peNwnaF+nJnFO/abLOVWtf9fa2C/cciXV5N1A=
+github.com/vault-thirteen/RingCaptcha v0.7.3/go.mod h1:ma/f7ikLho1EiT7yCz25GvBaknuO7uPbyEs9YuMPzv4=
+github.com/vault-thirteen/Simple-File-Server v0.12.0 h1:6JhiIAkn2w5kKZP027VLIQ8U7IqObiwVM8GhdP3rOuk=
+github.com/vault-thirteen/Simple-File-Server v0.12.0/go.mod h1:2WrY1wB/ams2qBzd12L9L9CBdDVXRhaLrGGJbsT37/4=
 github.com/vault-thirteen/auxie v0.24.1 h1:bzT3v6ifhOl8IM8rd74wKJlRXx3GkkUITjMk6YCokYE=
 github.com/vault-thirteen/auxie v0.24.1/go.mod h1:zF1Ue49fL+uasRZkSBNAzV56RNaze502WgAjN1NOkW0=
 golang.org/x/crypto v0.18.0 h1:PGVlW0xEltQnzFZ55hkuX5+KLyrMYhHld1YHO4AKcdc=
