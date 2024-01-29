@@ -25,7 +25,7 @@ type CaptchaSettings struct {
 
 	// Image's time to live, in seconds. Each image is deleted when this time
 	// passes after its creation.
-	ImageTTLSec uint `json:"imageTTLSec"`
+	ImageTtlSec uint `json:"imageTtlSec"`
 
 	ClearImagesFolderAtStart bool `json:"clearImagesFolderAtStart"`
 
@@ -37,6 +37,12 @@ type CaptchaSettings struct {
 	HttpServerHost string `json:"httpServerHost"`
 	HttpServerPort uint16 `json:"httpServerPort"`
 	HttpServerName string `json:"httpServerName"`
+
+	// Cache.
+	IsCachingEnabled bool `json:"isCachingEnabled"`
+	CacheSizeLimit   int  `json:"cacheSizeLimit"`
+	CacheVolumeLimit int  `json:"cacheVolumeLimit"`
+	CacheRecordTtl   uint `json:"cacheRecordTtl"`
 }
 
 func (s CaptchaSettings) Check() (err error) {
@@ -47,7 +53,7 @@ func (s CaptchaSettings) Check() (err error) {
 	}
 	if (s.ImageWidth == 0) ||
 		(s.ImageHeight == 0) ||
-		(s.ImageTTLSec == 0) {
+		(s.ImageTtlSec == 0) {
 		return errors.New(c.MsgCaptchaServiceSettingError)
 	}
 
@@ -55,6 +61,14 @@ func (s CaptchaSettings) Check() (err error) {
 		if (len(s.HttpServerHost) == 0) ||
 			(s.HttpServerPort == 0) ||
 			(len(s.HttpServerName) == 0) {
+			return errors.New(c.MsgCaptchaServiceSettingError)
+		}
+	}
+
+	if s.IsCachingEnabled {
+		if (s.CacheSizeLimit <= 0) ||
+			(s.CacheVolumeLimit <= 0) ||
+			(s.CacheRecordTtl == 0) {
 			return errors.New(c.MsgCaptchaServiceSettingError)
 		}
 	}

@@ -11,11 +11,15 @@
     "imagesFolder": "rcs_img",
     "imageWidth": 256,
     "imageHeight": 256,
-    "imageTTLSec": 120,
+    "imageTtlSec": 120,
     "clearImagesFolderAtStart": true,
     "useHttpServerForImages": true,
     "httpServerHost": "localhost",
     "httpServerPort": 2004,
-    "httpServerName": "RCS"
+    "httpServerName": "RCS",
+    "isCachingEnabled": true,
+    "cacheSizeLimit": 5,
+    "cacheVolumeLimit": 1000000,
+    "cacheRecordTtl": 60
   }
 }

@@ -376,6 +376,12 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	// Captcha.
+	if req.URL.Path == srv.settings.SystemSettings.CaptchaPath {
+		srv.handleCaptcha(rw, req)
+		return
+	}
+
 	srv.respondNotFound(rw)
 }
 

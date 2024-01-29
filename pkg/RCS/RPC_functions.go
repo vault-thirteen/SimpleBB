@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
-	rc "github.com/vault-thirteen/RingCaptcha"
+	rc "github.com/vault-thirteen/RingCaptcha/server"
 	rm "github.com/vault-thirteen/SimpleBB/pkg/RCS/models"
 )
 

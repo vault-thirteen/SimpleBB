@@ -47,6 +47,8 @@ func (srv *Server) GetSettings(_ *api.Request, _ *http.Request, hrw http.Respons
 		SiteDomain:         srv.settings.SystemSettings.SiteDomain,
 		IsFrontEndEnabled:  srv.settings.SystemSettings.IsFrontEndEnabled,
 		FrontEndPath:       srv.settings.SystemSettings.FrontEndPath,
+		ApiPath:            srv.settings.SystemSettings.ApiPath,
+		CaptchaPath:        srv.settings.SystemSettings.CaptchaPath,
 		SessionMaxDuration: srv.settings.SystemSettings.SessionMaxDuration,
 	}
 

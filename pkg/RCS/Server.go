@@ -12,7 +12,7 @@ import (
 	"time"
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
-	rc "github.com/vault-thirteen/RingCaptcha"
+	rc "github.com/vault-thirteen/RingCaptcha/server"
 	rs "github.com/vault-thirteen/SimpleBB/pkg/RCS/settings"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
@@ -173,7 +173,7 @@ func (srv *Server) clearJunk() {
 	defer srv.subRoutines.Done()
 
 	var err error
-	var imageTTL = int(srv.settings.CaptchaSettings.ImageTTLSec)
+	var imageTTL = int(srv.settings.CaptchaSettings.ImageTtlSec)
 
 main_loop:
 	for {
@@ -207,13 +207,17 @@ func (srv *Server) initCaptchaManager() (err error) {
 		srv.settings.CaptchaSettings.ImagesFolder,
 		srv.settings.CaptchaSettings.ImageWidth,
 		srv.settings.CaptchaSettings.ImageHeight,
-		srv.settings.CaptchaSettings.ImageTTLSec,
+		srv.settings.CaptchaSettings.ImageTtlSec,
 		srv.settings.CaptchaSettings.ClearImagesFolderAtStart,
 		srv.settings.CaptchaSettings.UseHttpServerForImages,
 		srv.settings.CaptchaSettings.HttpServerHost,
 		srv.settings.CaptchaSettings.HttpServerPort,
 		&srv.httpErrors,
 		srv.settings.CaptchaSettings.HttpServerName,
+		srv.settings.CaptchaSettings.IsCachingEnabled,
+		srv.settings.CaptchaSettings.CacheSizeLimit,
+		srv.settings.CaptchaSettings.CacheVolumeLimit,
+		srv.settings.CaptchaSettings.CacheRecordTtl,
 	)
 	if err != nil {
 		return err

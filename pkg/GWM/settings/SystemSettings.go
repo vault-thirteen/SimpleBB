@@ -26,11 +26,18 @@ type SystemSettings struct {
 	ClientIPAddressSource byte   `json:"clientIPAddressSource"`
 	ClientIPAddressHeader string `json:"clientIPAddressHeader"`
 
-	IsFrontEndEnabled  bool   `json:"isFrontEndEnabled"`
-	FrontEndPath       string `json:"frontEndPath"`
-	ApiPath            string `json:"apiPath"`
-	SessionMaxDuration uint   `json:"sessionMaxDuration"`
-	IsDebugMode        bool   `json:"isDebugMode"`
+	// URL.
+	IsFrontEndEnabled bool   `json:"isFrontEndEnabled"`
+	FrontEndPath      string `json:"frontEndPath"`
+	ApiPath           string `json:"apiPath"`
+	CaptchaPath       string `json:"captchaPath"`
+
+	// Captcha.
+	// These settings must be synchronised with settings of the RCS module.
+	//TODO: Settings for redirecting requests for captcha images.
+
+	SessionMaxDuration uint `json:"sessionMaxDuration"`
+	IsDebugMode        bool `json:"isDebugMode"`
 }
 
 func (s SystemSettings) Check() (err error) {
@@ -38,11 +45,19 @@ func (s SystemSettings) Check() (err error) {
 		(len(s.SiteDomain) == 0) ||
 		(s.ClientIPAddressSource < ClientIPAddressSource_Direct) ||
 		(s.ClientIPAddressSource > ClientIPAddressSource_CustomHeader) ||
-		(len(s.FrontEndPath) == 0) ||
 		(len(s.ApiPath) == 0) ||
-		(s.FrontEndPath == s.ApiPath) ||
+		(len(s.CaptchaPath) == 0) ||
+		(s.ApiPath == s.CaptchaPath) ||
 		(s.SessionMaxDuration == 0) {
 		return errors.New(c.MsgSystemSettingError)
+	}
+
+	if s.IsFrontEndEnabled {
+		if (len(s.FrontEndPath) == 0) ||
+			(s.FrontEndPath == s.ApiPath) ||
+			(s.FrontEndPath == s.CaptchaPath) {
+			return errors.New(c.MsgSystemSettingError)
+		}
 	}
 
 	if s.ClientIPAddressSource == ClientIPAddressSource_CustomHeader {

@@ -130,3 +130,12 @@ func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, cl
 	handler(ar, req, rw)
 	return
 }
+
+func (srv *Server) handleCaptcha(rw http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		srv.respondMethodNotAllowed(rw)
+		return
+	}
+
+	//TODO
+}
