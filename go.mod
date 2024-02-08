@@ -10,7 +10,7 @@ require (
 	github.com/vault-thirteen/JSON-RPC-M1 v0.3.3
 	github.com/vault-thirteen/RingCaptcha v0.7.3
 	github.com/vault-thirteen/auxie v0.24.1
-	golang.org/x/term v0.16.0
+	golang.org/x/term v0.17.0
 )
 
 require (
@@ -22,5 +22,5 @@ require (
 	github.com/vault-thirteen/Simple-File-Server v0.12.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/image v0.15.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 )
