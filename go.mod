@@ -6,10 +6,10 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/valord577/mailx v0.6.20240511
-	github.com/vault-thirteen/BytePackedPassword v0.3.9
-	github.com/vault-thirteen/JSON-RPC-M1 v0.3.5
-	github.com/vault-thirteen/RingCaptcha v0.7.5
-	github.com/vault-thirteen/auxie v0.26.0
+	github.com/vault-thirteen/BytePackedPassword v0.3.10
+	github.com/vault-thirteen/JSON-RPC-M1 v0.3.6
+	github.com/vault-thirteen/RingCaptcha v0.7.6
+	github.com/vault-thirteen/auxie v0.26.1
 	golang.org/x/term v0.22.0
 )
 
@@ -20,8 +20,8 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/vault-thirteen/Cache v0.12.5 // indirect
-	github.com/vault-thirteen/Simple-File-Server v0.12.1 // indirect
+	github.com/vault-thirteen/Simple-File-Server v0.12.2 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
-	golang.org/x/image v0.15.0 // indirect
+	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 )
