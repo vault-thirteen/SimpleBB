@@ -35,26 +35,6 @@ import (
 
 // Service functions.
 
-// General methods of API.
-
-func (srv *Server) GetProductVersion(_ *api.Request, _ *http.Request, hrw http.ResponseWriter) {
-	srv.respondWithPlainText(hrw, srv.settings.VersionInfo.ProgramVersionString())
-}
-
-func (srv *Server) GetSettings(_ *api.Request, _ *http.Request, hrw http.ResponseWriter) {
-	var publicApiSettings = &api.Settings{
-		SiteName:           srv.settings.SystemSettings.SiteName,
-		SiteDomain:         srv.settings.SystemSettings.SiteDomain,
-		IsFrontEndEnabled:  srv.settings.SystemSettings.IsFrontEndEnabled,
-		FrontEndPath:       srv.settings.SystemSettings.FrontEndPath,
-		ApiPath:            srv.settings.SystemSettings.ApiPath,
-		CaptchaPath:        srv.settings.SystemSettings.CaptchaPath,
-		SessionMaxDuration: srv.settings.SystemSettings.SessionMaxDuration,
-	}
-
-	srv.respondWithJsonObject(hrw, publicApiSettings)
-}
-
 // ACM.
 
 func (srv *Server) RegisterUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {

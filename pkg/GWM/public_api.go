@@ -3,19 +3,18 @@ package gwm
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
+	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
+	"github.com/vault-thirteen/auxie/header"
 	hh "github.com/vault-thirteen/auxie/http-helper"
 )
 
 const (
-	// General methods of API.
-	ApiFunctionName_GetProductVersion = "getProductVersion"
-	ApiFunctionName_GetSettings       = "getSettings"
-
 	// ACM.
 	ApiFunctionName_RegisterUser           = "registerUser"
 	ApiFunctionName_ApproveAndRegisterUser = "approveAndRegisterUser"
@@ -61,6 +60,33 @@ const (
 	ApiFunctionName_ListForumAndThreadsOnPage   = "listForumAndThreadsOnPage"
 	ApiFunctionName_ListSectionsAndForums       = "listSectionsAndForums"
 )
+
+func (srv *Server) handlePublicSettings(rw http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		srv.respondMethodNotAllowed(rw)
+		return
+	}
+
+	// Check accepted MIME types.
+	ok, err := hh.CheckBrowserSupportForJson(req)
+	if err != nil {
+		srv.respondBadRequest(rw)
+		return
+	}
+
+	if !ok {
+		srv.respondNotAcceptable(rw)
+		return
+	}
+
+	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_Json)
+
+	_, err = rw.Write(srv.publicSettingsFileData)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+}
 
 func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, clientIPA string) {
 	if req.Method != http.MethodPost {

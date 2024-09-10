@@ -1,6 +1,8 @@
 package api
 
 type Settings struct {
+	Version            uint   `json:"version"`
+	ProductVersion     string `json:"productVersion"`
 	SiteName           string `json:"siteName"`
 	SiteDomain         string `json:"siteDomain"`
 	IsFrontEndEnabled  bool   `json:"isFrontEndEnabled"`
@@ -8,4 +10,6 @@ type Settings struct {
 	ApiPath            string `json:"apiPath"`
 	CaptchaPath        string `json:"captchaPath"`
 	SessionMaxDuration uint   `json:"sessionMaxDuration"`
+	MessageEditTime    uint   `json:"messageEditTime"`
+	PageSize           uint   `json:"pageSize"`
 }

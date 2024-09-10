@@ -30,6 +30,7 @@
     "tableInitScriptsFolder": "sql\\GWM\\table_init"
   },
   "system": {
+    "settingsVersion": 1,
     "siteName": "Test Site",
     "siteDomain": "example.org",
     "isFirewallUsed": true,
@@ -42,6 +43,10 @@
     "captchaImgServerHost": "localhost",
     "captchaImgServerPort": 2004,
     "sessionMaxDuration": 86400,
+    "messageEditTime": 300,
+    "pageSize": 20,
+    "publicSettingsFileName": "settings.json",
+    "frontendAssetsFolder": "assets\\frontend",
     "isDebugMode": false
   },
   "acm": {

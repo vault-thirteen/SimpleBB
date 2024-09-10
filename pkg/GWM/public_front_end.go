@@ -5,28 +5,20 @@ import (
 	"net/http"
 
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
+	"github.com/vault-thirteen/auxie/header"
 )
 
-func (srv *Server) handlePublicFrontEnd(rw http.ResponseWriter, req *http.Request) {
-	up, err := models.NewUrlParameterFromHttpRequest(req)
-	if err != nil {
-		srv.respondBadRequest(rw)
+func (srv *Server) handleFrontEndStaticFile(rw http.ResponseWriter, req *http.Request, fedf models.FrontEndFileData) {
+	if req.Method != http.MethodGet {
+		srv.respondMethodNotAllowed(rw)
 		return
 	}
 
-	//TODO
-	rw.WriteHeader(http.StatusTeapot)
-	if up.ForumId != nil {
-		// Showing a forum.
-		_, err = rw.Write([]byte("Forum"))
-	} else if up.ThreadId != nil {
-		// Showing a thread.
-		_, err = rw.Write([]byte("Thread"))
-	} else {
-		// Showing sections & forums.
-		_, err = rw.Write([]byte("Sections & Forums"))
-	}
+	rw.Header().Set(header.HttpHeaderContentType, fedf.ContentType)
+
+	_, err := rw.Write(fedf.CachedFile)
 	if err != nil {
-		log.Println(err)
+		log.Println(err.Error())
+		return
 	}
 }

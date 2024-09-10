@@ -8,11 +8,12 @@ import (
 
 // SystemSettings are system settings.
 type SystemSettings struct {
-	SiteName   string `json:"siteName"`
-	SiteDomain string `json:"siteDomain"`
+	SettingsVersion uint   `json:"settingsVersion" :"settings_version"`
+	SiteName        string `json:"siteName" :"site_name"`
+	SiteDomain      string `json:"siteDomain" :"site_domain"`
 
 	// This setting must be synchronised with settings of the ACM module.
-	IsFirewallUsed bool `json:"isFirewallUsed"`
+	IsFirewallUsed bool `json:"isFirewallUsed" :"is_firewall_used"`
 
 	// ClientIPAddressSource setting selects where to search for client's IP
 	// address. '1' means that IP address is taken directly from the client's
@@ -23,26 +24,31 @@ type SystemSettings struct {
 	// the most suitable. The second variant ('2') may be used if you are
 	// proxying requests of your clients somewhere inside your own network
 	// infrastructure, such as via a load balancer or with a reverse proxy.
-	ClientIPAddressSource byte   `json:"clientIPAddressSource"`
-	ClientIPAddressHeader string `json:"clientIPAddressHeader"`
+	ClientIPAddressSource byte   `json:"clientIPAddressSource" :"client_ip_address_source"`
+	ClientIPAddressHeader string `json:"clientIPAddressHeader" :"client_ip_address_header"`
 
 	// URL.
-	IsFrontEndEnabled bool   `json:"isFrontEndEnabled"`
-	FrontEndPath      string `json:"frontEndPath"`
-	ApiPath           string `json:"apiPath"`
-	CaptchaPath       string `json:"captchaPath"`
+	IsFrontEndEnabled bool   `json:"isFrontEndEnabled" :"is_front_end_enabled"`
+	FrontEndPath      string `json:"frontEndPath" :"front_end_path"`
+	ApiPath           string `json:"apiPath" :"api_path"`
+	CaptchaPath       string `json:"captchaPath" :"captcha_path"`
 
 	// Captcha.
 	// These settings must be synchronised with settings of the RCS module.
-	CaptchaImgServerHost string `json:"captchaImgServerHost"`
-	CaptchaImgServerPort uint16 `json:"captchaImgServerPort"`
+	CaptchaImgServerHost   string `json:"captchaImgServerHost" :"captcha_img_server_host"`
+	CaptchaImgServerPort   uint16 `json:"captchaImgServerPort" :"captcha_img_server_port"`
+	SessionMaxDuration     uint   `json:"sessionMaxDuration" :"session_max_duration"`
+	MessageEditTime        uint   `json:"messageEditTime" :"message_edit_time"`
+	PageSize               uint   `json:"pageSize" :"page_size"`
+	PublicSettingsFileName string `json:"publicSettingsFileName" :"public_settings_file_name"`
+	FrontendAssetsFolder   string `json:"frontendAssetsFolder" :"frontend_assets_folder"`
 
-	SessionMaxDuration uint `json:"sessionMaxDuration"`
-	IsDebugMode        bool `json:"isDebugMode"`
+	IsDebugMode bool `json:"isDebugMode" :"is_debug_mode"`
 }
 
 func (s SystemSettings) Check() (err error) {
-	if (len(s.SiteName) == 0) ||
+	if (s.SettingsVersion == 0) ||
+		(len(s.SiteName) == 0) ||
 		(len(s.SiteDomain) == 0) ||
 		(s.ClientIPAddressSource < ClientIPAddressSource_Direct) ||
 		(s.ClientIPAddressSource > ClientIPAddressSource_CustomHeader) ||
@@ -51,7 +57,11 @@ func (s SystemSettings) Check() (err error) {
 		(s.ApiPath == s.CaptchaPath) ||
 		(len(s.CaptchaImgServerHost) == 0) ||
 		(s.CaptchaImgServerPort == 0) ||
-		(s.SessionMaxDuration == 0) {
+		(s.SessionMaxDuration == 0) ||
+		(s.MessageEditTime == 0) ||
+		(s.PageSize == 0) ||
+		(len(s.PublicSettingsFileName) == 0) ||
+		(len(s.FrontendAssetsFolder) == 0) {
 		return errors.New(c.MsgSystemSettingError)
 	}
 

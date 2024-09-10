@@ -5,6 +5,9 @@ import (
 )
 
 const (
-	ContentType_TextPlain       = mime.TypeTextPlain
-	ContentType_ApplicationJson = mime.TypeApplicationJson
+	ContentType_PlainText  = mime.TypeTextPlain
+	ContentType_Json       = mime.TypeApplicationJson
+	ContentType_JavaScript = mime.TypeApplicationJavascript
+	ContentType_HtmlPage   = mime.TypeTextHtml
+	ContentType_CssStyle   = mime.TypeTextCss
 )

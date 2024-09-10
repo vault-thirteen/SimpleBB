@@ -8,6 +8,7 @@ import (
 	"os"
 )
 
+//TODO:RSA-PSS.
 // Unfortunately, Golang can not parse RSA-PSS (RSASSA-PSS) keys.
 // See this bug report: https://github.com/golang/go/issues/48314
 // What a shame again. Guys, why is your language so poor ?

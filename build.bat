@@ -18,12 +18,16 @@ SET smtp_folder=SMTP
 SET tool_folder=tool
 SET argon2_tool_folder=Argon2
 SET jwt_tool_folder=MakeJWToken
+SET assets_folder=assets
+SET frontend_assets_folder=frontend
 
 :: Create the folders.
 MKDIR "%build_dir%"
 MKDIR "%build_dir%\%tool_folder%"
 MKDIR "%build_dir%\%cert_dir%"
 MKDIR "%build_dir%\%sql_dir%"
+MKDIR "%build_dir%\%assets_folder%"
+MKDIR "%build_dir%\%assets_folder%\%frontend_assets_folder%"
 
 :: 1. ACM Module.
 ECHO 1. ACM Module
@@ -60,6 +64,7 @@ COPY "%cert_dir%\%gw_folder%" "%build_dir%\%cert_dir%\%gw_folder%\"
 MKDIR "%build_dir%\%sql_dir%\%gw_folder%"
 MKDIR "%build_dir%\%sql_dir%\%gw_folder%\%sql_init_dir%"
 COPY "%sql_dir%\%gw_folder%\%sql_init_dir%" "%build_dir%\%sql_dir%\%gw_folder%\%sql_init_dir%\"
+COPY "%assets_folder%\%frontend_assets_folder%" "%build_dir%\%assets_folder%\%frontend_assets_folder%\"
 
 :: 3. Message Module.
 ECHO 3. Message Module

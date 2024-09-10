@@ -2,6 +2,7 @@ package gwm
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -17,6 +18,7 @@ import (
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	a "github.com/vault-thirteen/SimpleBB/pkg/ACM"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/dbo"
+	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
 	gs "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
 	m "github.com/vault-thirteen/SimpleBB/pkg/MM"
@@ -24,6 +26,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
+	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cset "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
@@ -69,6 +72,13 @@ type Server struct {
 	commonHttpStatusCodesByRpcErrorCode map[int]int
 	acmHttpStatusCodesByRpcErrorCode    map[int]int
 	mmHttpStatusCodesByRpcErrorCode     map[int]int
+
+	// Public settings.
+	publicSettingsPath     string // URL path of handler.
+	publicSettingsFileData []byte // Cached file contents in JSON format.
+
+	// Front End Data.
+	frontEnd *models.FrontEndData
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -139,6 +149,18 @@ func NewServer(s cm.ISettings) (srv *Server, err error) {
 	err = srv.initStatusCodeMapper()
 	if err != nil {
 		return nil, err
+	}
+
+	err = srv.initPublicSettings()
+	if err != nil {
+		return nil, err
+	}
+
+	if srv.settings.SystemSettings.IsFrontEndEnabled {
+		err = srv.initFrontEndData()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return srv, nil
@@ -348,7 +370,7 @@ func (srv *Server) httpRouterInt(rw http.ResponseWriter, req *http.Request) {
 
 // HTTP router for external requests.
 func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
-	// Firewall.
+	// Firewall (optional).
 	var clientIPA string
 	if srv.settings.SystemSettings.IsFirewallUsed {
 		var ok bool
@@ -371,10 +393,32 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Settings handler.
+	if req.URL.Path == srv.publicSettingsPath {
+		srv.handlePublicSettings(rw, req)
+		return
+	}
+
 	// Front end handlers (optional).
 	if srv.settings.SystemSettings.IsFrontEndEnabled {
+		// Front End root path.
 		if req.URL.Path == srv.settings.SystemSettings.FrontEndPath {
-			srv.handlePublicFrontEnd(rw, req)
+			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.IndexHtmlPage)
+			return
+		}
+
+		// Static files for front end.
+		switch req.URL.Path {
+		case srv.frontEnd.IndexHtmlPage.UrlPath:
+			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.IndexHtmlPage)
+			return
+
+		case srv.frontEnd.LoaderScript.UrlPath:
+			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.LoaderScript)
+			return
+
+		case srv.frontEnd.CssStyles.UrlPath:
+			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.CssStyles)
 			return
 		}
 	}
@@ -392,6 +436,56 @@ func (srv *Server) initStatusCodeMapper() (err error) {
 	srv.commonHttpStatusCodesByRpcErrorCode = c.GetMapOfHttpStatusCodesByRpcErrorCodes()
 	srv.acmHttpStatusCodesByRpcErrorCode = a.GetMapOfHttpStatusCodesByRpcErrorCodes()
 	srv.mmHttpStatusCodesByRpcErrorCode = m.GetMapOfHttpStatusCodesByRpcErrorCodes()
+
+	return nil
+}
+
+func (srv *Server) initPublicSettings() (err error) {
+	srv.publicSettingsPath = srv.settings.SystemSettings.FrontEndPath + srv.settings.SystemSettings.PublicSettingsFileName
+
+	var publicSettings = &api.Settings{
+		Version:            srv.settings.SystemSettings.SettingsVersion,
+		ProductVersion:     srv.settings.VersionInfo.ProgramVersionString(),
+		SiteName:           srv.settings.SystemSettings.SiteName,
+		SiteDomain:         srv.settings.SystemSettings.SiteDomain,
+		IsFrontEndEnabled:  srv.settings.SystemSettings.IsFrontEndEnabled,
+		FrontEndPath:       srv.settings.SystemSettings.FrontEndPath,
+		ApiPath:            srv.settings.SystemSettings.ApiPath,
+		CaptchaPath:        srv.settings.SystemSettings.CaptchaPath,
+		SessionMaxDuration: srv.settings.SystemSettings.SessionMaxDuration,
+		MessageEditTime:    srv.settings.SystemSettings.MessageEditTime,
+		PageSize:           srv.settings.SystemSettings.PageSize,
+	}
+
+	// Do note that file for public settings is a virtual file.
+	srv.publicSettingsFileData, err = json.Marshal(publicSettings)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (srv *Server) initFrontEndData() (err error) {
+	frontendAssetsFolder := cm.NormalisePath(srv.settings.SystemSettings.FrontendAssetsFolder)
+	fep := srv.settings.SystemSettings.FrontEndPath
+
+	srv.frontEnd = &models.FrontEndData{}
+
+	srv.frontEnd.IndexHtmlPage, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_IndexHtmlPage, ch.ContentType_HtmlPage, frontendAssetsFolder)
+	if err != nil {
+		return err
+	}
+
+	srv.frontEnd.LoaderScript, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_LoaderScript, ch.ContentType_JavaScript, frontendAssetsFolder)
+	if err != nil {
+		return err
+	}
+
+	srv.frontEnd.CssStyles, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_CssStyles, ch.ContentType_CssStyle, frontendAssetsFolder)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -456,10 +550,6 @@ func (srv *Server) pingClientsForExternalServices() (err error) {
 
 func (srv *Server) initApiFunctions() (err error) {
 	srv.apiFunctionNames = []string{
-		// General methods of API.
-		ApiFunctionName_GetProductVersion,
-		ApiFunctionName_GetSettings,
-
 		// ACM.
 		ApiFunctionName_RegisterUser,
 		ApiFunctionName_ApproveAndRegisterUser,
@@ -507,10 +597,6 @@ func (srv *Server) initApiFunctions() (err error) {
 	}
 
 	srv.apiHandlers = map[string]api.RequestHandler{
-		// General methods of API.
-		ApiFunctionName_GetProductVersion: srv.GetProductVersion,
-		ApiFunctionName_GetSettings:       srv.GetSettings,
-
 		// ACM.
 		ApiFunctionName_RegisterUser:           srv.RegisterUser,
 		ApiFunctionName_ApproveAndRegisterUser: srv.ApproveAndRegisterUser,

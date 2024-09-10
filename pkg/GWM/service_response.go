@@ -41,7 +41,7 @@ func (srv *Server) processRpcError(moduleId byte, re *jrm1.RpcError, rw http.Res
 
 // respondWithPlainText responds via HTTP with a simple text message.
 func (srv *Server) respondWithPlainText(rw http.ResponseWriter, text string) {
-	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_TextPlain)
+	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_PlainText)
 
 	_, err := rw.Write([]byte(text))
 	if err != nil {
@@ -52,7 +52,7 @@ func (srv *Server) respondWithPlainText(rw http.ResponseWriter, text string) {
 
 // respondWithJsonObject responds via HTTP with a JSON object.
 func (srv *Server) respondWithJsonObject(rw http.ResponseWriter, obj any) {
-	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_ApplicationJson)
+	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_Json)
 
 	err := json.NewEncoder(rw).Encode(obj)
 	if err != nil {
