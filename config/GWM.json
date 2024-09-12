@@ -47,7 +47,9 @@
     "pageSize": 20,
     "publicSettingsFileName": "settings.json",
     "frontendAssetsFolder": "assets\\frontend",
-    "isDebugMode": false
+    "isDebugMode": false,
+    "isDeveloperMode": false,
+    "devModeHttpHeaderAccessControlAllowOrigin": "localhost"
   },
   "acm": {
     "schema": "https",

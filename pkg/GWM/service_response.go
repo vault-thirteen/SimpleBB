@@ -34,14 +34,17 @@ func (srv *Server) processRpcError(moduleId byte, re *jrm1.RpcError, rw http.Res
 		return
 	}
 
-	rw.WriteHeader(httpStatusCode)
-	srv.respondWithPlainText(rw, re.AsError().Error())
+	srv.respondWithPlainText(rw, re.AsError().Error(), httpStatusCode)
 	return
 }
 
 // respondWithPlainText responds via HTTP with a simple text message.
-func (srv *Server) respondWithPlainText(rw http.ResponseWriter, text string) {
+func (srv *Server) respondWithPlainText(rw http.ResponseWriter, text string, httpStatusCode int) {
+	if srv.settings.SystemSettings.IsDeveloperMode {
+		rw.Header().Set(header.HttpHeaderAccessControlAllowOrigin, srv.settings.SystemSettings.DevModeHttpHeaderAccessControlAllowOrigin)
+	}
 	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_PlainText)
+	rw.WriteHeader(httpStatusCode)
 
 	_, err := rw.Write([]byte(text))
 	if err != nil {
@@ -52,6 +55,9 @@ func (srv *Server) respondWithPlainText(rw http.ResponseWriter, text string) {
 
 // respondWithJsonObject responds via HTTP with a JSON object.
 func (srv *Server) respondWithJsonObject(rw http.ResponseWriter, obj any) {
+	if srv.settings.SystemSettings.IsDeveloperMode {
+		rw.Header().Set(header.HttpHeaderAccessControlAllowOrigin, srv.settings.SystemSettings.DevModeHttpHeaderAccessControlAllowOrigin)
+	}
 	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_Json)
 
 	err := json.NewEncoder(rw).Encode(obj)

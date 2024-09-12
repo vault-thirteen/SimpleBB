@@ -43,7 +43,9 @@ type SystemSettings struct {
 	PublicSettingsFileName string `json:"publicSettingsFileName" :"public_settings_file_name"`
 	FrontendAssetsFolder   string `json:"frontendAssetsFolder" :"frontend_assets_folder"`
 
-	IsDebugMode bool `json:"isDebugMode" :"is_debug_mode"`
+	IsDebugMode                               bool   `json:"isDebugMode" :"is_debug_mode"`
+	IsDeveloperMode                           bool   `json:"isDeveloperMode" :"is_developer_mode"`
+	DevModeHttpHeaderAccessControlAllowOrigin string `json:"devModeHttpHeaderAccessControlAllowOrigin"`
 }
 
 func (s SystemSettings) Check() (err error) {
@@ -75,6 +77,12 @@ func (s SystemSettings) Check() (err error) {
 
 	if s.ClientIPAddressSource == ClientIPAddressSource_CustomHeader {
 		if len(s.ClientIPAddressHeader) == 0 {
+			return errors.New(c.MsgSystemSettingError)
+		}
+	}
+
+	if s.IsDeveloperMode {
+		if len(s.DevModeHttpHeaderAccessControlAllowOrigin) == 0 {
 			return errors.New(c.MsgSystemSettingError)
 		}
 	}
