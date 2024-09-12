@@ -14,6 +14,9 @@ import (
 // processInternalServerError logs the internal error and responds via HTTP.
 func (srv *Server) processInternalServerError(rw http.ResponseWriter, err error) {
 	srv.logError(err)
+	if srv.settings.SystemSettings.IsDeveloperMode {
+		rw.Header().Set(header.HttpHeaderAccessControlAllowOrigin, srv.settings.SystemSettings.DevModeHttpHeaderAccessControlAllowOrigin)
+	}
 	rw.WriteHeader(http.StatusInternalServerError)
 }
 
@@ -68,22 +71,37 @@ func (srv *Server) respondWithJsonObject(rw http.ResponseWriter, obj any) {
 }
 
 func (srv *Server) respondBadRequest(rw http.ResponseWriter) {
+	if srv.settings.SystemSettings.IsDeveloperMode {
+		rw.Header().Set(header.HttpHeaderAccessControlAllowOrigin, srv.settings.SystemSettings.DevModeHttpHeaderAccessControlAllowOrigin)
+	}
 	rw.WriteHeader(http.StatusBadRequest)
 }
 
 func (srv *Server) respondForbidden(rw http.ResponseWriter) {
+	if srv.settings.SystemSettings.IsDeveloperMode {
+		rw.Header().Set(header.HttpHeaderAccessControlAllowOrigin, srv.settings.SystemSettings.DevModeHttpHeaderAccessControlAllowOrigin)
+	}
 	rw.WriteHeader(http.StatusForbidden)
 }
 
 func (srv *Server) respondNotFound(rw http.ResponseWriter) {
+	if srv.settings.SystemSettings.IsDeveloperMode {
+		rw.Header().Set(header.HttpHeaderAccessControlAllowOrigin, srv.settings.SystemSettings.DevModeHttpHeaderAccessControlAllowOrigin)
+	}
 	rw.WriteHeader(http.StatusNotFound)
 }
 
 func (srv *Server) respondMethodNotAllowed(rw http.ResponseWriter) {
+	if srv.settings.SystemSettings.IsDeveloperMode {
+		rw.Header().Set(header.HttpHeaderAccessControlAllowOrigin, srv.settings.SystemSettings.DevModeHttpHeaderAccessControlAllowOrigin)
+	}
 	rw.WriteHeader(http.StatusMethodNotAllowed)
 }
 
 func (srv *Server) respondNotAcceptable(rw http.ResponseWriter) {
+	if srv.settings.SystemSettings.IsDeveloperMode {
+		rw.Header().Set(header.HttpHeaderAccessControlAllowOrigin, srv.settings.SystemSettings.DevModeHttpHeaderAccessControlAllowOrigin)
+	}
 	rw.WriteHeader(http.StatusNotAcceptable)
 }
 
