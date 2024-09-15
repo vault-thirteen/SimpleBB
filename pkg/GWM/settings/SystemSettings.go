@@ -7,13 +7,14 @@ import (
 )
 
 // SystemSettings are system settings.
+// Many of these settings must be synchronised with other modules.
 type SystemSettings struct {
-	SettingsVersion uint   `json:"settingsVersion" :"settings_version"`
-	SiteName        string `json:"siteName" :"site_name"`
-	SiteDomain      string `json:"siteDomain" :"site_domain"`
+	SettingsVersion uint   `json:"settingsVersion"`
+	SiteName        string `json:"siteName"`
+	SiteDomain      string `json:"siteDomain"`
 
-	// This setting must be synchronised with settings of the ACM module.
-	IsFirewallUsed bool `json:"isFirewallUsed" :"is_firewall_used"`
+	// Firewall.
+	IsFirewallUsed bool `json:"isFirewallUsed"`
 
 	// ClientIPAddressSource setting selects where to search for client's IP
 	// address. '1' means that IP address is taken directly from the client's
@@ -24,27 +25,31 @@ type SystemSettings struct {
 	// the most suitable. The second variant ('2') may be used if you are
 	// proxying requests of your clients somewhere inside your own network
 	// infrastructure, such as via a load balancer or with a reverse proxy.
-	ClientIPAddressSource byte   `json:"clientIPAddressSource" :"client_ip_address_source"`
-	ClientIPAddressHeader string `json:"clientIPAddressHeader" :"client_ip_address_header"`
-
-	// URL.
-	IsFrontEndEnabled bool   `json:"isFrontEndEnabled" :"is_front_end_enabled"`
-	FrontEndPath      string `json:"frontEndPath" :"front_end_path"`
-	ApiPath           string `json:"apiPath" :"api_path"`
-	CaptchaPath       string `json:"captchaPath" :"captcha_path"`
+	ClientIPAddressSource byte   `json:"clientIPAddressSource"`
+	ClientIPAddressHeader string `json:"clientIPAddressHeader"`
 
 	// Captcha.
-	// These settings must be synchronised with settings of the RCS module.
-	CaptchaImgServerHost   string `json:"captchaImgServerHost" :"captcha_img_server_host"`
-	CaptchaImgServerPort   uint16 `json:"captchaImgServerPort" :"captcha_img_server_port"`
-	SessionMaxDuration     uint   `json:"sessionMaxDuration" :"session_max_duration"`
-	MessageEditTime        uint   `json:"messageEditTime" :"message_edit_time"`
-	PageSize               uint   `json:"pageSize" :"page_size"`
-	PublicSettingsFileName string `json:"publicSettingsFileName" :"public_settings_file_name"`
-	FrontendAssetsFolder   string `json:"frontendAssetsFolder" :"frontend_assets_folder"`
+	CaptchaImgServerHost string `json:"captchaImgServerHost"`
+	CaptchaImgServerPort uint16 `json:"captchaImgServerPort"`
+	CaptchaFolder        string `json:"captchaFolder"`
 
-	IsDebugMode                               bool   `json:"isDebugMode" :"is_debug_mode"`
-	IsDeveloperMode                           bool   `json:"isDeveloperMode" :"is_developer_mode"`
+	// Sessions and messages.
+	SessionMaxDuration uint `json:"sessionMaxDuration"`
+	MessageEditTime    uint `json:"messageEditTime"`
+	PageSize           uint `json:"pageSize"`
+
+	// URL paths.
+	ApiFolder              string `json:"apiFolder"`
+	PublicSettingsFileName string `json:"publicSettingsFileName"`
+
+	// Front end.
+	IsFrontEndEnabled         bool   `json:"isFrontEndEnabled"`
+	FrontEndStaticFilesFolder string `json:"frontEndStaticFilesFolder"`
+	FrontEndAssetsFolder      string `json:"frontEndAssetsFolder"`
+
+	// Development settings.
+	IsDebugMode                               bool   `json:"isDebugMode"`
+	IsDeveloperMode                           bool   `json:"isDeveloperMode"`
 	DevModeHttpHeaderAccessControlAllowOrigin string `json:"devModeHttpHeaderAccessControlAllowOrigin"`
 }
 
@@ -54,23 +59,20 @@ func (s SystemSettings) Check() (err error) {
 		(len(s.SiteDomain) == 0) ||
 		(s.ClientIPAddressSource < ClientIPAddressSource_Direct) ||
 		(s.ClientIPAddressSource > ClientIPAddressSource_CustomHeader) ||
-		(len(s.ApiPath) == 0) ||
-		(len(s.CaptchaPath) == 0) ||
-		(s.ApiPath == s.CaptchaPath) ||
 		(len(s.CaptchaImgServerHost) == 0) ||
 		(s.CaptchaImgServerPort == 0) ||
+		(len(s.CaptchaFolder) == 0) ||
 		(s.SessionMaxDuration == 0) ||
 		(s.MessageEditTime == 0) ||
 		(s.PageSize == 0) ||
-		(len(s.PublicSettingsFileName) == 0) ||
-		(len(s.FrontendAssetsFolder) == 0) {
+		(len(s.ApiFolder) == 0) ||
+		(len(s.PublicSettingsFileName) == 0) {
 		return errors.New(c.MsgSystemSettingError)
 	}
 
 	if s.IsFrontEndEnabled {
-		if (len(s.FrontEndPath) == 0) ||
-			(s.FrontEndPath == s.ApiPath) ||
-			(s.FrontEndPath == s.CaptchaPath) {
+		if (len(s.FrontEndStaticFilesFolder) == 0) ||
+			(len(s.FrontEndAssetsFolder) == 0) {
 			return errors.New(c.MsgSystemSettingError)
 		}
 	}

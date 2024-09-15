@@ -28,8 +28,11 @@ import (
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
 	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 	cset "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
+
+const ErrUrlIsTooShort = "URL is too short"
 
 type Server struct {
 	// Settings.
@@ -74,7 +77,6 @@ type Server struct {
 	mmHttpStatusCodesByRpcErrorCode     map[int]int
 
 	// Public settings.
-	publicSettingsPath     string // URL path of handler.
 	publicSettingsFileData []byte // Cached file contents in JSON format.
 
 	// Front End Data.
@@ -387,61 +389,47 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	// API handlers.
-	if req.URL.Path == srv.settings.SystemSettings.ApiPath {
+	isFrontEndEnabled := srv.settings.SystemSettings.IsFrontEndEnabled
+
+	if (req.URL.Path == gs.FrontEndRoot) && (isFrontEndEnabled) { // <- /
+		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.IndexHtmlPage)
+		return
+	}
+
+	var err error
+	urlParts := cn.SplitUrlPath(req.URL.Path)
+	if len(urlParts) < 1 {
+		err = errors.New(ErrUrlIsTooShort)
+		srv.logError(err)
+		return
+	}
+	category := urlParts[0]
+
+	switch category {
+	case srv.settings.SystemSettings.ApiFolder: // <- /api
 		srv.handlePublicApi(rw, req, clientIPA)
 		return
-	}
 
-	// Settings handler.
-	if req.URL.Path == srv.publicSettingsPath {
+	case srv.settings.SystemSettings.PublicSettingsFileName: // <- /settings.json
 		srv.handlePublicSettings(rw, req)
 		return
-	}
 
-	// Front end handlers (optional).
-	if srv.settings.SystemSettings.IsFrontEndEnabled {
-		// Front End root path.
-		if req.URL.Path == srv.settings.SystemSettings.FrontEndPath {
-			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.IndexHtmlPage)
-			return
-		}
-
-		// Static files for front end.
-		switch req.URL.Path {
-		case srv.frontEnd.ArgonJs.UrlPath:
-			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.ArgonJs)
-			return
-
-		case srv.frontEnd.ArgonWasm.UrlPath:
-			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.ArgonWasm)
-			return
-
-		case srv.frontEnd.BppJs.UrlPath:
-			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.BppJs)
-			return
-
-		case srv.frontEnd.IndexHtmlPage.UrlPath:
-			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.IndexHtmlPage)
-			return
-
-		case srv.frontEnd.LoaderScript.UrlPath:
-			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.LoaderScript)
-			return
-
-		case srv.frontEnd.CssStyles.UrlPath:
-			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.CssStyles)
-			return
-		}
-	}
-
-	// Captcha.
-	if req.URL.Path == srv.settings.SystemSettings.CaptchaPath {
+	case srv.settings.SystemSettings.CaptchaFolder: // <- /captcha
 		srv.handleCaptcha(rw, req)
 		return
-	}
 
-	srv.respondNotFound(rw)
+	case srv.settings.SystemSettings.FrontEndStaticFilesFolder: // <- /fe
+		if !isFrontEndEnabled {
+			srv.respondNotFound(rw)
+			return
+		}
+		srv.handleFrontEnd(rw, req)
+		return
+
+	default:
+		srv.respondNotFound(rw)
+		return
+	}
 }
 
 func (srv *Server) initStatusCodeMapper() (err error) {
@@ -453,23 +441,23 @@ func (srv *Server) initStatusCodeMapper() (err error) {
 }
 
 func (srv *Server) initPublicSettings() (err error) {
-	srv.publicSettingsPath = srv.settings.SystemSettings.FrontEndPath + srv.settings.SystemSettings.PublicSettingsFileName
-
-	var publicSettings = &api.Settings{
-		Version:            srv.settings.SystemSettings.SettingsVersion,
-		ProductVersion:     srv.settings.VersionInfo.ProgramVersionString(),
-		SiteName:           srv.settings.SystemSettings.SiteName,
-		SiteDomain:         srv.settings.SystemSettings.SiteDomain,
-		IsFrontEndEnabled:  srv.settings.SystemSettings.IsFrontEndEnabled,
-		FrontEndPath:       srv.settings.SystemSettings.FrontEndPath,
-		ApiPath:            srv.settings.SystemSettings.ApiPath,
-		CaptchaPath:        srv.settings.SystemSettings.CaptchaPath,
-		SessionMaxDuration: srv.settings.SystemSettings.SessionMaxDuration,
-		MessageEditTime:    srv.settings.SystemSettings.MessageEditTime,
-		PageSize:           srv.settings.SystemSettings.PageSize,
+	// File with public settings is a special virtual file which lies in the
+	// root folder. It contains useful settings for client applications.
+	var publicSettings = &models.Settings{
+		Version:                   srv.settings.SystemSettings.SettingsVersion,
+		ProductVersion:            srv.settings.VersionInfo.ProgramVersionString(),
+		SiteName:                  srv.settings.SystemSettings.SiteName,
+		SiteDomain:                srv.settings.SystemSettings.SiteDomain,
+		CaptchaFolder:             srv.settings.SystemSettings.CaptchaFolder,
+		SessionMaxDuration:        srv.settings.SystemSettings.SessionMaxDuration,
+		MessageEditTime:           srv.settings.SystemSettings.MessageEditTime,
+		PageSize:                  srv.settings.SystemSettings.PageSize,
+		ApiFolder:                 srv.settings.SystemSettings.ApiFolder,
+		PublicSettingsFileName:    srv.settings.SystemSettings.PublicSettingsFileName,
+		IsFrontEndEnabled:         srv.settings.SystemSettings.IsFrontEndEnabled,
+		FrontEndStaticFilesFolder: srv.settings.SystemSettings.FrontEndStaticFilesFolder,
 	}
 
-	// Do note that file for public settings is a virtual file.
 	srv.publicSettingsFileData, err = json.Marshal(publicSettings)
 	if err != nil {
 		return err
@@ -479,8 +467,8 @@ func (srv *Server) initPublicSettings() (err error) {
 }
 
 func (srv *Server) initFrontEndData() (err error) {
-	frontendAssetsFolder := cm.NormalisePath(srv.settings.SystemSettings.FrontendAssetsFolder)
-	fep := srv.settings.SystemSettings.FrontEndPath
+	frontendAssetsFolder := cm.NormalisePath(srv.settings.SystemSettings.FrontEndAssetsFolder)
+	fep := gs.FrontEndRoot + srv.settings.SystemSettings.FrontEndStaticFilesFolder + "/"
 
 	srv.frontEnd = &models.FrontEndData{}
 

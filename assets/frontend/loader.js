@@ -9,13 +9,14 @@ varnameSettingsVersion = "settingsVersion";
 varnameSettingsProductVersion = "settingsProductVersion";
 varnameSettingsSiteName = "settingsSiteName";
 varnameSettingsSiteDomain = "settingsSiteDomain";
-varnameSettingsIsFrontEndEnabled = "isFrontEndEnabled";
-varnameSettingsFrontEndPath = "frontEndPath";
-varnameSettingsApiPath = "settingsApiPath";
-varnameSettingsCaptchaPath = "settingsCaptchaPath";
+varnameSettingsCaptchaFolder = "settingsCaptchaFolder";
 varnameSettingsSessionMaxDuration = "settingsSessionMaxDuration";
 varnameSettingsMessageEditTime = "settingsMessageEditTime";
 varnameSettingsPageSize = "settingsPageSize";
+varnameSettingsApiFolder = "settingsApiFolder";
+varnameSettingsPublicSettingsFileName = "settingsPublicSettingsFileName";
+varnameSettingsIsFrontEndEnabled = "settingsIsFrontEndEnabled";
+varnameSettingsFrontEndStaticFilesFolder = "settingsFrontEndStaticFilesFolder";
 varnameIsLoggedIn = "isLoggedIn";
 varnameRegistrationEmail = "registrationEmail";
 varnameRegistrationVcode = "registrationVcode";
@@ -54,16 +55,21 @@ errNextStepUnknown = "unknown next step";
 errPasswordNotValid = "password is not valid";
 errWebTokenIsNotSet = "web token is not set";
 errNotOk = "something went wrong";
+errServer = "server error";
+errClient = "client error";
+errUnknown = "unknown error";
+errElementTypeUnsupported = "unsupported element type";
 
 // Messages.
 msgRedirecting = "Redirecting. Please wait ...";
+msgGenericErrorPrefix = "Error: ";
 
 // Action names.
 actionName_registerUser = "registerUser";
 actionName_logUserIn = "logUserIn";
 actionName_logUserOut = "logUserOut";
 
-// Longevity of cached settings.
+// Longevity of cached settings. In seconds.
 settingsExpirationDuration = 60;
 
 // Various other settings.
@@ -72,20 +78,25 @@ redirectDelay = 7;
 // Path to initial settings for a loader script.
 settingsPath = "settings.json";
 
+settingsRootPath = "/";
+
 // Settings class.
 class Settings {
-    constructor(version, productVersion, siteName, siteDomain, isFrontEndEnabled, frontEndPath, apiPath, captchaPath, sessionMaxDuration, messageEditTime, pageSize) {
-        this.Version = version;
+    constructor(version, productVersion, siteName, siteDomain, captchaFolder,
+                sessionMaxDuration, messageEditTime, pageSize, apiFolder,
+                publicSettingsFileName, isFrontEndEnabled, frontEndStaticFilesFolder) {
+        this.Version = version; // Number.
         this.ProductVersion = productVersion;
         this.SiteName = siteName;
         this.SiteDomain = siteDomain;
-        this.IsFrontEndEnabled = isFrontEndEnabled;
-        this.FrontEndPath = frontEndPath;
-        this.ApiPath = apiPath;
-        this.CaptchaPath = captchaPath;
-        this.SessionMaxDuration = sessionMaxDuration;
-        this.MessageEditTime = messageEditTime;
-        this.PageSize = pageSize;
+        this.CaptchaFolder = captchaFolder;
+        this.SessionMaxDuration = sessionMaxDuration; // Number.
+        this.MessageEditTime = messageEditTime; // Number.
+        this.PageSize = pageSize; // Number.
+        this.ApiFolder = apiFolder;
+        this.PublicSettingsFileName = publicSettingsFileName;
+        this.IsFrontEndEnabled = isFrontEndEnabled; // Boolean.
+        this.FrontEndStaticFilesFolder = frontEndStaticFilesFolder;
     }
 }
 
@@ -291,22 +302,23 @@ async function updateSettings() {
 }
 
 async function fetchSettings() {
-    let data = await fetch(settingsPath);
+    let data = await fetch(settingsRootPath + settingsPath);
     return await data.json();
 }
 
 function saveSettings(settings) {
-    sessionStorage.setItem(varnameSettingsVersion, settings.version);
+    sessionStorage.setItem(varnameSettingsVersion, settings.version.toString());
     sessionStorage.setItem(varnameSettingsProductVersion, settings.productVersion);
     sessionStorage.setItem(varnameSettingsSiteName, settings.siteName);
     sessionStorage.setItem(varnameSettingsSiteDomain, settings.siteDomain);
+    sessionStorage.setItem(varnameSettingsCaptchaFolder, settings.captchaFolder);
+    sessionStorage.setItem(varnameSettingsSessionMaxDuration, settings.sessionMaxDuration.toString());
+    sessionStorage.setItem(varnameSettingsMessageEditTime, settings.messageEditTime.toString());
+    sessionStorage.setItem(varnameSettingsPageSize, settings.pageSize.toString());
+    sessionStorage.setItem(varnameSettingsApiFolder, settings.apiFolder);
+    sessionStorage.setItem(varnameSettingsPublicSettingsFileName, settings.publicSettingsFileName);
     sessionStorage.setItem(varnameSettingsIsFrontEndEnabled, settings.isFrontEndEnabled.toString());
-    sessionStorage.setItem(varnameSettingsFrontEndPath, settings.frontEndPath);
-    sessionStorage.setItem(varnameSettingsApiPath, settings.apiPath);
-    sessionStorage.setItem(varnameSettingsCaptchaPath, settings.captchaPath);
-    sessionStorage.setItem(varnameSettingsSessionMaxDuration, settings.sessionMaxDuration);
-    sessionStorage.setItem(varnameSettingsMessageEditTime, settings.messageEditTime);
-    sessionStorage.setItem(varnameSettingsPageSize, settings.pageSize);
+    sessionStorage.setItem(varnameSettingsFrontEndStaticFilesFolder, settings.frontEndStaticFilesFolder);
 }
 
 function getSettings() {
@@ -315,13 +327,14 @@ function getSettings() {
         sessionStorage.getItem(varnameSettingsProductVersion),
         sessionStorage.getItem(varnameSettingsSiteName),
         sessionStorage.getItem(varnameSettingsSiteDomain),
-        stringToBoolean(sessionStorage.getItem(varnameSettingsIsFrontEndEnabled)),
-        sessionStorage.getItem(varnameSettingsFrontEndPath),
-        sessionStorage.getItem(varnameSettingsApiPath),
-        sessionStorage.getItem(varnameSettingsCaptchaPath),
+        sessionStorage.getItem(varnameSettingsCaptchaFolder),
         Number(sessionStorage.getItem(varnameSettingsSessionMaxDuration)),
         Number(sessionStorage.getItem(varnameSettingsMessageEditTime)),
         Number(sessionStorage.getItem(varnameSettingsPageSize)),
+        sessionStorage.getItem(varnameSettingsApiFolder),
+        sessionStorage.getItem(varnameSettingsPublicSettingsFileName),
+        stringToBoolean(sessionStorage.getItem(varnameSettingsIsFrontEndEnabled)),
+        sessionStorage.getItem(varnameSettingsFrontEndStaticFilesFolder),
     );
 }
 
@@ -744,7 +757,7 @@ async function sleep(ms) {
 async function sendApiRequest(data) {
     console.debug("sendApiRequest", "data:", data);//TODO:DEBUG.
     let settings = getSettings();
-    let url = settings.ApiPath
+    let url = settingsRootPath + settings.ApiFolder;
     let resp;
     let result;
     let ri = {
@@ -767,16 +780,16 @@ async function sendApiRequest(data) {
 
 function createErrorTextByStatusCode(statusCode) {
     if ((statusCode >= 400) && (statusCode <= 499)) {
-        return "Client error (" + statusCode.toString() + ")";
+        return msgGenericErrorPrefix + errClient + " (" + statusCode.toString() + ")";
     }
     if ((statusCode >= 500) && (statusCode <= 599)) {
-        return "Server error (" + statusCode.toString() + ")";
+        return msgGenericErrorPrefix + errServer + " (" + statusCode.toString() + ")";
     }
-    return "Unknown error (" + statusCode.toString() + ")";
+    return msgGenericErrorPrefix + errUnknown + " (" + statusCode.toString() + ")";
 }
 
 function composeErrorText(errMsg) {
-    return "Error: " + errMsg + ".";
+    return msgGenericErrorPrefix + errMsg + ".";
 }
 
 async function redirectPage(wait, url) {
@@ -792,14 +805,12 @@ async function redirectPage(wait, url) {
 // root. Front end root is taken from settings stored in browser's JavaScript
 // session storage.
 async function redirectToRelativePath(wait, relPath) {
-    let settings = getSettings();
-    let url = settings.FrontEndPath + relPath;
+    let url = settingsRootPath + relPath;
     await redirectPage(wait, url);
 }
 
 async function redirectToMainPage(wait) {
-    let settings = getSettings();
-    await redirectPage(wait, settings.FrontEndPath);
+    await redirectPage(wait, settingsRootPath);
 }
 
 function disableButton(btn) {
@@ -812,7 +823,7 @@ function disableButton(btn) {
             return;
 
         default:
-            console.error("unsupported element type")
+            console.error(errElementTypeUnsupported);
     }
 }
 
@@ -914,6 +925,6 @@ function checkPwdSymbol(symbol) {
 
 function makeCaptchaImageUrl(captchaId) {
     let settings = getSettings();
-    let captchaPath = settings.CaptchaPath;
+    let captchaPath = settingsRootPath + settings.CaptchaFolder;
     return captchaPath + "?id=" + captchaId;
 }

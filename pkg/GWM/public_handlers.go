@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
 	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
@@ -164,4 +165,50 @@ func (srv *Server) handleCaptcha(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	srv.captchaProxy.ServeHTTP(rw, req)
+}
+
+// handleFrontEnd serves static files for the front end part.
+func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request) {
+	// While the number of cases is less than 10..20, the "switch" branching
+	// works faster than other methods.
+	switch req.URL.Path {
+	case srv.frontEnd.ArgonJs.UrlPath:
+		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.ArgonJs)
+		return
+
+	case srv.frontEnd.ArgonWasm.UrlPath:
+		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.ArgonWasm)
+		return
+
+	case srv.frontEnd.BppJs.UrlPath:
+		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.BppJs)
+		return
+
+	case srv.frontEnd.IndexHtmlPage.UrlPath:
+		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.IndexHtmlPage)
+		return
+
+	case srv.frontEnd.LoaderScript.UrlPath:
+		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.LoaderScript)
+		return
+
+	case srv.frontEnd.CssStyles.UrlPath:
+		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.CssStyles)
+		return
+	}
+}
+
+func (srv *Server) handleFrontEndStaticFile(rw http.ResponseWriter, req *http.Request, fedf models.FrontEndFileData) {
+	if req.Method != http.MethodGet {
+		srv.respondMethodNotAllowed(rw)
+		return
+	}
+
+	rw.Header().Set(header.HttpHeaderContentType, fedf.ContentType)
+
+	_, err := rw.Write(fedf.CachedFile)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
 }

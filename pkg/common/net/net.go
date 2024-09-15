@@ -35,3 +35,17 @@ func SplitHostPort(addr string) (host, port string, err error) {
 
 	return parts[0], parts[1], nil
 }
+
+// SplitUrlPath splits an URL path into non-empty parts. This method is opposed
+// to the standard 'split' method which allows empty parts.
+func SplitUrlPath(path string) (parts []string) {
+	p := strings.Split(path, "/")
+	parts = make([]string, 0, len(p))
+	for _, x := range p {
+		if len(x) > 0 {
+			parts = append(parts, x)
+		}
+	}
+
+	return parts
+}
