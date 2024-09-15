@@ -71,8 +71,10 @@
     "administratorIds": []
   },
   "message": {
-    "subjectTemplate": "Verification code for forum on %s",
-    "bodyTemplateForReg": "We thank you for using %s. \r\n\r\nIn order to proceed with your registration, please, verify your e-mail address with an activation code: \r\n%s\r\n\r\nKeep this message until your registration is fully approved by administrators.\r\n",
+    "subjectTemplateForRegVCode": "Verification code for forum on %s",
+    "subjectTemplateForReg": "Registration on %s forum",
+    "bodyTemplateForRegVCode": "We thank you for using %s. \r\n\r\nIn order to proceed with your registration, please, verify your e-mail address with an activation code: \r\n%s\r\n\r\nKeep this message until your registration is fully approved by administrators.\r\n",
+    "bodyTemplateForReg": "We thank you for using %s. \r\n\r\nYour registration was approved.",
     "bodyTemplateForLogIn": "In order to log into the forum, use the following verification code: \r\n%s",
     "bodyTemplateForPwdChange": "In order to change your password, use the following verification code: \r\n%s",
     "bodyTemplateForEmailChange": "In order to change your e-mail address, use the following verification code: \r\n%s"

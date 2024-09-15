@@ -367,7 +367,7 @@ func (srv *Server) isUserModerator(userId uint) (isModerator bool) {
 	return false
 }
 
-func (srv *Server) sendVerificationCodeCommon(params sm.SendMessageParams) (re *jrm1.RpcError) {
+func (srv *Server) sendEmailMessage(params sm.SendMessageParams) (re *jrm1.RpcError) {
 	var result = new(sm.SendMessageResult)
 
 	var err error
@@ -384,29 +384,36 @@ func (srv *Server) sendVerificationCodeCommon(params sm.SendMessageParams) (re *
 }
 
 func (srv *Server) sendVerificationCodeForReg(email string, code string) (re *jrm1.RpcError) {
-	var subject = fmt.Sprintf(srv.settings.MessageSettings.SubjectTemplate, srv.settings.SystemSettings.SiteName)
-	var msg = fmt.Sprintf(srv.settings.MessageSettings.BodyTemplateForReg, srv.settings.SystemSettings.SiteName, code)
+	var subject = fmt.Sprintf(srv.settings.MessageSettings.SubjectTemplateForRegVCode, srv.settings.SystemSettings.SiteName)
+	var msg = fmt.Sprintf(srv.settings.MessageSettings.BodyTemplateForRegVCode, srv.settings.SystemSettings.SiteName, code)
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
-	return srv.sendVerificationCodeCommon(params)
+	return srv.sendEmailMessage(params)
 }
 
 func (srv *Server) sendVerificationCodeForLogIn(email string, code string) (re *jrm1.RpcError) {
-	var subject = fmt.Sprintf(srv.settings.MessageSettings.SubjectTemplate, srv.settings.SystemSettings.SiteName)
+	var subject = fmt.Sprintf(srv.settings.MessageSettings.SubjectTemplateForRegVCode, srv.settings.SystemSettings.SiteName)
 	var msg = fmt.Sprintf(srv.settings.MessageSettings.BodyTemplateForLogIn, code)
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
-	return srv.sendVerificationCodeCommon(params)
+	return srv.sendEmailMessage(params)
 }
 
 func (srv *Server) sendVerificationCodeForEmailChange(email string, code string) (re *jrm1.RpcError) {
-	var subject = fmt.Sprintf(srv.settings.MessageSettings.SubjectTemplate, srv.settings.SystemSettings.SiteName)
+	var subject = fmt.Sprintf(srv.settings.MessageSettings.SubjectTemplateForRegVCode, srv.settings.SystemSettings.SiteName)
 	var msg = fmt.Sprintf(srv.settings.MessageSettings.BodyTemplateForEmailChange, code)
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
-	return srv.sendVerificationCodeCommon(params)
+	return srv.sendEmailMessage(params)
 }
 
 func (srv *Server) sendVerificationCodeForPwdChange(email string, code string) (re *jrm1.RpcError) {
-	var subject = fmt.Sprintf(srv.settings.MessageSettings.SubjectTemplate, srv.settings.SystemSettings.SiteName)
+	var subject = fmt.Sprintf(srv.settings.MessageSettings.SubjectTemplateForRegVCode, srv.settings.SystemSettings.SiteName)
 	var msg = fmt.Sprintf(srv.settings.MessageSettings.BodyTemplateForPwdChange, code)
 	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
-	return srv.sendVerificationCodeCommon(params)
+	return srv.sendEmailMessage(params)
+}
+
+func (srv *Server) sendGreetingAfterReg(email string) (re *jrm1.RpcError) {
+	var subject = fmt.Sprintf(srv.settings.MessageSettings.SubjectTemplateForReg, srv.settings.SystemSettings.SiteName)
+	var msg = fmt.Sprintf(srv.settings.MessageSettings.BodyTemplateForReg, srv.settings.SystemSettings.SiteName)
+	var params = sm.SendMessageParams{Recipient: email, Subject: subject, Message: msg}
+	return srv.sendEmailMessage(params)
 }

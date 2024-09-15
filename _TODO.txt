@@ -1,1 +1,0 @@
-* Send an e-mail message when a user is registered.

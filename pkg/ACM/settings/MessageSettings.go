@@ -8,7 +8,9 @@ import (
 
 // MessageSettings are settings of e-mail messages.
 type MessageSettings struct {
-	SubjectTemplate            string `json:"subjectTemplate"`
+	SubjectTemplateForRegVCode string `json:"subjectTemplateForRegVCode"`
+	SubjectTemplateForReg      string `json:"subjectTemplateForReg"`
+	BodyTemplateForRegVCode    string `json:"bodyTemplateForRegVCode"`
 	BodyTemplateForReg         string `json:"bodyTemplateForReg"`
 	BodyTemplateForLogIn       string `json:"bodyTemplateForLogIn"`
 	BodyTemplateForPwdChange   string `json:"bodyTemplateForPwdChange"`
@@ -16,7 +18,9 @@ type MessageSettings struct {
 }
 
 func (s MessageSettings) Check() (err error) {
-	if (len(s.SubjectTemplate) == 0) ||
+	if (len(s.SubjectTemplateForRegVCode) == 0) ||
+		(len(s.SubjectTemplateForReg) == 0) ||
+		(len(s.BodyTemplateForRegVCode) == 0) ||
 		(len(s.BodyTemplateForReg) == 0) ||
 		(len(s.BodyTemplateForLogIn) == 0) ||
 		(len(s.BodyTemplateForPwdChange) == 0) ||

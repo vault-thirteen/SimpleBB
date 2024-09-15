@@ -29,6 +29,9 @@ MKDIR "%build_dir%\%sql_dir%"
 MKDIR "%build_dir%\%assets_folder%"
 MKDIR "%build_dir%\%assets_folder%\%frontend_assets_folder%"
 
+:: Show version of Go language.
+go version
+
 :: 1. ACM Module.
 ECHO 1. ACM Module
 

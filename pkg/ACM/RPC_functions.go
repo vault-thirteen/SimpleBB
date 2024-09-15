@@ -223,6 +223,11 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 		return nil, srv.databaseError(err)
 	}
 
+	re = srv.sendGreetingAfterReg(p.Email)
+	if re != nil {
+		return nil, re
+	}
+
 	return &am.RegisterUserResult{NextStep: 0}, nil
 }
 
@@ -256,6 +261,11 @@ func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (r
 	err = srv.dbo.RegisterPreRegUser(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
+	}
+
+	re = srv.sendGreetingAfterReg(p.Email)
+	if re != nil {
+		return nil, re
 	}
 
 	return &am.ApproveAndRegisterUserResult{OK: true}, nil

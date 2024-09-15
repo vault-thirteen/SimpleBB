@@ -409,6 +409,18 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 
 		// Static files for front end.
 		switch req.URL.Path {
+		case srv.frontEnd.ArgonJs.UrlPath:
+			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.ArgonJs)
+			return
+
+		case srv.frontEnd.ArgonWasm.UrlPath:
+			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.ArgonWasm)
+			return
+
+		case srv.frontEnd.BppJs.UrlPath:
+			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.BppJs)
+			return
+
 		case srv.frontEnd.IndexHtmlPage.UrlPath:
 			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.IndexHtmlPage)
 			return
@@ -471,6 +483,21 @@ func (srv *Server) initFrontEndData() (err error) {
 	fep := srv.settings.SystemSettings.FrontEndPath
 
 	srv.frontEnd = &models.FrontEndData{}
+
+	srv.frontEnd.ArgonJs, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_ArgonJs, ch.ContentType_JavaScript, frontendAssetsFolder)
+	if err != nil {
+		return err
+	}
+
+	srv.frontEnd.ArgonWasm, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_ArgonWasm, ch.ContentType_Wasm, frontendAssetsFolder)
+	if err != nil {
+		return err
+	}
+
+	srv.frontEnd.BppJs, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_BppJs, ch.ContentType_JavaScript, frontendAssetsFolder)
+	if err != nil {
+		return err
+	}
 
 	srv.frontEnd.IndexHtmlPage, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_IndexHtmlPage, ch.ContentType_HtmlPage, frontendAssetsFolder)
 	if err != nil {
