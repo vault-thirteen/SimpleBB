@@ -24,7 +24,7 @@
     </table>
     <table class="header1">
         <tr>
-            <td id="header1TitleReg1" class="header1Title">Header 1</td>
+            <td id="header1TitleReg1" class="header1Title"></td>
         </tr>
     </table>
     <table class="header2">
@@ -70,7 +70,7 @@
     </table>
     <table class="header1">
         <tr>
-            <td id="header1TitleReg2" class="header1Title">Header 1</td>
+            <td id="header1TitleReg2" class="header1Title"></td>
         </tr>
     </table>
     <table class="header2">
@@ -114,7 +114,7 @@
     </table>
     <table class="header1">
         <tr>
-            <td id="header1TitleReg3" class="header1Title">Header 1</td>
+            <td id="header1TitleReg3" class="header1Title"></td>
         </tr>
     </table>
     <table class="header2">
@@ -214,7 +214,7 @@
     </table>
     <table class="header1">
         <tr>
-            <td id="header1TitleReg4" class="header1Title">Header 1</td>
+            <td id="header1TitleReg4" class="header1Title"></td>
         </tr>
     </table>
     <table class="header2">
@@ -243,7 +243,7 @@
     </table>
     <table class="header1">
         <tr>
-            <td id="header1TitleLogIn1" class="header1Title">Header 1</td>
+            <td id="header1TitleLogIn1" class="header1Title"></td>
         </tr>
     </table>
     <table class="header2">
@@ -289,7 +289,7 @@
     </table>
     <table class="header1">
         <tr>
-            <td id="header1TitleLogIn2" class="header1Title">Header 1</td>
+            <td id="header1TitleLogIn2" class="header1Title"></td>
         </tr>
     </table>
     <table class="header2">
@@ -350,7 +350,7 @@
     </table>
     <table class="header1">
         <tr>
-            <td id="header1TitleLogIn3" class="header1Title">Header 1</td>
+            <td id="header1TitleLogIn3" class="header1Title"></td>
         </tr>
     </table>
     <table class="header2">
@@ -396,7 +396,7 @@
     </table>
     <table class="header1">
         <tr>
-            <td id="header1TitleLogIn4" class="header1Title">Header 1</td>
+            <td id="header1TitleLogIn4" class="header1Title"></td>
         </tr>
     </table>
     <table class="header2">
@@ -423,7 +423,7 @@
     </table>
     <table class="header1">
         <tr>
-            <td id="header1TitleLogOut1" class="header1Title">Header 1</td>
+            <td id="header1TitleLogOut1" class="header1Title"></td>
         </tr>
     </table>
     <table class="header2">
@@ -460,7 +460,7 @@
     </table>
     <table class="header1">
         <tr>
-            <td id="header1TitleLogOut2" class="header1Title">Header 1</td>
+            <td id="header1TitleLogOut2" class="header1Title"></td>
         </tr>
     </table>
     <table class="header2">
@@ -479,5 +479,155 @@
         </tr>
     </table>
 </div>
+<div id="divChangeEmail1" class="divChangeEmail">
+    <table class="vs1">
+        <tr>
+            <td></td>
+        </tr>
+    </table>
+    <table class="header1">
+        <tr>
+            <td id="header1TitleChangeEmail1" class="header1Title"></td>
+        </tr>
+    </table>
+    <table class="header2">
+        <tr>
+            <td id="header2TextChangeEmail1" class="header2Text">To change your e-mail address, fill the form.</td>
+        </tr>
+    </table>
+    <table id="formHolderChangeEmail1" class="formHolder">
+        <tr>
+            <td class="col1">New E-mail Address</td>
+            <td>
+                <form class="f9"><input id="f9i" type="text" name="newEmail" autocomplete="off"/></form>
+            </td>
+            <td class="col3"></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <form>
+                    <input type="button" value="Change E-mail Address" class="submit"
+                           onclick="onChangeEmail1Submit(this)" autocomplete="off"/>
+                </form>
+            </td>
+        </tr>
+    </table>
+    <table class="header3">
+        <tr>
+            <td id="header3TextChangeEmail1" class="header3Text"></td>
+        </tr>
+    </table>
+    <table class="header4">
+        <tr>
+            <td id="header4TextChangeEmail1" class="header4Text"></td>
+        </tr>
+    </table>
+</div>
+<div id="divChangeEmail2" class="divChangeEmail">
+    <table class="vs1">
+        <tr>
+            <td></td>
+        </tr>
+    </table>
+    <table class="header1">
+        <tr>
+            <td id="header1TitleChangeEmail2" class="header1Title"></td>
+        </tr>
+    </table>
+    <table class="header2">
+        <tr>
+            <td id="header2TextChangeEmail2" class="header2Text">To proceed, fill the form.</td>
+        </tr>
+    </table>
+    <table id="formHolderChangeEmail2" class="formHolder">
+        <tr>
+            <td class="col1">Password</td>
+            <td>
+                <form class="f10"><input id="f10i" type="password" name="pwd" autocomplete="off"/></form>
+            </td>
+            <td class="col3"></td>
+        </tr>
+        <tr id="formHolderChangeEmail2CaptchaImage">
+            <td class="col1">Captcha</td>
+            <td>
+                <img id="f11ii" class="f11ii" alt="Captcha image"/>
+            </td>
+            <td class="col3"></td>
+        </tr>
+        <tr id="formHolderChangeEmail2CaptchaAnswer">
+            <td class="col1">Answer</td>
+            <td>
+                <form class="f11">
+                    <input id="f11i" type="text" name="captcha" placeholder="How many circles do you see ?"
+                           autocomplete="off"/>
+                </form>
+            </td>
+            <td class="col3"></td>
+        </tr>
+        <tr>
+            <td class="col1">Verification Code Old</td>
+            <td>
+                <form class="f12"><input id="f12i" type="password" name="vcodeOld" autocomplete="off"/></form>
+            </td>
+            <td class="col3"></td>
+        </tr>
+        <tr>
+            <td class="col1">Verification Code New</td>
+            <td>
+                <form class="f13"><input id="f13i" type="password" name="vcodeNew" autocomplete="off"/></form>
+            </td>
+            <td class="col3"></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <form>
+                    <input type="button" value="Change E-mail Address" class="submit"
+                           onclick="onChangeEmail2Submit(this)" autocomplete="off"/>
+                </form>
+            </td>
+        </tr>
+    </table>
+    <table class="header3">
+        <tr>
+            <td id="header3TextChangeEmail2" class="header3Text"></td>
+        </tr>
+    </table>
+    <table class="header4">
+        <tr>
+            <td id="header4TextChangeEmail2" class="header4Text"></td>
+        </tr>
+    </table>
+</div>
+<div id="divChangeEmail3" class="divChangeEmail">
+    <table class="vs1">
+        <tr>
+            <td></td>
+        </tr>
+    </table>
+    <table class="header1">
+        <tr>
+            <td id="header1TitleChangeEmail3" class="header1Title"></td>
+        </tr>
+    </table>
+    <table class="header2">
+        <tr>
+            <td id="header2TextChangeEmail3" class="header2Text">You have successfully changed your e-mail address.
+            </td>
+        </tr>
+    </table>
+    <table class="header3">
+        <tr>
+            <td id="header3TextChangeEmail3" class="header3Text">Your account have been logged out of the system for
+                security reasons. Visit the <a href="/">home page</a> to log in.
+            </td>
+        </tr>
+    </table>
+    <table class="header4">
+        <tr>
+            <td id="header4TextChangeEmail3" class="header4Text"></td>
+        </tr>
+    </table>
+</div>
 </body>
 </html>
+<!-- TODO: changePwd -->

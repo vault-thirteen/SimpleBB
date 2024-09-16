@@ -1,3 +1,14 @@
+// Path to initial settings for a loader script.
+settingsPath = "settings.json";
+
+settingsRootPath = "/";
+
+// Various other settings.
+redirectDelay = 5;
+
+// Longevity of cached settings. In seconds.
+settingsExpirationDuration = 60;
+
 // Timestamps.
 varnamePageFirstLoadTime = "pageFirstLoadTime";
 varnamePageCurrentLoadTime = "pageCurrentLoadTime";
@@ -25,6 +36,10 @@ varnameLogInRequestId = "logInRequestId";
 varnameLogInAuthDataBytes = "logInAuthDataBytes";
 varnameLogInIsCaptchaNeeded = "logInIsCaptchaNeeded";
 varnameLogInCaptchaId = "logInCaptchaId";
+varnameChangeEmailRequestId = "changeEmailRequestId";
+varnameChangeEmailAuthDataBytes = "changeEmailAuthDataBytes";
+varnameChangeEmailIsCaptchaNeeded = "changeEmailIsCaptchaNeeded";
+varnameChangeEmailCaptchaId = "changeEmailCaptchaId";
 
 // Pages.
 qpRegistrationStep1 = "?reg1"
@@ -37,6 +52,9 @@ qpLogInStep3 = "?login3"
 qpLogInStep4 = "?login4"
 qpLogOutStep1 = "?logout1"
 qpLogOutStep2 = "?logout2"
+qpChangeEmailStep1 = "?changeEmail1";
+qpChangeEmailStep2 = "?changeEmail2";
+qpChangeEmailStep3 = "?changeEmail3";
 
 // Form Input Elements.
 fiid1 = "f1i";
@@ -49,6 +67,12 @@ fiid6 = "f6i";
 fiid7 = "f7i";
 fiid7_image = "f7ii";
 fiid8 = "f8i";
+fiid9 = "f9i";
+fiid10 = "f10i";
+fiid11 = "f11i";
+fiid11_image = "f11ii";
+fiid12 = "f12i";
+fiid13 = "f13i";
 
 // Errors.
 errNextStepUnknown = "unknown next step";
@@ -68,17 +92,7 @@ msgGenericErrorPrefix = "Error: ";
 actionName_registerUser = "registerUser";
 actionName_logUserIn = "logUserIn";
 actionName_logUserOut = "logUserOut";
-
-// Longevity of cached settings. In seconds.
-settingsExpirationDuration = 60;
-
-// Various other settings.
-redirectDelay = 7;
-
-// Path to initial settings for a loader script.
-settingsPath = "settings.json";
-
-settingsRootPath = "/";
+actionName_changeEmail = "changeEmail";
 
 // Settings class.
 class Settings {
@@ -158,6 +172,25 @@ class Parameters_LogIn3 {
     }
 }
 
+class Parameters_ChangeEmail1 {
+    constructor(stepN, newEmail) {
+        this.StepN = stepN;
+        this.NewEmail = newEmail;
+    }
+}
+
+class Parameters_ChangeEmail2 {
+    constructor(stepN, requestId, authChallengeResponse, verificationCodeOld,
+                verificationCodeNew, captchaAnswer) {
+        this.StepN = stepN;
+        this.RequestId = requestId;
+        this.AuthChallengeResponse = authChallengeResponse;
+        this.VerificationCodeOld = verificationCodeOld;
+        this.VerificationCodeNew = verificationCodeNew;
+        this.CaptchaAnswer = captchaAnswer;
+    }
+}
+
 class ApiResponse {
     constructor(isOk, jsonObject, statusCode, errorText) {
         this.IsOk = isOk;
@@ -219,6 +252,18 @@ async function loadPage() {
 
         case qpLogOutStep2:
             showLogOut2Form();
+            return;
+
+        case qpChangeEmailStep1:
+            showChangeEmail1Form();
+            return;
+
+        case qpChangeEmailStep2:
+            showChangeEmail2Form();
+            return;
+
+        case qpChangeEmailStep3:
+            showChangeEmail3Form();
             return;
     }
 
@@ -458,6 +503,41 @@ function showLogOut1Form() {
 function showLogOut2Form() {
     showBlock("divLogOut2");
     showHeader1("header1TitleLogOut2");
+}
+
+function showChangeEmail1Form() {
+    showBlock("divChangeEmail1");
+    showHeader1("header1TitleChangeEmail1");
+}
+
+function showChangeEmail2Form() {
+    showBlock("divChangeEmail2");
+    showHeader1("header1TitleChangeEmail2");
+
+    // Captcha (optional).
+    let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varnameChangeEmailIsCaptchaNeeded));
+    let captchaId = sessionStorage.getItem(varnameChangeEmailCaptchaId);
+    let cptImageTr = document.getElementById("formHolderChangeEmail2CaptchaImage");
+    let cptImage = document.getElementById(fiid11_image);
+    let cptAnswerTr = document.getElementById("formHolderChangeEmail2CaptchaAnswer");
+    let cptAnswer = document.getElementById(fiid11);
+    if (isCaptchaNeeded) {
+        cptImageTr.style.display = "table-row";
+        cptAnswerTr.style.display = "table-row";
+        if (captchaId.length > 0) {
+            cptImage.src = makeCaptchaImageUrl(captchaId);
+        }
+        cptAnswer.enabled = true;
+    } else {
+        cptImageTr.style.display = "none";
+        cptAnswerTr.style.display = "none";
+        cptAnswer.enabled = false;
+    }
+}
+
+function showChangeEmail3Form() {
+    showBlock("divChangeEmail3");
+    showHeader1("header1TitleChangeEmail3");
 }
 
 async function onReg1Submit(btn) {
@@ -748,6 +828,111 @@ async function onLogOut1Submit(btn) {
     disableButton(btn);
     h3Field.innerHTML = msgRedirecting;
     await redirectToRelativePath(true, qpLogOutStep2);
+}
+
+async function onChangeEmail1Submit(btn) {
+    console.debug("onChangeEmail1Submit");
+
+    // Send the request.
+    let h3Field = document.getElementById("header3TextChangeEmail1");
+    let errField = document.getElementById("header4TextChangeEmail1");
+    let newEmail = document.getElementById(fiid9).value;
+    let params = new Parameters_ChangeEmail1(1, newEmail);
+    let reqData = new ApiRequest(actionName_changeEmail, params);
+    let resp = await sendApiRequest(reqData);
+    console.debug("resp.JsonObject:", resp.JsonObject);
+    if (!resp.IsOk) {
+        errField.innerHTML = composeErrorText(resp.ErrorText);
+        // Redirect to the main page on error.
+        disableButton(btn);
+        h3Field.innerHTML = msgRedirecting;
+        await redirectToMainPage(true);
+        return;
+    }
+    let nextStep = resp.JsonObject.result.nextStep;
+    if (nextStep !== 2) {
+        errField.innerHTML = composeErrorText(errNextStepUnknown);
+        return;
+    }
+    errField.innerHTML = "";
+
+    // Save some non-sensitive input data into browser for the next page.
+    let requestId = resp.JsonObject.result.requestId;
+    sessionStorage.setItem(varnameChangeEmailRequestId, requestId);
+    let authDataBytes = resp.JsonObject.result.authDataBytes;
+    sessionStorage.setItem(varnameChangeEmailAuthDataBytes, authDataBytes);
+    let isCaptchaNeeded = resp.JsonObject.result.isCaptchaNeeded;
+    sessionStorage.setItem(varnameChangeEmailIsCaptchaNeeded, isCaptchaNeeded.toString());
+    let captchaId = resp.JsonObject.result.captchaId;
+    sessionStorage.setItem(varnameChangeEmailCaptchaId, captchaId);
+
+    // Redirect to next step.
+    disableButton(btn);
+    h3Field.innerHTML = msgRedirecting;
+    await redirectToRelativePath(true, qpChangeEmailStep2);
+}
+
+async function onChangeEmail2Submit(btn) {
+    console.debug("onChangeEmail2Submit");
+
+    let h3Field = document.getElementById("header3TextChangeEmail2");
+    let errField = document.getElementById("header4TextChangeEmail2");
+
+    // Captcha (optional).
+    let captchaAnswer = document.getElementById(fiid11).value;
+
+    // Secret.
+    let authDataBytes = sessionStorage.getItem(varnameChangeEmailAuthDataBytes);
+    let saltBA = base64ToByteArray(authDataBytes);
+    let pwd = document.getElementById(fiid10).value;
+    if (!isPasswordAllowed(pwd)) {
+        errField.innerHTML = composeErrorText(errPasswordNotValid);
+        return;
+    }
+    let keyBA = makeHashKey(pwd, saltBA);
+    let authChallengeResponse = byteArrayToBase64(keyBA);
+
+    // Send the request.
+    let requestId = sessionStorage.getItem(varnameChangeEmailRequestId);
+    let verificationCodeOld = document.getElementById(fiid12).value;
+    let verificationCodeNew = document.getElementById(fiid13).value;
+    let params = new Parameters_ChangeEmail2(2, requestId, authChallengeResponse, verificationCodeOld, verificationCodeNew, captchaAnswer);
+    let reqData = new ApiRequest(actionName_changeEmail, params);
+    let resp = await sendApiRequest(reqData);
+    console.debug("resp.JsonObject:", resp.JsonObject);
+    if (!resp.IsOk) {
+        errField.innerHTML = composeErrorText(resp.ErrorText);
+        // Redirect to the main page on error.
+        disableButton(btn);
+        h3Field.innerHTML = msgRedirecting;
+        await redirectToMainPage(true);
+        return;
+    }
+    let nextStep = resp.JsonObject.result.nextStep;
+    if (nextStep !== 0) {
+        errField.innerHTML = composeErrorText(errNextStepUnknown);
+        return;
+    }
+    let ok = resp.JsonObject.result.ok;
+    if (!ok) {
+        errField.innerHTML = composeErrorText(errNotOk);
+        return;
+    }
+    errField.innerHTML = "";
+
+    // Clear saved input data from browser.
+    sessionStorage.removeItem(varnameChangeEmailRequestId);
+    sessionStorage.removeItem(varnameChangeEmailAuthDataBytes);
+    sessionStorage.removeItem(varnameChangeEmailIsCaptchaNeeded);
+    sessionStorage.removeItem(varnameChangeEmailCaptchaId);
+
+    // Save the 'log' flag.
+    logOut();
+
+    // Redirect to next step.
+    disableButton(btn);
+    h3Field.innerHTML = msgRedirecting;
+    await redirectToRelativePath(true, qpChangeEmailStep3);
 }
 
 async function sleep(ms) {

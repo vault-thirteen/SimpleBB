@@ -74,12 +74,14 @@ func (srv *Server) handlePublicSettings(rw http.ResponseWriter, req *http.Reques
 		srv.respondBadRequest(rw)
 		return
 	}
-
 	if !ok {
 		srv.respondNotAcceptable(rw)
 		return
 	}
 
+	if srv.settings.SystemSettings.IsDeveloperMode {
+		rw.Header().Set(header.HttpHeaderAccessControlAllowOrigin, srv.settings.SystemSettings.DevModeHttpHeaderAccessControlAllowOrigin)
+	}
 	rw.Header().Set(header.HttpHeaderContentType, ch.ContentType_Json)
 
 	_, err = rw.Write(srv.publicSettingsFileData)
@@ -195,6 +197,10 @@ func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request) {
 	case srv.frontEnd.CssStyles.UrlPath:
 		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.CssStyles)
 		return
+
+	default:
+		srv.respondNotFound(rw)
+		return
 	}
 }
 
@@ -204,6 +210,9 @@ func (srv *Server) handleFrontEndStaticFile(rw http.ResponseWriter, req *http.Re
 		return
 	}
 
+	if srv.settings.SystemSettings.IsDeveloperMode {
+		rw.Header().Set(header.HttpHeaderAccessControlAllowOrigin, srv.settings.SystemSettings.DevModeHttpHeaderAccessControlAllowOrigin)
+	}
 	rw.Header().Set(header.HttpHeaderContentType, fedf.ContentType)
 
 	_, err := rw.Write(fedf.CachedFile)

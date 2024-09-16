@@ -96,7 +96,12 @@ table.formHolder {
 .f5 input,
 .f6 input,
 .f7 input,
-.f8 input {
+.f8 input,
+.f9 input,
+.f10 input,
+.f11 input,
+.f12 input,
+.f13 input {
     width: 240px;
     font-family: "DejaVu Sans Mono", monospace;
     font-size: 15px;
@@ -107,7 +112,10 @@ table.formHolder {
 .f2 input,
 .f4 input,
 .f6 input,
-.f8 input {
+.f8 input,
+.f10 input,
+.f12 input,
+.f13 input {
     letter-spacing: 2px;
 }
 
@@ -143,7 +151,8 @@ table.formHolder {
 
 div.divReg,
 div.divLogIn,
-div.divLogOut {
+div.divLogOut,
+div.divChangeEmail {
     height: auto;
     display: none;
 }
