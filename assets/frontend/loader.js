@@ -40,6 +40,10 @@ varnameChangeEmailRequestId = "changeEmailRequestId";
 varnameChangeEmailAuthDataBytes = "changeEmailAuthDataBytes";
 varnameChangeEmailIsCaptchaNeeded = "changeEmailIsCaptchaNeeded";
 varnameChangeEmailCaptchaId = "changeEmailCaptchaId";
+varnameChangePwdRequestId = "changePwdRequestId";
+varnameChangePwdAuthDataBytes = "changePwdAuthDataBytes";
+varnameChangePwdIsCaptchaNeeded = "changePwdIsCaptchaNeeded";
+varnameChangePwdCaptchaId = "changePwdCaptchaId";
 
 // Pages.
 qpRegistrationStep1 = "?reg1"
@@ -55,6 +59,9 @@ qpLogOutStep2 = "?logout2"
 qpChangeEmailStep1 = "?changeEmail1";
 qpChangeEmailStep2 = "?changeEmail2";
 qpChangeEmailStep3 = "?changeEmail3";
+qpChangePwdStep1 = "?changePwd1";
+qpChangePwdStep2 = "?changePwd2";
+qpChangePwdStep3 = "?changePwd3";
 
 // Form Input Elements.
 fiid1 = "f1i";
@@ -73,6 +80,11 @@ fiid11 = "f11i";
 fiid11_image = "f11ii";
 fiid12 = "f12i";
 fiid13 = "f13i";
+fiid14 = "f14i";
+fiid15 = "f15i";
+fiid16 = "f16i";
+fiid16_image = "f16ii";
+fiid17 = "f17i";
 
 // Errors.
 errNextStepUnknown = "unknown next step";
@@ -93,6 +105,7 @@ actionName_registerUser = "registerUser";
 actionName_logUserIn = "logUserIn";
 actionName_logUserOut = "logUserOut";
 actionName_changeEmail = "changeEmail";
+actionName_changePwd = "changePassword";
 
 // Settings class.
 class Settings {
@@ -191,6 +204,23 @@ class Parameters_ChangeEmail2 {
     }
 }
 
+class Parameters_ChangePwd1 {
+    constructor(stepN, newPassword) {
+        this.StepN = stepN;
+        this.NewPassword = newPassword;
+    }
+}
+
+class Parameters_ChangePwd2 {
+    constructor(stepN, requestId, authChallengeResponse, vcode, captchaAnswer) {
+        this.StepN = stepN;
+        this.RequestId = requestId;
+        this.AuthChallengeResponse = authChallengeResponse;
+        this.VerificationCode = vcode;
+        this.CaptchaAnswer = captchaAnswer;
+    }
+}
+
 class ApiResponse {
     constructor(isOk, jsonObject, statusCode, errorText) {
         this.IsOk = isOk;
@@ -264,6 +294,18 @@ async function loadPage() {
 
         case qpChangeEmailStep3:
             showChangeEmail3Form();
+            return;
+
+        case qpChangePwdStep1:
+            showChangePwd1Form();
+            return;
+
+        case qpChangePwdStep2:
+            showChangePwd2Form();
+            return;
+
+        case qpChangePwdStep3:
+            showChangePwd3Form();
             return;
     }
 
@@ -471,18 +513,7 @@ function showLogIn2Form() {
     let cptImage = document.getElementById(fiid7_image);
     let cptAnswerTr = document.getElementById("formHolderLogIn2CaptchaAnswer");
     let cptAnswer = document.getElementById(fiid7);
-    if (isCaptchaNeeded) {
-        cptImageTr.style.display = "table-row";
-        cptAnswerTr.style.display = "table-row";
-        if (captchaId.length > 0) {
-            cptImage.src = makeCaptchaImageUrl(captchaId);
-        }
-        cptAnswer.enabled = true;
-    } else {
-        cptImageTr.style.display = "none";
-        cptAnswerTr.style.display = "none";
-        cptAnswer.enabled = false;
-    }
+    setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer);
 }
 
 function showLogIn3Form() {
@@ -521,6 +552,39 @@ function showChangeEmail2Form() {
     let cptImage = document.getElementById(fiid11_image);
     let cptAnswerTr = document.getElementById("formHolderChangeEmail2CaptchaAnswer");
     let cptAnswer = document.getElementById(fiid11);
+    setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer);
+}
+
+function showChangeEmail3Form() {
+    showBlock("divChangeEmail3");
+    showHeader1("header1TitleChangeEmail3");
+}
+
+function showChangePwd1Form() {
+    showBlock("divChangePwd1");
+    showHeader1("header1TitleChangePwd1");
+}
+
+function showChangePwd2Form() {
+    showBlock("divChangePwd2");
+    showHeader1("header1TitleChangePwd2");
+
+    // Captcha (optional).
+    let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varnameChangePwdIsCaptchaNeeded));
+    let captchaId = sessionStorage.getItem(varnameChangePwdCaptchaId);
+    let cptImageTr = document.getElementById("formHolderChangePwd2CaptchaImage");
+    let cptImage = document.getElementById(fiid16_image);
+    let cptAnswerTr = document.getElementById("formHolderChangePwd2CaptchaAnswer");
+    let cptAnswer = document.getElementById(fiid16);
+    setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer);
+}
+
+function showChangePwd3Form() {
+    showBlock("divChangePwd3");
+    showHeader1("header1TitleChangePwd3");
+}
+
+function setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer) {
     if (isCaptchaNeeded) {
         cptImageTr.style.display = "table-row";
         cptAnswerTr.style.display = "table-row";
@@ -533,11 +597,6 @@ function showChangeEmail2Form() {
         cptAnswerTr.style.display = "none";
         cptAnswer.enabled = false;
     }
-}
-
-function showChangeEmail3Form() {
-    showBlock("divChangeEmail3");
-    showHeader1("header1TitleChangeEmail3");
 }
 
 async function onReg1Submit(btn) {
@@ -933,6 +992,110 @@ async function onChangeEmail2Submit(btn) {
     disableButton(btn);
     h3Field.innerHTML = msgRedirecting;
     await redirectToRelativePath(true, qpChangeEmailStep3);
+}
+
+async function onChangePwd1Submit(btn) {
+    console.debug("onChangePwd1Submit");
+
+    // Send the request.
+    let h3Field = document.getElementById("header3TextChangePwd1");
+    let errField = document.getElementById("header4TextChangePwd1");
+    let newPwd = document.getElementById(fiid14).value;
+    let params = new Parameters_ChangePwd1(1, newPwd);
+    let reqData = new ApiRequest(actionName_changePwd, params);
+    let resp = await sendApiRequest(reqData);
+    console.debug("resp.JsonObject:", resp.JsonObject);
+    if (!resp.IsOk) {
+        errField.innerHTML = composeErrorText(resp.ErrorText);
+        // Redirect to the main page on error.
+        disableButton(btn);
+        h3Field.innerHTML = msgRedirecting;
+        await redirectToMainPage(true);
+        return;
+    }
+    let nextStep = resp.JsonObject.result.nextStep;
+    if (nextStep !== 2) {
+        errField.innerHTML = composeErrorText(errNextStepUnknown);
+        return;
+    }
+    errField.innerHTML = "";
+
+    // Save some non-sensitive input data into browser for the next page.
+    let requestId = resp.JsonObject.result.requestId;
+    sessionStorage.setItem(varnameChangePwdRequestId, requestId);
+    let authDataBytes = resp.JsonObject.result.authDataBytes;
+    sessionStorage.setItem(varnameChangePwdAuthDataBytes, authDataBytes);
+    let isCaptchaNeeded = resp.JsonObject.result.isCaptchaNeeded;
+    sessionStorage.setItem(varnameChangePwdIsCaptchaNeeded, isCaptchaNeeded.toString());
+    let captchaId = resp.JsonObject.result.captchaId;
+    sessionStorage.setItem(varnameChangePwdCaptchaId, captchaId);
+
+    // Redirect to next step.
+    disableButton(btn);
+    h3Field.innerHTML = msgRedirecting;
+    await redirectToRelativePath(true, qpChangePwdStep2);
+}
+
+async function onChangePwd2Submit(btn) {
+    console.debug("onChangePwd2Submit");
+
+    let h3Field = document.getElementById("header3TextChangePwd2");
+    let errField = document.getElementById("header4TextChangePwd2");
+
+    // Captcha (optional).
+    let captchaAnswer = document.getElementById(fiid16).value;
+
+    // Secret.
+    let authDataBytes = sessionStorage.getItem(varnameChangePwdAuthDataBytes);
+    let saltBA = base64ToByteArray(authDataBytes);
+    let pwd = document.getElementById(fiid15).value;
+    if (!isPasswordAllowed(pwd)) {
+        errField.innerHTML = composeErrorText(errPasswordNotValid);
+        return;
+    }
+    let keyBA = makeHashKey(pwd, saltBA);
+    let authChallengeResponse = byteArrayToBase64(keyBA);
+
+    // Send the request.
+    let requestId = sessionStorage.getItem(varnameChangePwdRequestId);
+    let vcode = document.getElementById(fiid17).value;
+    let params = new Parameters_ChangePwd2(2, requestId, authChallengeResponse, vcode, captchaAnswer);
+    let reqData = new ApiRequest(actionName_changePwd, params);
+    let resp = await sendApiRequest(reqData);
+    console.debug("resp.JsonObject:", resp.JsonObject);
+    if (!resp.IsOk) {
+        errField.innerHTML = composeErrorText(resp.ErrorText);
+        // Redirect to the main page on error.
+        disableButton(btn);
+        h3Field.innerHTML = msgRedirecting;
+        await redirectToMainPage(true);
+        return;
+    }
+    let nextStep = resp.JsonObject.result.nextStep;
+    if (nextStep !== 0) {
+        errField.innerHTML = composeErrorText(errNextStepUnknown);
+        return;
+    }
+    let ok = resp.JsonObject.result.ok;
+    if (!ok) {
+        errField.innerHTML = composeErrorText(errNotOk);
+        return;
+    }
+    errField.innerHTML = "";
+
+    // Clear saved input data from browser.
+    sessionStorage.removeItem(varnameChangePwdRequestId);
+    sessionStorage.removeItem(varnameChangePwdAuthDataBytes);
+    sessionStorage.removeItem(varnameChangePwdIsCaptchaNeeded);
+    sessionStorage.removeItem(varnameChangePwdCaptchaId);
+
+    // Save the 'log' flag.
+    logOut();
+
+    // Redirect to next step.
+    disableButton(btn);
+    h3Field.innerHTML = msgRedirecting;
+    await redirectToRelativePath(true, qpChangePwdStep3);
 }
 
 async function sleep(ms) {
