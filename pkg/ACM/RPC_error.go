@@ -131,5 +131,6 @@ func GetMapOfHttpStatusCodesByRpcErrorCodes() map[int]int {
 		RpcErrorCode_VerificationCodeGenerator:          http.StatusInternalServerError,
 		RpcErrorCode_VerificationCodeIsNotSet:           http.StatusBadRequest,
 		RpcErrorCode_VerificationCodeIsWrong:            http.StatusForbidden,
+		RpcErrorCode_PageIsNotSet:                       http.StatusBadRequest,
 	}
 }
