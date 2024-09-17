@@ -276,6 +276,11 @@ func (srv *Server) checkForAdministrator(rw http.ResponseWriter, req *http.Reque
 		return false, err
 	}
 
+	if token == nil {
+		srv.respondForbidden(rw)
+		return
+	}
+
 	// Make a 'GetSelfRoles' RPC request to verify user's roles.
 	action := ApiFunctionName_GetSelfRoles
 	var params json.RawMessage = []byte("{}")
