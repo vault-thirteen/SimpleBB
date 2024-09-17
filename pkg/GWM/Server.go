@@ -391,9 +391,16 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 
 	isFrontEndEnabled := srv.settings.SystemSettings.IsFrontEndEnabled
 
-	if (req.URL.Path == gs.FrontEndRoot) && (isFrontEndEnabled) { // <- /
-		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.IndexHtmlPage)
-		return
+	if isFrontEndEnabled {
+		switch req.URL.Path {
+		case gs.FrontEndRoot: // <- /
+			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.IndexHtmlPage)
+			return
+
+		case srv.frontEnd.FavIcon.UrlPath: // <- /favicon.png
+			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.FavIcon)
+			return
+		}
 	}
 
 	var err error
@@ -423,7 +430,11 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 			srv.respondNotFound(rw)
 			return
 		}
-		srv.handleFrontEnd(rw, req)
+		srv.handleFrontEnd(rw, req, clientIPA)
+		return
+
+	case gs.FrontEndStaticFileName_AdminHtmlPage: // <- /admin.html
+		srv.handleAdminFrontEnd(rw, req, clientIPA)
 		return
 
 	default:
@@ -472,6 +483,16 @@ func (srv *Server) initFrontEndData() (err error) {
 
 	srv.frontEnd = &models.FrontEndData{}
 
+	srv.frontEnd.AdminHtmlPage, err = models.NewFrontEndFileData(gs.FrontEndRoot, gs.FrontEndStaticFileName_AdminHtmlPage, ch.ContentType_HtmlPage, frontendAssetsFolder)
+	if err != nil {
+		return err
+	}
+
+	srv.frontEnd.AdminJs, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_AdminJs, ch.ContentType_JavaScript, frontendAssetsFolder)
+	if err != nil {
+		return err
+	}
+
 	srv.frontEnd.ArgonJs, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_ArgonJs, ch.ContentType_JavaScript, frontendAssetsFolder)
 	if err != nil {
 		return err
@@ -487,17 +508,22 @@ func (srv *Server) initFrontEndData() (err error) {
 		return err
 	}
 
+	srv.frontEnd.CssStyles, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_CssStyles, ch.ContentType_CssStyle, frontendAssetsFolder)
+	if err != nil {
+		return err
+	}
+
+	srv.frontEnd.FavIcon, err = models.NewFrontEndFileData(gs.FrontEndRoot, gs.FrontEndStaticFileName_FavIcon, ch.ContentType_PNG, frontendAssetsFolder)
+	if err != nil {
+		return err
+	}
+
 	srv.frontEnd.IndexHtmlPage, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_IndexHtmlPage, ch.ContentType_HtmlPage, frontendAssetsFolder)
 	if err != nil {
 		return err
 	}
 
 	srv.frontEnd.LoaderScript, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_LoaderScript, ch.ContentType_JavaScript, frontendAssetsFolder)
-	if err != nil {
-		return err
-	}
-
-	srv.frontEnd.CssStyles, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_CssStyles, ch.ContentType_CssStyle, frontendAssetsFolder)
 	if err != nil {
 		return err
 	}

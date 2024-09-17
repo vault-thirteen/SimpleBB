@@ -2,10 +2,12 @@ package gwm
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
 
+	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
 	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
@@ -171,7 +173,7 @@ func (srv *Server) handleCaptcha(rw http.ResponseWriter, req *http.Request) {
 }
 
 // handleFrontEnd serves static files for the front end part.
-func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request) {
+func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request, clientIPA string) {
 	// While the number of cases is less than 10..20, the "switch" branching
 	// works faster than other methods.
 	switch req.URL.Path {
@@ -199,6 +201,49 @@ func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request) {
 		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.CssStyles)
 		return
 
+	case srv.frontEnd.AdminJs.UrlPath:
+		srv.handleAdminFrontEnd(rw, req, clientIPA)
+		return
+
+	default:
+		srv.respondNotFound(rw)
+		return
+	}
+}
+
+// handleAdminFrontEnd serves static files for the front end part for
+// administrator users.
+func (srv *Server) handleAdminFrontEnd(rw http.ResponseWriter, req *http.Request, clientIPA string) {
+	// Step 1. Filter for fake URL.
+	switch req.URL.Path {
+	case srv.frontEnd.AdminHtmlPage.UrlPath: // <- /admin.html
+	case srv.frontEnd.AdminJs.UrlPath: // <- /fe/admin.js
+	default:
+		srv.respondNotFound(rw)
+		return
+	}
+
+	// Step 2. Filter for administrator role.
+	ok, err := srv.checkForAdministrator(rw, req, clientIPA)
+	if err != nil {
+		srv.processInternalServerError(rw, err)
+		return
+	}
+	if !ok {
+		srv.respondForbidden(rw)
+		return
+	}
+
+	// Step 3. Page selection.
+	switch req.URL.Path {
+	case srv.frontEnd.AdminHtmlPage.UrlPath: // <- /admin.html
+		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.AdminHtmlPage)
+		return
+
+	case srv.frontEnd.AdminJs.UrlPath: // <- /fe/admin.js
+		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.AdminJs)
+		return
+
 	default:
 		srv.respondNotFound(rw)
 		return
@@ -221,4 +266,47 @@ func (srv *Server) handleFrontEndStaticFile(rw http.ResponseWriter, req *http.Re
 		log.Println(err.Error())
 		return
 	}
+}
+
+func (srv *Server) checkForAdministrator(rw http.ResponseWriter, req *http.Request, clientIPA string) (ok bool, err error) {
+	var token *string
+	token, err = cm.GetToken(req)
+	if err != nil {
+		srv.respondBadRequest(rw)
+		return false, err
+	}
+
+	// Make a 'GetSelfRoles' RPC request to verify user's roles.
+	action := ApiFunctionName_GetSelfRoles
+	var params json.RawMessage = []byte("{}")
+	var ar = &api.Request{
+		Action:     &action,
+		Parameters: &params,
+		Authorisation: &cmr.Auth{
+			UserIPA: clientIPA,
+			Token:   *token,
+		},
+	}
+
+	var response *api.Response
+	response, err = srv.getSelfRoles(ar)
+	if err != nil {
+		srv.processInternalServerError(rw, err)
+		return false, err
+	}
+
+	var result *am.GetSelfRolesResult
+	result, ok = response.Result.(*am.GetSelfRolesResult)
+	if !ok {
+		err = errors.New(ErrTypeCast)
+		srv.processInternalServerError(rw, err)
+		return false, err
+	}
+
+	if !result.IsAdministrator {
+		srv.respondForbidden(rw)
+		return false, nil
+	}
+
+	return true, nil
 }

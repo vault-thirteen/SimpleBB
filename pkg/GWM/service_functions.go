@@ -540,6 +540,8 @@ func (srv *Server) SetUserRoleReader(ar *api.Request, _ *http.Request, hrw http.
 	return
 }
 
+// GetSelfRoles is a normal version of 'GetSelfRoles' RPC request for public
+// usage. For internal purposes, use its internal variant – 'getSelfRoles'.
 func (srv *Server) GetSelfRoles(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
 	var params am.GetSelfRolesParams
@@ -572,6 +574,37 @@ func (srv *Server) GetSelfRoles(ar *api.Request, _ *http.Request, hrw http.Respo
 	}
 	srv.respondWithJsonObject(hrw, response)
 	return
+}
+
+// getSelfRoles is a clone of the 'GetSelfRoles' method, intended for internal
+// usage only.
+func (srv *Server) getSelfRoles(ar *api.Request) (response *api.Response, err error) {
+	var params am.GetSelfRolesParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		return nil, err
+	}
+
+	params.CommonParams = cmr.CommonParams{
+		Auth: ar.Authorisation,
+	}
+
+	var result = new(am.GetSelfRolesResult)
+	var re *jrm1.RpcError
+	re, err = srv.acmServiceClient.MakeRequest(context.Background(), ac.FuncGetSelfRoles, params, result)
+	if err != nil {
+		return nil, err
+	}
+	if re != nil {
+		return nil, re.AsError()
+	}
+
+	result.CommonResult.Clear()
+	response = &api.Response{
+		Action: ar.Action,
+		Result: result,
+	}
+	return response, nil
 }
 
 func (srv *Server) BanUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
