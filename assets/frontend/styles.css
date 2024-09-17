@@ -1,34 +1,34 @@
 html {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    background-color: beige;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	background-color: beige;
 }
 
 body,
 div {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
 }
 
 table {
-    border-collapse: collapse;
-    border-spacing: 0;
-    margin: 0;
-    padding: 0;
+	border-collapse: collapse;
+	border-spacing: 0;
+	margin: 0;
+	padding: 0;
 }
 
 form, input {
-    border: 0;
-    margin: 0;
-    padding: 0;
+	border: 0;
+	margin: 0;
+	padding: 0;
 }
 
 table.vs1 {
-    height: 20px;
+	height: 20px;
 }
 
 table.header1,
@@ -36,57 +36,57 @@ table.header2,
 table.formHolder,
 table.header3,
 table.header4 {
-    margin-left: auto;
-    margin-right: auto;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 td.header1Title,
 td.header2Text,
 td.header3Text,
 td.header4Text {
-    font-family: "DejaVu Sans", serif;
-    text-align: center;
+	font-family: "DejaVu Sans", serif;
+	text-align: center;
 }
 
 td.header1Title {
-    font-size: 24px;
-    padding-bottom: 6px;
+	font-size: 24px;
+	padding-bottom: 6px;
 }
 
 td.header2Text {
-    font-size: 15px;
-    padding-bottom: 4px;
+	font-size: 15px;
+	padding-bottom: 4px;
 }
 
 td.header3Text {
-    font-size: 13px;
-    padding-top: 5px;
-    padding-bottom: 3px;
-    text-align: left;
+	font-size: 13px;
+	padding-top: 5px;
+	padding-bottom: 3px;
+	text-align: left;
 }
 
 td.header4Text {
-    font-size: 15px;
-    padding-top: 5px;
-    padding-bottom: 3px;
-    color: red;
+	font-size: 15px;
+	padding-top: 5px;
+	padding-bottom: 3px;
+	color: red;
 }
 
 table.formHolder {
-    width: 480px;
-    background-color: lightskyblue;
-    border: 1px solid black;
+	width: 480px;
+	background-color: lightskyblue;
+	border: 1px solid black;
 }
 
 .formHolder td.col1 {
-    width: 240px;
-    font-family: "DejaVu Sans Mono", monospace;
-    font-size: 16px;
-    text-align: center;
+	width: 240px;
+	font-family: "DejaVu Sans Mono", monospace;
+	font-size: 16px;
+	text-align: center;
 }
 
 .formHolder td.col3 {
-    width: 20px;
+	width: 20px;
 }
 
 .f1 input,
@@ -106,10 +106,10 @@ table.formHolder {
 .f15 input,
 .f16 input,
 .f17 input {
-    width: 240px;
-    font-family: "DejaVu Sans Mono", monospace;
-    font-size: 15px;
-    letter-spacing: 1px;
+	width: 240px;
+	font-family: "DejaVu Sans Mono", monospace;
+	font-size: 15px;
+	letter-spacing: 1px;
 }
 
 /* pwd */
@@ -123,37 +123,37 @@ table.formHolder {
 .f14 input,
 .f15 input,
 .f17 input {
-    letter-spacing: 2px;
+	letter-spacing: 2px;
 }
 
 .flag_none {
-    width: 100%;
-    height: 100%;
-    background-color: transparent;
+	width: 100%;
+	height: 100%;
+	background-color: transparent;
 }
 
 .flag_error {
-    width: 100%;
-    height: 100%;
-    background-color: red;
+	width: 100%;
+	height: 100%;
+	background-color: red;
 }
 
 .formHolder input.submit {
-    width: 100%;
-    background-color: lightgrey;
-    font-size: 16px;
+	width: 100%;
+	background-color: lightgrey;
+	font-size: 16px;
 }
 
 .formHolder input.submit:hover {
-    width: 100%;
-    background-color: gray;
-    cursor: pointer;
+	width: 100%;
+	background-color: gray;
+	cursor: pointer;
 }
 
 .header3Text a {
-    color: blue;
-    text-decoration: underline;
-    cursor: pointer;
+	color: blue;
+	text-decoration: underline;
+	cursor: pointer;
 }
 
 div.divReg,
@@ -161,10 +161,10 @@ div.divLogIn,
 div.divLogOut,
 div.divChangeEmail,
 div.divChangePwd {
-    height: auto;
-    display: none;
+	height: auto;
+	display: none;
 }
 
 li.hidden {
-    list-style: none;
+	list-style: none;
 }
