@@ -3,6 +3,7 @@ package acm
 import (
 	"database/sql"
 	"fmt"
+	"math"
 	"time"
 
 	bpp "github.com/vault-thirteen/BytePackedPassword"
@@ -858,6 +859,46 @@ func (srv *Server) getListOfLoggedUsers(p *am.GetListOfLoggedUsersParams) (resul
 
 	var err error
 	result.LoggedUserIds, err = srv.dbo.GetListOfLoggedUsers()
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	return result, nil
+}
+
+func (srv *Server) getListOfAllUsers(p *am.GetListOfAllUsersParams) (result *am.GetListOfAllUsersResult, re *jrm1.RpcError) {
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	var thisUserData *am.UserData
+	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !thisUserData.User.IsAdministrator {
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check parameters.
+	if p.Page == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
+	}
+
+	usersCount, err := srv.dbo.CountAllUsers()
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &am.GetListOfAllUsersResult{
+		Page:       p.Page,
+		TotalPages: uint(math.Ceil(float64(usersCount) / float64(srv.settings.SystemSettings.PageSize))),
+		TotalUsers: uint(usersCount),
+	}
+
+	result.UserIds, err = srv.dbo.GetListOfAllUsers(p.Page, srv.settings.SystemSettings.PageSize)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}

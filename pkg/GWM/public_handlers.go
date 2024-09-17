@@ -25,6 +25,7 @@ const (
 	ApiFunctionName_IsUserLoggedIn         = "isUserLoggedIn"
 	ApiFunctionName_ChangePassword         = "changePassword"
 	ApiFunctionName_ChangeEmail            = "changeEmail"
+	ApiFunctionName_GetListOfAllUsers      = "getListOfAllUsers"
 	ApiFunctionName_GetUserRoles           = "getUserRoles"
 	ApiFunctionName_ViewUserParameters     = "viewUserParameters"
 	ApiFunctionName_SetUserRoleAuthor      = "setUserRoleAuthor"

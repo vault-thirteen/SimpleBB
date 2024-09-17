@@ -150,6 +150,15 @@ func (dbo *DatabaseObject) CheckVerificationCodesForEmailChange(requestId string
 	return true, nil
 }
 
+func (dbo *DatabaseObject) CountAllUsers() (n int, err error) {
+	err = dbo.PreparedStatement(DbPsid_CountAllUsers).QueryRow().Scan(&n)
+	if err != nil {
+		return cdbo.CountOnError, err
+	}
+
+	return n, nil
+}
+
 func (dbo *DatabaseObject) CountEmailChangesByUserId(userId uint) (n int, err error) {
 	err = dbo.PreparedStatement(DbPsid_CountEmailChangesByUserId).QueryRow(userId).Scan(&n)
 	if err != nil {
@@ -465,6 +474,25 @@ func (dbo *DatabaseObject) DeleteSessionByUserId(userId uint) (err error) {
 func (dbo *DatabaseObject) GetEmailChangeByRequestId(requestId string) (ecr *am.EmailChange, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetEmailChangeByRequestId).QueryRow(requestId)
 	return am.NewEmailChangeFromScannableSource(row)
+}
+
+func (dbo *DatabaseObject) GetListOfAllUsers(pageNumber uint, pageSize uint) (userIds []uint, err error) {
+	userIds = make([]uint, 0)
+
+	var rows *sql.Rows
+	rows, err = dbo.PreparedStatement(DbPsid_GetListOfAllUsers).Query(pageSize, (pageNumber-1)*pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
+		}
+	}()
+
+	return cm.NewArrayFromScannableSource[uint](rows)
 }
 
 func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []uint, err error) {

@@ -37,6 +37,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.IsUserLoggedIn,
 		srv.ChangePassword,
 		srv.ChangeEmail,
+		srv.GetListOfAllUsers,
 		srv.GetUserRoles,
 		srv.ViewUserParameters,
 		srv.SetUserRoleAuthor,
@@ -192,6 +193,22 @@ func (srv *Server) ChangeEmail(params *json.RawMessage, _ *jrm1.ResponseMetaData
 
 	var r *am.ChangeEmailResult
 	r, re = srv.changeEmail(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) GetListOfAllUsers(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.GetListOfAllUsersParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.GetListOfAllUsersResult
+	r, re = srv.getListOfAllUsers(p)
 	if re != nil {
 		return nil, re
 	}

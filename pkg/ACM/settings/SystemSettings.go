@@ -22,6 +22,7 @@ type SystemSettings struct {
 	PasswordChangeExpirationTime uint   `json:"passwordChangeExpirationTime"`
 	EmailChangeExpirationTime    uint   `json:"emailChangeExpirationTime"`
 	ActionTryTimeout             uint   `json:"actionTryTimeout"`
+	PageSize                     uint   `json:"pageSize"`
 
 	// This setting must be synchronised with settings of the Gateway module.
 	IsTableOfIncidentsUsed bool `json:"isTableOfIncidentsUsed"`
@@ -58,7 +59,8 @@ func (s SystemSettings) Check() (err error) {
 		(s.SessionMaxDuration == 0) ||
 		(s.PasswordChangeExpirationTime == 0) ||
 		(s.EmailChangeExpirationTime == 0) ||
-		(s.ActionTryTimeout == 0) {
+		(s.ActionTryTimeout == 0) ||
+		(s.PageSize == 0) {
 		return errors.New(c.MsgSystemSettingError)
 	}
 

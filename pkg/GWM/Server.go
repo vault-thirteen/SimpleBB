@@ -621,6 +621,7 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_IsUserLoggedIn:         srv.IsUserLoggedIn,
 		ApiFunctionName_ChangePassword:         srv.ChangePassword,
 		ApiFunctionName_ChangeEmail:            srv.ChangeEmail,
+		ApiFunctionName_GetListOfAllUsers:      srv.GetListOfAllUsers,
 		ApiFunctionName_GetUserRoles:           srv.GetUserRoles,
 		ApiFunctionName_ViewUserParameters:     srv.ViewUserParameters,
 		ApiFunctionName_SetUserRoleAuthor:      srv.SetUserRoleAuthor,

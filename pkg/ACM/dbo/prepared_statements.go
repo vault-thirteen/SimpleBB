@@ -74,6 +74,8 @@ const (
 	DbPsid_SetUserEmail                         = 64
 	DbPsid_SaveLogEvent                         = 65
 	DbPsid_ClearEmailChangesTable               = 66
+	DbPsid_CountAllUsers                        = 67
+	DbPsid_GetListOfAllUsers                    = 68
 )
 
 func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
@@ -346,6 +348,14 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 
 	// 66.
 	q = fmt.Sprintf(`DELETE FROM %s WHERE TimeOfCreation < ?;`, dbo.tableNames.EmailChanges)
+	qs = append(qs, q)
+
+	// 67.
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s;`, dbo.tableNames.Users)
+	qs = append(qs, q)
+
+	// 68.
+	q = fmt.Sprintf(`SELECT Id FROM %s ORDER BY Id LIMIT ? OFFSET ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	return qs

@@ -47,6 +47,7 @@
     "passwordChangeExpirationTime": 300,
     "emailChangeExpirationTime": 300,
     "actionTryTimeout": 60,
+    "pageSize": 20,
     "isTableOfIncidentsUsed": true,
     "blockTimePerIncident": {
       "illegalAccessAttempt": 60,

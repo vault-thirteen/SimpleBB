@@ -20,8 +20,9 @@ const (
 	FuncIsUserLoggedIn       = "IsUserLoggedIn"
 
 	// Various actions.
-	FuncChangePassword = "ChangePassword"
-	FuncChangeEmail    = "ChangeEmail"
+	FuncChangePassword    = "ChangePassword"
+	FuncChangeEmail       = "ChangeEmail"
+	FuncGetListOfAllUsers = "GetListOfAllUsers"
 
 	// User properties.
 	FuncGetUserRoles       = "GetUserRoles"

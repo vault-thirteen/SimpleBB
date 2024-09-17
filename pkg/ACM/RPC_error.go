@@ -45,6 +45,7 @@ const (
 	RpcErrorCode_VerificationCodeGenerator          = 33
 	RpcErrorCode_VerificationCodeIsNotSet           = 34
 	RpcErrorCode_VerificationCodeIsWrong            = 35
+	RpcErrorCode_PageIsNotSet                       = 36
 )
 
 // Messages.
@@ -84,6 +85,7 @@ const (
 	RpcErrorMsg_VerificationCodeGenerator          = "verification code generator error"
 	RpcErrorMsg_VerificationCodeIsNotSet           = "verification code is not set"
 	RpcErrorMsg_VerificationCodeIsWrong            = "verification code is wrong"
+	RpcErrorMsg_PageIsNotSet                       = "page is not set"
 )
 
 // Unique HTTP status codes used in the map:
