@@ -17,6 +17,27 @@
 	</script>
 </head>
 <body onload="onPageLoad()">
-
+<div class="head">Administrator's Control Panel</div>
+<table id="acpMenu" class="acpMenu">
+	<tr>
+		<td class="col1">
+			<form><input class="btnGo" type="button" value=" ☼☼☼ " onclick="onGoRegAprovalClick(this)"></form>
+		</td>
+		<td>Registration Approval</td>
+	</tr>
+	<tr>
+		<td class="col1">
+			<form><input class="btnGo" type="button" value=" ☼☼☼ " onclick="onGoLoggedUsersClick(this)"></form>
+		</td>
+		<td>Logged Users</td>
+	</tr>
+	<tr>
+		<td class="col1">
+			<form><input class="btnGo" type="button" value=" ☼☼☼ " onclick="onGoListAllUsersClick(this)"></form>
+		</td>
+		<td>List of all Users</td>
+	</tr>
+</table>
+<div id="subpage" class="subpage"></div>
 </body>
 </html>

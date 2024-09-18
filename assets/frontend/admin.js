@@ -1,3 +1,386 @@
+// Notes.
+// Admin's script does not query server for settings.
+// Settings are hard-coded into the script for security reasons.
+
+redirectDelay = 0;
+thisPage = "admin.html";
+apiPath = "api/";
+qpListOfUsers = "?listOfUsers";
+
+// Action names.
+actionName_GetListOfAllUsers = "getListOfAllUsers";
+actionName_GetListOfLoggedUsers = "getListOfLoggedUsers";
+actionName_ViewUserParameters = "viewUserParameters";
+
+// Messages.
+msgGenericErrorPrefix = "Error: ";
+
+// Errors.
+errNotOk = "something went wrong";
+errServer = "server error";
+errClient = "client error";
+errUnknown = "unknown error";
+errPreviousPageDoesNotExist = "previous page does not exist";
+errNextPageDoesNotExist = "next page does not exist";
+
+// Global variables.
+page = 0;
+pages = 0;
+
+class ApiRequest {
+	constructor(action, parameters) {
+		this.Action = action;
+		this.Parameters = parameters;
+	}
+}
+
+class Parameters_GetListOfAllUsers {
+	constructor(page) {
+		this.Page = page;
+	}
+}
+
+class Parameters_ViewUserParameters {
+	constructor(userId) {
+		this.UserId = userId;
+	}
+}
+
+class ApiResponse {
+	constructor(isOk, jsonObject, statusCode, errorText) {
+		this.IsOk = isOk;
+		this.JsonObject = jsonObject;
+		this.StatusCode = statusCode;
+		this.ErrorText = errorText;
+	}
+}
+
 function onPageLoad() {
-    console.debug("onPageLoad");
+	console.debug("onPageLoad");
+
+	// Select a page.
+	let curPage = window.location.search;
+	switch (curPage) {
+		case qpListOfUsers:
+			showPage_ListOfUsers();
+			return;
+
+		default:
+			showPage_MainMenu();
+			return;
+	}
+}
+
+function onGoRegAprovalClick(btn) {
+	console.debug("onGoRegAprovalClick");
+}
+
+function onGoLoggedUsersClick(btn) {
+	console.debug("onGoLoggedUsersClick");
+}
+
+async function onGoListAllUsersClick(btn) {
+	console.debug("onGoListAllUsersClick");
+	await redirectToSubPage(true, qpListOfUsers);
+}
+
+async function redirectToSubPage(wait, qp) {
+	let url = thisPage + qp;
+	await redirectPage(wait, url);
+}
+
+async function redirectToMainMenu(wait) {
+	let url = thisPage;
+	await redirectPage(wait, url);
+}
+
+async function redirectPage(wait, url) {
+	if (wait) {
+		await sleep(redirectDelay * 1000);
+	}
+
+	document.location.href = url;
+}
+
+async function sleep(ms) {
+	await new Promise(r => setTimeout(r, ms));
+}
+
+function showPage_MainMenu() {
+	document.getElementById("acpMenu").style.display = "table";
+}
+
+async function showPage_ListOfUsers() {
+	let sp = document.getElementById("subpage");
+	sp.style.display = "block";
+	addBtnBack(sp);
+	addTitle(sp, "List of All Users");
+	page = 1;
+	let resp = await getListOfAllUsers(page);
+	if (resp == null) {
+		return;
+	}
+	let pageNumber = resp.result.page;
+	let pageCount = resp.result.totalPages;
+	pages = pageCount;
+	addPaginator(sp, pageNumber, pageCount);
+	addListOfUsers(sp);
+	refreshListOfUsers("subpageListOfUsers", resp.result.userIds);
+}
+
+function addBtnBack(el) {
+	let btn = document.createElement("INPUT");
+	btn.type = "button";
+	btn.className = "btnBack";
+	btn.value = "Go Back";
+	btn.addEventListener("click", async (e) => {
+		await redirectToMainMenu(true);
+	})
+	el.appendChild(btn);
+}
+
+function addTitle(el, text) {
+	let div = document.createElement("DIV");
+	div.className = "subpageTitle";
+	div.id = "subpageTitle";
+	div.textContent = text;
+	el.appendChild(div);
+}
+
+function addPaginator(el, pageNumber, pageCount) {
+	let div = document.createElement("DIV");
+	div.className = "subpagePaginator";
+	div.id = "subpagePaginator";
+
+	let s = document.createElement("span");
+	s.textContent = "Page " + pageNumber + " of " + pageCount + ". ";
+	div.appendChild(s);
+
+	let btnPrev = document.createElement("input");
+	btnPrev.type = "button";
+	btnPrev.className = "btnPrev";
+	btnPrev.id = "btnPrev";
+	btnPrev.value = "Previous Page";
+	btnPrev.addEventListener("click", async (e) => {
+		onBtnPrevClick(btnPrev);
+	});
+	div.appendChild(btnPrev);
+
+	s = document.createElement("span");
+	s.className = "subpageSpacerA";
+	s.innerHTML = "&nbsp;";
+	div.appendChild(s);
+
+	let btnNext = document.createElement("input");
+	btnNext.type = "button";
+	btnNext.className = "btnNext";
+	btnNext.id = "btnNext";
+	btnNext.value = "Next Page";
+	btnNext.addEventListener("click", async (e) => {
+		onBtnNextClick(btnNext);
+	});
+	div.appendChild(btnNext);
+
+	el.appendChild(div);
+}
+
+function refreshPaginator(id, pageNumber, pageCount) {
+	let div = document.getElementById(id);
+	let ch1 = div.children[0];
+	ch1.textContent = "Page " + pageNumber + " of " + pageCount + ". ";
+}
+
+async function onBtnPrevClick(btn) {
+	if (page <= 1) {
+		console.error(errPreviousPageDoesNotExist);
+		return;
+	}
+
+	page--;
+	await updateTableOfUsers();
+}
+
+async function onBtnNextClick(btn) {
+	if (page >= pages) {
+		console.error(errNextPageDoesNotExist);
+		return;
+	}
+
+	page++;
+	await updateTableOfUsers();
+}
+
+async function updateTableOfUsers() {
+	let resp = await getListOfAllUsers(page);
+	if (resp == null) {
+		return;
+	}
+	let pageNumber = resp.result.page;
+	let pageCount = resp.result.totalPages;
+	refreshPaginator("subpagePaginator", pageNumber, pageCount);
+	refreshListOfUsers("subpageListOfUsers", resp.result.userIds);
+}
+
+function addListOfUsers(el) {
+	let div = document.createElement("DIV");
+	div.className = "subpageListOfUsers";
+	div.id = "subpageListOfUsers";
+	el.appendChild(div);
+}
+
+async function refreshListOfUsers(id, userIds) {
+	let div = document.getElementById(id);
+	div.innerHTML = "";
+	let tbl = document.createElement("TABLE");
+	tbl.className = "subpageListOfUsers";
+
+	// Header.
+	let tr = document.createElement("TR");
+	let th;
+	let ths = [
+		"#", "ID", "IsLoggedIn", "E-Mail", "Name", "RegTime", "ApprovalTime",
+		"LastBadLogInTime", "LastBadActionTime", "BanTime", "CanLogIn",
+		"IsReader", "IsWriter", "IsAuthor", "IsModerator", "IsAdministrator"];
+	for (i = 0; i < ths.length; i++) {
+		th = document.createElement("TH");
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	// Get list of logged-in users.
+	let resp = await getListOfLoggedInUsers();
+	if (resp == null) {
+		return;
+	}
+	let loggedUserIds = resp.result.loggedUserIds;
+
+	// Cells.
+	let isUserLoggedIn;
+	let userId;
+	let userParams;
+	for (let i = 0; i < userIds.length; i++) {
+		userId = userIds[i];
+
+		// Get user parameters.
+		resp = await viewUserParameters(userId);
+		if (resp == null) {
+			return;
+		}
+		userParams = resp.result;
+
+		// Fill data.
+		tr = document.createElement("TR");
+		let tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = userId.toString();
+		isUserLoggedIn = loggedUserIds.includes(userId);
+		tds[2] = boolToText(isUserLoggedIn);
+		tds[3] = userParams.email;
+		tds[4] = userParams.name;
+		tds[5] = userParams.regTime;
+		tds[6] = userParams.approvalTime;
+		tds[7] = userParams.lastBadLogInTime;
+		tds[8] = userParams.lastBadActionTime;
+		tds[9] = userParams.banTime;
+		tds[10] = boolToText(userParams.canLogIn);
+		tds[11] = boolToText(userParams.isReader);
+		tds[12] = boolToText(userParams.isWriter);
+		tds[13] = boolToText(userParams.isAuthor);
+		tds[14] = boolToText(userParams.isModerator);
+		tds[15] = boolToText(userParams.isAdministrator);
+
+		let td;
+		for (j = 0; j < tds.length; j++) {
+			td = document.createElement("TD");
+			td.textContent = tds[j];
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	div.appendChild(tbl);
+}
+
+async function sendApiRequest(data) {
+	let resp;
+	let result;
+	let ri = {
+		method: "POST",
+		body: JSON.stringify(data)
+	};
+	resp = await fetch(apiPath, ri);
+	if (resp.status === 200) {
+		result = new ApiResponse(true, await resp.json(), resp.status, null);
+		return result;
+	} else {
+		result = new ApiResponse(false, null, resp.status, await resp.text());
+		if (result.ErrorText.length === 0) {
+			result.ErrorText = createErrorTextByStatusCode(result.StatusCode);
+		}
+		console.error(result.ErrorText);
+		return result;
+	}
+}
+
+function createErrorTextByStatusCode(statusCode) {
+	if ((statusCode >= 400) && (statusCode <= 499)) {
+		return msgGenericErrorPrefix + errClient + " (" + statusCode.toString() + ")";
+	}
+	if ((statusCode >= 500) && (statusCode <= 599)) {
+		return msgGenericErrorPrefix + errServer + " (" + statusCode.toString() + ")";
+	}
+	return msgGenericErrorPrefix + errUnknown + " (" + statusCode.toString() + ")";
+}
+
+function composeErrorText(errMsg) {
+	return msgGenericErrorPrefix + errMsg.trim() + ".";
+}
+
+async function getListOfAllUsers(pageN) {
+	let params = new Parameters_GetListOfAllUsers(pageN);
+	let reqData = new ApiRequest(actionName_GetListOfAllUsers, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function getListOfLoggedInUsers() {
+	let reqData = new ApiRequest(actionName_GetListOfLoggedUsers, {});
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function viewUserParameters(userId) {
+	let params = new Parameters_ViewUserParameters(userId);
+	let reqData = new ApiRequest(actionName_ViewUserParameters, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+function boolToText(b) {
+	if (b === true) {
+		return "Yes";
+	}
+	if (b === false) {
+		return "No";
+	}
+	console.error("boolToText:", b);
+	return null;
 }

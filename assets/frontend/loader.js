@@ -1137,7 +1137,7 @@ function createErrorTextByStatusCode(statusCode) {
 }
 
 function composeErrorText(errMsg) {
-	return msgGenericErrorPrefix + errMsg + ".";
+	return msgGenericErrorPrefix + errMsg.trim() + ".";
 }
 
 async function redirectPage(wait, url) {
