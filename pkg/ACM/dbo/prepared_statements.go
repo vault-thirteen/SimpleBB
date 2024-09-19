@@ -7,75 +7,77 @@ import (
 
 // Indices of prepared statements.
 const (
-	DbPsid_CountUsersWithEmail                  = 0
-	DbPsid_InsertPreRegisteredUser              = 1
-	DbPsid_AttachVerificationCodeToPreRegUser   = 2
-	DbPsid_CheckVerificationCodeForPreReg       = 3
-	DbPsid_DeletePreRegUserIfNotApprovedByEmail = 4
-	DbPsid_ApprovePreRegUserEmail               = 5
-	DbPsid_SetPreRegUserData                    = 6
-	DbPsid_ApprovePreRegUser                    = 7
-	DbPsid_RegisterPreRegUserP1                 = 8
-	DbPsid_RegisterPreRegUserP2                 = 9
-	DbPsid_CountUsersWithName                   = 10
-	DbPsid_ClearPreRegUsersTable                = 11
-	DbPsid_CountUsersWithEmailAbleToLogIn       = 12
-	DbPsid_DeleteAbandonedPreSessions           = 13
-	DbPsid_CountSessionsByUserEmail             = 14
-	DbPsid_CountPreSessionsByUserEmail          = 15
-	DbPsid_GetUserLastBadLogInTimeByEmail       = 16
-	DbPsid_CreatePreSession                     = 17
-	DbPsid_GetUserIdByEmail                     = 18
-	DbPsid_UpdateUserLastBadLogInTimeByEmail    = 19
-	DbPsid_GetPreSessionByRequestId             = 20
-	DbPsid_GetUserPasswordById                  = 21
-	DbPsid_DeletePreSessionByRequestId          = 22
-	DbPsid_SetPreSessionCaptchaFlag             = 23
-	DbPsid_SetPreSessionPasswordFlag            = 24
-	DbPsid_AttachVerificationCodeToPreSession   = 25
-	DbPsid_UpdatePreSessionRequestId            = 26
-	DbPsid_CheckVerificationCodeForLogIn        = 27
-	DbPsid_SetPreSessionVerificationFlag        = 28
-	DbPsid_CreateSession                        = 29
-	DbPsid_ClearSessions                        = 30
-	DbPsid_GetUserById                          = 31
-	DbPsid_GetSessionByUserId                   = 32
-	DbPsid_DeleteSession                        = 33
-	DbPsid_SaveIncident                         = 34
-	DbPsid_SaveIncidentWithoutUserIPA           = 35
-	DbPsid_GetListOfLoggedUsers                 = 36
-	DbPsid_CountSessionsByUserId                = 37
-	DbPsid_GetUserRolesById                     = 38
-	DbPsid_GetUserParametersById                = 39
-	DbPsid_SetUserRoleAuthor                    = 40
-	DbPsid_SetUserRoleWriter                    = 41
-	DbPsid_SetUserRoleReader                    = 42
-	DbPsid_SetUserRoleCanLogIn                  = 43
-	DbPsid_DeleteSessionByUserId                = 44
-	DbPsid_UpdateUserBanTime                    = 45
-	DbPsid_SetPreRegUserEmailSendStatus         = 46
-	DbPsid_SetPreSessionEmailSendStatus         = 47
-	DbPsid_ClearPasswordChangesTable            = 48
-	DbPsid_CountPasswordChangesByUserId         = 49
-	DbPsid_UpdateUserLastBadActionTimeById      = 50
-	DbPsid_GetUserLastBadActionTimeById         = 51
-	DbPsid_CreatePasswordChangeRequest          = 52
-	DbPsid_GetPasswordChangeByRequestId         = 53
-	DbPsid_DeletePasswordChangeByRequestId      = 54
-	DbPsid_CheckVerificationCodeForPwdChange    = 55
-	DbPsid_SetPasswordChangeVFlags              = 56
-	DbPsid_SetUserPassword                      = 57
-	DbPsid_CountEmailChangesByUserId            = 58
-	DbPsid_CreateEmailChangeRequest             = 59
-	DbPsid_GetEmailChangeByRequestId            = 60
-	DbPsid_DeleteEmailChangeByRequestId         = 61
-	DbPsid_CheckVerificationCodesForEmailChange = 62
-	DbPsid_SetEmailChangeVFlags                 = 63
-	DbPsid_SetUserEmail                         = 64
-	DbPsid_SaveLogEvent                         = 65
-	DbPsid_ClearEmailChangesTable               = 66
-	DbPsid_CountAllUsers                        = 67
-	DbPsid_GetListOfAllUsers                    = 68
+	DbPsid_CountUsersWithEmail                    = 0
+	DbPsid_InsertPreRegisteredUser                = 1
+	DbPsid_AttachVerificationCodeToPreRegUser     = 2
+	DbPsid_CheckVerificationCodeForPreReg         = 3
+	DbPsid_DeletePreRegUserIfNotApprovedByEmail   = 4
+	DbPsid_ApprovePreRegUserEmail                 = 5
+	DbPsid_SetPreRegUserData                      = 6
+	DbPsid_ApprovePreRegUser                      = 7
+	DbPsid_RegisterPreRegUserP1                   = 8
+	DbPsid_RegisterPreRegUserP2                   = 9
+	DbPsid_CountUsersWithName                     = 10
+	DbPsid_ClearPreRegUsersTable                  = 11
+	DbPsid_CountUsersWithEmailAbleToLogIn         = 12
+	DbPsid_DeleteAbandonedPreSessions             = 13
+	DbPsid_CountSessionsByUserEmail               = 14
+	DbPsid_CountPreSessionsByUserEmail            = 15
+	DbPsid_GetUserLastBadLogInTimeByEmail         = 16
+	DbPsid_CreatePreSession                       = 17
+	DbPsid_GetUserIdByEmail                       = 18
+	DbPsid_UpdateUserLastBadLogInTimeByEmail      = 19
+	DbPsid_GetPreSessionByRequestId               = 20
+	DbPsid_GetUserPasswordById                    = 21
+	DbPsid_DeletePreSessionByRequestId            = 22
+	DbPsid_SetPreSessionCaptchaFlag               = 23
+	DbPsid_SetPreSessionPasswordFlag              = 24
+	DbPsid_AttachVerificationCodeToPreSession     = 25
+	DbPsid_UpdatePreSessionRequestId              = 26
+	DbPsid_CheckVerificationCodeForLogIn          = 27
+	DbPsid_SetPreSessionVerificationFlag          = 28
+	DbPsid_CreateSession                          = 29
+	DbPsid_ClearSessions                          = 30
+	DbPsid_GetUserById                            = 31
+	DbPsid_GetSessionByUserId                     = 32
+	DbPsid_DeleteSession                          = 33
+	DbPsid_SaveIncident                           = 34
+	DbPsid_SaveIncidentWithoutUserIPA             = 35
+	DbPsid_GetListOfLoggedUsers                   = 36
+	DbPsid_CountSessionsByUserId                  = 37
+	DbPsid_GetUserRolesById                       = 38
+	DbPsid_GetUserParametersById                  = 39
+	DbPsid_SetUserRoleAuthor                      = 40
+	DbPsid_SetUserRoleWriter                      = 41
+	DbPsid_SetUserRoleReader                      = 42
+	DbPsid_SetUserRoleCanLogIn                    = 43
+	DbPsid_DeleteSessionByUserId                  = 44
+	DbPsid_UpdateUserBanTime                      = 45
+	DbPsid_SetPreRegUserEmailSendStatus           = 46
+	DbPsid_SetPreSessionEmailSendStatus           = 47
+	DbPsid_ClearPasswordChangesTable              = 48
+	DbPsid_CountPasswordChangesByUserId           = 49
+	DbPsid_UpdateUserLastBadActionTimeById        = 50
+	DbPsid_GetUserLastBadActionTimeById           = 51
+	DbPsid_CreatePasswordChangeRequest            = 52
+	DbPsid_GetPasswordChangeByRequestId           = 53
+	DbPsid_DeletePasswordChangeByRequestId        = 54
+	DbPsid_CheckVerificationCodeForPwdChange      = 55
+	DbPsid_SetPasswordChangeVFlags                = 56
+	DbPsid_SetUserPassword                        = 57
+	DbPsid_CountEmailChangesByUserId              = 58
+	DbPsid_CreateEmailChangeRequest               = 59
+	DbPsid_GetEmailChangeByRequestId              = 60
+	DbPsid_DeleteEmailChangeByRequestId           = 61
+	DbPsid_CheckVerificationCodesForEmailChange   = 62
+	DbPsid_SetEmailChangeVFlags                   = 63
+	DbPsid_SetUserEmail                           = 64
+	DbPsid_SaveLogEvent                           = 65
+	DbPsid_ClearEmailChangesTable                 = 66
+	DbPsid_CountAllUsers                          = 67
+	DbPsid_GetListOfAllUsers                      = 68
+	DbPsid_CountRegistrationsReadyForApproval     = 69
+	DbPsid_GetListOfRegistrationsReadyForApproval = 70
 )
 
 func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
@@ -356,6 +358,14 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 
 	// 68.
 	q = fmt.Sprintf(`SELECT Id FROM %s ORDER BY Id LIMIT ? OFFSET ?;`, dbo.tableNames.Users)
+	qs = append(qs, q)
+
+	// 69.
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE IsReadyForApproval = TRUE;`, dbo.tableNames.PreRegisteredUsers)
+	qs = append(qs, q)
+
+	// 70.
+	q = fmt.Sprintf(`SELECT Id, PreRegTime, Email, Name FROM %s WHERE IsReadyForApproval = TRUE ORDER BY PreRegTime LIMIT ? OFFSET ?;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	return qs

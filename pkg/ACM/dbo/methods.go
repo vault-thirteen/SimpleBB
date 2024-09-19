@@ -159,6 +159,15 @@ func (dbo *DatabaseObject) CountAllUsers() (n int, err error) {
 	return n, nil
 }
 
+func (dbo *DatabaseObject) CountRegistrationsReadyForApproval() (n int, err error) {
+	err = dbo.PreparedStatement(DbPsid_CountRegistrationsReadyForApproval).QueryRow().Scan(&n)
+	if err != nil {
+		return cdbo.CountOnError, err
+	}
+
+	return n, nil
+}
+
 func (dbo *DatabaseObject) CountEmailChangesByUserId(userId uint) (n int, err error) {
 	err = dbo.PreparedStatement(DbPsid_CountEmailChangesByUserId).QueryRow(userId).Scan(&n)
 	if err != nil {
@@ -512,6 +521,35 @@ func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []uint, err error) {
 	}()
 
 	return cm.NewArrayFromScannableSource[uint](rows)
+}
+
+func (dbo *DatabaseObject) GetListOfRegistrationsReadyForApproval(pageNumber uint, pageSize uint) (rrfas []am.RegistrationReadyForApproval, err error) {
+	rrfas = make([]am.RegistrationReadyForApproval, 0)
+
+	var rows *sql.Rows
+	rows, err = dbo.PreparedStatement(DbPsid_GetListOfRegistrationsReadyForApproval).Query(pageSize, (pageNumber-1)*pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
+		}
+	}()
+
+	var rrfa *am.RegistrationReadyForApproval
+	for rows.Next() {
+		rrfa, err = am.NewRegistrationReadyForApprovalFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		rrfas = append(rrfas, *rrfa)
+	}
+
+	return rrfas, nil
 }
 
 func (dbo *DatabaseObject) GetPasswordChangeByRequestId(requestId string) (pcr *am.PasswordChange, err error) {

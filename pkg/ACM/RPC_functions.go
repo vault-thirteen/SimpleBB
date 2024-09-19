@@ -232,6 +232,46 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 	return &am.RegisterUserResult{NextStep: 0}, nil
 }
 
+func (srv *Server) getListOfRegistrationsReadyForApproval(p *am.GetListOfRegistrationsReadyForApprovalParams) (result *am.GetListOfRegistrationsReadyForApprovalResult, re *jrm1.RpcError) {
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Check parameters.
+	if p.Page == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
+	}
+
+	var thisUserData *am.UserData
+	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !thisUserData.User.IsAdministrator {
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	rrfaCount, err := srv.dbo.CountRegistrationsReadyForApproval()
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &am.GetListOfRegistrationsReadyForApprovalResult{
+		Page:         p.Page,
+		TotalPages:   uint(math.Ceil(float64(rrfaCount) / float64(srv.settings.SystemSettings.PageSize))),
+		TotalRecords: uint(rrfaCount),
+	}
+
+	result.RRFA, err = srv.dbo.GetListOfRegistrationsReadyForApproval(p.Page, srv.settings.SystemSettings.PageSize)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	return result, nil
+}
+
 func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (result *am.ApproveAndRegisterUserResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
@@ -870,6 +910,11 @@ func (srv *Server) getListOfAllUsers(p *am.GetListOfAllUsersParams) (result *am.
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
+	// Check parameters.
+	if p.Page == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
+	}
+
 	var thisUserData *am.UserData
 	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -880,11 +925,6 @@ func (srv *Server) getListOfAllUsers(p *am.GetListOfAllUsersParams) (result *am.
 	if !thisUserData.User.IsAdministrator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	// Check parameters.
-	if p.Page == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
 	}
 
 	usersCount, err := srv.dbo.CountAllUsers()
@@ -1653,6 +1693,11 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
+	// Check parameters.
+	if p.UserId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
+	}
+
 	var thisUserData *am.UserData
 	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1663,10 +1708,6 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 	if !thisUserData.User.IsAdministrator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	if p.UserId == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
 
 	result = &am.ViewUserParametersResult{}
@@ -1693,6 +1734,11 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
+	// Check parameters.
+	if p.UserId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
+	}
+
 	var thisUserData *am.UserData
 	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1703,10 +1749,6 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 	if !thisUserData.User.IsAdministrator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	if p.UserId == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
 
 	err := srv.dbo.SetUserRoleAuthor(p.UserId, p.IsRoleEnabled)
@@ -1721,6 +1763,11 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
+	// Check parameters.
+	if p.UserId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
+	}
+
 	var thisUserData *am.UserData
 	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1731,10 +1778,6 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 	if !thisUserData.User.IsAdministrator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	if p.UserId == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
 
 	err := srv.dbo.SetUserRoleWriter(p.UserId, p.IsRoleEnabled)
@@ -1749,6 +1792,11 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
+	// Check parameters.
+	if p.UserId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
+	}
+
 	var thisUserData *am.UserData
 	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1759,10 +1807,6 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 	if !thisUserData.User.IsAdministrator {
 		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	if p.UserId == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
 
 	err := srv.dbo.SetUserRoleReader(p.UserId, p.IsRoleEnabled)

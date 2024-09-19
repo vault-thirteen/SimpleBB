@@ -45,6 +45,21 @@ type RegisterUserResult struct {
 	NextStep byte `json:"nextStep"`
 }
 
+type GetListOfRegistrationsReadyForApprovalParams struct {
+	cmr.CommonParams
+
+	Page uint `json:"page"`
+}
+
+type GetListOfRegistrationsReadyForApprovalResult struct {
+	cmr.CommonResult
+
+	RRFA         []RegistrationReadyForApproval `json:"rrfa"`
+	Page         uint                           `json:"page,omitempty"`
+	TotalPages   uint                           `json:"totalPages,omitempty"`
+	TotalRecords uint                           `json:"totalRecords,omitempty"`
+}
+
 type ApproveAndRegisterUserParams struct {
 	cmr.CommonParams
 

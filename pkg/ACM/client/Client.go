@@ -10,8 +10,9 @@ const (
 	FuncPing = cc.FuncPing
 
 	// User registration.
-	FuncRegisterUser           = "RegisterUser"
-	FuncApproveAndRegisterUser = "ApproveAndRegisterUser"
+	FuncRegisterUser                           = "RegisterUser"
+	FuncGetListOfRegistrationsReadyForApproval = "GetListOfRegistrationsReadyForApproval"
+	FuncApproveAndRegisterUser                 = "ApproveAndRegisterUser"
 
 	// Logging in and out.
 	FuncLogUserIn            = "LogUserIn"
