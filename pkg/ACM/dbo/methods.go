@@ -667,6 +667,26 @@ func (dbo *DatabaseObject) RegisterPreRegUser(email string) (err error) {
 	return nil
 }
 
+func (dbo *DatabaseObject) RejectRegistrationRequest(id uint) (err error) {
+	var result sql.Result
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_RejectRegistrationRequest).Exec(id)
+	if err != nil {
+		return err
+	}
+
+	var ra int64
+	ra, err = result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if ra != 1 {
+		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
+	}
+
+	return nil
+}
+
 func (dbo *DatabaseObject) SaveIncident(incidentType am.IncidentType, email string, userIPAB net.IP) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SaveIncident).Exec(incidentType, email, userIPAB)

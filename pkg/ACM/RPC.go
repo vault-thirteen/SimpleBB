@@ -31,6 +31,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.Ping,
 		srv.RegisterUser,
 		srv.GetListOfRegistrationsReadyForApproval,
+		srv.RejectRegistrationRequest,
 		srv.ApproveAndRegisterUser,
 		srv.LogUserIn,
 		srv.LogUserOut,
@@ -94,6 +95,22 @@ func (srv *Server) GetListOfRegistrationsReadyForApproval(params *json.RawMessag
 
 	var r *am.GetListOfRegistrationsReadyForApprovalResult
 	r, re = srv.getListOfRegistrationsReadyForApproval(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) RejectRegistrationRequest(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.RejectRegistrationRequestParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.RejectRegistrationRequestResult
+	r, re = srv.rejectRegistrationRequest(p)
 	if re != nil {
 		return nil, re
 	}

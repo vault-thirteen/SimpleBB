@@ -12,6 +12,7 @@ const (
 	// User registration.
 	FuncRegisterUser                           = "RegisterUser"
 	FuncGetListOfRegistrationsReadyForApproval = "GetListOfRegistrationsReadyForApproval"
+	FuncRejectRegistrationRequest              = "RejectRegistrationRequest"
 	FuncApproveAndRegisterUser                 = "ApproveAndRegisterUser"
 
 	// Logging in and out.

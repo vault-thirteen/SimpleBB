@@ -185,11 +185,22 @@ table.acpMenu td {
 .btnGo,
 .btnBack,
 .btnPrev,
-.btnNext {
+.btnNext,
+.btnAccept,
+.btnReject {
 	font-size: 16px;
 	font-family: "DejaVu Sans", serif;
 	color: lightsteelblue;
 	width: 128px;
+	cursor: pointer;
+}
+
+.btnAccept {
+	color: darkgreen;
+}
+
+.btnReject {
+	color: crimson;
 }
 
 .acpMenu,
@@ -203,21 +214,31 @@ table.acpMenu td {
 	display: inline-block;
 }
 
-table.subpageListOfUsers {
+table.subpageListOfUsers,
+table.subpageListOfRRFA {
 	border: 1px solid black;
 	text-align: right;
 }
 
 table.subpageListOfUsers td,
-table.subpageListOfUsers th {
+table.subpageListOfUsers th,
+table.subpageListOfRRFA td,
+table.subpageListOfRRFA th {
 	border: 1px solid black;
 	padding: 2px;
 }
 
-table.subpageListOfUsers th {
+table.subpageListOfUsers th,
+table.subpageListOfRRFA th {
 	text-align: center;
 }
 
-table.subpageListOfUsers tr:nth-child(even) {
+table.subpageListOfUsers tr:nth-child(even),
+table.subpageListOfRRFA tr:nth-child(even) {
 	background-color: white;
+}
+
+th.numCol,
+td.numCol {
+	color: gray;
 }

@@ -272,6 +272,30 @@ func (srv *Server) getListOfRegistrationsReadyForApproval(p *am.GetListOfRegistr
 	return result, nil
 }
 
+func (srv *Server) rejectRegistrationRequest(p *am.RejectRegistrationRequestParams) (result *am.RejectRegistrationRequestResult, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var thisUserData *am.UserData
+	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !thisUserData.User.IsAdministrator {
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	err := srv.dbo.RejectRegistrationRequest(p.Id)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	return &am.RejectRegistrationRequestResult{OK: true}, nil
+}
+
 func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (result *am.ApproveAndRegisterUserResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()

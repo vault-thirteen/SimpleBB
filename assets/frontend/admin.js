@@ -6,9 +6,13 @@ redirectDelay = 0;
 thisPage = "admin.html";
 apiPath = "api/";
 qpListOfUsers = "?listOfUsers";
+qpRegistrationsReadyForApproval = "?registrationsReadyForApproval";
 
 // Action names.
 actionName_GetListOfAllUsers = "getListOfAllUsers";
+actionName_GetListOfRegistrationsReadyForApproval = "getListOfRegistrationsReadyForApproval";
+actionName_ApproveAndRegisterUser = "approveAndRegisterUser";
+actionName_RejectRegistrationRequest = "rejectRegistrationRequest";
 actionName_GetListOfLoggedUsers = "getListOfLoggedUsers";
 actionName_ViewUserParameters = "viewUserParameters";
 
@@ -40,9 +44,27 @@ class Parameters_GetListOfAllUsers {
 	}
 }
 
+class Parameters_GetListOfRegistrationsReadyForApproval {
+	constructor(page) {
+		this.Page = page;
+	}
+}
+
 class Parameters_ViewUserParameters {
 	constructor(userId) {
 		this.UserId = userId;
+	}
+}
+
+class Parameters_ApproveAndRegisterUser {
+	constructor(email) {
+		this.Email = email;
+	}
+}
+
+class Parameters_RejectRegistrationRequest {
+	constructor(id) {
+		this.Id = id;
 	}
 }
 
@@ -65,14 +87,19 @@ function onPageLoad() {
 			showPage_ListOfUsers();
 			return;
 
+		case qpRegistrationsReadyForApproval:
+			showPage_RegistrationsReadyForApproval();
+			return;
+
 		default:
 			showPage_MainMenu();
 			return;
 	}
 }
 
-function onGoRegAprovalClick(btn) {
+async function onGoRegAprovalClick(btn) {
 	console.debug("onGoRegAprovalClick");
+	await redirectToSubPage(true, qpRegistrationsReadyForApproval);
 }
 
 function onGoLoggedUsersClick(btn) {
@@ -123,9 +150,27 @@ async function showPage_ListOfUsers() {
 	let pageNumber = resp.result.page;
 	let pageCount = resp.result.totalPages;
 	pages = pageCount;
-	addPaginator(sp, pageNumber, pageCount);
+	addPaginator(sp, pageNumber, pageCount, "userListPrev", "userListNext");
 	addListOfUsers(sp);
 	refreshListOfUsers("subpageListOfUsers", resp.result.userIds);
+}
+
+async function showPage_RegistrationsReadyForApproval() {
+	let sp = document.getElementById("subpage");
+	sp.style.display = "block";
+	addBtnBack(sp);
+	addTitle(sp, "List of Registrations ready for Approval");
+	page = 1;
+	let resp = await getListOfRegistrationsReadyForApproval(page);
+	if (resp == null) {
+		return;
+	}
+	let pageNumber = resp.result.page;
+	let pageCount = resp.result.totalPages;
+	pages = pageCount;
+	addPaginator(sp, pageNumber, pageCount, "rrfaListPrev", "rrfaListNext");
+	addListOfRRFA(sp);
+	refreshListOfRRFA("subpageListOfRRFA", resp.result.rrfa);
 }
 
 function addBtnBack(el) {
@@ -147,7 +192,7 @@ function addTitle(el, text) {
 	el.appendChild(div);
 }
 
-function addPaginator(el, pageNumber, pageCount) {
+function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
 	let div = document.createElement("DIV");
 	div.className = "subpagePaginator";
 	div.id = "subpagePaginator";
@@ -161,9 +206,7 @@ function addPaginator(el, pageNumber, pageCount) {
 	btnPrev.className = "btnPrev";
 	btnPrev.id = "btnPrev";
 	btnPrev.value = "Previous Page";
-	btnPrev.addEventListener("click", async (e) => {
-		onBtnPrevClick(btnPrev);
-	});
+	addClickEventHandler(btnPrev, variantPrev);
 	div.appendChild(btnPrev);
 
 	s = document.createElement("span");
@@ -176,12 +219,41 @@ function addPaginator(el, pageNumber, pageCount) {
 	btnNext.className = "btnNext";
 	btnNext.id = "btnNext";
 	btnNext.value = "Next Page";
-	btnNext.addEventListener("click", async (e) => {
-		onBtnNextClick(btnNext);
-	});
+	addClickEventHandler(btnNext, variantNext);
 	div.appendChild(btnNext);
 
 	el.appendChild(div);
+}
+
+function addClickEventHandler(btn, variant) {
+	switch (variant) {
+		case "userListPrev":
+			btn.addEventListener("click", async (e) => {
+				onBtnPrevClick(btn);
+			});
+			return;
+
+		case "userListNext":
+			btn.addEventListener("click", async (e) => {
+				onBtnNextClick(btn);
+			});
+			return;
+
+		case "rrfaListPrev":
+			btn.addEventListener("click", async (e) => {
+				onBtnPrevClick_rrfa(btn);
+			});
+			return;
+
+		case "rrfaListNext":
+			btn.addEventListener("click", async (e) => {
+				onBtnNextClick_rrfa(btn);
+			});
+			return;
+
+		default:
+			console.error(x);
+	}
 }
 
 function refreshPaginator(id, pageNumber, pageCount) {
@@ -210,6 +282,26 @@ async function onBtnNextClick(btn) {
 	await updateTableOfUsers();
 }
 
+async function onBtnPrevClick_rrfa(btn) {
+	if (page <= 1) {
+		console.error(errPreviousPageDoesNotExist);
+		return;
+	}
+
+	page--;
+	await updateTableOfRRFA();
+}
+
+async function onBtnNextClick_rrfa(btn) {
+	if (page >= pages) {
+		console.error(errNextPageDoesNotExist);
+		return;
+	}
+
+	page++;
+	await updateTableOfRRFA();
+}
+
 async function updateTableOfUsers() {
 	let resp = await getListOfAllUsers(page);
 	if (resp == null) {
@@ -221,10 +313,28 @@ async function updateTableOfUsers() {
 	refreshListOfUsers("subpageListOfUsers", resp.result.userIds);
 }
 
+async function updateTableOfRRFA() {
+	let resp = await getListOfRegistrationsReadyForApproval(page);
+	if (resp == null) {
+		return;
+	}
+	let pageNumber = resp.result.page;
+	let pageCount = resp.result.totalPages;
+	refreshPaginator("subpagePaginator", pageNumber, pageCount);
+	refreshListOfRRFA("subpageListOfRRFA", resp.result.rrfa);
+}
+
 function addListOfUsers(el) {
 	let div = document.createElement("DIV");
 	div.className = "subpageListOfUsers";
 	div.id = "subpageListOfUsers";
+	el.appendChild(div);
+}
+
+function addListOfRRFA(el) {
+	let div = document.createElement("DIV");
+	div.className = "subpageListOfRRFA";
+	div.id = "subpageListOfRRFA";
 	el.appendChild(div);
 }
 
@@ -243,6 +353,9 @@ async function refreshListOfUsers(id, userIds) {
 		"IsReader", "IsWriter", "IsAuthor", "IsModerator", "IsAdministrator"];
 	for (i = 0; i < ths.length; i++) {
 		th = document.createElement("TH");
+		if (i === 0) {
+			th.className = "numCol";
+		}
 		th.textContent = ths[i];
 		tr.appendChild(th);
 	}
@@ -282,11 +395,11 @@ async function refreshListOfUsers(id, userIds) {
 		tds[2] = boolToText(isUserLoggedIn);
 		tds[3] = userParams.email;
 		tds[4] = userParams.name;
-		tds[5] = userParams.regTime;
-		tds[6] = userParams.approvalTime;
-		tds[7] = userParams.lastBadLogInTime;
-		tds[8] = userParams.lastBadActionTime;
-		tds[9] = userParams.banTime;
+		tds[5] = prettyTime(userParams.regTime);
+		tds[6] = prettyTime(userParams.approvalTime);
+		tds[7] = prettyTime(userParams.lastBadLogInTime);
+		tds[8] = prettyTime(userParams.lastBadActionTime);
+		tds[9] = prettyTime(userParams.banTime);
 		tds[10] = boolToText(userParams.canLogIn);
 		tds[11] = boolToText(userParams.isReader);
 		tds[12] = boolToText(userParams.isWriter);
@@ -297,7 +410,76 @@ async function refreshListOfUsers(id, userIds) {
 		let td;
 		for (j = 0; j < tds.length; j++) {
 			td = document.createElement("TD");
+
+			if (j === 0) {
+				td.className = "numCol";
+			}
+
 			td.textContent = tds[j];
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	div.appendChild(tbl);
+}
+
+async function refreshListOfRRFA(id, rrfas) {
+	let div = document.getElementById(id);
+	div.innerHTML = "";
+	let tbl = document.createElement("TABLE");
+	tbl.className = "subpageListOfRRFA";
+
+	// Header.
+	let tr = document.createElement("TR");
+	let th;
+	let ths = [
+		"#", "ID", "PreRegTime", "E-Mail", "Name", "Actions"];
+	for (i = 0; i < ths.length; i++) {
+		th = document.createElement("TH");
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	// Cells.
+	let rrfa;
+	for (let i = 0; i < rrfas.length; i++) {
+		rrfa = rrfas[i];
+
+		// Fill data.
+		tr = document.createElement("TR");
+		let tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = rrfa.id.toString();
+		tds[2] = prettyTime(rrfa.preRegTime);
+		tds[3] = rrfa.email;
+		tds[4] = rrfa.name;
+		tds[5] = '<input type="button" class="btnAccept" value="Accept" onclick="onBtnAcceptClick(this)">' +
+			'<span class="subpageSpacerA">&nbsp;</span>' +
+			'<input type="button" class="btnReject" value="Reject" onclick="onBtnRejectClick(this)">';
+
+		let td;
+		for (j = 0; j < tds.length; j++) {
+			td = document.createElement("TD");
+
+			if (j === 0) {
+				td.className = "numCol";
+			}
+
+			if (j !== 5) {
+				td.textContent = tds[j];
+			} else {
+				td.innerHTML = tds[j];
+			}
 			tr.appendChild(td);
 		}
 
@@ -353,6 +535,17 @@ async function getListOfAllUsers(pageN) {
 	return resp.JsonObject;
 }
 
+async function getListOfRegistrationsReadyForApproval(pageN) {
+	let params = new Parameters_GetListOfRegistrationsReadyForApproval(pageN);
+	let reqData = new ApiRequest(actionName_GetListOfRegistrationsReadyForApproval, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
 async function getListOfLoggedInUsers() {
 	let reqData = new ApiRequest(actionName_GetListOfLoggedUsers, {});
 	let resp = await sendApiRequest(reqData);
@@ -383,4 +576,69 @@ function boolToText(b) {
 	}
 	console.error("boolToText:", b);
 	return null;
+}
+
+function prettyTime(timeStr) {
+	if (timeStr === null) {
+		return "";
+	}
+	if (timeStr.length === 0) {
+		return "";
+	}
+
+	let t = new Date(timeStr);
+
+	return t.getUTCDay().toString().padStart(2, '0') + "." +
+		t.getUTCMonth().toString().padStart(2, '0') + "." +
+		t.getUTCFullYear().toString().padStart(4, '0') + " " +
+		t.getUTCHours().toString().padStart(2, '0') + ":" +
+		t.getUTCMinutes().toString().padStart(2, '0');
+}
+
+async function onBtnAcceptClick(btn) {
+	let tr = btn.parentElement.parentElement;
+	let reqEmail = tr.children[3].textContent;
+	let resp = await approveAndRegisterUser(reqEmail);
+	if (resp == null) {
+		return;
+	}
+	if (!resp.result.ok) {
+		return;
+	}
+	tr.style.display = "none";
+}
+
+async function onBtnRejectClick(btn) {
+	let tr = btn.parentElement.parentElement;
+	let reqId = Number(tr.children[1].textContent);
+	let resp = await rejectRegistrationRequest(reqId);
+	if (resp == null) {
+		return;
+	}
+	if (!resp.result.ok) {
+		return;
+	}
+	tr.style.display = "none";
+}
+
+async function approveAndRegisterUser(email) {
+	let params = new Parameters_ApproveAndRegisterUser(email);
+	let reqData = new ApiRequest(actionName_ApproveAndRegisterUser, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function rejectRegistrationRequest(id) {
+	let params = new Parameters_RejectRegistrationRequest(id);
+	let reqData = new ApiRequest(actionName_RejectRegistrationRequest, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
 }

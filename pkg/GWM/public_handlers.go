@@ -21,6 +21,7 @@ const (
 	// ACM.
 	ApiFunctionName_RegisterUser                           = "registerUser"
 	ApiFunctionName_GetListOfRegistrationsReadyForApproval = "getListOfRegistrationsReadyForApproval"
+	ApiFunctionName_RejectRegistrationRequest              = "rejectRegistrationRequest"
 	ApiFunctionName_ApproveAndRegisterUser                 = "approveAndRegisterUser"
 	ApiFunctionName_LogUserIn                              = "logUserIn"
 	ApiFunctionName_LogUserOut                             = "logUserOut"

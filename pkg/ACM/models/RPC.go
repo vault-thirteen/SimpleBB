@@ -60,6 +60,19 @@ type GetListOfRegistrationsReadyForApprovalResult struct {
 	TotalRecords uint                           `json:"totalRecords,omitempty"`
 }
 
+type RejectRegistrationRequestParams struct {
+	cmr.CommonParams
+
+	// ID of a registration request.
+	Id uint `json:"id"`
+}
+
+type RejectRegistrationRequestResult struct {
+	cmr.CommonResult
+
+	OK bool `json:"ok"`
+}
+
 type ApproveAndRegisterUserParams struct {
 	cmr.CommonParams
 

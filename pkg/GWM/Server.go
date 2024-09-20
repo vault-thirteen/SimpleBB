@@ -641,6 +641,7 @@ func (srv *Server) initApiFunctions() (err error) {
 		// ACM.
 		ApiFunctionName_RegisterUser:                           srv.RegisterUser,
 		ApiFunctionName_GetListOfRegistrationsReadyForApproval: srv.GetListOfRegistrationsReadyForApproval,
+		ApiFunctionName_RejectRegistrationRequest:              srv.RejectRegistrationRequest,
 		ApiFunctionName_ApproveAndRegisterUser:                 srv.ApproveAndRegisterUser,
 		ApiFunctionName_LogUserIn:                              srv.LogUserIn,
 		ApiFunctionName_LogUserOut:                             srv.LogUserOut,

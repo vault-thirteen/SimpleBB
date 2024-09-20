@@ -105,6 +105,40 @@ func (srv *Server) GetListOfRegistrationsReadyForApproval(ar *api.Request, _ *ht
 	return
 }
 
+func (srv *Server) RejectRegistrationRequest(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params am.RejectRegistrationRequestParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{
+		Auth: ar.Authorisation,
+	}
+
+	var result = new(am.RejectRegistrationRequestResult)
+	var re *jrm1.RpcError
+	re, err = srv.acmServiceClient.MakeRequest(context.Background(), ac.FuncRejectRegistrationRequest, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_ACM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{
+		Action: ar.Action,
+		Result: result,
+	}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
 func (srv *Server) ApproveAndRegisterUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
 	var params am.ApproveAndRegisterUserParams
