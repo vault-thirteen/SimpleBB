@@ -1,10 +1,11 @@
-// Notes.
-// Admin's script does not query server for settings.
-// Settings are hard-coded into the script for security reasons.
-
+// Settings.
+settingsPath = "settings.json";
+rootPath = "/";
+let settings;
 redirectDelay = 0;
-thisPage = "admin.html";
-apiPath = "api/";
+
+// Pages.
+adminPage = "admin.html";
 qpListOfUsers = "?listOfUsers";
 qpRegistrationsReadyForApproval = "?registrationsReadyForApproval";
 
@@ -20,6 +21,7 @@ actionName_ViewUserParameters = "viewUserParameters";
 msgGenericErrorPrefix = "Error: ";
 
 // Errors.
+errSettings = "settings error";
 errNotOk = "something went wrong";
 errServer = "server error";
 errClient = "client error";
@@ -30,6 +32,26 @@ errNextPageDoesNotExist = "next page does not exist";
 // Global variables.
 page = 0;
 pages = 0;
+
+// Settings class.
+class Settings {
+	constructor(version, productVersion, siteName, siteDomain, captchaFolder,
+				sessionMaxDuration, messageEditTime, pageSize, apiFolder,
+				publicSettingsFileName, isFrontEndEnabled, frontEndStaticFilesFolder) {
+		this.Version = version; // Number.
+		this.ProductVersion = productVersion;
+		this.SiteName = siteName;
+		this.SiteDomain = siteDomain;
+		this.CaptchaFolder = captchaFolder;
+		this.SessionMaxDuration = sessionMaxDuration; // Number.
+		this.MessageEditTime = messageEditTime; // Number.
+		this.PageSize = pageSize; // Number.
+		this.ApiFolder = apiFolder;
+		this.PublicSettingsFileName = publicSettingsFileName;
+		this.IsFrontEndEnabled = isFrontEndEnabled; // Boolean.
+		this.FrontEndStaticFilesFolder = frontEndStaticFilesFolder;
+	}
+}
 
 class ApiRequest {
 	constructor(action, parameters) {
@@ -77,8 +99,14 @@ class ApiResponse {
 	}
 }
 
-function onPageLoad() {
+async function onPageLoad() {
 	console.debug("onPageLoad");
+
+	settings = await getSettings();
+	if (settings === null) {
+		return;
+	}
+	console.debug('Received settings. Version:', settings.Version);
 
 	// Select a page.
 	let curPage = window.location.search;
@@ -97,8 +125,40 @@ function onPageLoad() {
 	}
 }
 
-async function onGoRegAprovalClick(btn) {
-	console.debug("onGoRegAprovalClick");
+async function getSettings() {
+	let data = await fetchSettings();
+
+	let x = new Settings(
+		data.version,
+		data.productVersion,
+		data.siteName,
+		data.siteDomain,
+		data.captchaFolder,
+		data.sessionMaxDuration,
+		data.messageEditTime,
+		data.pageSize,
+		data.apiFolder,
+		data.publicSettingsFileName,
+		data.isFrontEndEnabled,
+		data.frontEndStaticFilesFolder,
+	);
+
+	// Self-check.
+	if ((x.PublicSettingsFileName !== settingsPath)) {
+		console.error(errSettings);
+		return null;
+	}
+
+	return x;
+}
+
+async function fetchSettings() {
+	let data = await fetch(rootPath + settingsPath);
+	return await data.json();
+}
+
+async function onGoRegApprovalClick(btn) {
+	console.debug("onGoRegApprovalClick");
 	await redirectToSubPage(true, qpRegistrationsReadyForApproval);
 }
 
@@ -112,12 +172,12 @@ async function onGoListAllUsersClick(btn) {
 }
 
 async function redirectToSubPage(wait, qp) {
-	let url = thisPage + qp;
+	let url = adminPage + qp;
 	await redirectPage(wait, url);
 }
 
 async function redirectToMainMenu(wait) {
-	let url = thisPage;
+	let url = adminPage;
 	await redirectPage(wait, url);
 }
 
@@ -496,7 +556,7 @@ async function sendApiRequest(data) {
 		method: "POST",
 		body: JSON.stringify(data)
 	};
-	resp = await fetch(apiPath, ri);
+	resp = await fetch(rootPath + settings.ApiFolder, ri);
 	if (resp.status === 200) {
 		result = new ApiResponse(true, await resp.json(), resp.status, null);
 		return result;

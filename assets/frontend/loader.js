@@ -1,6 +1,5 @@
 // Path to initial settings for a loader script.
 settingsPath = "settings.json";
-
 settingsRootPath = "/";
 
 // Various other settings.
