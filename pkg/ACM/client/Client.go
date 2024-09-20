@@ -18,6 +18,7 @@ const (
 	// Logging in and out.
 	FuncLogUserIn            = "LogUserIn"
 	FuncLogUserOut           = "LogUserOut"
+	FuncLogUserOutA          = "LogUserOutA"
 	FuncGetListOfLoggedUsers = "GetListOfLoggedUsers"
 	FuncIsUserLoggedIn       = "IsUserLoggedIn"
 

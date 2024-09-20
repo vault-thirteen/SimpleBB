@@ -645,6 +645,7 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_ApproveAndRegisterUser:                 srv.ApproveAndRegisterUser,
 		ApiFunctionName_LogUserIn:                              srv.LogUserIn,
 		ApiFunctionName_LogUserOut:                             srv.LogUserOut,
+		ApiFunctionName_LogUserOutA:                            srv.LogUserOutA,
 		ApiFunctionName_GetListOfLoggedUsers:                   srv.GetListOfLoggedUsers,
 		ApiFunctionName_IsUserLoggedIn:                         srv.IsUserLoggedIn,
 		ApiFunctionName_ChangePassword:                         srv.ChangePassword,

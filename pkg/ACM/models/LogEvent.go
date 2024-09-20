@@ -18,6 +18,10 @@ type LogEvent struct {
 	UserId   uint
 	Email    string
 	UserIPAB net.IP
+
+	// ID of administrator for those events which were started by an
+	// administrator.
+	AdminId *uint
 }
 
 func CheckLogEvent(le *LogEvent) (err error) {

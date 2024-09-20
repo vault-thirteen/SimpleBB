@@ -7,6 +7,7 @@ redirectDelay = 0;
 // Pages.
 adminPage = "admin.html";
 qpListOfUsers = "?listOfUsers";
+qpListOfLoggedUsers = "?listOfLoggedUsers";
 qpRegistrationsReadyForApproval = "?registrationsReadyForApproval";
 
 // Action names.
@@ -16,6 +17,7 @@ actionName_ApproveAndRegisterUser = "approveAndRegisterUser";
 actionName_RejectRegistrationRequest = "rejectRegistrationRequest";
 actionName_GetListOfLoggedUsers = "getListOfLoggedUsers";
 actionName_ViewUserParameters = "viewUserParameters";
+actionName_LogUserOutA = "logUserOutA";
 
 // Messages.
 msgGenericErrorPrefix = "Error: ";
@@ -90,6 +92,12 @@ class Parameters_RejectRegistrationRequest {
 	}
 }
 
+class Parameters_logUserOutA {
+	constructor(userId) {
+		this.UserId = userId;
+	}
+}
+
 class ApiResponse {
 	constructor(isOk, jsonObject, statusCode, errorText) {
 		this.IsOk = isOk;
@@ -113,6 +121,10 @@ async function onPageLoad() {
 	switch (curPage) {
 		case qpListOfUsers:
 			showPage_ListOfUsers();
+			return;
+
+		case qpListOfLoggedUsers:
+			showPage_ListOfLoggedUsers();
 			return;
 
 		case qpRegistrationsReadyForApproval:
@@ -158,16 +170,14 @@ async function fetchSettings() {
 }
 
 async function onGoRegApprovalClick(btn) {
-	console.debug("onGoRegApprovalClick");
 	await redirectToSubPage(true, qpRegistrationsReadyForApproval);
 }
 
-function onGoLoggedUsersClick(btn) {
-	console.debug("onGoLoggedUsersClick");
+async function onGoLoggedUsersClick(btn) {
+	await redirectToSubPage(true, qpListOfLoggedUsers);
 }
 
 async function onGoListAllUsersClick(btn) {
-	console.debug("onGoListAllUsersClick");
 	await redirectToSubPage(true, qpListOfUsers);
 }
 
@@ -213,6 +223,27 @@ async function showPage_ListOfUsers() {
 	addPaginator(sp, pageNumber, pageCount, "userListPrev", "userListNext");
 	addListOfUsers(sp);
 	refreshListOfUsers("subpageListOfUsers", resp.result.userIds);
+}
+
+async function showPage_ListOfLoggedUsers() {
+	let sp = document.getElementById("subpage");
+	sp.style.display = "block";
+	addBtnBack(sp);
+	addTitle(sp, "List of logged-in Users");
+	page = 1;
+	let resp = await getListOfLoggedInUsers();
+	if (resp == null) {
+		return;
+	}
+	let userIds = resp.result.loggedUserIds;
+	let userCount = userIds.length;
+	let pageNumber = page;
+	let pageCount = Math.ceil(userCount / settings.PageSize);
+	pages = pageCount;
+	let userIdsOnPage = calculateUserIdsOnPage(userIds, page, settings.PageSize);
+	addPaginator(sp, pageNumber, pageCount, "loggedUserListPrev", "loggedUserListNext");
+	addListOfLoggedUsers(sp);
+	refreshListOfLoggedUsers("subpageListOfLoggedUsers", userIdsOnPage);
 }
 
 async function showPage_RegistrationsReadyForApproval() {
@@ -299,6 +330,18 @@ function addClickEventHandler(btn, variant) {
 			});
 			return;
 
+		case "loggedUserListPrev":
+			btn.addEventListener("click", async (e) => {
+				onBtnPrevClick_logged(btn);
+			});
+			return;
+
+		case "loggedUserListNext":
+			btn.addEventListener("click", async (e) => {
+				onBtnNextClick_logged(btn);
+			});
+			return;
+
 		case "rrfaListPrev":
 			btn.addEventListener("click", async (e) => {
 				onBtnPrevClick_rrfa(btn);
@@ -342,6 +385,26 @@ async function onBtnNextClick(btn) {
 	await updateTableOfUsers();
 }
 
+async function onBtnPrevClick_logged(btn) {
+	if (page <= 1) {
+		console.error(errPreviousPageDoesNotExist);
+		return;
+	}
+
+	page--;
+	await updateTableOfLoggedUsers();
+}
+
+async function onBtnNextClick_logged(btn) {
+	if (page >= pages) {
+		console.error(errNextPageDoesNotExist);
+		return;
+	}
+
+	page++;
+	await updateTableOfLoggedUsers();
+}
+
 async function onBtnPrevClick_rrfa(btn) {
 	if (page <= 1) {
 		console.error(errPreviousPageDoesNotExist);
@@ -373,6 +436,21 @@ async function updateTableOfUsers() {
 	refreshListOfUsers("subpageListOfUsers", resp.result.userIds);
 }
 
+async function updateTableOfLoggedUsers() {
+	let resp = await getListOfLoggedInUsers();
+	if (resp == null) {
+		return;
+	}
+	let userIds = resp.result.loggedUserIds;
+	let userCount = userIds.length;
+	let pageNumber = page;
+	let pageCount = Math.ceil(userCount / settings.PageSize);
+	pages = pageCount;
+	let userIdsOnPage = calculateUserIdsOnPage(userIds, page, settings.PageSize);
+	refreshPaginator("subpagePaginator", pageNumber, pageCount);
+	refreshListOfLoggedUsers("subpageListOfLoggedUsers", userIdsOnPage);
+}
+
 async function updateTableOfRRFA() {
 	let resp = await getListOfRegistrationsReadyForApproval(page);
 	if (resp == null) {
@@ -388,6 +466,13 @@ function addListOfUsers(el) {
 	let div = document.createElement("DIV");
 	div.className = "subpageListOfUsers";
 	div.id = "subpageListOfUsers";
+	el.appendChild(div);
+}
+
+function addListOfLoggedUsers(el) {
+	let div = document.createElement("DIV");
+	div.className = "subpageListOfLoggedUsers";
+	div.id = "subpageListOfLoggedUsers";
 	el.appendChild(div);
 }
 
@@ -476,6 +561,75 @@ async function refreshListOfUsers(id, userIds) {
 			}
 
 			td.textContent = tds[j];
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	div.appendChild(tbl);
+}
+
+async function refreshListOfLoggedUsers(id, userIdsOnPage) {
+	let div = document.getElementById(id);
+	div.innerHTML = "";
+	let tbl = document.createElement("TABLE");
+	tbl.className = "subpageListOfLoggedUsers";
+
+	// Header.
+	let tr = document.createElement("TR");
+	let th;
+	let ths = [
+		"#", "ID", "E-Mail", "Name", "Actions"];
+	for (i = 0; i < ths.length; i++) {
+		th = document.createElement("TH");
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	// Cells.
+	let userId;
+	let userParams;
+	for (let i = 0; i < userIdsOnPage.length; i++) {
+		userId = userIdsOnPage[i];
+
+		// Get user parameters.
+		resp = await viewUserParameters(userId);
+		if (resp == null) {
+			return;
+		}
+		userParams = resp.result;
+
+		// Fill data.
+		tr = document.createElement("TR");
+		let tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = userId.toString();
+		tds[2] = userParams.email;
+		tds[3] = userParams.name;
+		tds[4] = '<input type="button" class="btnLogOut" value="Log Out" onclick="onBtnLogOutClick(this)">';
+
+		let td;
+		for (j = 0; j < tds.length; j++) {
+			td = document.createElement("TD");
+
+			if (j === 0) {
+				td.className = "numCol";
+			}
+
+			if (j !== 4) {
+				td.textContent = tds[j];
+			} else {
+				td.innerHTML = tds[j];
+			}
 			tr.appendChild(td);
 		}
 
@@ -681,6 +835,19 @@ async function onBtnRejectClick(btn) {
 	tr.style.display = "none";
 }
 
+async function onBtnLogOutClick(btn) {
+	let tr = btn.parentElement.parentElement;
+	let userId = Number(tr.children[1].textContent);
+	let resp = await logUserOutA(userId);
+	if (resp == null) {
+		return;
+	}
+	if (!resp.result.ok) {
+		return;
+	}
+	tr.style.display = "none";
+}
+
 async function approveAndRegisterUser(email) {
 	let params = new Parameters_ApproveAndRegisterUser(email);
 	let reqData = new ApiRequest(actionName_ApproveAndRegisterUser, params);
@@ -695,6 +862,22 @@ async function approveAndRegisterUser(email) {
 async function rejectRegistrationRequest(id) {
 	let params = new Parameters_RejectRegistrationRequest(id);
 	let reqData = new ApiRequest(actionName_RejectRegistrationRequest, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+function calculateUserIdsOnPage(allIds, pageN, pageSize) {
+	let x = Math.min(pageN * pageSize, allIds.length);
+	return allIds.slice((pageN - 1) * pageSize, x);
+}
+
+async function logUserOutA(userId) {
+	let params = new Parameters_logUserOutA(userId);
+	let reqData = new ApiRequest(actionName_LogUserOutA, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));

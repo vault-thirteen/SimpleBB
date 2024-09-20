@@ -1,12 +1,13 @@
 package models
 
 const (
-	LogEventType_LogIn  = 1
-	LogEventType_LogOut = 2
+	LogEventType_LogIn   = 1
+	LogEventType_LogOut  = 2 // Self logging out.
+	LogEventType_LogOutA = 3 // Logging out by an administrator.
 )
 
 const (
-	LogEventTypesCount = 2
+	LogEventTypesCount = 3
 )
 
 type LogEventType byte

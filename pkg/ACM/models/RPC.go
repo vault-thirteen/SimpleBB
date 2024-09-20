@@ -146,6 +146,18 @@ type LogUserOutResult struct {
 	OK bool `json:"ok"`
 }
 
+type LogUserOutAParams struct {
+	cmr.CommonParams
+
+	UserId uint `json:"userId"`
+}
+
+type LogUserOutAResult struct {
+	cmr.CommonResult
+
+	OK bool `json:"ok"`
+}
+
 type GetListOfLoggedUsersParams struct {
 	cmr.CommonParams
 }

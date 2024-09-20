@@ -187,7 +187,8 @@ table.acpMenu td {
 .btnPrev,
 .btnNext,
 .btnAccept,
-.btnReject {
+.btnReject,
+.btnLogOut {
 	font-size: 16px;
 	font-family: "DejaVu Sans", serif;
 	color: lightsteelblue;
@@ -199,7 +200,8 @@ table.acpMenu td {
 	color: darkgreen;
 }
 
-.btnReject {
+.btnReject,
+.btnLogOut {
 	color: crimson;
 }
 
@@ -215,26 +217,32 @@ table.acpMenu td {
 }
 
 table.subpageListOfUsers,
-table.subpageListOfRRFA {
+table.subpageListOfRRFA,
+table.subpageListOfLoggedUsers {
 	border: 1px solid black;
 	text-align: right;
 }
 
-table.subpageListOfUsers td,
+
 table.subpageListOfUsers th,
+table.subpageListOfUsers td,
+table.subpageListOfRRFA th,
 table.subpageListOfRRFA td,
-table.subpageListOfRRFA th {
+table.subpageListOfLoggedUsers th,
+table.subpageListOfLoggedUsers td {
 	border: 1px solid black;
 	padding: 2px;
 }
 
 table.subpageListOfUsers th,
-table.subpageListOfRRFA th {
+table.subpageListOfRRFA th,
+table.subpageListOfLoggedUsers th {
 	text-align: center;
 }
 
 table.subpageListOfUsers tr:nth-child(even),
-table.subpageListOfRRFA tr:nth-child(even) {
+table.subpageListOfRRFA tr:nth-child(even),
+table.subpageListOfLoggedUsers tr:nth-child(even) {
 	background-color: white;
 }
 

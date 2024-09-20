@@ -25,6 +25,7 @@ const (
 	ApiFunctionName_ApproveAndRegisterUser                 = "approveAndRegisterUser"
 	ApiFunctionName_LogUserIn                              = "logUserIn"
 	ApiFunctionName_LogUserOut                             = "logUserOut"
+	ApiFunctionName_LogUserOutA                            = "logUserOutA"
 	ApiFunctionName_GetListOfLoggedUsers                   = "getListOfLoggedUsers"
 	ApiFunctionName_IsUserLoggedIn                         = "isUserLoggedIn"
 	ApiFunctionName_ChangePassword                         = "changePassword"

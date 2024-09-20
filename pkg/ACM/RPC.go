@@ -35,6 +35,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.ApproveAndRegisterUser,
 		srv.LogUserIn,
 		srv.LogUserOut,
+		srv.LogUserOutA,
 		srv.GetListOfLoggedUsers,
 		srv.IsUserLoggedIn,
 		srv.ChangePassword,
@@ -161,6 +162,22 @@ func (srv *Server) LogUserOut(params *json.RawMessage, _ *jrm1.ResponseMetaData)
 
 	var r *am.LogUserOutResult
 	r, re = srv.logUserOut(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) LogUserOutA(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.LogUserOutAParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.LogUserOutAResult
+	r, re = srv.logUserOutA(p)
 	if re != nil {
 		return nil, re
 	}

@@ -734,6 +734,7 @@ func (dbo *DatabaseObject) SaveLogEvent(logEvent *am.LogEvent) (err error) {
 		logEvent.UserId,
 		logEvent.Email,
 		logEvent.UserIPAB,
+		logEvent.AdminId,
 	)
 	if err != nil {
 		return err

@@ -346,7 +346,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 65.
-	q = fmt.Sprintf(`INSERT INTO %s (Type, UserId, Email, UserIPAB) VALUES (?, ?, ?, ?);`, dbo.tableNames.LogEvents)
+	q = fmt.Sprintf(`INSERT INTO %s (Type, UserId, Email, UserIPAB, AdminId) VALUES (?, ?, ?, ?, ?);`, dbo.tableNames.LogEvents)
 	qs = append(qs, q)
 
 	// 66.

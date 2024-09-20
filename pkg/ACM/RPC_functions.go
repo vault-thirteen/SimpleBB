@@ -910,6 +910,78 @@ func (srv *Server) logUserOut(p *am.LogUserOutParams) (result *am.LogUserOutResu
 	return &am.LogUserOutResult{OK: true}, nil
 }
 
+func (srv *Server) logUserOutA(p *am.LogUserOutAParams) (result *am.LogUserOutAResult, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	// Check parameters.
+	if p.UserId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
+	}
+
+	var callerData *am.UserData
+	callerData, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !callerData.User.IsAdministrator {
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	var user *am.User
+	var err error
+	user, err = srv.dbo.GetUserById(p.UserId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if user == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIsNotFound, RpcErrorMsg_UserIsNotFound, p.UserId)
+	}
+
+	if user.Id != p.UserId {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_DatabaseInconsistency, RpcErrorMsg_DatabaseInconsistency, user)
+	}
+
+	var session *am.Session
+	session, err = srv.dbo.GetSessionByUserId(p.UserId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if session == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SessionIsNotFound, RpcErrorMsg_SessionIsNotFound, p.UserId)
+	}
+
+	if session.UserId != p.UserId {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_DatabaseInconsistency, RpcErrorMsg_DatabaseInconsistency, session)
+	}
+
+	err = srv.dbo.DeleteSessionByUserId(p.UserId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	// Journaling.
+	logEvent := &am.LogEvent{
+		Type:     am.LogEventType_LogOutA,
+		UserId:   session.UserId,
+		Email:    user.Email,
+		UserIPAB: session.UserIPAB,
+		AdminId:  &callerData.User.Id,
+	}
+
+	err = srv.dbo.SaveLogEvent(logEvent)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	return &am.LogUserOutAResult{OK: true}, nil
+}
+
 func (srv *Server) getListOfLoggedUsers(p *am.GetListOfLoggedUsersParams) (result *am.GetListOfLoggedUsersResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
