@@ -4,11 +4,20 @@ rootPath = "/";
 let settings;
 redirectDelay = 0;
 
+// Names of Query Parameters.
+qpPrefix = "?"
+qpnId = "id";
+qpnListOfUsers = "listOfUsers";
+qpnListOfLoggedUsers = "listOfLoggedUsers"
+qpnRegistrationsReadyForApproval = "registrationsReadyForApproval";
+qpnUserPage = "userPage";
+
 // Pages.
 adminPage = "admin.html";
-qpListOfUsers = "?listOfUsers";
-qpListOfLoggedUsers = "?listOfLoggedUsers";
-qpRegistrationsReadyForApproval = "?registrationsReadyForApproval";
+qpListOfUsers = qpPrefix + qpnListOfUsers;
+qpListOfLoggedUsers = qpPrefix + qpnListOfLoggedUsers;
+qpRegistrationsReadyForApproval = qpPrefix + qpnRegistrationsReadyForApproval;
+qpUserPage = qpPrefix + qpnUserPage;
 
 // Action names.
 actionName_GetListOfAllUsers = "getListOfAllUsers";
@@ -30,6 +39,8 @@ errClient = "client error";
 errUnknown = "unknown error";
 errPreviousPageDoesNotExist = "previous page does not exist";
 errNextPageDoesNotExist = "next page does not exist";
+errPageNotFound = "page is not found";
+errIdNotSet = "ID is not set";
 
 // Global variables.
 page = 0;
@@ -118,6 +129,8 @@ async function onPageLoad() {
 
 	// Select a page.
 	let curPage = window.location.search;
+	let sp = new URLSearchParams(curPage);
+
 	switch (curPage) {
 		case qpListOfUsers:
 			showPage_ListOfUsers();
@@ -130,11 +143,20 @@ async function onPageLoad() {
 		case qpRegistrationsReadyForApproval:
 			showPage_RegistrationsReadyForApproval();
 			return;
-
-		default:
-			showPage_MainMenu();
-			return;
 	}
+
+	if (sp.has(qpnUserPage)) {
+		if (!sp.has(qpnId)) {
+			console.error(errIdNotSet);
+			return;
+		}
+
+		let userId = sp.get(qpnId);
+		showPage_UserPage(userId);
+		return;
+	}
+
+	showPage_MainMenu();
 }
 
 async function getSettings() {
@@ -264,6 +286,14 @@ async function showPage_RegistrationsReadyForApproval() {
 	refreshListOfRRFA("subpageListOfRRFA", resp.result.rrfa);
 }
 
+async function showPage_UserPage(userId) {
+	let sp = document.getElementById("subpage");
+	sp.style.display = "block";
+	addBtnBack(sp);
+	addTitle(sp, "User Page");
+	console.debug("TODO");
+}
+
 function addBtnBack(el) {
 	let btn = document.createElement("INPUT");
 	btn.type = "button";
@@ -289,7 +319,7 @@ function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
 	div.id = "subpagePaginator";
 
 	let s = document.createElement("span");
-	s.textContent = "Page " + pageNumber + " of " + pageCount + ". ";
+	s.textContent = "Page " + pageNumber + " of " + pageCount + " ";
 	div.appendChild(s);
 
 	let btnPrev = document.createElement("input");
@@ -362,7 +392,7 @@ function addClickEventHandler(btn, variant) {
 function refreshPaginator(id, pageNumber, pageCount) {
 	let div = document.getElementById(id);
 	let ch1 = div.children[0];
-	ch1.textContent = "Page " + pageNumber + " of " + pageCount + ". ";
+	ch1.textContent = "Page " + pageNumber + " of " + pageCount + " ";
 }
 
 async function onBtnPrevClick(btn) {
@@ -512,6 +542,7 @@ async function refreshListOfUsers(id, userIds) {
 		return;
 	}
 	let loggedUserIds = resp.result.loggedUserIds;
+	let columnsWithLink = [1, 3, 4];
 
 	// Cells.
 	let isUserLoggedIn;
@@ -553,14 +584,20 @@ async function refreshListOfUsers(id, userIds) {
 		tds[15] = boolToText(userParams.isAdministrator);
 
 		let td;
+		let url;
 		for (j = 0; j < tds.length; j++) {
+			url = composeUserPageLink(userId.toString());
 			td = document.createElement("TD");
 
 			if (j === 0) {
 				td.className = "numCol";
 			}
 
-			td.textContent = tds[j];
+			if (columnsWithLink.includes(j)) {
+				td.innerHTML = '<a href="' + url + '">' + tds[j] + '</a>';
+			} else {
+				td.textContent = tds[j];
+			}
 			tr.appendChild(td);
 		}
 
@@ -884,4 +921,8 @@ async function logUserOutA(userId) {
 		return null;
 	}
 	return resp.JsonObject;
+}
+
+function composeUserPageLink(userId) {
+	return qpUserPage + "&" + qpnId + "=" + userId;
 }

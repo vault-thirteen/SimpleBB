@@ -1,14 +1,23 @@
 html {
-	width: 100%;
-	height: 100%;
 	margin: 0;
 	padding: 0;
 	background-color: beige;
 }
 
+body {
+	display: inline-block;
+}
+
+body.main {
+	width: 100%;
+}
+
+body.admin {
+	width: auto;
+}
+
 body,
 div {
-	width: 100%;
 	margin: 0;
 	padding: 0;
 }
@@ -24,6 +33,11 @@ form, input {
 	border: 0;
 	margin: 0;
 	padding: 0;
+}
+
+.contentHolder {
+	margin-left: auto;
+	margin-right: auto;
 }
 
 table.vs1 {
@@ -166,7 +180,10 @@ div.divChangePwd {
 
 div.head {
 	font-family: "DejaVu Sans", serif;
+	font-size: 16px;
+	margin: 10px;
 	text-align: left;
+	color: grey;
 }
 
 li.hidden {
@@ -183,17 +200,28 @@ table.acpMenu td {
 }
 
 .btnGo,
-.btnBack,
-.btnPrev,
-.btnNext,
 .btnAccept,
 .btnReject,
-.btnLogOut {
+.btnLogOut,
+.btnPrev,
+.btnNext,
+.btnBack {
+	border: 1px solid grey;
+	color: grey;
+	cursor: pointer;
 	font-size: 16px;
 	font-family: "DejaVu Sans", serif;
-	color: lightsteelblue;
 	width: 128px;
-	cursor: pointer;
+}
+
+.btnBack {
+	color: brown;
+}
+
+.btnPrev,
+.btnNext {
+	font-size: 14px;
+	color: grey;
 }
 
 .btnAccept {
@@ -209,6 +237,23 @@ table.acpMenu td {
 .subpage {
 	display: none;
 	font-family: "DejaVu Sans", serif;
+	font-size: 14px;
+	margin: 10px;
+}
+
+.subpageTitle {
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border: 1px solid black;
+	font-size: 18px;
+	background-color: bisque;
+	padding-left: 10px;
+}
+
+.subpagePaginator {
+	font-size: 14px;
+	color: grey;
+	margin-bottom: 5px;
 }
 
 .subpageSpacerA {
@@ -223,15 +268,19 @@ table.subpageListOfLoggedUsers {
 	text-align: right;
 }
 
-
 table.subpageListOfUsers th,
-table.subpageListOfUsers td,
 table.subpageListOfRRFA th,
+table.subpageListOfLoggedUsers th {
+	border: 1px solid black;
+	padding: 3px;
+	background-color: bisque;
+}
+
+table.subpageListOfUsers td,
 table.subpageListOfRRFA td,
-table.subpageListOfLoggedUsers th,
 table.subpageListOfLoggedUsers td {
 	border: 1px solid black;
-	padding: 2px;
+	padding: 3px;
 }
 
 table.subpageListOfUsers th,
@@ -244,6 +293,22 @@ table.subpageListOfUsers tr:nth-child(even),
 table.subpageListOfRRFA tr:nth-child(even),
 table.subpageListOfLoggedUsers tr:nth-child(even) {
 	background-color: white;
+}
+
+table.subpageListOfUsers tr:nth-child(odd),
+table.subpageListOfRRFA tr:nth-child(odd),
+table.subpageListOfLoggedUsers tr:nth-child(odd) {
+	background-color: #E8E8E8;
+}
+
+table.subpageListOfUsers tr:hover {
+	background-color: #FFFFBA;
+}
+
+table.subpageListOfUsers tr a {
+	width: 100%;
+	height: 100%;
+	display: block;
 }
 
 th.numCol,
