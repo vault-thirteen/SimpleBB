@@ -27,6 +27,12 @@ actionName_RejectRegistrationRequest = "rejectRegistrationRequest";
 actionName_GetListOfLoggedUsers = "getListOfLoggedUsers";
 actionName_ViewUserParameters = "viewUserParameters";
 actionName_LogUserOutA = "logUserOutA";
+actionName_IsUserLoggedIn = "isUserLoggedIn";
+actionName_SetUserRoleAuthor = "setUserRoleAuthor";
+actionName_SetUserRoleWriter = "setUserRoleWriter";
+actionName_SetUserRoleReader = "setUserRoleReader";
+actionName_BanUser = "banUser";
+actionName_UnbanUser = "unbanUser";
 
 // Messages.
 msgGenericErrorPrefix = "Error: ";
@@ -41,6 +47,12 @@ errPreviousPageDoesNotExist = "previous page does not exist";
 errNextPageDoesNotExist = "next page does not exist";
 errPageNotFound = "page is not found";
 errIdNotSet = "ID is not set";
+
+// User role names.
+userRoleAuthor = "author";
+userRoleWriter = "writer";
+userRoleReader = "reader";
+userRoleLogging = "logging";
 
 // Global variables.
 page = 0;
@@ -103,7 +115,46 @@ class Parameters_RejectRegistrationRequest {
 	}
 }
 
-class Parameters_logUserOutA {
+class Parameters_LogUserOutA {
+	constructor(userId) {
+		this.UserId = userId;
+	}
+}
+
+class Parameters_IsUserLoggedIn {
+	constructor(userId) {
+		this.UserId = userId;
+	}
+}
+
+class Parameters_SetUserRoleAuthor {
+	constructor(userId, isRoleEnabled) {
+		this.UserId = userId;
+		this.IsRoleEnabled = isRoleEnabled;
+	}
+}
+
+class Parameters_SetUserRoleWriter {
+	constructor(userId, isRoleEnabled) {
+		this.UserId = userId;
+		this.IsRoleEnabled = isRoleEnabled;
+	}
+}
+
+class Parameters_SetUserRoleReader {
+	constructor(userId, isRoleEnabled) {
+		this.UserId = userId;
+		this.IsRoleEnabled = isRoleEnabled;
+	}
+}
+
+class Parameters_BanUser {
+	constructor(userId) {
+		this.UserId = userId;
+	}
+}
+
+class Parameters_UnbanUser {
 	constructor(userId) {
 		this.UserId = userId;
 	}
@@ -151,7 +202,7 @@ async function onPageLoad() {
 			return;
 		}
 
-		let userId = sp.get(qpnId);
+		let userId = Number(sp.get(qpnId));
 		showPage_UserPage(userId);
 		return;
 	}
@@ -291,7 +342,160 @@ async function showPage_UserPage(userId) {
 	sp.style.display = "block";
 	addBtnBack(sp);
 	addTitle(sp, "User Page");
-	console.debug("TODO");
+
+	// Get information.
+	let resp = await viewUserParameters(userId);
+	if (resp == null) {
+		return;
+	}
+	let userParams = resp.result;
+
+	resp = await isUserLoggedIn(userId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.userId !== userId) {
+		return;
+	}
+	let userLogInState = resp.result.isUserLoggedIn;
+
+	// Draw the information.
+	let divUserPage = document.createElement("DIV");
+	divUserPage.className = "subpageUserPage";
+	divUserPage.id = "subpageUserPage";
+	sp.appendChild(divUserPage);
+	let tbl = document.createElement("TABLE");
+	tbl.className = "subpageUserPage";
+
+	let fieldNames = [
+		"ID", "E-Mail", "Name", "PreRegTime", "RegTime", "ApprovalTime",
+		"IsAdministrator", "IsModerator", "IsAuthor", "IsWriter", "IsReader",
+		"CanLogIn", "LastBadLogInTime", "BanTime", "LastBadActionTime",
+		"IsLoggedIn"
+	];
+
+	let fieldValues = [
+		userId.toString(),
+		userParams.email,
+		userParams.name,
+		prettyTime(userParams.preRegTime),
+		prettyTime(userParams.regTime),
+		prettyTime(userParams.approvalTime),
+		boolToText(userParams.isAdministrator),
+		boolToText(userParams.isModerator),
+		boolToText(userParams.isAuthor),
+		boolToText(userParams.isWriter),
+		boolToText(userParams.isReader),
+		boolToText(userParams.canLogIn),
+		prettyTime(userParams.lastBadLogInTime),
+		prettyTime(userParams.banTime),
+		prettyTime(userParams.lastBadActionTime),
+		boolToText(userLogInState),
+	];
+
+	// Header.
+	let tr = document.createElement("TR");
+	let th;
+	let ths = ["#", "Field Name", "Value", "Actions"];
+
+	for (i = 0; i < ths.length; i++) {
+		th = document.createElement("TH");
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	// Rows.
+	let tds;
+	let td;
+	let actions;
+	for (let i = 0; i < fieldNames.length; i++) {
+		tr = document.createElement("TR");
+
+		tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = fieldNames[i];
+		tds[2] = fieldValues[i];
+
+		switch (fieldNames[i]) {
+			case "IsAuthor":
+				if (userParams.isAuthor) {
+					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + userRoleAuthor + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + userRoleAuthor + '\',' + userId + ')">';
+				}
+				break;
+
+			case "IsWriter":
+				if (userParams.isWriter) {
+					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + userRoleWriter + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + userRoleWriter + '\',' + userId + ')">';
+				}
+				break;
+
+			case "IsReader":
+				if (userParams.isReader) {
+					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + userRoleReader + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + userRoleReader + '\',' + userId + ')">';
+				}
+				break;
+
+			case "CanLogIn":
+				if (userParams.canLogIn) {
+					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + userRoleLogging + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + userRoleLogging + '\',' + userId + ')">';
+				}
+				break;
+
+			case "IsLoggedIn":
+				if (userLogInState) {
+					actions = '<input type="button" class="btnLogOut" value="Log Out" onclick="onBtnLogOutUPClick(' + userId + ')">';
+				} else {
+					actions = "";
+				}
+				break;
+
+			default:
+				actions = "";
+		}
+		tds[3] = actions;
+
+		let jLast = tds.length - 1;
+		for (j = 0; j < tds.length; j++) {
+			td = document.createElement("TD");
+			if (j === 0) {
+				td.className = "numCol";
+			}
+			if (j === jLast) {
+				td.innerHTML = tds[j];
+			} else {
+				td.textContent = tds[j];
+			}
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	divUserPage.appendChild(tbl);
 }
 
 function addBtnBack(el) {
@@ -628,9 +832,12 @@ async function refreshListOfLoggedUsers(id, userIdsOnPage) {
 	}
 	tbl.appendChild(tr);
 
+	let columnsWithLink = [2, 3, 4];
+
 	// Cells.
 	let userId;
 	let userParams;
+	let resp;
 	for (let i = 0; i < userIdsOnPage.length; i++) {
 		userId = userIdsOnPage[i];
 
@@ -656,16 +863,19 @@ async function refreshListOfLoggedUsers(id, userIdsOnPage) {
 
 		let td;
 		for (j = 0; j < tds.length; j++) {
+			url = composeUserPageLink(userId.toString());
 			td = document.createElement("TD");
 
 			if (j === 0) {
 				td.className = "numCol";
 			}
 
-			if (j !== 4) {
-				td.textContent = tds[j];
-			} else {
+			if (columnsWithLink.includes(j)) {
+				td.innerHTML = '<a href="' + url + '">' + tds[j] + '</a>';
+			} else if (j === 4) {
 				td.innerHTML = tds[j];
+			} else {
+				td.textContent = tds[j];
 			}
 			tr.appendChild(td);
 		}
@@ -741,13 +951,12 @@ async function refreshListOfRRFA(id, rrfas) {
 }
 
 async function sendApiRequest(data) {
-	let resp;
 	let result;
 	let ri = {
 		method: "POST",
 		body: JSON.stringify(data)
 	};
-	resp = await fetch(rootPath + settings.ApiFolder, ri);
+	let resp = await fetch(rootPath + settings.ApiFolder, ri);
 	if (resp.status === 200) {
 		result = new ApiResponse(true, await resp.json(), resp.status, null);
 		return result;
@@ -810,6 +1019,17 @@ async function getListOfLoggedInUsers() {
 async function viewUserParameters(userId) {
 	let params = new Parameters_ViewUserParameters(userId);
 	let reqData = new ApiRequest(actionName_ViewUserParameters, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function isUserLoggedIn(userId) {
+	let params = new Parameters_IsUserLoggedIn(userId);
+	let reqData = new ApiRequest(actionName_IsUserLoggedIn, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -885,6 +1105,81 @@ async function onBtnLogOutClick(btn) {
 	tr.style.display = "none";
 }
 
+async function onBtnLogOutUPClick(userId) {
+	let resp = await logUserOutA(userId);
+	if (resp == null) {
+		return;
+	}
+	if (!resp.result.ok) {
+		return;
+	}
+	reloadPage();
+}
+
+async function onBtnEnableRoleUPClick(role, userId) {
+	let resp;
+	switch (role) {
+		case userRoleAuthor:
+			resp = await setUserRoleAuthor(userId, true);
+			break;
+
+		case userRoleWriter:
+			resp = await setUserRoleWriter(userId, true);
+			break;
+
+		case userRoleReader:
+			resp = await setUserRoleReader(userId, true);
+			break;
+
+		case userRoleLogging:
+			resp = await unbanUser(userId);
+			break;
+
+		default:
+			return;
+	}
+
+	if (resp == null) {
+		return;
+	}
+	if (!resp.result.ok) {
+		return;
+	}
+	reloadPage();
+}
+
+async function onBtnDisableRoleUPClick(role, userId) {
+	let resp;
+	switch (role) {
+		case userRoleAuthor:
+			resp = await setUserRoleAuthor(userId, false);
+			break;
+
+		case userRoleWriter:
+			resp = await setUserRoleWriter(userId, false);
+			break;
+
+		case userRoleReader:
+			resp = await setUserRoleReader(userId, false);
+			break;
+
+		case userRoleLogging:
+			resp = await banUser(userId);
+			break;
+
+		default:
+			return;
+	}
+
+	if (resp == null) {
+		return;
+	}
+	if (!resp.result.ok) {
+		return;
+	}
+	reloadPage();
+}
+
 async function approveAndRegisterUser(email) {
 	let params = new Parameters_ApproveAndRegisterUser(email);
 	let reqData = new ApiRequest(actionName_ApproveAndRegisterUser, params);
@@ -913,8 +1208,63 @@ function calculateUserIdsOnPage(allIds, pageN, pageSize) {
 }
 
 async function logUserOutA(userId) {
-	let params = new Parameters_logUserOutA(userId);
+	let params = new Parameters_LogUserOutA(userId);
 	let reqData = new ApiRequest(actionName_LogUserOutA, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function setUserRoleAuthor(userId, roleValue) {
+	let params = new Parameters_SetUserRoleAuthor(userId, roleValue);
+	let reqData = new ApiRequest(actionName_SetUserRoleAuthor, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function setUserRoleWriter(userId, roleValue) {
+	let params = new Parameters_SetUserRoleWriter(userId, roleValue);
+	let reqData = new ApiRequest(actionName_SetUserRoleWriter, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function setUserRoleReader(userId, roleValue) {
+	let params = new Parameters_SetUserRoleReader(userId, roleValue);
+	let reqData = new ApiRequest(actionName_SetUserRoleReader, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function banUser(userId) {
+	let params = new Parameters_BanUser(userId);
+	let reqData = new ApiRequest(actionName_BanUser, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function unbanUser(userId) {
+	let params = new Parameters_UnbanUser(userId);
+	let reqData = new ApiRequest(actionName_UnbanUser, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -925,4 +1275,8 @@ async function logUserOutA(userId) {
 
 function composeUserPageLink(userId) {
 	return qpUserPage + "&" + qpnId + "=" + userId;
+}
+
+function reloadPage() {
+	location.reload();
 }
