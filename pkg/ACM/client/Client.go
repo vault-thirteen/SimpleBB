@@ -20,12 +20,13 @@ const (
 	FuncLogUserOut           = "LogUserOut"
 	FuncLogUserOutA          = "LogUserOutA"
 	FuncGetListOfLoggedUsers = "GetListOfLoggedUsers"
+	FuncGetListOfAllUsers    = "GetListOfAllUsers"
 	FuncIsUserLoggedIn       = "IsUserLoggedIn"
 
 	// Various actions.
-	FuncChangePassword    = "ChangePassword"
-	FuncChangeEmail       = "ChangeEmail"
-	FuncGetListOfAllUsers = "GetListOfAllUsers"
+	FuncChangePassword = "ChangePassword"
+	FuncChangeEmail    = "ChangeEmail"
+	FuncGetUserSession = "GetUserSession"
 
 	// User properties.
 	FuncGetUserRoles       = "GetUserRoles"

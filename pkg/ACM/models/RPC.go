@@ -168,6 +168,21 @@ type GetListOfLoggedUsersResult struct {
 	LoggedUserIds []uint `json:"loggedUserIds"`
 }
 
+type GetListOfAllUsersParams struct {
+	cmr.CommonParams
+
+	Page uint `json:"page"`
+}
+
+type GetListOfAllUsersResult struct {
+	cmr.CommonResult
+
+	UserIds    []uint `json:"userIds"`
+	Page       uint   `json:"page,omitempty"`
+	TotalPages uint   `json:"totalPages,omitempty"`
+	TotalUsers uint   `json:"totalUsers,omitempty"`
+}
+
 type IsUserLoggedInParams struct {
 	cmr.CommonParams
 
@@ -279,19 +294,16 @@ type ChangeEmailResult struct {
 	OK bool `json:"ok"`
 }
 
-type GetListOfAllUsersParams struct {
+type GetUserSessionParams struct {
 	cmr.CommonParams
 
-	Page uint `json:"page"`
+	UserId uint `json:"userId"`
 }
 
-type GetListOfAllUsersResult struct {
+type GetUserSessionResult struct {
 	cmr.CommonResult
 
-	UserIds    []uint `json:"userIds"`
-	Page       uint   `json:"page,omitempty"`
-	TotalPages uint   `json:"totalPages,omitempty"`
-	TotalUsers uint   `json:"totalUsers,omitempty"`
+	Session *Session `json:"session"`
 }
 
 // User properties.

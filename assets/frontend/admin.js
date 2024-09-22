@@ -33,6 +33,7 @@ actionName_SetUserRoleWriter = "setUserRoleWriter";
 actionName_SetUserRoleReader = "setUserRoleReader";
 actionName_BanUser = "banUser";
 actionName_UnbanUser = "unbanUser";
+actionName_GetUserSession = "getUserSession";
 
 // Messages.
 msgGenericErrorPrefix = "Error: ";
@@ -160,6 +161,12 @@ class Parameters_UnbanUser {
 	}
 }
 
+class Parameters_GetUserSession {
+	constructor(userId) {
+		this.UserId = userId;
+	}
+}
+
 class ApiResponse {
 	constructor(isOk, jsonObject, statusCode, errorText) {
 		this.IsOk = isOk;
@@ -170,13 +177,11 @@ class ApiResponse {
 }
 
 async function onPageLoad() {
-	console.debug("onPageLoad");
-
 	settings = await getSettings();
 	if (settings === null) {
 		return;
 	}
-	console.debug('Received settings. Version:', settings.Version);
+	console.info('Received settings. Version:', settings.Version);
 
 	// Select a page.
 	let curPage = window.location.search;
@@ -821,7 +826,7 @@ async function refreshListOfLoggedUsers(id, userIdsOnPage) {
 	let tr = document.createElement("TR");
 	let th;
 	let ths = [
-		"#", "ID", "E-Mail", "Name", "Actions"];
+		"#", "ID", "E-Mail", "Name", "IP Address", "Log Time", "Actions"];
 	for (i = 0; i < ths.length; i++) {
 		th = document.createElement("TH");
 		if (i === 0) {
@@ -832,11 +837,12 @@ async function refreshListOfLoggedUsers(id, userIdsOnPage) {
 	}
 	tbl.appendChild(tr);
 
-	let columnsWithLink = [2, 3, 4];
+	let columnsWithLink = [1, 2, 3];
 
 	// Cells.
 	let userId;
 	let userParams;
+	let userSession;
 	let resp;
 	for (let i = 0; i < userIdsOnPage.length; i++) {
 		userId = userIdsOnPage[i];
@@ -848,6 +854,13 @@ async function refreshListOfLoggedUsers(id, userIdsOnPage) {
 		}
 		userParams = resp.result;
 
+		// Get user session.
+		resp = await getUserSession(userId);
+		if (resp == null) {
+			return;
+		}
+		userSession = resp.result.session;
+
 		// Fill data.
 		tr = document.createElement("TR");
 		let tds = [];
@@ -855,11 +868,14 @@ async function refreshListOfLoggedUsers(id, userIdsOnPage) {
 			tds.push("");
 		}
 
+
 		tds[0] = (i + 1).toString();
 		tds[1] = userId.toString();
 		tds[2] = userParams.email;
 		tds[3] = userParams.name;
-		tds[4] = '<input type="button" class="btnLogOut" value="Log Out" onclick="onBtnLogOutClick(this)">';
+		tds[4] = userSession.userIPA;
+		tds[5] = prettyTime(userSession.startTime);
+		tds[6] = '<input type="button" class="btnLogOut" value="Log Out" onclick="onBtnLogOutClick(this)">';
 
 		let td;
 		for (j = 0; j < tds.length; j++) {
@@ -872,7 +888,7 @@ async function refreshListOfLoggedUsers(id, userIdsOnPage) {
 
 			if (columnsWithLink.includes(j)) {
 				td.innerHTML = '<a href="' + url + '">' + tds[j] + '</a>';
-			} else if (j === 4) {
+			} else if (j === 6) {
 				td.innerHTML = tds[j];
 			} else {
 				td.textContent = tds[j];
@@ -1058,9 +1074,10 @@ function prettyTime(timeStr) {
 	}
 
 	let t = new Date(timeStr);
+	let monthN = t.getUTCMonth() + 1; // Months in JavaScript start with 0 !
 
-	return t.getUTCDay().toString().padStart(2, '0') + "." +
-		t.getUTCMonth().toString().padStart(2, '0') + "." +
+	return t.getUTCDate().toString().padStart(2, '0') + "." +
+		monthN.toString().padStart(2, '0') + "." +
 		t.getUTCFullYear().toString().padStart(4, '0') + " " +
 		t.getUTCHours().toString().padStart(2, '0') + ":" +
 		t.getUTCMinutes().toString().padStart(2, '0');
@@ -1265,6 +1282,17 @@ async function banUser(userId) {
 async function unbanUser(userId) {
 	let params = new Parameters_UnbanUser(userId);
 	let reqData = new ApiRequest(actionName_UnbanUser, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function getUserSession(userId) {
+	let params = new Parameters_GetUserSession(userId);
+	let reqData = new ApiRequest(actionName_GetUserSession, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));

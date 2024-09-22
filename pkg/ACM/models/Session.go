@@ -10,12 +10,12 @@ import (
 )
 
 type Session struct {
-	Id        uint
-	UserId    uint
-	StartTime time.Time
+	Id        uint      `json:"id"`
+	UserId    uint      `json:"userId"`
+	StartTime time.Time `json:"startTime"`
 
 	// IP address of a user. B = Byte array.
-	UserIPAB net.IP
+	UserIPAB net.IP `json:"userIPA"`
 }
 
 func NewSession() (s *Session) {

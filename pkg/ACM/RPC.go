@@ -37,10 +37,11 @@ func (srv *Server) initRpc() (err error) {
 		srv.LogUserOut,
 		srv.LogUserOutA,
 		srv.GetListOfLoggedUsers,
+		srv.GetListOfAllUsers,
 		srv.IsUserLoggedIn,
 		srv.ChangePassword,
 		srv.ChangeEmail,
-		srv.GetListOfAllUsers,
+		srv.GetUserSession,
 		srv.GetUserRoles,
 		srv.ViewUserParameters,
 		srv.SetUserRoleAuthor,
@@ -201,6 +202,22 @@ func (srv *Server) GetListOfLoggedUsers(params *json.RawMessage, _ *jrm1.Respons
 	return r, nil
 }
 
+func (srv *Server) GetListOfAllUsers(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.GetListOfAllUsersParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.GetListOfAllUsersResult
+	r, re = srv.getListOfAllUsers(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
 func (srv *Server) IsUserLoggedIn(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
 	var p *am.IsUserLoggedInParams
 	re = jrm1.ParseParameters(params, &p)
@@ -251,15 +268,15 @@ func (srv *Server) ChangeEmail(params *json.RawMessage, _ *jrm1.ResponseMetaData
 	return r, nil
 }
 
-func (srv *Server) GetListOfAllUsers(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
-	var p *am.GetListOfAllUsersParams
+func (srv *Server) GetUserSession(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.GetUserSessionParams
 	re = jrm1.ParseParameters(params, &p)
 	if re != nil {
 		return nil, re
 	}
 
-	var r *am.GetListOfAllUsersResult
-	r, re = srv.getListOfAllUsers(p)
+	var r *am.GetUserSessionResult
+	r, re = srv.getUserSession(p)
 	if re != nil {
 		return nil, re
 	}

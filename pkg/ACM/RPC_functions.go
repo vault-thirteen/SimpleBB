@@ -1748,6 +1748,45 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 	return result, nil
 }
 
+func (srv *Server) getUserSession(p *am.GetUserSessionParams) (result *am.GetUserSessionResult, re *jrm1.RpcError) {
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Check parameters.
+	if p.UserId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
+	}
+
+	var callerData *am.UserData
+	callerData, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !callerData.User.IsAdministrator {
+		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	result = &am.GetUserSessionResult{}
+
+	var err error
+	var session *am.Session
+	session, err = srv.dbo.GetSessionByUserId(p.UserId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if session == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SessionIsNotFound, RpcErrorMsg_SessionIsNotFound, nil)
+	}
+
+	result.Session = session
+
+	return result, nil
+}
+
 // User properties.
 
 func (srv *Server) getUserRoles(p *am.GetUserRolesParams) (result *am.GetUserRolesResult, re *jrm1.RpcError) {
