@@ -931,6 +931,64 @@ func (srv *Server) GetSection(ar *api.Request, _ *http.Request, hrw http.Respons
 	return
 }
 
+func (srv *Server) MoveSectionUp(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.MoveSectionUpParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.MoveSectionUpResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncMoveSectionUp, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) MoveSectionDown(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.MoveSectionDownParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.MoveSectionDownResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncMoveSectionDown, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
 func (srv *Server) DeleteSection(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
 	var params mm.DeleteSectionParams
@@ -1076,6 +1134,64 @@ func (srv *Server) GetForum(ar *api.Request, _ *http.Request, hrw http.ResponseW
 	return
 }
 
+func (srv *Server) MoveForumUp(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.MoveForumUpParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.MoveForumUpResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncMoveForumUp, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) MoveForumDown(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.MoveForumDownParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.MoveForumDownResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncMoveForumDown, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
 func (srv *Server) DeleteForum(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
 	var params mm.DeleteForumParams
@@ -1206,6 +1322,64 @@ func (srv *Server) GetThread(ar *api.Request, _ *http.Request, hrw http.Response
 	var result = new(mm.GetThreadResult)
 	var re *jrm1.RpcError
 	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncGetThread, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) MoveThreadUp(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.MoveThreadUpParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.MoveThreadUpResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncMoveThreadUp, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) MoveThreadDown(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.MoveThreadDownParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.MoveThreadDownResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncMoveThreadDown, params, result)
 	if err != nil {
 		srv.processInternalServerError(hrw, err)
 		return

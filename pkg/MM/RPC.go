@@ -33,16 +33,22 @@ func (srv *Server) initRpc() (err error) {
 		srv.ChangeSectionName,
 		srv.ChangeSectionParent,
 		srv.GetSection,
+		srv.MoveSectionUp,
+		srv.MoveSectionDown,
 		srv.DeleteSection,
 		srv.AddForum,
 		srv.ChangeForumName,
 		srv.ChangeForumSection,
 		srv.GetForum,
+		srv.MoveForumUp,
+		srv.MoveForumDown,
 		srv.DeleteForum,
 		srv.AddThread,
 		srv.ChangeThreadName,
 		srv.ChangeThreadForum,
 		srv.GetThread,
+		srv.MoveThreadUp,
+		srv.MoveThreadDown,
 		srv.DeleteThread,
 		srv.AddMessage,
 		srv.ChangeMessageText,
@@ -140,6 +146,38 @@ func (srv *Server) GetSection(params *json.RawMessage, _ *jrm1.ResponseMetaData)
 	return r, nil
 }
 
+func (srv *Server) MoveSectionUp(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.MoveSectionUpParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.MoveSectionUpResult
+	r, re = srv.moveSectionUp(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) MoveSectionDown(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.MoveSectionDownParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.MoveSectionDownResult
+	r, re = srv.moveSectionDown(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
 func (srv *Server) DeleteSection(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
 	var p *mm.DeleteSectionParams
 	re = jrm1.ParseParameters(params, &p)
@@ -222,6 +260,38 @@ func (srv *Server) GetForum(params *json.RawMessage, _ *jrm1.ResponseMetaData) (
 	return r, nil
 }
 
+func (srv *Server) MoveForumUp(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.MoveForumUpParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.MoveForumUpResult
+	r, re = srv.moveForumUp(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) MoveForumDown(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.MoveForumDownParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.MoveForumDownResult
+	r, re = srv.moveForumDown(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
 func (srv *Server) DeleteForum(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
 	var p *mm.DeleteForumParams
 	re = jrm1.ParseParameters(params, &p)
@@ -297,6 +367,38 @@ func (srv *Server) GetThread(params *json.RawMessage, _ *jrm1.ResponseMetaData) 
 
 	var r *mm.GetThreadResult
 	r, re = srv.getThread(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) MoveThreadUp(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.MoveThreadUpParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.MoveThreadUpResult
+	r, re = srv.moveThreadUp(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) MoveThreadDown(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.MoveThreadDownParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.MoveThreadDownResult
+	r, re = srv.moveThreadDown(p)
 	if re != nil {
 		return nil, re
 	}

@@ -353,6 +353,168 @@ func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResu
 	return result, nil
 }
 
+// moveSectionUp moves a section up by one position if possible.
+func (srv *Server) moveSectionUp(p *mm.MoveSectionUpParams) (result *mm.MoveSectionUpResult, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsAdministrator {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check parameters.
+	if p.SectionId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
+	}
+
+	// Check existence of the moved section.
+	var n int
+	var err error
+	n, err = srv.dbo.CountSectionsById(p.SectionId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+
+	// Get the section which is being moved.
+	var section *mm.Section
+	section, err = srv.dbo.GetSectionById(p.SectionId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if section == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+	if section.Parent == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RootSectionCanNotBeMoved, RpcErrorMsg_RootSectionCanNotBeMoved, nil)
+	}
+
+	// Get the parent section.
+	var parent *mm.Section
+	parent, err = srv.dbo.GetSectionById(*section.Parent)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if parent == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+	if parent.Children == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+
+	// Check compatibility.
+	if parent.ChildType != mm.ChildTypeSection {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
+	}
+
+	err = parent.Children.MoveItemUp(p.SectionId)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetSectionChildrenById(parent.Id, parent.Children)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &mm.MoveSectionUpResult{
+		OK: true,
+	}
+
+	return result, nil
+}
+
+// moveSectionDown moves a section down by one position if possible.
+func (srv *Server) moveSectionDown(p *mm.MoveSectionDownParams) (result *mm.MoveSectionDownResult, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsAdministrator {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check parameters.
+	if p.SectionId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
+	}
+
+	// Check existence of the moved section.
+	var n int
+	var err error
+	n, err = srv.dbo.CountSectionsById(p.SectionId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+
+	// Get the section which is being moved.
+	var section *mm.Section
+	section, err = srv.dbo.GetSectionById(p.SectionId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if section == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+	if section.Parent == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RootSectionCanNotBeMoved, RpcErrorMsg_RootSectionCanNotBeMoved, nil)
+	}
+
+	// Get the parent section.
+	var parent *mm.Section
+	parent, err = srv.dbo.GetSectionById(*section.Parent)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if parent == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+	if parent.Children == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+
+	// Check compatibility.
+	if parent.ChildType != mm.ChildTypeSection {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
+	}
+
+	err = parent.Children.MoveItemDown(p.SectionId)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetSectionChildrenById(parent.Id, parent.Children)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &mm.MoveSectionDownResult{
+		OK: true,
+	}
+
+	return result, nil
+}
+
 // deleteSection removes a section.
 func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSectionResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
@@ -747,6 +909,162 @@ func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, re
 	return result, nil
 }
 
+// moveForumUp moves a forum up by one position if possible.
+func (srv *Server) moveForumUp(p *mm.MoveForumUpParams) (result *mm.MoveForumUpResult, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsAdministrator {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check parameters.
+	if p.ForumId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
+	}
+
+	// Check existence of the moved forum.
+	var n int
+	var err error
+	n, err = srv.dbo.CountForumsById(p.ForumId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
+	// Get the forum which is being moved.
+	var forum *mm.Forum
+	forum, err = srv.dbo.GetForumById(p.ForumId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if forum == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
+	// Get the parent section.
+	var parent *mm.Section
+	parent, err = srv.dbo.GetSectionById(forum.SectionId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if parent == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+	if parent.Children == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
+	// Check compatibility.
+	if parent.ChildType != mm.ChildTypeForum {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
+	}
+
+	err = parent.Children.MoveItemUp(p.ForumId)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetSectionChildrenById(parent.Id, parent.Children)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &mm.MoveForumUpResult{
+		OK: true,
+	}
+
+	return result, nil
+}
+
+// moveForumDown moves a forum down by one position if possible.
+func (srv *Server) moveForumDown(p *mm.MoveForumDownParams) (result *mm.MoveForumDownResult, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsAdministrator {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check parameters.
+	if p.ForumId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
+	}
+
+	// Check existence of the moved forum.
+	var n int
+	var err error
+	n, err = srv.dbo.CountForumsById(p.ForumId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
+	// Get the forum which is being moved.
+	var forum *mm.Forum
+	forum, err = srv.dbo.GetForumById(p.ForumId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if forum == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
+	// Get the parent section.
+	var parent *mm.Section
+	parent, err = srv.dbo.GetSectionById(forum.SectionId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if parent == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
+	}
+	if parent.Children == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
+	// Check compatibility.
+	if parent.ChildType != mm.ChildTypeForum {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
+	}
+
+	err = parent.Children.MoveItemDown(p.ForumId)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetSectionChildrenById(parent.Id, parent.Children)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &mm.MoveForumDownResult{
+		OK: true,
+	}
+
+	return result, nil
+}
+
 // deleteForum removes a forum.
 func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
@@ -1088,6 +1406,152 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 
 	result = &mm.GetThreadResult{
 		Thread: thread,
+	}
+
+	return result, nil
+}
+
+// moveThreadUp moves a thread up by one position if possible.
+func (srv *Server) moveThreadUp(p *mm.MoveThreadUpParams) (result *mm.MoveThreadUpResult, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsAdministrator {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check parameters.
+	if p.ThreadId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
+	}
+
+	// Check existence of the moved thread.
+	var n int
+	var err error
+	n, err = srv.dbo.CountThreadsById(p.ThreadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	// Get the thread which is being moved.
+	var thread *mm.Thread
+	thread, err = srv.dbo.GetThreadById(p.ThreadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if thread == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	// Get the parent forum.
+	var parent *mm.Forum
+	parent, err = srv.dbo.GetForumById(thread.ForumId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if parent == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+	if parent.Threads == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	err = parent.Threads.MoveItemUp(p.ThreadId)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetForumThreadsById(parent.Id, parent.Threads)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &mm.MoveThreadUpResult{
+		OK: true,
+	}
+
+	return result, nil
+}
+
+// moveThreadDown moves a thread down by one position if possible.
+func (srv *Server) moveThreadDown(p *mm.MoveThreadDownParams) (result *mm.MoveThreadDownResult, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsAdministrator {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check parameters.
+	if p.ThreadId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
+	}
+
+	// Check existence of the moved thread.
+	var n int
+	var err error
+	n, err = srv.dbo.CountThreadsById(p.ThreadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	// Get the thread which is being moved.
+	var thread *mm.Thread
+	thread, err = srv.dbo.GetThreadById(p.ThreadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if thread == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	// Get the parent forum.
+	var parent *mm.Forum
+	parent, err = srv.dbo.GetForumById(thread.ForumId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if parent == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+	if parent.Threads == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	err = parent.Threads.MoveItemDown(p.ThreadId)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetForumThreadsById(parent.Id, parent.Threads)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &mm.MoveThreadDownResult{
+		OK: true,
 	}
 
 	return result, nil

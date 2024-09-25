@@ -14,6 +14,8 @@ const (
 	FuncChangeSectionName   = "ChangeSectionName"
 	FuncChangeSectionParent = "ChangeSectionParent"
 	FuncGetSection          = "GetSection"
+	FuncMoveSectionUp       = "MoveSectionUp"
+	FuncMoveSectionDown     = "MoveSectionDown"
 	FuncDeleteSection       = "DeleteSection"
 
 	// Forum.
@@ -21,6 +23,8 @@ const (
 	FuncChangeForumName    = "ChangeForumName"
 	FuncChangeForumSection = "ChangeForumSection"
 	FuncGetForum           = "GetForum"
+	FuncMoveForumUp        = "MoveForumUp"
+	FuncMoveForumDown      = "MoveForumDown"
 	FuncDeleteForum        = "DeleteForum"
 
 	// Thread.
@@ -28,6 +32,8 @@ const (
 	FuncChangeThreadName  = "ChangeThreadName"
 	FuncChangeThreadForum = "ChangeThreadForum"
 	FuncGetThread         = "GetThread"
+	FuncMoveThreadUp      = "MoveThreadUp"
+	FuncMoveThreadDown    = "MoveThreadDown"
 	FuncDeleteThread      = "DeleteThread"
 
 	// Message.

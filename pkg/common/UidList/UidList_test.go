@@ -191,6 +191,84 @@ func Test_RaiseItem(t *testing.T) {
 	aTest.MustBeEqual(isAlreadyRaised, true)
 }
 
+func Test_MoveItemUp(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+	var err error
+
+	// Test #1. Item is not found.
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	err = ul.MoveItemUp(4)
+	aTest.MustBeAnError(err)
+
+	// Test #2. Duplicate item.
+	ul = &UidList{1, 2, 3, 2}
+	err = ul.MoveItemUp(2)
+	aTest.MustBeAnError(err)
+
+	// Test #3. Item is already on top edge.
+	ul = &UidList{1, 2, 3}
+	err = ul.MoveItemUp(1)
+	aTest.MustBeAnError(err)
+
+	// Test #4. Middle item is moved.
+	ul = &UidList{1, 2, 3}
+	err = ul.MoveItemUp(2)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual([]uint(*ul), []uint{2, 1, 3})
+
+	// Test #5. Last item is moved.
+	ul = &UidList{1, 2, 3}
+	err = ul.MoveItemUp(3)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual([]uint(*ul), []uint{1, 3, 2})
+
+	// Test #6. One item.
+	ul = &UidList{1}
+	err = ul.MoveItemUp(1)
+	aTest.MustBeAnError(err)
+}
+
+func Test_MoveItemDown(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+	var err error
+
+	// Test #1. Item is not found.
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	err = ul.MoveItemDown(4)
+	aTest.MustBeAnError(err)
+
+	// Test #2. Duplicate item.
+	ul = &UidList{1, 2, 3, 2}
+	err = ul.MoveItemDown(2)
+	aTest.MustBeAnError(err)
+
+	// Test #3. Item is already on bottom edge.
+	ul = &UidList{1, 2, 3}
+	err = ul.MoveItemDown(3)
+	aTest.MustBeAnError(err)
+
+	// Test #4. Middle item is moved.
+	ul = &UidList{1, 2, 3}
+	err = ul.MoveItemDown(2)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual([]uint(*ul), []uint{1, 3, 2})
+
+	// Test #5. Top item is moved.
+	ul = &UidList{1, 2, 3}
+	err = ul.MoveItemDown(1)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual([]uint(*ul), []uint{2, 1, 3})
+
+	// Test #6. One item.
+	ul = &UidList{1}
+	err = ul.MoveItemDown(1)
+	aTest.MustBeAnError(err)
+}
+
 func Test_Scan(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList

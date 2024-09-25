@@ -15,6 +15,7 @@ const (
 	ErrFUnsupportedDataType        = "unsupported data type: %s"
 	ErrFDuplicateUid               = "duplicate uid: %v"
 	ErrFUidIsNotFound              = "uid is not found: %v"
+	ErrEdgePosition                = "edge position"
 )
 
 const (
@@ -162,6 +163,60 @@ func (ul *UidList) RaiseItem(uid uint) (isAlreadyRaised bool, err error) {
 	(*ul)[0] = movedItem
 
 	return false, nil
+}
+
+// MoveItemUp moves an existing identifier one position upwards if possible.
+func (ul *UidList) MoveItemUp(uid uint) (err error) {
+	// Find the item and check for uniqueness.
+	positions := make([]int, 0)
+	for i, x := range *ul {
+		if x == uid {
+			positions = append(positions, i)
+		}
+	}
+	if len(positions) == 0 {
+		return fmt.Errorf(ErrFUidIsNotFound, uid)
+	}
+	if len(positions) > 1 {
+		return fmt.Errorf(ErrFDuplicateUid, uid)
+	}
+	position := positions[0]
+
+	// Check for top edge position.
+	if position == 0 {
+		return errors.New(ErrEdgePosition)
+	}
+
+	// Move the item one position upwards.
+	(*ul)[position-1], (*ul)[position] = (*ul)[position], (*ul)[position-1]
+	return nil
+}
+
+// MoveItemDown moves an existing identifier one position downwards if possible.
+func (ul *UidList) MoveItemDown(uid uint) (err error) {
+	// Find the item and check for uniqueness.
+	positions := make([]int, 0)
+	for i, x := range *ul {
+		if x == uid {
+			positions = append(positions, i)
+		}
+	}
+	if len(positions) == 0 {
+		return fmt.Errorf(ErrFUidIsNotFound, uid)
+	}
+	if len(positions) > 1 {
+		return fmt.Errorf(ErrFDuplicateUid, uid)
+	}
+	position := positions[0]
+
+	// Check for bottom edge position.
+	if position == len(*ul)-1 {
+		return errors.New(ErrEdgePosition)
+	}
+
+	// Move the item one position upwards.
+	(*ul)[position+1], (*ul)[position] = (*ul)[position], (*ul)[position+1]
+	return nil
 }
 
 // Scan method provides compatibility with SQL JSON data type.

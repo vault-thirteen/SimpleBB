@@ -74,6 +74,32 @@ type GetSectionResult struct {
 	Section *Section `json:"section"`
 }
 
+type MoveSectionUpParams struct {
+	cmr.CommonParams
+
+	// Identifier of a section.
+	SectionId uint `json:"sectionId"`
+}
+
+type MoveSectionUpResult struct {
+	cmr.CommonResult
+
+	OK bool `json:"ok"`
+}
+
+type MoveSectionDownParams struct {
+	cmr.CommonParams
+
+	// Identifier of a section.
+	SectionId uint `json:"sectionId"`
+}
+
+type MoveSectionDownResult struct {
+	cmr.CommonResult
+
+	OK bool `json:"ok"`
+}
+
 type DeleteSectionParams struct {
 	cmr.CommonParams
 
@@ -148,6 +174,32 @@ type GetForumResult struct {
 	Forum *Forum `json:"forum"`
 }
 
+type MoveForumUpParams struct {
+	cmr.CommonParams
+
+	// Identifier of a forum.
+	ForumId uint `json:"forumId"`
+}
+
+type MoveForumUpResult struct {
+	cmr.CommonResult
+
+	OK bool `json:"ok"`
+}
+
+type MoveForumDownParams struct {
+	cmr.CommonParams
+
+	// Identifier of a forum.
+	ForumId uint `json:"forumId"`
+}
+
+type MoveForumDownResult struct {
+	cmr.CommonResult
+
+	OK bool `json:"ok"`
+}
+
 type DeleteForumParams struct {
 	cmr.CommonParams
 
@@ -219,6 +271,32 @@ type GetThreadResult struct {
 	cmr.CommonResult
 
 	Thread *Thread `json:"thread"`
+}
+
+type MoveThreadUpParams struct {
+	cmr.CommonParams
+
+	// Identifier of a thread.
+	ThreadId uint `json:"threadId"`
+}
+
+type MoveThreadUpResult struct {
+	cmr.CommonResult
+
+	OK bool `json:"ok"`
+}
+
+type MoveThreadDownParams struct {
+	cmr.CommonParams
+
+	// Identifier of a thread.
+	ThreadId uint `json:"threadId"`
+}
+
+type MoveThreadDownResult struct {
+	cmr.CommonResult
+
+	OK bool `json:"ok"`
 }
 
 type DeleteThreadParams struct {
