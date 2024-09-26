@@ -44,7 +44,7 @@ varnameChangePwdAuthDataBytes = "changePwdAuthDataBytes";
 varnameChangePwdIsCaptchaNeeded = "changePwdIsCaptchaNeeded";
 varnameChangePwdCaptchaId = "changePwdCaptchaId";
 
-// Pages.
+// Pages and Query Parameters.
 qpRegistrationStep1 = "?reg1"
 qpRegistrationStep2 = "?reg2"
 qpRegistrationStep3 = "?reg3"
@@ -61,6 +61,13 @@ qpChangeEmailStep3 = "?changeEmail3";
 qpChangePwdStep1 = "?changePwd1";
 qpChangePwdStep2 = "?changePwd2";
 qpChangePwdStep3 = "?changePwd3";
+
+qpPrefix = "?"
+qpnId = "id";
+qpnPage = "page";
+qpnSection = "section";
+qpnForum = "forum";
+qpnThread = "thread";
 
 // Form Input Elements.
 fiid1 = "f1i";
@@ -94,6 +101,15 @@ errServer = "server error";
 errClient = "client error";
 errUnknown = "unknown error";
 errElementTypeUnsupported = "unsupported element type";
+errRootSectionNotFound = "root section is not found";
+errSectionNotFound = "section is not found";
+errThreadNotFound = "thread is not found";
+errDuplicateMapKey = "duplicate map key";
+errIdNotSet = "ID is not set";
+errUnknownVariant = "unknown variant";
+errPreviousPageDoesNotExist = "previous page does not exist";
+errNextPageDoesNotExist = "next page does not exist";
+errPageNotFound = "page is not found";
 
 // Messages.
 msgRedirecting = "Redirecting. Please wait ...";
@@ -105,6 +121,19 @@ actionName_logUserIn = "logUserIn";
 actionName_logUserOut = "logUserOut";
 actionName_changeEmail = "changeEmail";
 actionName_changePwd = "changePassword";
+actionName_listSectionsAndForums = "listSectionsAndForums";
+actionName_listForumAndThreadsOnPage = "listForumAndThreadsOnPage";
+
+// Section settings.
+sectionChildTypeNone = 0;
+sectionChildTypeSection = 1;
+sectionChildTypeForum = 2;
+sectionMarginDelta = 10;
+
+// Global variables.
+page = 0;
+pages = 0;
+id = 0;
 
 // Settings class.
 class Settings {
@@ -220,6 +249,20 @@ class Parameters_ChangePwd2 {
 	}
 }
 
+class Parameters_ListForumAndThreadsOnPage {
+	constructor(forumId, page) {
+		this.ForumId = forumId;
+		this.Page = page;
+	}
+}
+
+class SectionNode {
+	constructor(section, level) {
+		this.Section = section;
+		this.Level = level;
+	}
+}
+
 class ApiResponse {
 	constructor(isOk, jsonObject, statusCode, errorText) {
 		this.IsOk = isOk;
@@ -240,8 +283,10 @@ async function loadPage() {
 	console.debug("isLoggedIn:", isLoggedInB);
 
 	// Select a page.
-	let curUrl = window.location.search;
-	switch (curUrl) {
+	let curPage = window.location.search;
+	let sp = new URLSearchParams(curPage);
+
+	switch (curPage) {
 		case qpRegistrationStep1:
 			showReg1Form();
 			return;
@@ -313,8 +358,34 @@ async function loadPage() {
 		return;
 	}
 
-	// Show the forum.
-	console.debug("TODO");//TODO: Show forum.
+	// Show the bulletin board.
+	if (sp.has(qpnSection)) {
+		if (!sp.has(qpnId)) {
+			console.error(errIdNotSet);
+			return;
+		}
+
+		let sectionId = Number(sp.get(qpnId));
+		id = sectionId;
+		await showSection(sectionId);
+		return;
+	}
+
+	if (sp.has(qpnForum)) {
+		if (!sp.has(qpnId)) {
+			console.error(errIdNotSet);
+			return;
+		}
+
+		let forumId = Number(sp.get(qpnId));
+		id = forumId;
+		page = Number(sp.get(qpnPage));
+		disableZeroPage();
+		await showForum(forumId);
+		return;
+	}
+
+	await showBB();
 }
 
 function getCurrentTimestamp() {
@@ -466,8 +537,8 @@ function logOut() {
 }
 
 function showBlock(divId) {
-	let divReg = document.getElementById(divId);
-	divReg.style.display = "block";
+	let div = document.getElementById(divId);
+	div.style.display = "block";
 }
 
 function showHeader1(elementId) {
@@ -581,6 +652,104 @@ function showChangePwd2Form() {
 function showChangePwd3Form() {
 	showBlock("divChangePwd3");
 	showHeader1("header1TitleChangePwd3");
+}
+
+async function showBB() {
+	let settings = getSettings();
+	showBlock("divBB");
+	let p = document.getElementById("divBB");
+	addPageHead(p, settings.SiteName);
+
+	let resp = await listSectionsAndForums();
+	if (resp == null) {
+		return;
+	}
+	let sections = resp.result.saf.sections;
+	let forums = resp.result.saf.forums;
+	let rootSectionIdx = getRootSectionIdx(sections);
+	if (rootSectionIdx == null) {
+		console.error(errRootSectionNotFound);
+	}
+	let rootSection = sections[rootSectionIdx];
+	let sectionsMap = putSectionsIntoMap(sections);
+	if (sectionsMap == null) {
+		return;
+	}
+	let forumsMap = putForumsIntoMap(forums);
+	if (forumsMap == null) {
+		return;
+	}
+	let nodes = [];
+	createTreeOfSections(rootSection, sectionsMap, 1, nodes);
+	processSectionNodes(p, nodes, forumsMap);
+}
+
+async function showSection(sectionId) {
+	let settings = getSettings();
+	showBlock("divBB");
+	let p = document.getElementById("divBB");
+	addPageHead(p, settings.SiteName);
+
+	let resp = await listSectionsAndForums();
+	if (resp == null) {
+		return;
+	}
+	let sections = resp.result.saf.sections;
+	let forums = resp.result.saf.forums;
+	let rootSectionIdx = getRootSectionIdx(sections);
+	if (rootSectionIdx == null) {
+		console.error(errRootSectionNotFound);
+	}
+	let rootSection = sections[rootSectionIdx];
+	let sectionsMap = putSectionsIntoMap(sections);
+	if (sectionsMap == null) {
+		return;
+	}
+	let forumsMap = putForumsIntoMap(forums);
+	if (forumsMap == null) {
+		return;
+	}
+	let allNodes = [];
+	createTreeOfSections(rootSection, sectionsMap, 1, allNodes);
+	let nodes = [];
+	if (!sectionsMap.has(sectionId)) {
+		console.error(errSectionNotFound);
+		return;
+	}
+	let curSection = sectionsMap.get(sectionId);
+	let curLevel = findCurrentNodeLevel(allNodes, sectionId);
+	createTreeOfSections(curSection, sectionsMap, curLevel, nodes);
+	processSectionNodes(p, nodes, forumsMap);
+}
+
+async function showForum(forumId) {
+	let settings = getSettings();
+	let p = document.getElementById("divBB");
+	let pageNumber = page;
+	let resp = await listForumAndThreadsOnPage(forumId, pageNumber);
+	if (resp == null) {
+		return;
+	}
+	let pageCount = resp.result.fatop.totalPages;
+
+	// Check for overflow.
+	pages = pageCount;
+	if (pageNumber > pageCount) {
+		console.error(errPageNotFound);
+		return;
+	}
+
+	let forum = resp.result.fatop;
+	let threads = resp.result.fatop.threads;
+	let threadsMap = putThreadsIntoMap(threads);
+	if (threadsMap == null) {
+		return;
+	}
+
+	showBlock("divBB");
+	addPageHead(p, settings.SiteName);
+	addPaginator(p, pageNumber, pageCount, "forumPagePrev", "forumPageNext");
+	processForumAndThreads(p, forum, threadsMap);
 }
 
 function setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer) {
@@ -1102,7 +1271,7 @@ async function sleep(ms) {
 }
 
 async function sendApiRequest(data) {
-	console.debug("sendApiRequest", "data:", data);//TODO:DEBUG.
+	//console.debug("sendApiRequest", "data:", data);
 	let settings = getSettings();
 	let url = settingsRootPath + settings.ApiFolder;
 	let resp;
@@ -1274,4 +1443,245 @@ function makeCaptchaImageUrl(captchaId) {
 	let settings = getSettings();
 	let captchaPath = settingsRootPath + settings.CaptchaFolder;
 	return captchaPath + "?id=" + captchaId;
+}
+
+function addPageHead(el, text) {
+	let div = document.createElement("DIV");
+	div.className = "pageHead";
+	div.id = "pageHead";
+	div.textContent = text;
+	el.appendChild(div);
+}
+
+async function listSectionsAndForums() {
+	let reqData = new ApiRequest(actionName_listSectionsAndForums, {});
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function listForumAndThreadsOnPage(forumId, page) {
+	let params = new Parameters_ListForumAndThreadsOnPage(forumId, page);
+	let reqData = new ApiRequest(actionName_listForumAndThreadsOnPage, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+function getRootSectionIdx(sections) {
+	for (let i = 0; i < sections.length; i++) {
+		if (sections[i].parent == null) {
+			return i;
+		}
+		return null;
+	}
+}
+
+function putSectionsIntoMap(sections) {
+	return putArrayItemsIntoMap(sections);
+}
+
+function putForumsIntoMap(forums) {
+	return putArrayItemsIntoMap(forums);
+}
+
+function putThreadsIntoMap(threads) {
+	return putArrayItemsIntoMap(threads);
+}
+
+function putArrayItemsIntoMap(a) {
+	let m = new Map();
+	let key;
+	for (let i = 0; i < a.length; i++) {
+		key = a[i].id;
+		if (m.has(key)) {
+			console.error(errDuplicateMapKey);
+			return null;
+		}
+		m.set(key, a[i]);
+	}
+	return m;
+}
+
+// createTreeOfSections creates a tree of sections.
+// 'nodes' is an output parameter.
+function createTreeOfSections(section, sectionsMap, level, nodes) {
+	nodes.push(new SectionNode(section, level));
+
+	if (section.childType !== sectionChildTypeSection) {
+		return;
+	}
+
+	let subSectionIds = section.children;
+	let subSection;
+	level++;
+	for (let i = 0; i < subSectionIds.length; i++) {
+		subSection = sectionsMap.get(subSectionIds[i]);
+		createTreeOfSections(subSection, sectionsMap, level, nodes);
+	}
+}
+
+function processSectionNodes(p, nodes, forumsMap) {
+	let node, divSection, divForum, ml, url, forumId, forum, sectionForums;
+	for (let i = 0; i < nodes.length; i++) {
+		node = nodes[i];
+
+		divSection = document.createElement("DIV");
+		divSection.className = "section";
+		divSection.id = "section_" + node.Section.id;
+		ml = sectionMarginDelta * node.Level;
+		divSection.style.cssText = "margin-left: " + ml + "px";
+		url = qpPrefix + qpnSection + "&" + qpnId + "=" + node.Section.id;
+		divSection.innerHTML = "<a href='" + url + "'>" + node.Section.name + "</a>";
+		p.appendChild(divSection);
+
+		if (node.Section.childType === sectionChildTypeForum) {
+			sectionForums = node.Section.children;
+		} else {
+			sectionForums = [];
+		}
+		for (let j = 0; j < sectionForums.length; j++) {
+			forumId = sectionForums[j];
+			forum = forumsMap.get(forumId);
+
+			divForum = document.createElement("DIV");
+			divForum.className = "forum";
+			divForum.id = "forum_" + forumId;
+			ml = sectionMarginDelta * (node.Level + 1);
+			divForum.style.cssText = "margin-left: " + ml + "px";
+			url = qpPrefix + qpnForum + "&" + qpnId + "=" + forumId;
+			divForum.innerHTML = "<a href='" + url + "'>" + forum.name + "</a>";
+			p.appendChild(divForum);
+		}
+
+	}
+}
+
+function processForumAndThreads(p, forum, threadsMap) {
+	let divForum, divThread, ml, url, threadIds, threadId, thread;
+
+	divForum = document.createElement("DIV");
+	divForum.className = "forum";
+	divForum.id = "forum_" + forum.forumId;
+	ml = sectionMarginDelta;
+	divForum.style.cssText = "margin-left: " + ml + "px";
+	url = qpPrefix + qpnForum + "&" + qpnId + "=" + forum.forumId;
+	divForum.innerHTML = "<a href='" + url + "'>" + forum.forumName + "</a>";
+	p.appendChild(divForum);
+
+	threadIds = forum.threadIds;
+	for (let i = 0; i < threadIds.length; i++) {
+		threadId = threadIds[i];
+		if (!threadsMap.has(threadId)) {
+			console.error(errThreadNotFound);
+			return;
+		}
+		thread = threadsMap.get(threadId);
+
+		divThread = document.createElement("DIV");
+		divThread.className = "thread";
+		divThread.id = "thread_" + thread.id;
+		ml = sectionMarginDelta * 2;
+		divThread.style.cssText = "margin-left: " + ml + "px";
+		url = qpPrefix + qpnThread + "&" + qpnId + "=" + threadId;
+		divThread.innerHTML = "<a href='" + url + "'>" + thread.name + "</a>";
+		p.appendChild(divThread);
+	}
+}
+
+function findCurrentNodeLevel(allNodes, sectionId) {
+	let node;
+	for (let i = 0; i < allNodes.length; i++) {
+		node = allNodes[i];
+		if (node.Section.id === sectionId) {
+			return node.Level;
+		}
+	}
+}
+
+function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
+	let div = document.createElement("DIV");
+	div.className = "paginator";
+	div.id = "paginator";
+
+	let s = document.createElement("span");
+	s.textContent = "Page " + pageNumber + " of " + pageCount + " ";
+	div.appendChild(s);
+
+	let btnPrev = document.createElement("input");
+	btnPrev.type = "button";
+	btnPrev.className = "btnPrev";
+	btnPrev.id = "btnPrev";
+	btnPrev.value = "Previous Page";
+	addClickEventHandler(btnPrev, variantPrev);
+	div.appendChild(btnPrev);
+
+	s = document.createElement("span");
+	s.className = "spacerA";
+	s.innerHTML = "&nbsp;";
+	div.appendChild(s);
+
+	let btnNext = document.createElement("input");
+	btnNext.type = "button";
+	btnNext.className = "btnNext";
+	btnNext.id = "btnNext";
+	btnNext.value = "Next Page";
+	addClickEventHandler(btnNext, variantNext);
+	div.appendChild(btnNext);
+
+	el.appendChild(div);
+}
+
+function addClickEventHandler(btn, variant) {
+	switch (variant) {
+		case "forumPagePrev":
+			btn.addEventListener("click", async (e) => {
+				await onBtnPrevClick_forumPage(btn);
+			});
+			return;
+
+		case "forumPageNext":
+			btn.addEventListener("click", async (e) => {
+				await onBtnNextClick_forumPage(btn);
+			});
+			return;
+
+
+		default:
+			console.error(errUnknownVariant);
+	}
+}
+
+async function onBtnPrevClick_forumPage(btn) {
+	if (page <= 1) {
+		console.error(errPreviousPageDoesNotExist);
+		return;
+	}
+
+	page--;
+	let url = qpPrefix + qpnForum + "&" + qpnId + "=" + id + "&" + qpnPage + "=" + page;
+	await redirectPage(false, url);
+}
+
+async function onBtnNextClick_forumPage(btn) {
+	if (page >= pages) {
+		console.error(errNextPageDoesNotExist);
+		return;
+	}
+
+	page++;
+	let url = qpPrefix + qpnForum + "&" + qpnId + "=" + id + "&" + qpnPage + "=" + page;
+	await redirectPage(false, url);
+}
+
+function disableZeroPage() {
+	if (page < 1) {
+		page = 1;
+	}
 }

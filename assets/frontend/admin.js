@@ -48,6 +48,7 @@ errPreviousPageDoesNotExist = "previous page does not exist";
 errNextPageDoesNotExist = "next page does not exist";
 errPageNotFound = "page is not found";
 errIdNotSet = "ID is not set";
+errUnknownVariant = "unknown variant";
 
 // User role names.
 userRoleAuthor = "author";
@@ -559,42 +560,42 @@ function addClickEventHandler(btn, variant) {
 	switch (variant) {
 		case "userListPrev":
 			btn.addEventListener("click", async (e) => {
-				onBtnPrevClick(btn);
+				await onBtnPrevClick(btn);
 			});
 			return;
 
 		case "userListNext":
 			btn.addEventListener("click", async (e) => {
-				onBtnNextClick(btn);
+				await onBtnNextClick(btn);
 			});
 			return;
 
 		case "loggedUserListPrev":
 			btn.addEventListener("click", async (e) => {
-				onBtnPrevClick_logged(btn);
+				await onBtnPrevClick_logged(btn);
 			});
 			return;
 
 		case "loggedUserListNext":
 			btn.addEventListener("click", async (e) => {
-				onBtnNextClick_logged(btn);
+				await onBtnNextClick_logged(btn);
 			});
 			return;
 
 		case "rrfaListPrev":
 			btn.addEventListener("click", async (e) => {
-				onBtnPrevClick_rrfa(btn);
+				await onBtnPrevClick_rrfa(btn);
 			});
 			return;
 
 		case "rrfaListNext":
 			btn.addEventListener("click", async (e) => {
-				onBtnNextClick_rrfa(btn);
+				await onBtnNextClick_rrfa(btn);
 			});
 			return;
 
 		default:
-			console.error(x);
+			console.error(errUnknownVariant);
 	}
 }
 

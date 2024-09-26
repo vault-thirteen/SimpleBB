@@ -173,9 +173,16 @@ div.divReg,
 div.divLogIn,
 div.divLogOut,
 div.divChangeEmail,
-div.divChangePwd {
+div.divChangePwd,
+div.divBB {
 	height: auto;
 	display: none;
+}
+
+div.divBB {
+	font-family: "DejaVu Sans", serif;
+	font-size: 14px;
+	margin: 10px;
 }
 
 div.head {
@@ -320,4 +327,65 @@ table.subpageListOfLoggedUsers tr a {
 th.numCol,
 td.numCol {
 	color: gray;
+}
+
+.pageHead {
+	font-family: "DejaVu Sans", serif;
+	font-size: 16px;
+	margin: 10px;
+	text-align: left;
+	color: grey;
+}
+
+div.section {
+	margin-right: 10px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border: 1px solid black;
+	font-size: 18px;
+	background-color: bisque;
+	padding-left: 10px;
+}
+
+div.section a {
+	text-decoration: none;
+}
+
+div.forum {
+	margin-right: 10px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border: 1px solid black;
+	font-size: 18px;
+	background-color: white;
+	padding-left: 10px;
+}
+
+div.forum a {
+	text-decoration: none;
+}
+
+div.thread {
+	margin-right: 10px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border: 1px solid black;
+	font-size: 18px;
+	background-color: gainsboro;
+	padding-left: 10px;
+}
+
+div.thread a {
+	text-decoration: none;
+}
+
+.paginator {
+	font-size: 14px;
+	color: grey;
+	margin-bottom: 5px;
+}
+
+.spacerA {
+	width: 15px;
+	display: inline-block;
 }
