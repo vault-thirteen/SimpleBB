@@ -1,3 +1,17 @@
+window.onpageshow = function (event) {
+	if (event.persisted) {
+		// Unfortunately, JavaScript does not reload a page when you click
+		// "Go Back" button in your web browser. Every year programmers invent
+		// a new "wheel" to fix this bug. And every year old working solutions
+		// stop working and new ones are invented. This circus looks infinite,
+		// but in reality it will end as soon as this evil programming language
+		// dies. Please, do not support JavaScript and its developers in any
+		// means possible. Please, let this evil "technology" to die.
+		console.info("JavaScript must die. This pseudo language is a big mockery and ridicule of people. This is not a joke. This is truth.");
+		window.location.reload();
+	}
+};
+
 // Path to initial settings for a loader script.
 settingsPath = "settings.json";
 settingsRootPath = "/";
@@ -93,6 +107,10 @@ fiid16_image = "f16ii";
 fiid17 = "f17i";
 
 // Errors.
+errIdNotSet = "ID is not set";
+errIdNotFound = "ID is not found";
+errPageNotSet = "page is not set";
+errPageNotFound = "page is not found";
 errNextStepUnknown = "unknown next step";
 errPasswordNotValid = "password is not valid";
 errWebTokenIsNotSet = "web token is not set";
@@ -105,11 +123,9 @@ errRootSectionNotFound = "root section is not found";
 errSectionNotFound = "section is not found";
 errThreadNotFound = "thread is not found";
 errDuplicateMapKey = "duplicate map key";
-errIdNotSet = "ID is not set";
 errUnknownVariant = "unknown variant";
 errPreviousPageDoesNotExist = "previous page does not exist";
 errNextPageDoesNotExist = "next page does not exist";
-errPageNotFound = "page is not found";
 
 // Messages.
 msgRedirecting = "Redirecting. Please wait ...";
@@ -131,9 +147,15 @@ sectionChildTypeForum = 2;
 sectionMarginDelta = 10;
 
 // Global variables.
-page = 0;
-pages = 0;
-id = 0;
+class GlobalVariablesContainer {
+	constructor(id, page, pages) {
+		this.Id = id;
+		this.Page = page;
+		this.Pages = pages;
+	}
+}
+
+mca_gvc = new GlobalVariablesContainer(0, 0, 0);
 
 // Settings class.
 class Settings {
@@ -360,28 +382,18 @@ async function loadPage() {
 
 	// Show the bulletin board.
 	if (sp.has(qpnSection)) {
-		if (!sp.has(qpnId)) {
-			console.error(errIdNotSet);
+		if (!prepareIdVariable(sp)) {
 			return;
 		}
-
-		let sectionId = Number(sp.get(qpnId));
-		id = sectionId;
-		await showSection(sectionId);
+		await showSection();
 		return;
 	}
 
 	if (sp.has(qpnForum)) {
-		if (!sp.has(qpnId)) {
-			console.error(errIdNotSet);
+		if ((!prepareIdVariable(sp)) || (!preparePageVariable(sp))) {
 			return;
 		}
-
-		let forumId = Number(sp.get(qpnId));
-		id = forumId;
-		page = Number(sp.get(qpnPage));
-		disableZeroPage();
-		await showForum(forumId);
+		await showForum();
 		return;
 	}
 
@@ -432,10 +444,6 @@ function updatePageCurrentLoadTime() {
 	sessionStorage.setItem(varnamePageCurrentLoadTime, timeNow.toString());
 }
 
-function getPageCurrentLoadTime() {
-	return sessionStorage.getItem(varnamePageCurrentLoadTime);
-}
-
 async function updateSettingsIfNeeded() {
 	let timeNow = getCurrentTimestamp();
 	let settingsLoadTimeStr = sessionStorage.getItem(varnameSettingsLoadTime);
@@ -454,7 +462,7 @@ async function updateSettingsIfNeeded() {
 
 async function updateSettings() {
 	let settings = await fetchSettings();
-	console.debug('Received settings. Version:', settings.version);
+	console.info('Received settings. Version: ' + settings.version.toString() + ".");
 	saveSettings(settings);
 }
 
@@ -655,11 +663,6 @@ function showChangePwd3Form() {
 }
 
 async function showBB() {
-	let settings = getSettings();
-	showBlock("divBB");
-	let p = document.getElementById("divBB");
-	addPageHead(p, settings.SiteName);
-
 	let resp = await listSectionsAndForums();
 	if (resp == null) {
 		return;
@@ -681,15 +684,17 @@ async function showBB() {
 	}
 	let nodes = [];
 	createTreeOfSections(rootSection, sectionsMap, 1, nodes);
+
+	// Draw.
+	showBlock("divBB");
+	let p = document.getElementById("divBB");
+	let settings = getSettings();
+	addPageHead(p, settings.SiteName);
 	processSectionNodes(p, nodes, forumsMap);
 }
 
-async function showSection(sectionId) {
-	let settings = getSettings();
-	showBlock("divBB");
-	let p = document.getElementById("divBB");
-	addPageHead(p, settings.SiteName);
-
+async function showSection() {
+	let sectionId = mca_gvc.Id;
 	let resp = await listSectionsAndForums();
 	if (resp == null) {
 		return;
@@ -719,21 +724,26 @@ async function showSection(sectionId) {
 	let curSection = sectionsMap.get(sectionId);
 	let curLevel = findCurrentNodeLevel(allNodes, sectionId);
 	createTreeOfSections(curSection, sectionsMap, curLevel, nodes);
+
+	// Draw.
+	showBlock("divBB");
+	let p = document.getElementById("divBB");
+	let settings = getSettings();
+	addPageHead(p, settings.SiteName);
 	processSectionNodes(p, nodes, forumsMap);
 }
 
-async function showForum(forumId) {
-	let settings = getSettings();
-	let p = document.getElementById("divBB");
-	let pageNumber = page;
+async function showForum() {
+	let forumId = mca_gvc.Id;
+	let pageNumber = mca_gvc.Page;
 	let resp = await listForumAndThreadsOnPage(forumId, pageNumber);
 	if (resp == null) {
 		return;
 	}
 	let pageCount = resp.result.fatop.totalPages;
+	mca_gvc.Pages = pageCount;
 
-	// Check for overflow.
-	pages = pageCount;
+	// Check page number for overflow.
 	if (pageNumber > pageCount) {
 		console.error(errPageNotFound);
 		return;
@@ -746,7 +756,10 @@ async function showForum(forumId) {
 		return;
 	}
 
+	// Draw.
 	showBlock("divBB");
+	let p = document.getElementById("divBB");
+	let settings = getSettings();
 	addPageHead(p, settings.SiteName);
 	addPaginator(p, pageNumber, pageCount, "forumPagePrev", "forumPageNext");
 	processForumAndThreads(p, forum, threadsMap);
@@ -1659,29 +1672,55 @@ function addClickEventHandler(btn, variant) {
 }
 
 async function onBtnPrevClick_forumPage(btn) {
-	if (page <= 1) {
+	if (mca_gvc.Page <= 1) {
 		console.error(errPreviousPageDoesNotExist);
 		return;
 	}
 
-	page--;
-	let url = qpPrefix + qpnForum + "&" + qpnId + "=" + id + "&" + qpnPage + "=" + page;
+	mca_gvc.Page--;
+	let url = qpPrefix + qpnForum + "&" + qpnId + "=" + mca_gvc.Id + "&" + qpnPage + "=" + mca_gvc.Page;
 	await redirectPage(false, url);
 }
 
 async function onBtnNextClick_forumPage(btn) {
-	if (page >= pages) {
+	if (mca_gvc.Page >= mca_gvc.Pages) {
 		console.error(errNextPageDoesNotExist);
 		return;
 	}
 
-	page++;
-	let url = qpPrefix + qpnForum + "&" + qpnId + "=" + id + "&" + qpnPage + "=" + page;
+	mca_gvc.Page++;
+	let url = qpPrefix + qpnForum + "&" + qpnId + "=" + mca_gvc.Id + "&" + qpnPage + "=" + mca_gvc.Page;
 	await redirectPage(false, url);
 }
 
-function disableZeroPage() {
-	if (page < 1) {
-		page = 1;
+function prepareIdVariable(sp) {
+	if (!sp.has(qpnId)) {
+		console.error(errIdNotSet);
+		return false;
 	}
+
+	let xId = Number(sp.get(qpnId));
+	if (xId <= 0) {
+		console.error(errIdNotFound);
+		return false;
+	}
+
+	mca_gvc.Id = xId;
+	return true;
+}
+
+function preparePageVariable(sp) {
+	let pageNumber;
+	if (!sp.has(qpnPage)) {
+		pageNumber = 1;
+	} else {
+		pageNumber = Number(sp.get(qpnPage));
+		if (pageNumber <= 0) {
+			console.error(errPageNotFound);
+			return false;
+		}
+	}
+
+	mca_gvc.Page = pageNumber;
+	return true;
 }

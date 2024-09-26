@@ -1,23 +1,31 @@
+window.onpageshow = function (event) {
+	if (event.persisted) {
+		// Unfortunately, JavaScript does not reload a page when you click
+		// "Go Back" button in your web browser. Every year programmers invent
+		// a new "wheel" to fix this bug. And every year old working solutions
+		// stop working and new ones are invented. This circus looks infinite,
+		// but in reality it will end as soon as this evil programming language
+		// dies. Please, do not support JavaScript and its developers in any
+		// means possible. Please, let this evil "technology" to die.
+		console.info("JavaScript must die. This pseudo language is a big mockery and ridicule of people. This is not a joke. This is truth.");
+		window.location.reload();
+	}
+};
+
 // Settings.
 settingsPath = "settings.json";
 rootPath = "/";
-let settings;
 redirectDelay = 0;
+adminPage = "admin.html";
 
 // Names of Query Parameters.
 qpPrefix = "?"
 qpnId = "id";
+qpnPage = "page";
 qpnListOfUsers = "listOfUsers";
 qpnListOfLoggedUsers = "listOfLoggedUsers"
 qpnRegistrationsReadyForApproval = "registrationsReadyForApproval";
 qpnUserPage = "userPage";
-
-// Pages.
-adminPage = "admin.html";
-qpListOfUsers = qpPrefix + qpnListOfUsers;
-qpListOfLoggedUsers = qpPrefix + qpnListOfLoggedUsers;
-qpRegistrationsReadyForApproval = qpPrefix + qpnRegistrationsReadyForApproval;
-qpUserPage = qpPrefix + qpnUserPage;
 
 // Action names.
 actionName_GetListOfAllUsers = "getListOfAllUsers";
@@ -39,6 +47,10 @@ actionName_GetUserSession = "getUserSession";
 msgGenericErrorPrefix = "Error: ";
 
 // Errors.
+errIdNotSet = "ID is not set";
+errIdNotFound = "ID is not found";
+errPageNotSet = "page is not set";
+errPageNotFound = "page is not found";
 errSettings = "settings error";
 errNotOk = "something went wrong";
 errServer = "server error";
@@ -46,8 +58,6 @@ errClient = "client error";
 errUnknown = "unknown error";
 errPreviousPageDoesNotExist = "previous page does not exist";
 errNextPageDoesNotExist = "next page does not exist";
-errPageNotFound = "page is not found";
-errIdNotSet = "ID is not set";
 errUnknownVariant = "unknown variant";
 
 // User role names.
@@ -57,8 +67,16 @@ userRoleReader = "reader";
 userRoleLogging = "logging";
 
 // Global variables.
-page = 0;
-pages = 0;
+class GlobalVariablesContainer {
+	constructor(settings, id, page, pages) {
+		this.Settings = settings;
+		this.Id = id;
+		this.Page = page;
+		this.Pages = pages;
+	}
+}
+
+mca_gvc = new GlobalVariablesContainer(0, 0, 0);
 
 // Settings class.
 class Settings {
@@ -178,38 +196,46 @@ class ApiResponse {
 }
 
 async function onPageLoad() {
-	settings = await getSettings();
+	let settings = await getSettings();
 	if (settings === null) {
 		return;
 	}
-	console.info('Received settings. Version:', settings.Version);
+	mca_gvc.Settings = settings;
+	console.info('Received settings. Version: ' + settings.Version.toString() + ".");
 
 	// Select a page.
 	let curPage = window.location.search;
 	let sp = new URLSearchParams(curPage);
 
-	switch (curPage) {
-		case qpListOfUsers:
-			showPage_ListOfUsers();
+	if (sp.has(qpnListOfUsers)) {
+		if (!preparePageVariable(sp)) {
 			return;
+		}
+		await showPage_ListOfUsers();
+		return;
+	}
 
-		case qpListOfLoggedUsers:
-			showPage_ListOfLoggedUsers();
+	if (sp.has(qpnListOfLoggedUsers)) {
+		if (!preparePageVariable(sp)) {
 			return;
+		}
+		await showPage_ListOfLoggedUsers();
+		return;
+	}
 
-		case qpRegistrationsReadyForApproval:
-			showPage_RegistrationsReadyForApproval();
+	if (sp.has(qpnRegistrationsReadyForApproval)) {
+		if (!preparePageVariable(sp)) {
 			return;
+		}
+		await showPage_RegistrationsReadyForApproval();
+		return;
 	}
 
 	if (sp.has(qpnUserPage)) {
-		if (!sp.has(qpnId)) {
-			console.error(errIdNotSet);
+		if (!prepareIdVariable(sp)) {
 			return;
 		}
-
-		let userId = Number(sp.get(qpnId));
-		showPage_UserPage(userId);
+		await showPage_UserPage();
 		return;
 	}
 
@@ -249,15 +275,15 @@ async function fetchSettings() {
 }
 
 async function onGoRegApprovalClick(btn) {
-	await redirectToSubPage(true, qpRegistrationsReadyForApproval);
+	await redirectToSubPage(true, qpPrefix + qpnRegistrationsReadyForApproval);
 }
 
 async function onGoLoggedUsersClick(btn) {
-	await redirectToSubPage(true, qpListOfLoggedUsers);
+	await redirectToSubPage(true, qpPrefix + qpnListOfLoggedUsers);
 }
 
 async function onGoListAllUsersClick(btn) {
-	await redirectToSubPage(true, qpListOfUsers);
+	await redirectToSubPage(true, qpPrefix + qpnListOfUsers);
 }
 
 async function redirectToSubPage(wait, qp) {
@@ -287,75 +313,97 @@ function showPage_MainMenu() {
 }
 
 async function showPage_ListOfUsers() {
-	let sp = document.getElementById("subpage");
-	sp.style.display = "block";
-	addBtnBack(sp);
-	addTitle(sp, "List of All Users");
-	page = 1;
-	let resp = await getListOfAllUsers(page);
+	let pageNumber = mca_gvc.Page;
+	let resp = await getListOfAllUsers(pageNumber);
 	if (resp == null) {
 		return;
 	}
-	let pageNumber = resp.result.page;
 	let pageCount = resp.result.totalPages;
-	pages = pageCount;
-	addPaginator(sp, pageNumber, pageCount, "userListPrev", "userListNext");
-	addListOfUsers(sp);
-	refreshListOfUsers("subpageListOfUsers", resp.result.userIds);
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	if (pageNumber > pageCount) {
+		console.error(errPageNotFound);
+		return;
+	}
+
+	let userIds = resp.result.userIds;
+
+	// Draw.
+	let p = document.getElementById("subpage");
+	p.style.display = "block";
+	addBtnBack(p);
+	addTitle(p, "List of All Users");
+	addPaginator(p, pageNumber, pageCount, "userListPrev", "userListNext");
+	addDiv(p, "subpageListOfUsers");
+	await fillListOfUsers("subpageListOfUsers", userIds);
 }
 
 async function showPage_ListOfLoggedUsers() {
-	let sp = document.getElementById("subpage");
-	sp.style.display = "block";
-	addBtnBack(sp);
-	addTitle(sp, "List of logged-in Users");
-	page = 1;
+	let pageNumber = mca_gvc.Page;
 	let resp = await getListOfLoggedInUsers();
 	if (resp == null) {
 		return;
 	}
 	let userIds = resp.result.loggedUserIds;
 	let userCount = userIds.length;
-	let pageNumber = page;
-	let pageCount = Math.ceil(userCount / settings.PageSize);
-	pages = pageCount;
-	let userIdsOnPage = calculateUserIdsOnPage(userIds, page, settings.PageSize);
-	addPaginator(sp, pageNumber, pageCount, "loggedUserListPrev", "loggedUserListNext");
-	addListOfLoggedUsers(sp);
-	refreshListOfLoggedUsers("subpageListOfLoggedUsers", userIdsOnPage);
+	let pageCount = Math.ceil(userCount / mca_gvc.Settings.PageSize);
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	if (pageNumber > pageCount) {
+		console.error(errPageNotFound);
+		return;
+	}
+
+	let userIdsOnPage = calculateUserIdsOnPage(userIds, pageNumber, mca_gvc.Settings.PageSize);
+
+	// Draw.
+	let p = document.getElementById("subpage");
+	p.style.display = "block";
+	addBtnBack(p);
+	addTitle(p, "List of logged-in Users");
+	addPaginator(p, pageNumber, pageCount, "loggedUserListPrev", "loggedUserListNext");
+	addDiv(p, "subpageListOfLoggedUsers");
+	await fillListOfLoggedUsers("subpageListOfLoggedUsers", userIdsOnPage);
 }
 
 async function showPage_RegistrationsReadyForApproval() {
-	let sp = document.getElementById("subpage");
-	sp.style.display = "block";
-	addBtnBack(sp);
-	addTitle(sp, "List of Registrations ready for Approval");
-	page = 1;
-	let resp = await getListOfRegistrationsReadyForApproval(page);
+	let pageNumber = mca_gvc.Page;
+	let resp = await getListOfRegistrationsReadyForApproval(mca_gvc.Page);
 	if (resp == null) {
 		return;
 	}
-	let pageNumber = resp.result.page;
 	let pageCount = resp.result.totalPages;
-	pages = pageCount;
-	addPaginator(sp, pageNumber, pageCount, "rrfaListPrev", "rrfaListNext");
-	addListOfRRFA(sp);
-	refreshListOfRRFA("subpageListOfRRFA", resp.result.rrfa);
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	if (pageNumber > pageCount) {
+		console.error(errPageNotFound);
+		return;
+	}
+
+	let rrfas = resp.result.rrfa;
+
+	// Draw.
+	let p = document.getElementById("subpage");
+	p.style.display = "block";
+	addBtnBack(p);
+	addTitle(p, "List of Registrations ready for Approval");
+	addPaginator(p, pageNumber, pageCount, "rrfaListPrev", "rrfaListNext");
+	addDiv(p, "subpageListOfRRFA");
+	await fillListOfRRFA("subpageListOfRRFA", rrfas);
 }
 
-async function showPage_UserPage(userId) {
-	let sp = document.getElementById("subpage");
-	sp.style.display = "block";
-	addBtnBack(sp);
-	addTitle(sp, "User Page");
-
-	// Get information.
+async function showPage_UserPage() {
+	let userId = mca_gvc.Id;
 	let resp = await viewUserParameters(userId);
 	if (resp == null) {
 		return;
 	}
 	let userParams = resp.result;
 
+	// Get additional information.
 	resp = await isUserLoggedIn(userId);
 	if (resp == null) {
 		return;
@@ -365,143 +413,13 @@ async function showPage_UserPage(userId) {
 	}
 	let userLogInState = resp.result.isUserLoggedIn;
 
-	// Draw the information.
-	let divUserPage = document.createElement("DIV");
-	divUserPage.className = "subpageUserPage";
-	divUserPage.id = "subpageUserPage";
-	sp.appendChild(divUserPage);
-	let tbl = document.createElement("TABLE");
-	tbl.className = "subpageUserPage";
-
-	let fieldNames = [
-		"ID", "E-Mail", "Name", "PreRegTime", "RegTime", "ApprovalTime",
-		"IsAdministrator", "IsModerator", "IsAuthor", "IsWriter", "IsReader",
-		"CanLogIn", "LastBadLogInTime", "BanTime", "LastBadActionTime",
-		"IsLoggedIn"
-	];
-
-	let fieldValues = [
-		userId.toString(),
-		userParams.email,
-		userParams.name,
-		prettyTime(userParams.preRegTime),
-		prettyTime(userParams.regTime),
-		prettyTime(userParams.approvalTime),
-		boolToText(userParams.isAdministrator),
-		boolToText(userParams.isModerator),
-		boolToText(userParams.isAuthor),
-		boolToText(userParams.isWriter),
-		boolToText(userParams.isReader),
-		boolToText(userParams.canLogIn),
-		prettyTime(userParams.lastBadLogInTime),
-		prettyTime(userParams.banTime),
-		prettyTime(userParams.lastBadActionTime),
-		boolToText(userLogInState),
-	];
-
-	// Header.
-	let tr = document.createElement("TR");
-	let th;
-	let ths = ["#", "Field Name", "Value", "Actions"];
-
-	for (i = 0; i < ths.length; i++) {
-		th = document.createElement("TH");
-		if (i === 0) {
-			th.className = "numCol";
-		}
-		th.textContent = ths[i];
-		tr.appendChild(th);
-	}
-	tbl.appendChild(tr);
-
-	// Rows.
-	let tds;
-	let td;
-	let actions;
-	for (let i = 0; i < fieldNames.length; i++) {
-		tr = document.createElement("TR");
-
-		tds = [];
-		for (let j = 0; j < ths.length; j++) {
-			tds.push("");
-		}
-
-		tds[0] = (i + 1).toString();
-		tds[1] = fieldNames[i];
-		tds[2] = fieldValues[i];
-
-		switch (fieldNames[i]) {
-			case "IsAuthor":
-				if (userParams.isAuthor) {
-					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRoleAuthor + '\',' + userId + ')">';
-				} else {
-					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRoleAuthor + '\',' + userId + ')">';
-				}
-				break;
-
-			case "IsWriter":
-				if (userParams.isWriter) {
-					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRoleWriter + '\',' + userId + ')">';
-				} else {
-					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRoleWriter + '\',' + userId + ')">';
-				}
-				break;
-
-			case "IsReader":
-				if (userParams.isReader) {
-					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRoleReader + '\',' + userId + ')">';
-				} else {
-					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRoleReader + '\',' + userId + ')">';
-				}
-				break;
-
-			case "CanLogIn":
-				if (userParams.canLogIn) {
-					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRoleLogging + '\',' + userId + ')">';
-				} else {
-					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRoleLogging + '\',' + userId + ')">';
-				}
-				break;
-
-			case "IsLoggedIn":
-				if (userLogInState) {
-					actions = '<input type="button" class="btnLogOut" value="Log Out" onclick="onBtnLogOutUPClick(' + userId + ')">';
-				} else {
-					actions = "";
-				}
-				break;
-
-			default:
-				actions = "";
-		}
-		tds[3] = actions;
-
-		let jLast = tds.length - 1;
-		for (j = 0; j < tds.length; j++) {
-			td = document.createElement("TD");
-			if (j === 0) {
-				td.className = "numCol";
-			}
-			if (j === jLast) {
-				td.innerHTML = tds[j];
-			} else {
-				td.textContent = tds[j];
-			}
-			tr.appendChild(td);
-		}
-
-		tbl.appendChild(tr);
-	}
-
-	divUserPage.appendChild(tbl);
+	// Draw.
+	let p = document.getElementById("subpage");
+	p.style.display = "block";
+	addBtnBack(p);
+	addTitle(p, "User Page");
+	addDiv(p, "subpageUserPage");
+	fillUserPage("subpageUserPage", userParams, userLogInState);
 }
 
 function addBtnBack(el) {
@@ -560,13 +478,13 @@ function addClickEventHandler(btn, variant) {
 	switch (variant) {
 		case "userListPrev":
 			btn.addEventListener("click", async (e) => {
-				await onBtnPrevClick(btn);
+				await onBtnPrevClick_userList(btn);
 			});
 			return;
 
 		case "userListNext":
 			btn.addEventListener("click", async (e) => {
-				await onBtnNextClick(btn);
+				await onBtnNextClick_userList(btn);
 			});
 			return;
 
@@ -599,236 +517,91 @@ function addClickEventHandler(btn, variant) {
 	}
 }
 
-function refreshPaginator(id, pageNumber, pageCount) {
-	let div = document.getElementById(id);
-	let ch1 = div.children[0];
-	ch1.textContent = "Page " + pageNumber + " of " + pageCount + " ";
-}
-
-async function onBtnPrevClick(btn) {
-	if (page <= 1) {
+async function onBtnPrevClick_userList(btn) {
+	if (mca_gvc.Page <= 1) {
 		console.error(errPreviousPageDoesNotExist);
 		return;
 	}
 
-	page--;
-	await updateTableOfUsers();
+	mca_gvc.Page--;
+	let url = qpPrefix + qpnListOfUsers + "&" + qpnPage + "=" + mca_gvc.Page;
+	await redirectPage(false, url);
 }
 
-async function onBtnNextClick(btn) {
-	if (page >= pages) {
+async function onBtnNextClick_userList(btn) {
+	if (mca_gvc.Page >= mca_gvc.Pages) {
 		console.error(errNextPageDoesNotExist);
 		return;
 	}
 
-	page++;
-	await updateTableOfUsers();
+	mca_gvc.Page++;
+	let url = qpPrefix + qpnListOfUsers + "&" + qpnPage + "=" + mca_gvc.Page;
+	await redirectPage(false, url);
 }
 
 async function onBtnPrevClick_logged(btn) {
-	if (page <= 1) {
+	if (mca_gvc.Page <= 1) {
 		console.error(errPreviousPageDoesNotExist);
 		return;
 	}
 
-	page--;
-	await updateTableOfLoggedUsers();
+	mca_gvc.Page--;
+	let url = qpPrefix + qpnListOfLoggedUsers + "&" + qpnPage + "=" + mca_gvc.Page;
+	await redirectPage(false, url);
 }
 
 async function onBtnNextClick_logged(btn) {
-	if (page >= pages) {
+	if (mca_gvc.Page >= mca_gvc.Pages) {
 		console.error(errNextPageDoesNotExist);
 		return;
 	}
 
-	page++;
-	await updateTableOfLoggedUsers();
+	mca_gvc.Page++;
+	let url = qpPrefix + qpnListOfLoggedUsers + "&" + qpnPage + "=" + mca_gvc.Page;
+	await redirectPage(false, url);
 }
 
 async function onBtnPrevClick_rrfa(btn) {
-	if (page <= 1) {
+	if (mca_gvc.Page <= 1) {
 		console.error(errPreviousPageDoesNotExist);
 		return;
 	}
 
-	page--;
-	await updateTableOfRRFA();
+	mca_gvc.Page--;
+	let url = qpPrefix + qpnRegistrationsReadyForApproval + "&" + qpnPage + "=" + mca_gvc.Page;
+	await redirectPage(false, url);
 }
 
 async function onBtnNextClick_rrfa(btn) {
-	if (page >= pages) {
+	if (mca_gvc.Page >= mca_gvc.Pages) {
 		console.error(errNextPageDoesNotExist);
 		return;
 	}
 
-	page++;
-	await updateTableOfRRFA();
+	mca_gvc.Page++;
+	let url = qpPrefix + qpnRegistrationsReadyForApproval + "&" + qpnPage + "=" + mca_gvc.Page;
+	await redirectPage(false, url);
 }
 
-async function updateTableOfUsers() {
-	let resp = await getListOfAllUsers(page);
-	if (resp == null) {
-		return;
-	}
-	let pageNumber = resp.result.page;
-	let pageCount = resp.result.totalPages;
-	refreshPaginator("subpagePaginator", pageNumber, pageCount);
-	refreshListOfUsers("subpageListOfUsers", resp.result.userIds);
-}
-
-async function updateTableOfLoggedUsers() {
-	let resp = await getListOfLoggedInUsers();
-	if (resp == null) {
-		return;
-	}
-	let userIds = resp.result.loggedUserIds;
-	let userCount = userIds.length;
-	let pageNumber = page;
-	let pageCount = Math.ceil(userCount / settings.PageSize);
-	pages = pageCount;
-	let userIdsOnPage = calculateUserIdsOnPage(userIds, page, settings.PageSize);
-	refreshPaginator("subpagePaginator", pageNumber, pageCount);
-	refreshListOfLoggedUsers("subpageListOfLoggedUsers", userIdsOnPage);
-}
-
-async function updateTableOfRRFA() {
-	let resp = await getListOfRegistrationsReadyForApproval(page);
-	if (resp == null) {
-		return;
-	}
-	let pageNumber = resp.result.page;
-	let pageCount = resp.result.totalPages;
-	refreshPaginator("subpagePaginator", pageNumber, pageCount);
-	refreshListOfRRFA("subpageListOfRRFA", resp.result.rrfa);
-}
-
-function addListOfUsers(el) {
+function addDiv(el, x) {
 	let div = document.createElement("DIV");
-	div.className = "subpageListOfUsers";
-	div.id = "subpageListOfUsers";
+	div.className = x;
+	div.id = x;
 	el.appendChild(div);
 }
 
-function addListOfLoggedUsers(el) {
-	let div = document.createElement("DIV");
-	div.className = "subpageListOfLoggedUsers";
-	div.id = "subpageListOfLoggedUsers";
-	el.appendChild(div);
-}
-
-function addListOfRRFA(el) {
-	let div = document.createElement("DIV");
-	div.className = "subpageListOfRRFA";
-	div.id = "subpageListOfRRFA";
-	el.appendChild(div);
-}
-
-async function refreshListOfUsers(id, userIds) {
-	let div = document.getElementById(id);
+async function fillListOfLoggedUsers(elClass, userIdsOnPage) {
+	let div = document.getElementById(elClass);
 	div.innerHTML = "";
 	let tbl = document.createElement("TABLE");
-	tbl.className = "subpageListOfUsers";
+	tbl.className = elClass;
 
 	// Header.
 	let tr = document.createElement("TR");
-	let th;
-	let ths = [
-		"#", "ID", "IsLoggedIn", "E-Mail", "Name", "RegTime", "ApprovalTime",
-		"LastBadLogInTime", "LastBadActionTime", "BanTime", "CanLogIn",
-		"IsReader", "IsWriter", "IsAuthor", "IsModerator", "IsAdministrator"];
-	for (i = 0; i < ths.length; i++) {
-		th = document.createElement("TH");
-		if (i === 0) {
-			th.className = "numCol";
-		}
-		th.textContent = ths[i];
-		tr.appendChild(th);
-	}
-	tbl.appendChild(tr);
-
-	// Get list of logged-in users.
-	let resp = await getListOfLoggedInUsers();
-	if (resp == null) {
-		return;
-	}
-	let loggedUserIds = resp.result.loggedUserIds;
-	let columnsWithLink = [1, 3, 4];
-
-	// Cells.
-	let isUserLoggedIn;
-	let userId;
-	let userParams;
-	for (let i = 0; i < userIds.length; i++) {
-		userId = userIds[i];
-
-		// Get user parameters.
-		resp = await viewUserParameters(userId);
-		if (resp == null) {
-			return;
-		}
-		userParams = resp.result;
-
-		// Fill data.
-		tr = document.createElement("TR");
-		let tds = [];
-		for (let j = 0; j < ths.length; j++) {
-			tds.push("");
-		}
-
-		tds[0] = (i + 1).toString();
-		tds[1] = userId.toString();
-		isUserLoggedIn = loggedUserIds.includes(userId);
-		tds[2] = boolToText(isUserLoggedIn);
-		tds[3] = userParams.email;
-		tds[4] = userParams.name;
-		tds[5] = prettyTime(userParams.regTime);
-		tds[6] = prettyTime(userParams.approvalTime);
-		tds[7] = prettyTime(userParams.lastBadLogInTime);
-		tds[8] = prettyTime(userParams.lastBadActionTime);
-		tds[9] = prettyTime(userParams.banTime);
-		tds[10] = boolToText(userParams.canLogIn);
-		tds[11] = boolToText(userParams.isReader);
-		tds[12] = boolToText(userParams.isWriter);
-		tds[13] = boolToText(userParams.isAuthor);
-		tds[14] = boolToText(userParams.isModerator);
-		tds[15] = boolToText(userParams.isAdministrator);
-
-		let td;
-		let url;
-		for (j = 0; j < tds.length; j++) {
-			url = composeUserPageLink(userId.toString());
-			td = document.createElement("TD");
-
-			if (j === 0) {
-				td.className = "numCol";
-			}
-
-			if (columnsWithLink.includes(j)) {
-				td.innerHTML = '<a href="' + url + '">' + tds[j] + '</a>';
-			} else {
-				td.textContent = tds[j];
-			}
-			tr.appendChild(td);
-		}
-
-		tbl.appendChild(tr);
-	}
-
-	div.appendChild(tbl);
-}
-
-async function refreshListOfLoggedUsers(id, userIdsOnPage) {
-	let div = document.getElementById(id);
-	div.innerHTML = "";
-	let tbl = document.createElement("TABLE");
-	tbl.className = "subpageListOfLoggedUsers";
-
-	// Header.
-	let tr = document.createElement("TR");
-	let th;
 	let ths = [
 		"#", "ID", "E-Mail", "Name", "IP Address", "Log Time", "Actions"];
-	for (i = 0; i < ths.length; i++) {
+	let th;
+	for (let i = 0; i < ths.length; i++) {
 		th = document.createElement("TH");
 		if (i === 0) {
 			th.className = "numCol";
@@ -841,10 +614,7 @@ async function refreshListOfLoggedUsers(id, userIdsOnPage) {
 	let columnsWithLink = [1, 2, 3];
 
 	// Cells.
-	let userId;
-	let userParams;
-	let userSession;
-	let resp;
+	let userId, userParams, userSession, resp;
 	for (let i = 0; i < userIdsOnPage.length; i++) {
 		userId = userIdsOnPage[i];
 
@@ -869,7 +639,6 @@ async function refreshListOfLoggedUsers(id, userIdsOnPage) {
 			tds.push("");
 		}
 
-
 		tds[0] = (i + 1).toString();
 		tds[1] = userId.toString();
 		tds[2] = userParams.email;
@@ -878,8 +647,8 @@ async function refreshListOfLoggedUsers(id, userIdsOnPage) {
 		tds[5] = prettyTime(userSession.startTime);
 		tds[6] = '<input type="button" class="btnLogOut" value="Log Out" onclick="onBtnLogOutClick(this)">';
 
-		let td;
-		for (j = 0; j < tds.length; j++) {
+		let td, url;
+		for (let j = 0; j < tds.length; j++) {
 			url = composeUserPageLink(userId.toString());
 			td = document.createElement("TD");
 
@@ -903,18 +672,18 @@ async function refreshListOfLoggedUsers(id, userIdsOnPage) {
 	div.appendChild(tbl);
 }
 
-async function refreshListOfRRFA(id, rrfas) {
-	let div = document.getElementById(id);
+async function fillListOfRRFA(elClass, rrfas) {
+	let div = document.getElementById(elClass);
 	div.innerHTML = "";
 	let tbl = document.createElement("TABLE");
-	tbl.className = "subpageListOfRRFA";
+	tbl.className = elClass;
 
 	// Header.
 	let tr = document.createElement("TR");
-	let th;
 	let ths = [
 		"#", "ID", "PreRegTime", "E-Mail", "Name", "Actions"];
-	for (i = 0; i < ths.length; i++) {
+	let th;
+	for (let i = 0; i < ths.length; i++) {
 		th = document.createElement("TH");
 		if (i === 0) {
 			th.className = "numCol";
@@ -946,7 +715,7 @@ async function refreshListOfRRFA(id, rrfas) {
 			'<input type="button" class="btnReject" value="Reject" onclick="onBtnRejectClick(this)">';
 
 		let td;
-		for (j = 0; j < tds.length; j++) {
+		for (let j = 0; j < tds.length; j++) {
 			td = document.createElement("TD");
 
 			if (j === 0) {
@@ -973,7 +742,7 @@ async function sendApiRequest(data) {
 		method: "POST",
 		body: JSON.stringify(data)
 	};
-	let resp = await fetch(rootPath + settings.ApiFolder, ri);
+	let resp = await fetch(rootPath + mca_gvc.Settings.ApiFolder, ri);
 	if (resp.status === 200) {
 		result = new ApiResponse(true, await resp.json(), resp.status, null);
 		return result;
@@ -1303,9 +1072,266 @@ async function getUserSession(userId) {
 }
 
 function composeUserPageLink(userId) {
-	return qpUserPage + "&" + qpnId + "=" + userId;
+	return qpPrefix + qpnUserPage + "&" + qpnId + "=" + userId;
 }
 
 function reloadPage() {
 	location.reload();
+}
+
+function prepareIdVariable(sp) {
+	if (!sp.has(qpnId)) {
+		console.error(errIdNotSet);
+		return false;
+	}
+
+	let xId = Number(sp.get(qpnId));
+	if (xId <= 0) {
+		console.error(errIdNotFound);
+		return false;
+	}
+
+	mca_gvc.Id = xId;
+	return true;
+}
+
+function preparePageVariable(sp) {
+	let pageNumber;
+	if (!sp.has(qpnPage)) {
+		pageNumber = 1;
+	} else {
+		pageNumber = Number(sp.get(qpnPage));
+		if (pageNumber <= 0) {
+			console.error(errPageNotFound);
+			return false;
+		}
+	}
+
+	mca_gvc.Page = pageNumber;
+	return true;
+}
+
+async function fillListOfUsers(elClass, userIds) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let tbl = document.createElement("TABLE");
+	tbl.className = elClass;
+
+	// Header.
+	let tr = document.createElement("TR");
+	let ths = [
+		"#", "ID", "IsLoggedIn", "E-Mail", "Name", "RegTime", "ApprovalTime",
+		"LastBadLogInTime", "LastBadActionTime", "BanTime", "CanLogIn",
+		"IsReader", "IsWriter", "IsAuthor", "IsModerator", "IsAdministrator"];
+	let th;
+	for (let i = 0; i < ths.length; i++) {
+		th = document.createElement("TH");
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	// Get list of logged-in users (for flags).
+	let resp = await getListOfLoggedInUsers();
+	if (resp == null) {
+		return;
+	}
+	let loggedUserIds = resp.result.loggedUserIds;
+	let columnsWithLink = [1, 3, 4];
+
+	// Cells.
+	let isUserLoggedIn, userId, userParams;
+	for (let i = 0; i < userIds.length; i++) {
+		userId = userIds[i];
+
+		// Get user parameters.
+		resp = await viewUserParameters(userId);
+		if (resp == null) {
+			return;
+		}
+		userParams = resp.result;
+
+		// Fill data.
+		tr = document.createElement("TR");
+		let tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = userId.toString();
+		isUserLoggedIn = loggedUserIds.includes(userId);
+		tds[2] = boolToText(isUserLoggedIn);
+		tds[3] = userParams.email;
+		tds[4] = userParams.name;
+		tds[5] = prettyTime(userParams.regTime);
+		tds[6] = prettyTime(userParams.approvalTime);
+		tds[7] = prettyTime(userParams.lastBadLogInTime);
+		tds[8] = prettyTime(userParams.lastBadActionTime);
+		tds[9] = prettyTime(userParams.banTime);
+		tds[10] = boolToText(userParams.canLogIn);
+		tds[11] = boolToText(userParams.isReader);
+		tds[12] = boolToText(userParams.isWriter);
+		tds[13] = boolToText(userParams.isAuthor);
+		tds[14] = boolToText(userParams.isModerator);
+		tds[15] = boolToText(userParams.isAdministrator);
+
+		let td, url;
+		for (let j = 0; j < tds.length; j++) {
+			url = composeUserPageLink(userId.toString());
+			td = document.createElement("TD");
+
+			if (j === 0) {
+				td.className = "numCol";
+			}
+
+			if (columnsWithLink.includes(j)) {
+				td.innerHTML = '<a href="' + url + '">' + tds[j] + '</a>';
+			} else {
+				td.textContent = tds[j];
+			}
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	div.appendChild(tbl);
+}
+
+function fillUserPage(elClass, userParams, userLogInState) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let tbl = document.createElement("TABLE");
+	tbl.className = elClass;
+
+	// Header.
+	let tr = document.createElement("TR");
+	let ths = ["#", "Field Name", "Value", "Actions"];
+	let th;
+	for (let i = 0; i < ths.length; i++) {
+		th = document.createElement("TH");
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	let userId = mca_gvc.Id;
+	let fieldNames = [
+		"ID", "E-Mail", "Name", "PreRegTime", "RegTime", "ApprovalTime",
+		"IsAdministrator", "IsModerator", "IsAuthor", "IsWriter", "IsReader",
+		"CanLogIn", "LastBadLogInTime", "BanTime", "LastBadActionTime",
+		"IsLoggedIn"
+	];
+	let fieldValues = [
+		userId.toString(),
+		userParams.email,
+		userParams.name,
+		prettyTime(userParams.preRegTime),
+		prettyTime(userParams.regTime),
+		prettyTime(userParams.approvalTime),
+		boolToText(userParams.isAdministrator),
+		boolToText(userParams.isModerator),
+		boolToText(userParams.isAuthor),
+		boolToText(userParams.isWriter),
+		boolToText(userParams.isReader),
+		boolToText(userParams.canLogIn),
+		prettyTime(userParams.lastBadLogInTime),
+		prettyTime(userParams.banTime),
+		prettyTime(userParams.lastBadActionTime),
+		boolToText(userLogInState),
+	];
+
+	// Rows.
+	let tds, td, actions;
+	for (let i = 0; i < fieldNames.length; i++) {
+		tr = document.createElement("TR");
+
+		tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = fieldNames[i];
+		tds[2] = fieldValues[i];
+
+		switch (fieldNames[i]) {
+			case "IsAuthor":
+				if (userParams.isAuthor) {
+					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + userRoleAuthor + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + userRoleAuthor + '\',' + userId + ')">';
+				}
+				break;
+
+			case "IsWriter":
+				if (userParams.isWriter) {
+					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + userRoleWriter + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + userRoleWriter + '\',' + userId + ')">';
+				}
+				break;
+
+			case "IsReader":
+				if (userParams.isReader) {
+					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + userRoleReader + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + userRoleReader + '\',' + userId + ')">';
+				}
+				break;
+
+			case "CanLogIn":
+				if (userParams.canLogIn) {
+					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + userRoleLogging + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + userRoleLogging + '\',' + userId + ')">';
+				}
+				break;
+
+			case "IsLoggedIn":
+				if (userLogInState) {
+					actions = '<input type="button" class="btnLogOut" value="Log Out" onclick="onBtnLogOutUPClick(' + userId + ')">';
+				} else {
+					actions = "";
+				}
+				break;
+
+			default:
+				actions = "";
+		}
+		tds[3] = actions;
+
+		let jLast = tds.length - 1;
+		for (let j = 0; j < tds.length; j++) {
+			td = document.createElement("TD");
+			if (j === 0) {
+				td.className = "numCol";
+			}
+			if (j === jLast) {
+				td.innerHTML = tds[j];
+			} else {
+				td.textContent = tds[j];
+			}
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	div.appendChild(tbl);
 }
