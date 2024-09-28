@@ -20,51 +20,62 @@ adminPage = "admin.html";
 
 // Names of Query Parameters.
 qpPrefix = "?"
-qpnId = "id";
-qpnPage = "page";
-qpnListOfUsers = "listOfUsers";
-qpnListOfLoggedUsers = "listOfLoggedUsers"
-qpnRegistrationsReadyForApproval = "registrationsReadyForApproval";
-qpnUserPage = "userPage";
+
+qpn = {
+	Id: "id",
+	Page: "page",
+	ListOfUsers: "listOfUsers",
+	ListOfLoggedUsers: "listOfLoggedUsers",
+	RegistrationsReadyForApproval: "registrationsReadyForApproval",
+	UserPage: "userPage",
+}
 
 // Action names.
-actionName_GetListOfAllUsers = "getListOfAllUsers";
-actionName_GetListOfRegistrationsReadyForApproval = "getListOfRegistrationsReadyForApproval";
-actionName_ApproveAndRegisterUser = "approveAndRegisterUser";
-actionName_RejectRegistrationRequest = "rejectRegistrationRequest";
-actionName_GetListOfLoggedUsers = "getListOfLoggedUsers";
-actionName_ViewUserParameters = "viewUserParameters";
-actionName_LogUserOutA = "logUserOutA";
-actionName_IsUserLoggedIn = "isUserLoggedIn";
-actionName_SetUserRoleAuthor = "setUserRoleAuthor";
-actionName_SetUserRoleWriter = "setUserRoleWriter";
-actionName_SetUserRoleReader = "setUserRoleReader";
-actionName_BanUser = "banUser";
-actionName_UnbanUser = "unbanUser";
-actionName_GetUserSession = "getUserSession";
+actionName = {
+	GetListOfAllUsers: "getListOfAllUsers",
+	GetListOfRegistrationsReadyForApproval: "getListOfRegistrationsReadyForApproval",
+	ApproveAndRegisterUser: "approveAndRegisterUser",
+	RejectRegistrationRequest: "rejectRegistrationRequest",
+	GetListOfLoggedUsers: "getListOfLoggedUsers",
+	ViewUserParameters: "viewUserParameters",
+	LogUserOutA: "logUserOutA",
+	IsUserLoggedIn: "isUserLoggedIn",
+	SetUserRoleAuthor: "setUserRoleAuthor",
+	SetUserRoleWriter: "setUserRoleWriter",
+	SetUserRoleReader: "setUserRoleReader",
+	BanUser: "banUser",
+	UnbanUser: "unbanUser",
+	GetUserSession: "getUserSession",
+}
 
 // Messages.
-msgGenericErrorPrefix = "Error: ";
+msg = {
+	GenericErrorPrefix: "Error: ",
+}
 
 // Errors.
-errIdNotSet = "ID is not set";
-errIdNotFound = "ID is not found";
-errPageNotSet = "page is not set";
-errPageNotFound = "page is not found";
-errSettings = "settings error";
-errNotOk = "something went wrong";
-errServer = "server error";
-errClient = "client error";
-errUnknown = "unknown error";
-errPreviousPageDoesNotExist = "previous page does not exist";
-errNextPageDoesNotExist = "next page does not exist";
-errUnknownVariant = "unknown variant";
+err = {
+	IdNotSet: "ID is not set",
+	IdNotFound: "ID is not found",
+	PageNotSet: "page is not set",
+	PageNotFound: "page is not found",
+	Settings: "settings error",
+	NotOk: "something went wrong",
+	Server: "server error",
+	Client: "client error",
+	Unknown: "unknown error",
+	PreviousPageDoesNotExist: "previous page does not exist",
+	NextPageDoesNotExist: "next page does not exist",
+	UnknownVariant: "unknown variant",
+}
 
 // User role names.
-userRoleAuthor = "author";
-userRoleWriter = "writer";
-userRoleReader = "reader";
-userRoleLogging = "logging";
+userRole = {
+	Author: "author",
+	Writer: "writer",
+	Reader: "reader",
+	Logging: "logging",
+}
 
 // Global variables.
 class GlobalVariablesContainer {
@@ -207,7 +218,7 @@ async function onPageLoad() {
 	let curPage = window.location.search;
 	let sp = new URLSearchParams(curPage);
 
-	if (sp.has(qpnListOfUsers)) {
+	if (sp.has(qpn.ListOfUsers)) {
 		if (!preparePageVariable(sp)) {
 			return;
 		}
@@ -215,7 +226,7 @@ async function onPageLoad() {
 		return;
 	}
 
-	if (sp.has(qpnListOfLoggedUsers)) {
+	if (sp.has(qpn.ListOfLoggedUsers)) {
 		if (!preparePageVariable(sp)) {
 			return;
 		}
@@ -223,7 +234,7 @@ async function onPageLoad() {
 		return;
 	}
 
-	if (sp.has(qpnRegistrationsReadyForApproval)) {
+	if (sp.has(qpn.RegistrationsReadyForApproval)) {
 		if (!preparePageVariable(sp)) {
 			return;
 		}
@@ -231,7 +242,7 @@ async function onPageLoad() {
 		return;
 	}
 
-	if (sp.has(qpnUserPage)) {
+	if (sp.has(qpn.UserPage)) {
 		if (!prepareIdVariable(sp)) {
 			return;
 		}
@@ -262,7 +273,7 @@ async function getSettings() {
 
 	// Self-check.
 	if ((x.PublicSettingsFileName !== settingsPath)) {
-		console.error(errSettings);
+		console.error(err.Settings);
 		return null;
 	}
 
@@ -275,15 +286,15 @@ async function fetchSettings() {
 }
 
 async function onGoRegApprovalClick(btn) {
-	await redirectToSubPage(true, qpPrefix + qpnRegistrationsReadyForApproval);
+	await redirectToSubPage(true, qpPrefix + qpn.RegistrationsReadyForApproval);
 }
 
 async function onGoLoggedUsersClick(btn) {
-	await redirectToSubPage(true, qpPrefix + qpnListOfLoggedUsers);
+	await redirectToSubPage(true, qpPrefix + qpn.ListOfLoggedUsers);
 }
 
 async function onGoListAllUsersClick(btn) {
-	await redirectToSubPage(true, qpPrefix + qpnListOfUsers);
+	await redirectToSubPage(true, qpPrefix + qpn.ListOfUsers);
 }
 
 async function redirectToSubPage(wait, qp) {
@@ -323,7 +334,7 @@ async function showPage_ListOfUsers() {
 
 	// Check page number for overflow.
 	if (pageNumber > pageCount) {
-		console.error(errPageNotFound);
+		console.error(err.PageNotFound);
 		return;
 	}
 
@@ -352,7 +363,7 @@ async function showPage_ListOfLoggedUsers() {
 
 	// Check page number for overflow.
 	if (pageNumber > pageCount) {
-		console.error(errPageNotFound);
+		console.error(err.PageNotFound);
 		return;
 	}
 
@@ -379,7 +390,7 @@ async function showPage_RegistrationsReadyForApproval() {
 
 	// Check page number for overflow.
 	if (pageNumber > pageCount) {
-		console.error(errPageNotFound);
+		console.error(err.PageNotFound);
 		return;
 	}
 
@@ -513,73 +524,73 @@ function addClickEventHandler(btn, variant) {
 			return;
 
 		default:
-			console.error(errUnknownVariant);
+			console.error(err.UnknownVariant);
 	}
 }
 
 async function onBtnPrevClick_userList(btn) {
 	if (mca_gvc.Page <= 1) {
-		console.error(errPreviousPageDoesNotExist);
+		console.error(err.PreviousPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page--;
-	let url = qpPrefix + qpnListOfUsers + "&" + qpnPage + "=" + mca_gvc.Page;
+	let url = qpPrefix + qpn.ListOfUsers + "&" + qpn.Page + "=" + mca_gvc.Page;
 	await redirectPage(false, url);
 }
 
 async function onBtnNextClick_userList(btn) {
 	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(errNextPageDoesNotExist);
+		console.error(err.NextPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page++;
-	let url = qpPrefix + qpnListOfUsers + "&" + qpnPage + "=" + mca_gvc.Page;
+	let url = qpPrefix + qpn.ListOfUsers + "&" + qpn.Page + "=" + mca_gvc.Page;
 	await redirectPage(false, url);
 }
 
 async function onBtnPrevClick_logged(btn) {
 	if (mca_gvc.Page <= 1) {
-		console.error(errPreviousPageDoesNotExist);
+		console.error(err.PreviousPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page--;
-	let url = qpPrefix + qpnListOfLoggedUsers + "&" + qpnPage + "=" + mca_gvc.Page;
+	let url = qpPrefix + qpn.ListOfLoggedUsers + "&" + qpn.Page + "=" + mca_gvc.Page;
 	await redirectPage(false, url);
 }
 
 async function onBtnNextClick_logged(btn) {
 	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(errNextPageDoesNotExist);
+		console.error(err.NextPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page++;
-	let url = qpPrefix + qpnListOfLoggedUsers + "&" + qpnPage + "=" + mca_gvc.Page;
+	let url = qpPrefix + qpn.ListOfLoggedUsers + "&" + qpn.Page + "=" + mca_gvc.Page;
 	await redirectPage(false, url);
 }
 
 async function onBtnPrevClick_rrfa(btn) {
 	if (mca_gvc.Page <= 1) {
-		console.error(errPreviousPageDoesNotExist);
+		console.error(err.PreviousPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page--;
-	let url = qpPrefix + qpnRegistrationsReadyForApproval + "&" + qpnPage + "=" + mca_gvc.Page;
+	let url = qpPrefix + qpn.RegistrationsReadyForApproval + "&" + qpn.Page + "=" + mca_gvc.Page;
 	await redirectPage(false, url);
 }
 
 async function onBtnNextClick_rrfa(btn) {
 	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(errNextPageDoesNotExist);
+		console.error(err.NextPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page++;
-	let url = qpPrefix + qpnRegistrationsReadyForApproval + "&" + qpnPage + "=" + mca_gvc.Page;
+	let url = qpPrefix + qpn.RegistrationsReadyForApproval + "&" + qpn.Page + "=" + mca_gvc.Page;
 	await redirectPage(false, url);
 }
 
@@ -758,21 +769,21 @@ async function sendApiRequest(data) {
 
 function createErrorTextByStatusCode(statusCode) {
 	if ((statusCode >= 400) && (statusCode <= 499)) {
-		return msgGenericErrorPrefix + errClient + " (" + statusCode.toString() + ")";
+		return msg.GenericErrorPrefix + err.Client + " (" + statusCode.toString() + ")";
 	}
 	if ((statusCode >= 500) && (statusCode <= 599)) {
-		return msgGenericErrorPrefix + errServer + " (" + statusCode.toString() + ")";
+		return msg.GenericErrorPrefix + err.Server + " (" + statusCode.toString() + ")";
 	}
-	return msgGenericErrorPrefix + errUnknown + " (" + statusCode.toString() + ")";
+	return msg.GenericErrorPrefix + err.Unknown + " (" + statusCode.toString() + ")";
 }
 
 function composeErrorText(errMsg) {
-	return msgGenericErrorPrefix + errMsg.trim() + ".";
+	return msg.GenericErrorPrefix + errMsg.trim() + ".";
 }
 
 async function getListOfAllUsers(pageN) {
 	let params = new Parameters_GetListOfAllUsers(pageN);
-	let reqData = new ApiRequest(actionName_GetListOfAllUsers, params);
+	let reqData = new ApiRequest(actionName.GetListOfAllUsers, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -783,7 +794,7 @@ async function getListOfAllUsers(pageN) {
 
 async function getListOfRegistrationsReadyForApproval(pageN) {
 	let params = new Parameters_GetListOfRegistrationsReadyForApproval(pageN);
-	let reqData = new ApiRequest(actionName_GetListOfRegistrationsReadyForApproval, params);
+	let reqData = new ApiRequest(actionName.GetListOfRegistrationsReadyForApproval, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -793,7 +804,7 @@ async function getListOfRegistrationsReadyForApproval(pageN) {
 }
 
 async function getListOfLoggedInUsers() {
-	let reqData = new ApiRequest(actionName_GetListOfLoggedUsers, {});
+	let reqData = new ApiRequest(actionName.GetListOfLoggedUsers, {});
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -804,7 +815,7 @@ async function getListOfLoggedInUsers() {
 
 async function viewUserParameters(userId) {
 	let params = new Parameters_ViewUserParameters(userId);
-	let reqData = new ApiRequest(actionName_ViewUserParameters, params);
+	let reqData = new ApiRequest(actionName.ViewUserParameters, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -815,7 +826,7 @@ async function viewUserParameters(userId) {
 
 async function isUserLoggedIn(userId) {
 	let params = new Parameters_IsUserLoggedIn(userId);
-	let reqData = new ApiRequest(actionName_IsUserLoggedIn, params);
+	let reqData = new ApiRequest(actionName.IsUserLoggedIn, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -906,19 +917,19 @@ async function onBtnLogOutUPClick(userId) {
 async function onBtnEnableRoleUPClick(role, userId) {
 	let resp;
 	switch (role) {
-		case userRoleAuthor:
+		case userRole.Author:
 			resp = await setUserRoleAuthor(userId, true);
 			break;
 
-		case userRoleWriter:
+		case userRole.Writer:
 			resp = await setUserRoleWriter(userId, true);
 			break;
 
-		case userRoleReader:
+		case userRole.Reader:
 			resp = await setUserRoleReader(userId, true);
 			break;
 
-		case userRoleLogging:
+		case userRole.Logging:
 			resp = await unbanUser(userId);
 			break;
 
@@ -938,19 +949,19 @@ async function onBtnEnableRoleUPClick(role, userId) {
 async function onBtnDisableRoleUPClick(role, userId) {
 	let resp;
 	switch (role) {
-		case userRoleAuthor:
+		case userRole.Author:
 			resp = await setUserRoleAuthor(userId, false);
 			break;
 
-		case userRoleWriter:
+		case userRole.Writer:
 			resp = await setUserRoleWriter(userId, false);
 			break;
 
-		case userRoleReader:
+		case userRole.Reader:
 			resp = await setUserRoleReader(userId, false);
 			break;
 
-		case userRoleLogging:
+		case userRole.Logging:
 			resp = await banUser(userId);
 			break;
 
@@ -969,7 +980,7 @@ async function onBtnDisableRoleUPClick(role, userId) {
 
 async function approveAndRegisterUser(email) {
 	let params = new Parameters_ApproveAndRegisterUser(email);
-	let reqData = new ApiRequest(actionName_ApproveAndRegisterUser, params);
+	let reqData = new ApiRequest(actionName.ApproveAndRegisterUser, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -980,7 +991,7 @@ async function approveAndRegisterUser(email) {
 
 async function rejectRegistrationRequest(id) {
 	let params = new Parameters_RejectRegistrationRequest(id);
-	let reqData = new ApiRequest(actionName_RejectRegistrationRequest, params);
+	let reqData = new ApiRequest(actionName.RejectRegistrationRequest, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -996,7 +1007,7 @@ function calculateUserIdsOnPage(allIds, pageN, pageSize) {
 
 async function logUserOutA(userId) {
 	let params = new Parameters_LogUserOutA(userId);
-	let reqData = new ApiRequest(actionName_LogUserOutA, params);
+	let reqData = new ApiRequest(actionName.LogUserOutA, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1007,7 +1018,7 @@ async function logUserOutA(userId) {
 
 async function setUserRoleAuthor(userId, roleValue) {
 	let params = new Parameters_SetUserRoleAuthor(userId, roleValue);
-	let reqData = new ApiRequest(actionName_SetUserRoleAuthor, params);
+	let reqData = new ApiRequest(actionName.SetUserRoleAuthor, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1018,7 +1029,7 @@ async function setUserRoleAuthor(userId, roleValue) {
 
 async function setUserRoleWriter(userId, roleValue) {
 	let params = new Parameters_SetUserRoleWriter(userId, roleValue);
-	let reqData = new ApiRequest(actionName_SetUserRoleWriter, params);
+	let reqData = new ApiRequest(actionName.SetUserRoleWriter, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1029,7 +1040,7 @@ async function setUserRoleWriter(userId, roleValue) {
 
 async function setUserRoleReader(userId, roleValue) {
 	let params = new Parameters_SetUserRoleReader(userId, roleValue);
-	let reqData = new ApiRequest(actionName_SetUserRoleReader, params);
+	let reqData = new ApiRequest(actionName.SetUserRoleReader, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1040,7 +1051,7 @@ async function setUserRoleReader(userId, roleValue) {
 
 async function banUser(userId) {
 	let params = new Parameters_BanUser(userId);
-	let reqData = new ApiRequest(actionName_BanUser, params);
+	let reqData = new ApiRequest(actionName.BanUser, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1051,7 +1062,7 @@ async function banUser(userId) {
 
 async function unbanUser(userId) {
 	let params = new Parameters_UnbanUser(userId);
-	let reqData = new ApiRequest(actionName_UnbanUser, params);
+	let reqData = new ApiRequest(actionName.UnbanUser, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1062,7 +1073,7 @@ async function unbanUser(userId) {
 
 async function getUserSession(userId) {
 	let params = new Parameters_GetUserSession(userId);
-	let reqData = new ApiRequest(actionName_GetUserSession, params);
+	let reqData = new ApiRequest(actionName.GetUserSession, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1072,7 +1083,7 @@ async function getUserSession(userId) {
 }
 
 function composeUserPageLink(userId) {
-	return qpPrefix + qpnUserPage + "&" + qpnId + "=" + userId;
+	return qpPrefix + qpn.UserPage + "&" + qpn.Id + "=" + userId;
 }
 
 function reloadPage() {
@@ -1080,14 +1091,14 @@ function reloadPage() {
 }
 
 function prepareIdVariable(sp) {
-	if (!sp.has(qpnId)) {
-		console.error(errIdNotSet);
+	if (!sp.has(qpn.Id)) {
+		console.error(err.IdNotSet);
 		return false;
 	}
 
-	let xId = Number(sp.get(qpnId));
+	let xId = Number(sp.get(qpn.Id));
 	if (xId <= 0) {
-		console.error(errIdNotFound);
+		console.error(err.IdNotFound);
 		return false;
 	}
 
@@ -1097,12 +1108,12 @@ function prepareIdVariable(sp) {
 
 function preparePageVariable(sp) {
 	let pageNumber;
-	if (!sp.has(qpnPage)) {
+	if (!sp.has(qpn.Page)) {
 		pageNumber = 1;
 	} else {
-		pageNumber = Number(sp.get(qpnPage));
+		pageNumber = Number(sp.get(qpn.Page));
 		if (pageNumber <= 0) {
-			console.error(errPageNotFound);
+			console.error(err.PageNotFound);
 			return false;
 		}
 	}
@@ -1266,40 +1277,40 @@ function fillUserPage(elClass, userParams, userLogInState) {
 			case "IsAuthor":
 				if (userParams.isAuthor) {
 					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRoleAuthor + '\',' + userId + ')">';
+						'onclick="onBtnDisableRoleUPClick(\'' + userRole.Author + '\',' + userId + ')">';
 				} else {
 					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRoleAuthor + '\',' + userId + ')">';
+						'onclick="onBtnEnableRoleUPClick(\'' + userRole.Author + '\',' + userId + ')">';
 				}
 				break;
 
 			case "IsWriter":
 				if (userParams.isWriter) {
 					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRoleWriter + '\',' + userId + ')">';
+						'onclick="onBtnDisableRoleUPClick(\'' + userRole.Writer + '\',' + userId + ')">';
 				} else {
 					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRoleWriter + '\',' + userId + ')">';
+						'onclick="onBtnEnableRoleUPClick(\'' + userRole.Writer + '\',' + userId + ')">';
 				}
 				break;
 
 			case "IsReader":
 				if (userParams.isReader) {
 					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRoleReader + '\',' + userId + ')">';
+						'onclick="onBtnDisableRoleUPClick(\'' + userRole.Reader + '\',' + userId + ')">';
 				} else {
 					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRoleReader + '\',' + userId + ')">';
+						'onclick="onBtnEnableRoleUPClick(\'' + userRole.Reader + '\',' + userId + ')">';
 				}
 				break;
 
 			case "CanLogIn":
 				if (userParams.canLogIn) {
 					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRoleLogging + '\',' + userId + ')">';
+						'onclick="onBtnDisableRoleUPClick(\'' + userRole.Logging + '\',' + userId + ')">';
 				} else {
 					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRoleLogging + '\',' + userId + ')">';
+						'onclick="onBtnEnableRoleUPClick(\'' + userRole.Logging + '\',' + userId + ')">';
 				}
 				break;
 

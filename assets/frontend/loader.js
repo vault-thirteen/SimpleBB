@@ -16,141 +16,151 @@ window.onpageshow = function (event) {
 settingsPath = "settings.json";
 settingsRootPath = "/";
 adminPage = "admin.html";
-
-// Various other settings.
+settingsExpirationDuration = 60;
 redirectDelay = 5;
 
-// Longevity of cached settings. In seconds.
-settingsExpirationDuration = 60;
-
-// Timestamps.
-varnamePageFirstLoadTime = "pageFirstLoadTime";
-varnamePageCurrentLoadTime = "pageCurrentLoadTime";
-varnameSettingsLoadTime = "settingsLoadTime";
-varnameLogInTime = "logInTime";
-
 // Names of JavaScript storage variables.
-varnameSettingsVersion = "settingsVersion";
-varnameSettingsProductVersion = "settingsProductVersion";
-varnameSettingsSiteName = "settingsSiteName";
-varnameSettingsSiteDomain = "settingsSiteDomain";
-varnameSettingsCaptchaFolder = "settingsCaptchaFolder";
-varnameSettingsSessionMaxDuration = "settingsSessionMaxDuration";
-varnameSettingsMessageEditTime = "settingsMessageEditTime";
-varnameSettingsPageSize = "settingsPageSize";
-varnameSettingsApiFolder = "settingsApiFolder";
-varnameSettingsPublicSettingsFileName = "settingsPublicSettingsFileName";
-varnameSettingsIsFrontEndEnabled = "settingsIsFrontEndEnabled";
-varnameSettingsFrontEndStaticFilesFolder = "settingsFrontEndStaticFilesFolder";
-varnameIsLoggedIn = "isLoggedIn";
-varnameRegistrationEmail = "registrationEmail";
-varnameRegistrationVcode = "registrationVcode";
-varnameLogInEmail = "logInEmail";
-varnameLogInRequestId = "logInRequestId";
-varnameLogInAuthDataBytes = "logInAuthDataBytes";
-varnameLogInIsCaptchaNeeded = "logInIsCaptchaNeeded";
-varnameLogInCaptchaId = "logInCaptchaId";
-varnameChangeEmailRequestId = "changeEmailRequestId";
-varnameChangeEmailAuthDataBytes = "changeEmailAuthDataBytes";
-varnameChangeEmailIsCaptchaNeeded = "changeEmailIsCaptchaNeeded";
-varnameChangeEmailCaptchaId = "changeEmailCaptchaId";
-varnameChangePwdRequestId = "changePwdRequestId";
-varnameChangePwdAuthDataBytes = "changePwdAuthDataBytes";
-varnameChangePwdIsCaptchaNeeded = "changePwdIsCaptchaNeeded";
-varnameChangePwdCaptchaId = "changePwdCaptchaId";
+varname = {
+	PageFirstLoadTime: "pageFirstLoadTime",
+	PageCurrentLoadTime: "pageCurrentLoadTime",
+	SettingsLoadTime: "settingsLoadTime",
+	LogInTime: "logInTime",
+	SettingsVersion: "settingsVersion",
+	SettingsProductVersion: "settingsProductVersion",
+	SettingsSiteName: "settingsSiteName",
+	SettingsSiteDomain: "settingsSiteDomain",
+	SettingsCaptchaFolder: "settingsCaptchaFolder",
+	SettingsSessionMaxDuration: "settingsSessionMaxDuration",
+	SettingsMessageEditTime: "settingsMessageEditTime",
+	SettingsPageSize: "settingsPageSize",
+	SettingsApiFolder: "settingsApiFolder",
+	SettingsPublicSettingsFileName: "settingsPublicSettingsFileName",
+	SettingsIsFrontEndEnabled: "settingsIsFrontEndEnabled",
+	SettingsFrontEndStaticFilesFolder: "settingsFrontEndStaticFilesFolder",
+	IsLoggedIn: "isLoggedIn",
+	RegistrationEmail: "registrationEmail",
+	RegistrationVcode: "registrationVcode",
+	LogInEmail: "logInEmail",
+	LogInRequestId: "logInRequestId",
+	LogInAuthDataBytes: "logInAuthDataBytes",
+	LogInIsCaptchaNeeded: "logInIsCaptchaNeeded",
+	LogInCaptchaId: "logInCaptchaId",
+	ChangeEmailRequestId: "changeEmailRequestId",
+	ChangeEmailAuthDataBytes: "changeEmailAuthDataBytes",
+	ChangeEmailIsCaptchaNeeded: "changeEmailIsCaptchaNeeded",
+	ChangeEmailCaptchaId: "changeEmailCaptchaId",
+	ChangePwdRequestId: "changePwdRequestId",
+	ChangePwdAuthDataBytes: "changePwdAuthDataBytes",
+	ChangePwdIsCaptchaNeeded: "changePwdIsCaptchaNeeded",
+	ChangePwdCaptchaId: "changePwdCaptchaId",
+}
 
 // Pages and Query Parameters.
-qpRegistrationStep1 = "?reg1"
-qpRegistrationStep2 = "?reg2"
-qpRegistrationStep3 = "?reg3"
-qpRegistrationStep4 = "?reg4"
-qpLogInStep1 = "?login1"
-qpLogInStep2 = "?login2"
-qpLogInStep3 = "?login3"
-qpLogInStep4 = "?login4"
-qpLogOutStep1 = "?logout1"
-qpLogOutStep2 = "?logout2"
-qpChangeEmailStep1 = "?changeEmail1";
-qpChangeEmailStep2 = "?changeEmail2";
-qpChangeEmailStep3 = "?changeEmail3";
-qpChangePwdStep1 = "?changePwd1";
-qpChangePwdStep2 = "?changePwd2";
-qpChangePwdStep3 = "?changePwd3";
-qpSelfPage = "?selfPage";
+qp = {
+	Prefix: "?",
+	RegistrationStep1: "?reg1",
+	RegistrationStep2: "?reg2",
+	RegistrationStep3: "?reg3",
+	RegistrationStep4: "?reg4",
+	LogInStep1: "?login1",
+	LogInStep2: "?login2",
+	LogInStep3: "?login3",
+	LogInStep4: "?login4",
+	LogOutStep1: "?logout1",
+	LogOutStep2: "?logout2",
+	ChangeEmailStep1: "?changeEmail1",
+	ChangeEmailStep2: "?changeEmail2",
+	ChangeEmailStep3: "?changeEmail3",
+	ChangePwdStep1: "?changePwd1",
+	ChangePwdStep2: "?changePwd2",
+	ChangePwdStep3: "?changePwd3",
+	SelfPage: "?selfPage",
+}
 
-qpPrefix = "?"
-qpnId = "id";
-qpnPage = "page";
-qpnSection = "section";
-qpnForum = "forum";
-qpnThread = "thread";
+qpn = {
+	Id: "id",
+	Page: "page",
+	Section: "section",
+	Forum: "forum",
+	Thread: "thread",
+}
 
 // Form Input Elements.
-fiid1 = "f1i";
-fiid2 = "f2i";
-fiid3 = "f3i";
-fiid4 = "f4i";
-fiid4_errflag = "f4ief";
-fiid5 = "f5i";
-fiid6 = "f6i";
-fiid7 = "f7i";
-fiid7_image = "f7ii";
-fiid8 = "f8i";
-fiid9 = "f9i";
-fiid10 = "f10i";
-fiid11 = "f11i";
-fiid11_image = "f11ii";
-fiid12 = "f12i";
-fiid13 = "f13i";
-fiid14 = "f14i";
-fiid15 = "f15i";
-fiid16 = "f16i";
-fiid16_image = "f16ii";
-fiid17 = "f17i";
-fiid18 = "f18i";
-fiid19 = "f19i";
-fiid20 = "f20i";
-fid21_tr = "f21tr";
+fi = {
+	id1: "f1i",
+	id2: "f2i",
+	id3: "f3i",
+	id4: "f4i",
+	id4_errflag: "f4ief",
+	id5: "f5i",
+	id6: "f6i",
+	id7: "f7i",
+	id7_image: "f7ii",
+	id8: "f8i",
+	id9: "f9i",
+	id10: "f10i",
+	id11: "f11i",
+	id11_image: "f11ii",
+	id12: "f12i",
+	id13: "f13i",
+	id14: "f14i",
+	id15: "f15i",
+	id16: "f16i",
+	id16_image: "f16ii",
+	id17: "f17i",
+	id18: "f18i",
+	id19: "f19i",
+	id20: "f20i",
+	id21_tr: "f21tr",
+}
 
 // Errors.
-errIdNotSet = "ID is not set";
-errIdNotFound = "ID is not found";
-errPageNotSet = "page is not set";
-errPageNotFound = "page is not found";
-errNextStepUnknown = "unknown next step";
-errPasswordNotValid = "password is not valid";
-errWebTokenIsNotSet = "web token is not set";
-errNotOk = "something went wrong";
-errServer = "server error";
-errClient = "client error";
-errUnknown = "unknown error";
-errElementTypeUnsupported = "unsupported element type";
-errRootSectionNotFound = "root section is not found";
-errSectionNotFound = "section is not found";
-errThreadNotFound = "thread is not found";
-errDuplicateMapKey = "duplicate map key";
-errUnknownVariant = "unknown variant";
-errPreviousPageDoesNotExist = "previous page does not exist";
-errNextPageDoesNotExist = "next page does not exist";
+err = {
+	IdNotSet: "ID is not set",
+	IdNotFound: "ID is not found",
+	PageNotSet: "page is not set",
+	PageNotFound: "page is not found",
+	NextStepUnknown: "unknown next step",
+	PasswordNotValid: "password is not valid",
+	WebTokenIsNotSet: "web token is not set",
+	NotOk: "something went wrong",
+	Server: "server error",
+	Client: "client error",
+	Unknown: "unknown error",
+	ElementTypeUnsupported: "unsupported element type",
+	RootSectionNotFound: "root section is not found",
+	SectionNotFound: "section is not found",
+	ThreadNotFound: "thread is not found",
+	DuplicateMapKey: "duplicate map key",
+	UnknownVariant: "unknown variant",
+	PreviousPageDoesNotExist: "previous page does not exist",
+	NextPageDoesNotExist: "next page does not exist",
+}
 
 // Messages.
-msgRedirecting = "Redirecting. Please wait ...";
-msgGenericErrorPrefix = "Error: ";
+msg = {
+	Redirecting: "Redirecting. Please wait ...",
+	GenericErrorPrefix: "Error: ",
+}
 
 // Action names.
-actionName_registerUser = "registerUser";
-actionName_logUserIn = "logUserIn";
-actionName_logUserOut = "logUserOut";
-actionName_changeEmail = "changeEmail";
-actionName_changePwd = "changePassword";
-actionName_listSectionsAndForums = "listSectionsAndForums";
-actionName_listForumAndThreadsOnPage = "listForumAndThreadsOnPage";
-actionName_getSelfRoles = "getSelfRoles";
+actionName = {
+	RegisterUser: "registerUser",
+	LogUserIn: "logUserIn",
+	LogUserOut: "logUserOut",
+	ChangeEmail: "changeEmail",
+	ChangePwd: "changePassword",
+	ListSectionsAndForums: "listSectionsAndForums",
+	ListForumAndThreadsOnPage: "listForumAndThreadsOnPage",
+	GetSelfRoles: "getSelfRoles",
+}
 
 // Section settings.
-sectionChildTypeNone = 0;
-sectionChildTypeSection = 1;
-sectionChildTypeForum = 2;
+sectionChildType = {
+	None: 0,
+	Section: 1,
+	Forum: 2,
+}
 sectionMarginDelta = 10;
 
 // Global variables.
@@ -310,38 +320,38 @@ async function loadPage() {
 
 	// Redirect to registration.
 	switch (curPage) {
-		case qpRegistrationStep1:
+		case qp.RegistrationStep1:
 			showReg1Form();
 			return;
 
-		case qpRegistrationStep2:
+		case qp.RegistrationStep2:
 			showReg2Form();
 			return;
 
-		case qpRegistrationStep3:
+		case qp.RegistrationStep3:
 			showReg3Form();
 			return;
 
-		case qpRegistrationStep4:
+		case qp.RegistrationStep4:
 			showReg4Form();
 			return;
 	}
 
 	// Redirect to logging in.
 	switch (curPage) {
-		case qpLogInStep1:
+		case qp.LogInStep1:
 			showLogIn1Form();
 			return;
 
-		case qpLogInStep2:
+		case qp.LogInStep2:
 			showLogIn2Form();
 			return;
 
-		case qpLogInStep3:
+		case qp.LogInStep3:
 			showLogIn3Form();
 			return;
 
-		case qpLogInStep4:
+		case qp.LogInStep4:
 			showLogIn4Form();
 			await redirectToMainPage(true);
 			return;
@@ -356,46 +366,46 @@ async function loadPage() {
 
 	// Pages for logged users.
 	switch (curPage) {
-		case qpLogOutStep1:
+		case qp.LogOutStep1:
 			showLogOut1Form();
 			return;
 
-		case qpLogOutStep2:
+		case qp.LogOutStep2:
 			showLogOut2Form();
 			return;
 
-		case qpChangeEmailStep1:
+		case qp.ChangeEmailStep1:
 			showChangeEmail1Form();
 			return;
 
-		case qpChangeEmailStep2:
+		case qp.ChangeEmailStep2:
 			showChangeEmail2Form();
 			return;
 
-		case qpChangeEmailStep3:
+		case qp.ChangeEmailStep3:
 			showChangeEmail3Form();
 			return;
 
-		case qpChangePwdStep1:
+		case qp.ChangePwdStep1:
 			showChangePwd1Form();
 			return;
 
-		case qpChangePwdStep2:
+		case qp.ChangePwdStep2:
 			showChangePwd2Form();
 			return;
 
-		case qpChangePwdStep3:
+		case qp.ChangePwdStep3:
 			showChangePwd3Form();
 			return;
 
-		case qpSelfPage:
+		case qp.SelfPage:
 			await showUserPage();
 			return;
 	}
 
 	// Show the bulletin board.
 	let sp = new URLSearchParams(curPage);
-	if (sp.has(qpnSection)) {
+	if (sp.has(qpn.Section)) {
 		if (!prepareIdVariable(sp)) {
 			return;
 		}
@@ -403,7 +413,7 @@ async function loadPage() {
 		return;
 	}
 
-	if (sp.has(qpnForum)) {
+	if (sp.has(qpn.Forum)) {
 		if ((!prepareIdVariable(sp)) || (!preparePageVariable(sp))) {
 			return;
 		}
@@ -446,11 +456,11 @@ function stringToBoolean(s) {
 }
 
 function getPageFirstLoadTime() {
-	let pageFirstLoadTimeStr = sessionStorage.getItem(varnamePageFirstLoadTime);
+	let pageFirstLoadTimeStr = sessionStorage.getItem(varname.PageFirstLoadTime);
 
 	if (pageFirstLoadTimeStr === null) {
 		let timeNow = getCurrentTimestamp();
-		sessionStorage.setItem(varnamePageFirstLoadTime, timeNow.toString());
+		sessionStorage.setItem(varname.PageFirstLoadTime, timeNow.toString());
 		return timeNow;
 	} else {
 		return pageFirstLoadTimeStr;
@@ -459,12 +469,12 @@ function getPageFirstLoadTime() {
 
 function updatePageCurrentLoadTime() {
 	let timeNow = getCurrentTimestamp();
-	sessionStorage.setItem(varnamePageCurrentLoadTime, timeNow.toString());
+	sessionStorage.setItem(varname.PageCurrentLoadTime, timeNow.toString());
 }
 
 async function updateSettingsIfNeeded() {
 	let timeNow = getCurrentTimestamp();
-	let settingsLoadTimeStr = sessionStorage.getItem(varnameSettingsLoadTime);
+	let settingsLoadTimeStr = sessionStorage.getItem(varname.SettingsLoadTime);
 
 	let settingsAge = 0;
 	if (settingsLoadTimeStr != null) {
@@ -474,7 +484,7 @@ async function updateSettingsIfNeeded() {
 
 	if ((settingsLoadTimeStr == null) || (settingsAge > settingsExpirationDuration)) {
 		await updateSettings();
-		sessionStorage.setItem(varnameSettingsLoadTime, timeNow.toString());
+		sessionStorage.setItem(varname.SettingsLoadTime, timeNow.toString());
 	}
 }
 
@@ -490,44 +500,44 @@ async function fetchSettings() {
 }
 
 function saveSettings(settings) {
-	sessionStorage.setItem(varnameSettingsVersion, settings.version.toString());
-	sessionStorage.setItem(varnameSettingsProductVersion, settings.productVersion);
-	sessionStorage.setItem(varnameSettingsSiteName, settings.siteName);
-	sessionStorage.setItem(varnameSettingsSiteDomain, settings.siteDomain);
-	sessionStorage.setItem(varnameSettingsCaptchaFolder, settings.captchaFolder);
-	sessionStorage.setItem(varnameSettingsSessionMaxDuration, settings.sessionMaxDuration.toString());
-	sessionStorage.setItem(varnameSettingsMessageEditTime, settings.messageEditTime.toString());
-	sessionStorage.setItem(varnameSettingsPageSize, settings.pageSize.toString());
-	sessionStorage.setItem(varnameSettingsApiFolder, settings.apiFolder);
-	sessionStorage.setItem(varnameSettingsPublicSettingsFileName, settings.publicSettingsFileName);
-	sessionStorage.setItem(varnameSettingsIsFrontEndEnabled, settings.isFrontEndEnabled.toString());
-	sessionStorage.setItem(varnameSettingsFrontEndStaticFilesFolder, settings.frontEndStaticFilesFolder);
+	sessionStorage.setItem(varname.SettingsVersion, settings.version.toString());
+	sessionStorage.setItem(varname.SettingsProductVersion, settings.productVersion);
+	sessionStorage.setItem(varname.SettingsSiteName, settings.siteName);
+	sessionStorage.setItem(varname.SettingsSiteDomain, settings.siteDomain);
+	sessionStorage.setItem(varname.SettingsCaptchaFolder, settings.captchaFolder);
+	sessionStorage.setItem(varname.SettingsSessionMaxDuration, settings.sessionMaxDuration.toString());
+	sessionStorage.setItem(varname.SettingsMessageEditTime, settings.messageEditTime.toString());
+	sessionStorage.setItem(varname.SettingsPageSize, settings.pageSize.toString());
+	sessionStorage.setItem(varname.SettingsApiFolder, settings.apiFolder);
+	sessionStorage.setItem(varname.SettingsPublicSettingsFileName, settings.publicSettingsFileName);
+	sessionStorage.setItem(varname.SettingsIsFrontEndEnabled, settings.isFrontEndEnabled.toString());
+	sessionStorage.setItem(varname.SettingsFrontEndStaticFilesFolder, settings.frontEndStaticFilesFolder);
 }
 
 function getSettings() {
 	return new Settings(
-		Number(sessionStorage.getItem(varnameSettingsVersion)),
-		sessionStorage.getItem(varnameSettingsProductVersion),
-		sessionStorage.getItem(varnameSettingsSiteName),
-		sessionStorage.getItem(varnameSettingsSiteDomain),
-		sessionStorage.getItem(varnameSettingsCaptchaFolder),
-		Number(sessionStorage.getItem(varnameSettingsSessionMaxDuration)),
-		Number(sessionStorage.getItem(varnameSettingsMessageEditTime)),
-		Number(sessionStorage.getItem(varnameSettingsPageSize)),
-		sessionStorage.getItem(varnameSettingsApiFolder),
-		sessionStorage.getItem(varnameSettingsPublicSettingsFileName),
-		stringToBoolean(sessionStorage.getItem(varnameSettingsIsFrontEndEnabled)),
-		sessionStorage.getItem(varnameSettingsFrontEndStaticFilesFolder),
+		Number(sessionStorage.getItem(varname.SettingsVersion)),
+		sessionStorage.getItem(varname.SettingsProductVersion),
+		sessionStorage.getItem(varname.SettingsSiteName),
+		sessionStorage.getItem(varname.SettingsSiteDomain),
+		sessionStorage.getItem(varname.SettingsCaptchaFolder),
+		Number(sessionStorage.getItem(varname.SettingsSessionMaxDuration)),
+		Number(sessionStorage.getItem(varname.SettingsMessageEditTime)),
+		Number(sessionStorage.getItem(varname.SettingsPageSize)),
+		sessionStorage.getItem(varname.SettingsApiFolder),
+		sessionStorage.getItem(varname.SettingsPublicSettingsFileName),
+		stringToBoolean(sessionStorage.getItem(varname.SettingsIsFrontEndEnabled)),
+		sessionStorage.getItem(varname.SettingsFrontEndStaticFilesFolder),
 	);
 }
 
 function isLoggedIn(settings) {
-	let isLoggedInStr = localStorage.getItem(varnameIsLoggedIn);
+	let isLoggedInStr = localStorage.getItem(varname.IsLoggedIn);
 	let isLoggedIn;
 
 	if (isLoggedInStr === null) {
 		isLoggedIn = false;
-		localStorage.setItem(varnameIsLoggedIn, isLoggedIn.toString());
+		localStorage.setItem(varname.IsLoggedIn, isLoggedIn.toString());
 		return false;
 	}
 
@@ -537,12 +547,12 @@ function isLoggedIn(settings) {
 	}
 
 	// Check if the session is not closed by timeout.
-	let logInTime = Number(localStorage.getItem(varnameLogInTime));
+	let logInTime = Number(localStorage.getItem(varname.LogInTime));
 	let timeNow = getCurrentTimestamp();
 	let sessionAge = timeNow - logInTime;
 	if (sessionAge > settings.SessionMaxDuration) {
 		isLoggedIn = false;
-		localStorage.setItem(varnameIsLoggedIn, isLoggedIn.toString());
+		localStorage.setItem(varname.IsLoggedIn, isLoggedIn.toString());
 		return false;
 	}
 
@@ -551,15 +561,15 @@ function isLoggedIn(settings) {
 
 function logIn() {
 	isLoggedIn = true;
-	localStorage.setItem(varnameIsLoggedIn, isLoggedIn.toString());
+	localStorage.setItem(varname.IsLoggedIn, isLoggedIn.toString());
 	let timeNow = getCurrentTimestamp();
-	localStorage.setItem(varnameLogInTime, timeNow.toString());
+	localStorage.setItem(varname.LogInTime, timeNow.toString());
 }
 
 function logOut() {
 	isLoggedIn = false;
-	localStorage.setItem(varnameIsLoggedIn, isLoggedIn.toString());
-	localStorage.removeItem(varnameLogInTime);
+	localStorage.setItem(varname.IsLoggedIn, isLoggedIn.toString());
+	localStorage.removeItem(varname.LogInTime);
 }
 
 function showBlock(block) {
@@ -618,12 +628,12 @@ function showLogIn1Form() {
 
 function showLogIn2Form() {
 	// Captcha (optional).
-	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varnameLogInIsCaptchaNeeded));
-	let captchaId = sessionStorage.getItem(varnameLogInCaptchaId);
+	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varname.LogInIsCaptchaNeeded));
+	let captchaId = sessionStorage.getItem(varname.LogInCaptchaId);
 	let cptImageTr = document.getElementById("formHolderLogIn2CaptchaImage");
-	let cptImage = document.getElementById(fiid7_image);
+	let cptImage = document.getElementById(fi.id7_image);
 	let cptAnswerTr = document.getElementById("formHolderLogIn2CaptchaAnswer");
-	let cptAnswer = document.getElementById(fiid7);
+	let cptAnswer = document.getElementById(fi.id7);
 	let settings = getSettings();
 
 	// Draw.
@@ -686,12 +696,12 @@ function showChangeEmail1Form() {
 
 function showChangeEmail2Form() {
 	// Captcha (optional).
-	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varnameChangeEmailIsCaptchaNeeded));
-	let captchaId = sessionStorage.getItem(varnameChangeEmailCaptchaId);
+	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varname.ChangeEmailIsCaptchaNeeded));
+	let captchaId = sessionStorage.getItem(varname.ChangeEmailCaptchaId);
 	let cptImageTr = document.getElementById("formHolderChangeEmail2CaptchaImage");
-	let cptImage = document.getElementById(fiid11_image);
+	let cptImage = document.getElementById(fi.id11_image);
 	let cptAnswerTr = document.getElementById("formHolderChangeEmail2CaptchaAnswer");
-	let cptAnswer = document.getElementById(fiid11);
+	let cptAnswer = document.getElementById(fi.id11);
 	let settings = getSettings();
 
 	// Draw.
@@ -724,12 +734,12 @@ function showChangePwd1Form() {
 
 function showChangePwd2Form() {
 	// Captcha (optional).
-	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varnameChangePwdIsCaptchaNeeded));
-	let captchaId = sessionStorage.getItem(varnameChangePwdCaptchaId);
+	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varname.ChangePwdIsCaptchaNeeded));
+	let captchaId = sessionStorage.getItem(varname.ChangePwdCaptchaId);
 	let cptImageTr = document.getElementById("formHolderChangePwd2CaptchaImage");
-	let cptImage = document.getElementById(fiid16_image);
+	let cptImage = document.getElementById(fi.id16_image);
 	let cptAnswerTr = document.getElementById("formHolderChangePwd2CaptchaAnswer");
-	let cptAnswer = document.getElementById(fiid16);
+	let cptAnswer = document.getElementById(fi.id16);
 	let settings = getSettings();
 
 	// Draw.
@@ -775,7 +785,7 @@ async function showBB() {
 	let forums = resp.result.saf.forums;
 	let rootSectionIdx = getRootSectionIdx(sections);
 	if (rootSectionIdx == null) {
-		console.error(errRootSectionNotFound);
+		console.error(err.RootSectionNotFound);
 	}
 	let rootSection = sections[rootSectionIdx];
 	let sectionsMap = putSectionsIntoMap(sections);
@@ -808,7 +818,7 @@ async function showSection() {
 	let forums = resp.result.saf.forums;
 	let rootSectionIdx = getRootSectionIdx(sections);
 	if (rootSectionIdx == null) {
-		console.error(errRootSectionNotFound);
+		console.error(err.RootSectionNotFound);
 	}
 	let rootSection = sections[rootSectionIdx];
 	let sectionsMap = putSectionsIntoMap(sections);
@@ -823,7 +833,7 @@ async function showSection() {
 	createTreeOfSections(rootSection, sectionsMap, 1, allNodes);
 	let nodes = [];
 	if (!sectionsMap.has(sectionId)) {
-		console.error(errSectionNotFound);
+		console.error(err.SectionNotFound);
 		return;
 	}
 	let curSection = sectionsMap.get(sectionId);
@@ -847,11 +857,14 @@ async function showForum() {
 		return;
 	}
 	let pageCount = resp.result.fatop.totalPages;
+	if (pageCount === undefined) {
+		pageCount = 1;
+	}
 	mca_gvc.Pages = pageCount;
 
 	// Check page number for overflow.
 	if (pageNumber > pageCount) {
-		console.error(errPageNotFound);
+		console.error(err.PageNotFound);
 		return;
 	}
 
@@ -893,9 +906,9 @@ async function onReg1Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextReg1");
 	let errField = document.getElementById("header4TextReg1");
-	let email = document.getElementById(fiid1).value;
+	let email = document.getElementById(fi.id1).value;
 	let params = new Parameters_RegisterUser1(1, email);
-	let reqData = new ApiRequest(actionName_registerUser, params);
+	let reqData = new ApiRequest(actionName.RegisterUser, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
@@ -903,18 +916,18 @@ async function onReg1Submit(btn) {
 	}
 	let nextStep = resp.JsonObject.result.nextStep;
 	if (nextStep !== 2) {
-		errField.innerHTML = composeErrorText(errNextStepUnknown);
+		errField.innerHTML = composeErrorText(err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
-	sessionStorage.setItem(varnameRegistrationEmail, email);
+	sessionStorage.setItem(varname.RegistrationEmail, email);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msgRedirecting;
-	await redirectToRelativePath(true, qpRegistrationStep2);
+	h3Field.innerHTML = msg.Redirecting;
+	await redirectToRelativePath(true, qp.RegistrationStep2);
 }
 
 async function onReg2Submit(btn) {
@@ -923,41 +936,41 @@ async function onReg2Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextReg2");
 	let errField = document.getElementById("header4TextReg2");
-	let email = sessionStorage.getItem(varnameRegistrationEmail);
-	let vcode = document.getElementById(fiid2).value;
+	let email = sessionStorage.getItem(varname.RegistrationEmail);
+	let vcode = document.getElementById(fi.id2).value;
 	let params = new Parameters_RegisterUser2(2, email, vcode);
-	let reqData = new ApiRequest(actionName_registerUser, params);
+	let reqData = new ApiRequest(actionName.RegisterUser, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
 		disableButton(btn);
-		h3Field.innerHTML = msgRedirecting;
+		h3Field.innerHTML = msg.Redirecting;
 		await redirectToMainPage(true);
 		return;
 	}
 	let nextStep = resp.JsonObject.result.nextStep;
 	if (nextStep !== 3) {
-		errField.innerHTML = composeErrorText(errNextStepUnknown);
+		errField.innerHTML = composeErrorText(err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
-	sessionStorage.setItem(varnameRegistrationVcode, vcode);
+	sessionStorage.setItem(varname.RegistrationVcode, vcode);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msgRedirecting;
-	await redirectToRelativePath(true, qpRegistrationStep3);
+	h3Field.innerHTML = msg.Redirecting;
+	await redirectToRelativePath(true, qp.RegistrationStep3);
 }
 
 async function onReg3Submit(btn) {
 	console.debug("onReg3Submit");
 
 	// Check the input.
-	let pwd = document.getElementById(fiid4).value;
-	let pwdErrFlag = document.getElementById(fiid4_errflag);
+	let pwd = document.getElementById(fi.id4).value;
+	let pwdErrFlag = document.getElementById(fi.id4_errflag);
 	let ok = checkPwd(pwd);
 	if (ok) {
 		pwdErrFlag.className = "flag_none";
@@ -969,35 +982,35 @@ async function onReg3Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextReg3");
 	let errField = document.getElementById("header4TextReg3");
-	let email = sessionStorage.getItem(varnameRegistrationEmail);
-	let vcode = sessionStorage.getItem(varnameRegistrationVcode);
-	let name = document.getElementById(fiid3).value;
+	let email = sessionStorage.getItem(varname.RegistrationEmail);
+	let vcode = sessionStorage.getItem(varname.RegistrationVcode);
+	let name = document.getElementById(fi.id3).value;
 	let params = new Parameters_RegisterUser3(3, email, vcode, name, pwd);
-	let reqData = new ApiRequest(actionName_registerUser, params);
+	let reqData = new ApiRequest(actionName.RegisterUser, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
 		disableButton(btn);
-		h3Field.innerHTML = msgRedirecting;
+		h3Field.innerHTML = msg.Redirecting;
 		await redirectToMainPage(true);
 		return;
 	}
 	let nextStep = resp.JsonObject.result.nextStep;
 	if ((nextStep !== 4) && (nextStep !== 0)) {
-		errField.innerHTML = composeErrorText(errNextStepUnknown);
+		errField.innerHTML = composeErrorText(err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Clear saved input data from browser.
-	sessionStorage.removeItem(varnameRegistrationEmail);
-	sessionStorage.removeItem(varnameRegistrationVcode);
+	sessionStorage.removeItem(varname.RegistrationEmail);
+	sessionStorage.removeItem(varname.RegistrationVcode);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msgRedirecting;
-	await redirectToRelativePath(true, qpRegistrationStep4);
+	h3Field.innerHTML = msg.Redirecting;
+	await redirectToRelativePath(true, qp.RegistrationStep4);
 }
 
 async function onLogIn1Submit(btn) {
@@ -1006,40 +1019,40 @@ async function onLogIn1Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextLogIn1");
 	let errField = document.getElementById("header4TextLogIn1");
-	let email = document.getElementById(fiid5).value;
+	let email = document.getElementById(fi.id5).value;
 	let params = new Parameters_LogIn1(1, email);
-	let reqData = new ApiRequest(actionName_logUserIn, params);
+	let reqData = new ApiRequest(actionName.LogUserIn, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
 		disableButton(btn);
-		h3Field.innerHTML = msgRedirecting;
+		h3Field.innerHTML = msg.Redirecting;
 		await redirectToMainPage(true);
 		return;
 	}
 	let nextStep = resp.JsonObject.result.nextStep;
 	if (nextStep !== 2) {
-		errField.innerHTML = composeErrorText(errNextStepUnknown);
+		errField.innerHTML = composeErrorText(err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
-	sessionStorage.setItem(varnameLogInEmail, email);
+	sessionStorage.setItem(varname.LogInEmail, email);
 	let requestId = resp.JsonObject.result.requestId;
-	sessionStorage.setItem(varnameLogInRequestId, requestId);
+	sessionStorage.setItem(varname.LogInRequestId, requestId);
 	let authDataBytes = resp.JsonObject.result.authDataBytes;
-	sessionStorage.setItem(varnameLogInAuthDataBytes, authDataBytes);
+	sessionStorage.setItem(varname.LogInAuthDataBytes, authDataBytes);
 	let isCaptchaNeeded = resp.JsonObject.result.isCaptchaNeeded;
-	sessionStorage.setItem(varnameLogInIsCaptchaNeeded, isCaptchaNeeded.toString());
+	sessionStorage.setItem(varname.LogInIsCaptchaNeeded, isCaptchaNeeded.toString());
 	let captchaId = resp.JsonObject.result.captchaId;
-	sessionStorage.setItem(varnameLogInCaptchaId, captchaId);
+	sessionStorage.setItem(varname.LogInCaptchaId, captchaId);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msgRedirecting;
-	await redirectToRelativePath(true, qpLogInStep2);
+	h3Field.innerHTML = msg.Redirecting;
+	await redirectToRelativePath(true, qp.LogInStep2);
 }
 
 async function onLogIn2Submit(btn) {
@@ -1049,53 +1062,53 @@ async function onLogIn2Submit(btn) {
 	let h3Field = document.getElementById("header3TextLogIn2");
 
 	// Captcha (optional).
-	let captchaAnswer = document.getElementById(fiid7).value;
+	let captchaAnswer = document.getElementById(fi.id7).value;
 
 	// Secret.
-	let authDataBytes = sessionStorage.getItem(varnameLogInAuthDataBytes);
+	let authDataBytes = sessionStorage.getItem(varname.LogInAuthDataBytes);
 	let saltBA = base64ToByteArray(authDataBytes);
-	let pwd = document.getElementById(fiid6).value;
+	let pwd = document.getElementById(fi.id6).value;
 	if (!isPasswordAllowed(pwd)) {
-		errField.innerHTML = composeErrorText(errPasswordNotValid);
+		errField.innerHTML = composeErrorText(err.PasswordNotValid);
 		return;
 	}
 	let keyBA = makeHashKey(pwd, saltBA);
 	let authChallengeResponse = byteArrayToBase64(keyBA);
 
 	// Send the request.
-	let email = sessionStorage.getItem(varnameLogInEmail);
-	let requestId = sessionStorage.getItem(varnameLogInRequestId);
+	let email = sessionStorage.getItem(varname.LogInEmail);
+	let requestId = sessionStorage.getItem(varname.LogInRequestId);
 	let params = new Parameters_LogIn2(2, email, requestId, captchaAnswer, authChallengeResponse);
-	let reqData = new ApiRequest(actionName_logUserIn, params);
+	let reqData = new ApiRequest(actionName.LogUserIn, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
 		disableButton(btn);
-		h3Field.innerHTML = msgRedirecting;
+		h3Field.innerHTML = msg.Redirecting;
 		await redirectToMainPage(true);
 		return;
 	}
 	let nextStep = resp.JsonObject.result.nextStep;
 	if (nextStep !== 3) {
-		errField.innerHTML = composeErrorText(errNextStepUnknown);
+		errField.innerHTML = composeErrorText(err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Clear saved input data from browser.
-	sessionStorage.removeItem(varnameLogInAuthDataBytes);
-	sessionStorage.removeItem(varnameLogInIsCaptchaNeeded);
-	sessionStorage.removeItem(varnameLogInCaptchaId);
+	sessionStorage.removeItem(varname.LogInAuthDataBytes);
+	sessionStorage.removeItem(varname.LogInIsCaptchaNeeded);
+	sessionStorage.removeItem(varname.LogInCaptchaId);
 
 	// Save some non-sensitive input data into browser for the next page.
 	let newRequestId = resp.JsonObject.result.requestId;
-	sessionStorage.setItem(varnameLogInRequestId, newRequestId);
+	sessionStorage.setItem(varname.LogInRequestId, newRequestId);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msgRedirecting;
-	await redirectToRelativePath(true, qpLogInStep3);
+	h3Field.innerHTML = msg.Redirecting;
+	await redirectToRelativePath(true, qp.LogInStep3);
 }
 
 async function onLogIn3Submit(btn) {
@@ -1105,42 +1118,42 @@ async function onLogIn3Submit(btn) {
 	let h3Field = document.getElementById("header3TextLogIn3");
 
 	// Send the request.
-	let vcode = document.getElementById(fiid8).value;
-	let email = sessionStorage.getItem(varnameLogInEmail);
-	let requestId = sessionStorage.getItem(varnameLogInRequestId);
+	let vcode = document.getElementById(fi.id8).value;
+	let email = sessionStorage.getItem(varname.LogInEmail);
+	let requestId = sessionStorage.getItem(varname.LogInRequestId);
 	let params = new Parameters_LogIn3(3, email, requestId, vcode);
-	let reqData = new ApiRequest(actionName_logUserIn, params);
+	let reqData = new ApiRequest(actionName.LogUserIn, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
 		disableButton(btn);
-		h3Field.innerHTML = msgRedirecting;
+		h3Field.innerHTML = msg.Redirecting;
 		await redirectToMainPage(true);
 		return;
 	}
 	let nextStep = resp.JsonObject.result.nextStep;
 	let isWebTokenSet = resp.JsonObject.result.isWebTokenSet;
 	if (nextStep !== 0) {
-		errField.innerHTML = composeErrorText(errNextStepUnknown);
+		errField.innerHTML = composeErrorText(err.NextStepUnknown);
 		return;
 	}
 	if (!isWebTokenSet) {
-		errField.innerHTML = composeErrorText(errWebTokenIsNotSet);
+		errField.innerHTML = composeErrorText(err.WebTokenIsNotSet);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Clear saved input data from browser.
-	sessionStorage.removeItem(varnameLogInEmail);
-	sessionStorage.removeItem(varnameLogInRequestId);
+	sessionStorage.removeItem(varname.LogInEmail);
+	sessionStorage.removeItem(varname.LogInRequestId);
 
 	// Save the 'log' flag.
 	logIn();
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msgRedirecting;
+	h3Field.innerHTML = msg.Redirecting;
 	await redirectToMainPage(true);
 }
 
@@ -1151,19 +1164,19 @@ async function onLogOut1Submit(btn) {
 	let h3Field = document.getElementById("header3TextLogOut1");
 
 	// Send the request.
-	let reqData = new ApiRequest(actionName_logUserOut, {});
+	let reqData = new ApiRequest(actionName.LogUserOut, {});
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
 		disableButton(btn);
-		h3Field.innerHTML = msgRedirecting;
+		h3Field.innerHTML = msg.Redirecting;
 		await redirectToMainPage(true);
 		return;
 	}
 	let ok = resp.JsonObject.result.ok;
 	if (!ok) {
-		errField.innerHTML = composeErrorText(errNotOk);
+		errField.innerHTML = composeErrorText(err.NotOk);
 		return;
 	}
 	errField.innerHTML = "";
@@ -1173,8 +1186,8 @@ async function onLogOut1Submit(btn) {
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msgRedirecting;
-	await redirectToRelativePath(true, qpLogOutStep2);
+	h3Field.innerHTML = msg.Redirecting;
+	await redirectToRelativePath(true, qp.LogOutStep2);
 }
 
 async function onChangeEmail1Submit(btn) {
@@ -1183,40 +1196,40 @@ async function onChangeEmail1Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextChangeEmail1");
 	let errField = document.getElementById("header4TextChangeEmail1");
-	let newEmail = document.getElementById(fiid9).value;
+	let newEmail = document.getElementById(fi.id9).value;
 	let params = new Parameters_ChangeEmail1(1, newEmail);
-	let reqData = new ApiRequest(actionName_changeEmail, params);
+	let reqData = new ApiRequest(actionName.ChangeEmail, params);
 	let resp = await sendApiRequest(reqData);
 	console.debug("resp.JsonObject:", resp.JsonObject);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
 		disableButton(btn);
-		h3Field.innerHTML = msgRedirecting;
+		h3Field.innerHTML = msg.Redirecting;
 		await redirectToMainPage(true);
 		return;
 	}
 	let nextStep = resp.JsonObject.result.nextStep;
 	if (nextStep !== 2) {
-		errField.innerHTML = composeErrorText(errNextStepUnknown);
+		errField.innerHTML = composeErrorText(err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
 	let requestId = resp.JsonObject.result.requestId;
-	sessionStorage.setItem(varnameChangeEmailRequestId, requestId);
+	sessionStorage.setItem(varname.ChangeEmailRequestId, requestId);
 	let authDataBytes = resp.JsonObject.result.authDataBytes;
-	sessionStorage.setItem(varnameChangeEmailAuthDataBytes, authDataBytes);
+	sessionStorage.setItem(varname.ChangeEmailAuthDataBytes, authDataBytes);
 	let isCaptchaNeeded = resp.JsonObject.result.isCaptchaNeeded;
-	sessionStorage.setItem(varnameChangeEmailIsCaptchaNeeded, isCaptchaNeeded.toString());
+	sessionStorage.setItem(varname.ChangeEmailIsCaptchaNeeded, isCaptchaNeeded.toString());
 	let captchaId = resp.JsonObject.result.captchaId;
-	sessionStorage.setItem(varnameChangeEmailCaptchaId, captchaId);
+	sessionStorage.setItem(varname.ChangeEmailCaptchaId, captchaId);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msgRedirecting;
-	await redirectToRelativePath(true, qpChangeEmailStep2);
+	h3Field.innerHTML = msg.Redirecting;
+	await redirectToRelativePath(true, qp.ChangeEmailStep2);
 }
 
 async function onChangeEmail2Submit(btn) {
@@ -1226,60 +1239,60 @@ async function onChangeEmail2Submit(btn) {
 	let errField = document.getElementById("header4TextChangeEmail2");
 
 	// Captcha (optional).
-	let captchaAnswer = document.getElementById(fiid11).value;
+	let captchaAnswer = document.getElementById(fi.id11).value;
 
 	// Secret.
-	let authDataBytes = sessionStorage.getItem(varnameChangeEmailAuthDataBytes);
+	let authDataBytes = sessionStorage.getItem(varname.ChangeEmailAuthDataBytes);
 	let saltBA = base64ToByteArray(authDataBytes);
-	let pwd = document.getElementById(fiid10).value;
+	let pwd = document.getElementById(fi.id10).value;
 	if (!isPasswordAllowed(pwd)) {
-		errField.innerHTML = composeErrorText(errPasswordNotValid);
+		errField.innerHTML = composeErrorText(err.PasswordNotValid);
 		return;
 	}
 	let keyBA = makeHashKey(pwd, saltBA);
 	let authChallengeResponse = byteArrayToBase64(keyBA);
 
 	// Send the request.
-	let requestId = sessionStorage.getItem(varnameChangeEmailRequestId);
-	let verificationCodeOld = document.getElementById(fiid12).value;
-	let verificationCodeNew = document.getElementById(fiid13).value;
-	let params = new Parameters_ChangeEmail2(2, requestId, authChallengeResponse, verificationCodeOld, verificationCodeNew, captchaAnswer);
-	let reqData = new ApiRequest(actionName_changeEmail, params);
+	let requestId = sessionStorage.getItem(varname.ChangeEmailRequestId);
+	let vCodeOld = document.getElementById(fi.id12).value;
+	let vCodeNew = document.getElementById(fi.id13).value;
+	let params = new Parameters_ChangeEmail2(2, requestId, authChallengeResponse, vCodeOld, vCodeNew, captchaAnswer);
+	let reqData = new ApiRequest(actionName.ChangeEmail, params);
 	let resp = await sendApiRequest(reqData);
 	console.debug("resp.JsonObject:", resp.JsonObject);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
 		disableButton(btn);
-		h3Field.innerHTML = msgRedirecting;
+		h3Field.innerHTML = msg.Redirecting;
 		await redirectToMainPage(true);
 		return;
 	}
 	let nextStep = resp.JsonObject.result.nextStep;
 	if (nextStep !== 0) {
-		errField.innerHTML = composeErrorText(errNextStepUnknown);
+		errField.innerHTML = composeErrorText(err.NextStepUnknown);
 		return;
 	}
 	let ok = resp.JsonObject.result.ok;
 	if (!ok) {
-		errField.innerHTML = composeErrorText(errNotOk);
+		errField.innerHTML = composeErrorText(err.NotOk);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Clear saved input data from browser.
-	sessionStorage.removeItem(varnameChangeEmailRequestId);
-	sessionStorage.removeItem(varnameChangeEmailAuthDataBytes);
-	sessionStorage.removeItem(varnameChangeEmailIsCaptchaNeeded);
-	sessionStorage.removeItem(varnameChangeEmailCaptchaId);
+	sessionStorage.removeItem(varname.ChangeEmailRequestId);
+	sessionStorage.removeItem(varname.ChangeEmailAuthDataBytes);
+	sessionStorage.removeItem(varname.ChangeEmailIsCaptchaNeeded);
+	sessionStorage.removeItem(varname.ChangeEmailCaptchaId);
 
 	// Save the 'log' flag.
 	logOut();
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msgRedirecting;
-	await redirectToRelativePath(true, qpChangeEmailStep3);
+	h3Field.innerHTML = msg.Redirecting;
+	await redirectToRelativePath(true, qp.ChangeEmailStep3);
 }
 
 async function onChangePwd1Submit(btn) {
@@ -1288,40 +1301,40 @@ async function onChangePwd1Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextChangePwd1");
 	let errField = document.getElementById("header4TextChangePwd1");
-	let newPwd = document.getElementById(fiid14).value;
+	let newPwd = document.getElementById(fi.id14).value;
 	let params = new Parameters_ChangePwd1(1, newPwd);
-	let reqData = new ApiRequest(actionName_changePwd, params);
+	let reqData = new ApiRequest(actionName.ChangePwd, params);
 	let resp = await sendApiRequest(reqData);
 	console.debug("resp.JsonObject:", resp.JsonObject);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
 		disableButton(btn);
-		h3Field.innerHTML = msgRedirecting;
+		h3Field.innerHTML = msg.Redirecting;
 		await redirectToMainPage(true);
 		return;
 	}
 	let nextStep = resp.JsonObject.result.nextStep;
 	if (nextStep !== 2) {
-		errField.innerHTML = composeErrorText(errNextStepUnknown);
+		errField.innerHTML = composeErrorText(err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
 	let requestId = resp.JsonObject.result.requestId;
-	sessionStorage.setItem(varnameChangePwdRequestId, requestId);
+	sessionStorage.setItem(varname.ChangePwdRequestId, requestId);
 	let authDataBytes = resp.JsonObject.result.authDataBytes;
-	sessionStorage.setItem(varnameChangePwdAuthDataBytes, authDataBytes);
+	sessionStorage.setItem(varname.ChangePwdAuthDataBytes, authDataBytes);
 	let isCaptchaNeeded = resp.JsonObject.result.isCaptchaNeeded;
-	sessionStorage.setItem(varnameChangePwdIsCaptchaNeeded, isCaptchaNeeded.toString());
+	sessionStorage.setItem(varname.ChangePwdIsCaptchaNeeded, isCaptchaNeeded.toString());
 	let captchaId = resp.JsonObject.result.captchaId;
-	sessionStorage.setItem(varnameChangePwdCaptchaId, captchaId);
+	sessionStorage.setItem(varname.ChangePwdCaptchaId, captchaId);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msgRedirecting;
-	await redirectToRelativePath(true, qpChangePwdStep2);
+	h3Field.innerHTML = msg.Redirecting;
+	await redirectToRelativePath(true, qp.ChangePwdStep2);
 }
 
 async function onChangePwd2Submit(btn) {
@@ -1331,59 +1344,59 @@ async function onChangePwd2Submit(btn) {
 	let errField = document.getElementById("header4TextChangePwd2");
 
 	// Captcha (optional).
-	let captchaAnswer = document.getElementById(fiid16).value;
+	let captchaAnswer = document.getElementById(fi.id16).value;
 
 	// Secret.
-	let authDataBytes = sessionStorage.getItem(varnameChangePwdAuthDataBytes);
+	let authDataBytes = sessionStorage.getItem(varname.ChangePwdAuthDataBytes);
 	let saltBA = base64ToByteArray(authDataBytes);
-	let pwd = document.getElementById(fiid15).value;
+	let pwd = document.getElementById(fi.id15).value;
 	if (!isPasswordAllowed(pwd)) {
-		errField.innerHTML = composeErrorText(errPasswordNotValid);
+		errField.innerHTML = composeErrorText(err.PasswordNotValid);
 		return;
 	}
 	let keyBA = makeHashKey(pwd, saltBA);
 	let authChallengeResponse = byteArrayToBase64(keyBA);
 
 	// Send the request.
-	let requestId = sessionStorage.getItem(varnameChangePwdRequestId);
-	let vcode = document.getElementById(fiid17).value;
+	let requestId = sessionStorage.getItem(varname.ChangePwdRequestId);
+	let vcode = document.getElementById(fi.id17).value;
 	let params = new Parameters_ChangePwd2(2, requestId, authChallengeResponse, vcode, captchaAnswer);
-	let reqData = new ApiRequest(actionName_changePwd, params);
+	let reqData = new ApiRequest(actionName.ChangePwd, params);
 	let resp = await sendApiRequest(reqData);
 	console.debug("resp.JsonObject:", resp.JsonObject);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
 		disableButton(btn);
-		h3Field.innerHTML = msgRedirecting;
+		h3Field.innerHTML = msg.Redirecting;
 		await redirectToMainPage(true);
 		return;
 	}
 	let nextStep = resp.JsonObject.result.nextStep;
 	if (nextStep !== 0) {
-		errField.innerHTML = composeErrorText(errNextStepUnknown);
+		errField.innerHTML = composeErrorText(err.NextStepUnknown);
 		return;
 	}
 	let ok = resp.JsonObject.result.ok;
 	if (!ok) {
-		errField.innerHTML = composeErrorText(errNotOk);
+		errField.innerHTML = composeErrorText(err.NotOk);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Clear saved input data from browser.
-	sessionStorage.removeItem(varnameChangePwdRequestId);
-	sessionStorage.removeItem(varnameChangePwdAuthDataBytes);
-	sessionStorage.removeItem(varnameChangePwdIsCaptchaNeeded);
-	sessionStorage.removeItem(varnameChangePwdCaptchaId);
+	sessionStorage.removeItem(varname.ChangePwdRequestId);
+	sessionStorage.removeItem(varname.ChangePwdAuthDataBytes);
+	sessionStorage.removeItem(varname.ChangePwdIsCaptchaNeeded);
+	sessionStorage.removeItem(varname.ChangePwdCaptchaId);
 
 	// Save the 'log' flag.
 	logOut();
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msgRedirecting;
-	await redirectToRelativePath(true, qpChangePwdStep3);
+	h3Field.innerHTML = msg.Redirecting;
+	await redirectToRelativePath(true, qp.ChangePwdStep3);
 }
 
 async function sleep(ms) {
@@ -1416,16 +1429,16 @@ async function sendApiRequest(data) {
 
 function createErrorTextByStatusCode(statusCode) {
 	if ((statusCode >= 400) && (statusCode <= 499)) {
-		return msgGenericErrorPrefix + errClient + " (" + statusCode.toString() + ")";
+		return msg.GenericErrorPrefix + err.Client + " (" + statusCode.toString() + ")";
 	}
 	if ((statusCode >= 500) && (statusCode <= 599)) {
-		return msgGenericErrorPrefix + errServer + " (" + statusCode.toString() + ")";
+		return msg.GenericErrorPrefix + err.Server + " (" + statusCode.toString() + ")";
 	}
-	return msgGenericErrorPrefix + errUnknown + " (" + statusCode.toString() + ")";
+	return msg.GenericErrorPrefix + err.Unknown + " (" + statusCode.toString() + ")";
 }
 
 function composeErrorText(errMsg) {
-	return msgGenericErrorPrefix + errMsg.trim() + ".";
+	return msg.GenericErrorPrefix + errMsg.trim() + ".";
 }
 
 async function redirectPage(wait, url) {
@@ -1459,7 +1472,7 @@ function disableButton(btn) {
 			return;
 
 		default:
-			console.error(errElementTypeUnsupported);
+			console.error(err.ElementTypeUnsupported);
 	}
 }
 
@@ -1623,7 +1636,7 @@ function addActionPanel(el, atTop) {
 }
 
 async function getSelfRoles() {
-	let reqData = new ApiRequest(actionName_getSelfRoles, {});
+	let reqData = new ApiRequest(actionName.GetSelfRoles, {});
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1633,7 +1646,7 @@ async function getSelfRoles() {
 }
 
 async function listSectionsAndForums() {
-	let reqData = new ApiRequest(actionName_listSectionsAndForums, {});
+	let reqData = new ApiRequest(actionName.ListSectionsAndForums, {});
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1644,7 +1657,7 @@ async function listSectionsAndForums() {
 
 async function listForumAndThreadsOnPage(forumId, page) {
 	let params = new Parameters_ListForumAndThreadsOnPage(forumId, page);
-	let reqData = new ApiRequest(actionName_listForumAndThreadsOnPage, params);
+	let reqData = new ApiRequest(actionName.ListForumAndThreadsOnPage, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1676,11 +1689,15 @@ function putThreadsIntoMap(threads) {
 
 function putArrayItemsIntoMap(a) {
 	let m = new Map();
+	if (a == null) {
+		return m;
+	}
+
 	let key;
 	for (let i = 0; i < a.length; i++) {
 		key = a[i].id;
 		if (m.has(key)) {
-			console.error(errDuplicateMapKey);
+			console.error(err.DuplicateMapKey);
 			return null;
 		}
 		m.set(key, a[i]);
@@ -1693,7 +1710,7 @@ function putArrayItemsIntoMap(a) {
 function createTreeOfSections(section, sectionsMap, level, nodes) {
 	nodes.push(new SectionNode(section, level));
 
-	if (section.childType !== sectionChildTypeSection) {
+	if (section.childType !== sectionChildType.Section) {
 		return;
 	}
 
@@ -1716,11 +1733,11 @@ function processSectionNodes(p, nodes, forumsMap) {
 		divSection.id = "section_" + node.Section.id;
 		ml = sectionMarginDelta * node.Level;
 		divSection.style.cssText = "margin-left: " + ml + "px";
-		url = qpPrefix + qpnSection + "&" + qpnId + "=" + node.Section.id;
+		url = qp.Prefix + qpn.Section + "&" + qpn.Id + "=" + node.Section.id;
 		divSection.innerHTML = "<a href='" + url + "'>" + node.Section.name + "</a>";
 		p.appendChild(divSection);
 
-		if (node.Section.childType === sectionChildTypeForum) {
+		if (node.Section.childType === sectionChildType.Forum) {
 			sectionForums = node.Section.children;
 		} else {
 			sectionForums = [];
@@ -1734,7 +1751,7 @@ function processSectionNodes(p, nodes, forumsMap) {
 			divForum.id = "forum_" + forumId;
 			ml = sectionMarginDelta * (node.Level + 1);
 			divForum.style.cssText = "margin-left: " + ml + "px";
-			url = qpPrefix + qpnForum + "&" + qpnId + "=" + forumId;
+			url = qp.Prefix + qpn.Forum + "&" + qpn.Id + "=" + forumId;
 			divForum.innerHTML = "<a href='" + url + "'>" + forum.name + "</a>";
 			p.appendChild(divForum);
 		}
@@ -1750,27 +1767,29 @@ function processForumAndThreads(p, forum, threadsMap) {
 	divForum.id = "forum_" + forum.forumId;
 	ml = sectionMarginDelta;
 	divForum.style.cssText = "margin-left: " + ml + "px";
-	url = qpPrefix + qpnForum + "&" + qpnId + "=" + forum.forumId;
+	url = qp.Prefix + qpn.Forum + "&" + qpn.Id + "=" + forum.forumId;
 	divForum.innerHTML = "<a href='" + url + "'>" + forum.forumName + "</a>";
 	p.appendChild(divForum);
 
 	threadIds = forum.threadIds;
-	for (let i = 0; i < threadIds.length; i++) {
-		threadId = threadIds[i];
-		if (!threadsMap.has(threadId)) {
-			console.error(errThreadNotFound);
-			return;
-		}
-		thread = threadsMap.get(threadId);
+	if (threadIds != null) {
+		for (let i = 0; i < threadIds.length; i++) {
+			threadId = threadIds[i];
+			if (!threadsMap.has(threadId)) {
+				console.error(err.ThreadNotFound);
+				return;
+			}
+			thread = threadsMap.get(threadId);
 
-		divThread = document.createElement("DIV");
-		divThread.className = "thread";
-		divThread.id = "thread_" + thread.id;
-		ml = sectionMarginDelta * 2;
-		divThread.style.cssText = "margin-left: " + ml + "px";
-		url = qpPrefix + qpnThread + "&" + qpnId + "=" + threadId;
-		divThread.innerHTML = "<a href='" + url + "'>" + thread.name + "</a>";
-		p.appendChild(divThread);
+			divThread = document.createElement("DIV");
+			divThread.className = "thread";
+			divThread.id = "thread_" + thread.id;
+			ml = sectionMarginDelta * 2;
+			divThread.style.cssText = "margin-left: " + ml + "px";
+			url = qp.Prefix + qpn.Thread + "&" + qpn.Id + "=" + threadId;
+			divThread.innerHTML = "<a href='" + url + "'>" + thread.name + "</a>";
+			p.appendChild(divThread);
+		}
 	}
 }
 
@@ -1833,41 +1852,41 @@ function addClickEventHandler(btn, variant) {
 
 
 		default:
-			console.error(errUnknownVariant);
+			console.error(err.UnknownVariant);
 	}
 }
 
 async function onBtnPrevClick_forumPage(btn) {
 	if (mca_gvc.Page <= 1) {
-		console.error(errPreviousPageDoesNotExist);
+		console.error(err.PreviousPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page--;
-	let url = qpPrefix + qpnForum + "&" + qpnId + "=" + mca_gvc.Id + "&" + qpnPage + "=" + mca_gvc.Page;
+	let url = qp.Prefix + qpn.Forum + "&" + qpn.Id + "=" + mca_gvc.Id + "&" + qpn.Page + "=" + mca_gvc.Page;
 	await redirectPage(false, url);
 }
 
 async function onBtnNextClick_forumPage(btn) {
 	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(errNextPageDoesNotExist);
+		console.error(err.NextPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page++;
-	let url = qpPrefix + qpnForum + "&" + qpnId + "=" + mca_gvc.Id + "&" + qpnPage + "=" + mca_gvc.Page;
+	let url = qp.Prefix + qpn.Forum + "&" + qpn.Id + "=" + mca_gvc.Id + "&" + qpn.Page + "=" + mca_gvc.Page;
 	await redirectPage(false, url);
 }
 
 function prepareIdVariable(sp) {
-	if (!sp.has(qpnId)) {
-		console.error(errIdNotSet);
+	if (!sp.has(qpn.Id)) {
+		console.error(err.IdNotSet);
 		return false;
 	}
 
-	let xId = Number(sp.get(qpnId));
+	let xId = Number(sp.get(qpn.Id));
 	if (xId <= 0) {
-		console.error(errIdNotFound);
+		console.error(err.IdNotFound);
 		return false;
 	}
 
@@ -1877,12 +1896,12 @@ function prepareIdVariable(sp) {
 
 function preparePageVariable(sp) {
 	let pageNumber;
-	if (!sp.has(qpnPage)) {
+	if (!sp.has(qpn.Page)) {
 		pageNumber = 1;
 	} else {
-		pageNumber = Number(sp.get(qpnPage));
+		pageNumber = Number(sp.get(qpn.Page));
 		if (pageNumber <= 0) {
-			console.error(errPageNotFound);
+			console.error(err.PageNotFound);
 			return false;
 		}
 	}
@@ -1892,9 +1911,9 @@ function preparePageVariable(sp) {
 }
 
 function fillUserPage(userParams) {
-	document.getElementById(fiid18).value = userParams.name;
-	document.getElementById(fiid19).value = userParams.email;
-	document.getElementById(fiid20).value = prettyTime(userParams.regTime);
+	document.getElementById(fi.id18).value = userParams.name;
+	document.getElementById(fi.id19).value = userParams.email;
+	document.getElementById(fi.id20).value = prettyTime(userParams.regTime);
 
 	let roles = [];
 	if (userParams.isAdministrator) {
@@ -1920,7 +1939,7 @@ function fillUserPage(userParams) {
 			rolesHtml += '<span class="userPageRole"><a href="' + adminPage + '" target="_blank" rel="noopener noreferrer">' + roles[i] + '</a></span>';
 		}
 	}
-	let tr = document.getElementById(fid21_tr);
+	let tr = document.getElementById(fi.id21_tr);
 	tr.children[1].innerHTML = rolesHtml;
 
 }
@@ -1944,22 +1963,22 @@ function prettyTime(timeStr) {
 }
 
 async function onBtnChangeEmailClick(btn) {
-	let url = qpChangeEmailStep1;
+	let url = qp.ChangeEmailStep1;
 	await redirectPage(false, url);
 }
 
 async function onBtnChangePwdClick(btn) {
-	let url = qpChangePwdStep1;
+	let url = qp.ChangePwdStep1;
 	await redirectPage(false, url);
 }
 
 async function onBtnLogOutSelfClick(btn) {
-	let url = qpLogOutStep1;
+	let url = qp.LogOutStep1;
 	await redirectPage(false, url);
 }
 
 async function onBtnAccountClick(btn) {
-	let url = qpSelfPage;
+	let url = qp.SelfPage;
 	await redirectPage(false, url);
 }
 
