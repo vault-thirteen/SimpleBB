@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
@@ -379,7 +381,10 @@ type GetSelfRolesParams struct {
 type GetSelfRolesResult struct {
 	cmr.CommonResult
 
-	UserId uint `json:"userId"`
+	UserId  uint      `json:"userId"`
+	Name    string    `json:"name"`
+	Email   string    `json:"email"`
+	RegTime time.Time `json:"regTime"`
 	cm.UserRoles
 }
 

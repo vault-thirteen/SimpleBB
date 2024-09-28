@@ -41,10 +41,9 @@ form, input {
 }
 
 table.vs1 {
-	height: 20px;
+	height: 5px;
 }
 
-table.header1,
 table.header2,
 table.formHolder,
 table.header3,
@@ -53,17 +52,11 @@ table.header4 {
 	margin-right: auto;
 }
 
-td.header1Title,
 td.header2Text,
 td.header3Text,
 td.header4Text {
 	font-family: "DejaVu Sans", serif;
 	text-align: center;
-}
-
-td.header1Title {
-	font-size: 24px;
-	padding-bottom: 6px;
 }
 
 td.header2Text {
@@ -86,7 +79,7 @@ td.header4Text {
 }
 
 table.formHolder {
-	width: 480px;
+	width: auto;
 	background-color: lightskyblue;
 	border: 1px solid black;
 }
@@ -174,9 +167,11 @@ div.divLogIn,
 div.divLogOut,
 div.divChangeEmail,
 div.divChangePwd,
+div.divUserPage,
 div.divBB {
 	height: auto;
 	display: none;
+	margin: 10px;
 }
 
 div.divBB {
@@ -214,7 +209,12 @@ table.acpMenu td {
 .btnNext,
 .btnBack,
 .btnEnableRole,
-.btnDisableRole {
+.btnDisableRole,
+.btnChangeEmail,
+.btnChangePwd,
+.btnLogOutSelf,
+.btnAccount,
+.btnGoToIndex {
 	border: 1px solid grey;
 	color: grey;
 	cursor: pointer;
@@ -236,6 +236,17 @@ table.acpMenu td {
 .btnAccept,
 .btnEnableRole {
 	color: darkgreen;
+}
+
+.btnChangeEmail,
+.btnChangePwd {
+	color: sandybrown;
+	width: 192px;
+}
+
+.btnLogOutSelf {
+	color: red;
+	width: 192px;
 }
 
 .btnReject,
@@ -332,9 +343,19 @@ td.numCol {
 .pageHead {
 	font-family: "DejaVu Sans", serif;
 	font-size: 16px;
-	margin: 10px;
+	margin: 10px 0 10px 0;
 	text-align: left;
 	color: grey;
+}
+
+.pageHeadL {
+	width: 100%;
+	text-align: left;
+}
+
+.pageHeadR {
+	width: auto;
+	text-align: right;
 }
 
 div.section {
@@ -382,10 +403,28 @@ div.thread a {
 .paginator {
 	font-size: 14px;
 	color: grey;
-	margin-bottom: 5px;
+	margin-bottom: 10px;
 }
 
 .spacerA {
 	width: 15px;
 	display: inline-block;
+}
+
+span.userPageRole {
+	display: inline-block;
+	background-color: #E8E8E8;
+	border-radius: 5px;
+	padding: 2px 5px 2px 5px;
+	margin: 4px;
+	font-family: "DejaVu Sans", serif;
+	font-size: 13px;
+}
+
+span.userPageRole a {
+	text-decoration: none;
+}
+
+.actionPanel {
+	margin-bottom: 10px;
 }

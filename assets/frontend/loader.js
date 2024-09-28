@@ -15,6 +15,7 @@ window.onpageshow = function (event) {
 // Path to initial settings for a loader script.
 settingsPath = "settings.json";
 settingsRootPath = "/";
+adminPage = "admin.html";
 
 // Various other settings.
 redirectDelay = 5;
@@ -75,6 +76,7 @@ qpChangeEmailStep3 = "?changeEmail3";
 qpChangePwdStep1 = "?changePwd1";
 qpChangePwdStep2 = "?changePwd2";
 qpChangePwdStep3 = "?changePwd3";
+qpSelfPage = "?selfPage";
 
 qpPrefix = "?"
 qpnId = "id";
@@ -105,6 +107,10 @@ fiid15 = "f15i";
 fiid16 = "f16i";
 fiid16_image = "f16ii";
 fiid17 = "f17i";
+fiid18 = "f18i";
+fiid19 = "f19i";
+fiid20 = "f20i";
+fid21_tr = "f21tr";
 
 // Errors.
 errIdNotSet = "ID is not set";
@@ -139,6 +145,7 @@ actionName_changeEmail = "changeEmail";
 actionName_changePwd = "changePassword";
 actionName_listSectionsAndForums = "listSectionsAndForums";
 actionName_listForumAndThreadsOnPage = "listForumAndThreadsOnPage";
+actionName_getSelfRoles = "getSelfRoles";
 
 // Section settings.
 sectionChildTypeNone = 0;
@@ -299,15 +306,9 @@ async function loadPage() {
 	let pageFirstLoadTime = getPageFirstLoadTime();
 	updatePageCurrentLoadTime();
 	await updateSettingsIfNeeded();
-	let settings = getSettings();
-	console.debug("settings:", settings);
-	let isLoggedInB = isLoggedIn(settings);
-	console.debug("isLoggedIn:", isLoggedInB);
-
-	// Select a page.
 	let curPage = window.location.search;
-	let sp = new URLSearchParams(curPage);
 
+	// Redirect to registration.
 	switch (curPage) {
 		case qpRegistrationStep1:
 			showReg1Form();
@@ -324,7 +325,10 @@ async function loadPage() {
 		case qpRegistrationStep4:
 			showReg4Form();
 			return;
+	}
 
+	// Redirect to logging in.
+	switch (curPage) {
 		case qpLogInStep1:
 			showLogIn1Form();
 			return;
@@ -341,7 +345,17 @@ async function loadPage() {
 			showLogIn4Form();
 			await redirectToMainPage(true);
 			return;
+	}
 
+	let settings = getSettings();
+	let isLoggedInB = isLoggedIn(settings);
+	if (!isLoggedInB) {
+		showLogIn1Form();
+		return;
+	}
+
+	// Pages for logged users.
+	switch (curPage) {
 		case qpLogOutStep1:
 			showLogOut1Form();
 			return;
@@ -373,14 +387,14 @@ async function loadPage() {
 		case qpChangePwdStep3:
 			showChangePwd3Form();
 			return;
-	}
 
-	if (!isLoggedInB) {
-		showLogIn1Form();
-		return;
+		case qpSelfPage:
+			await showUserPage();
+			return;
 	}
 
 	// Show the bulletin board.
+	let sp = new URLSearchParams(curPage);
 	if (sp.has(qpnSection)) {
 		if (!prepareIdVariable(sp)) {
 			return;
@@ -405,6 +419,10 @@ function getCurrentTimestamp() {
 }
 
 function stringToBoolean(s) {
+	if (s == null) {
+		return null;
+	}
+
 	let x = s.trim().toLowerCase();
 
 	switch (x) {
@@ -544,46 +562,61 @@ function logOut() {
 	localStorage.removeItem(varnameLogInTime);
 }
 
-function showBlock(divId) {
-	let div = document.getElementById(divId);
-	div.style.display = "block";
-}
-
-function showHeader1(elementId) {
-	let header1 = document.getElementById(elementId);
-	let settings = getSettings();
-	header1.innerHTML = settings.SiteName;
+function showBlock(block) {
+	block.style.display = "block";
 }
 
 function showReg1Form() {
-	showBlock("divReg1");
-	showHeader1("header1TitleReg1");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divReg1");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showReg2Form() {
-	showBlock("divReg2");
-	showHeader1("header1TitleReg2");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divReg2");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showReg3Form() {
-	showBlock("divReg3");
-	showHeader1("header1TitleReg3");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divReg3");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showReg4Form() {
-	showBlock("divReg4");
-	showHeader1("header1TitleReg4");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divReg4");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showLogIn1Form() {
-	showBlock("divLogIn1");
-	showHeader1("header1TitleLogIn1");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divLogIn1");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showLogIn2Form() {
-	showBlock("divLogIn2");
-	showHeader1("header1TitleLogIn2");
-
 	// Captcha (optional).
 	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varnameLogInIsCaptchaNeeded));
 	let captchaId = sessionStorage.getItem(varnameLogInCaptchaId);
@@ -591,38 +624,67 @@ function showLogIn2Form() {
 	let cptImage = document.getElementById(fiid7_image);
 	let cptAnswerTr = document.getElementById("formHolderLogIn2CaptchaAnswer");
 	let cptAnswer = document.getElementById(fiid7);
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divLogIn2");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 	setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer);
 }
 
 function showLogIn3Form() {
-	showBlock("divLogIn3");
-	showHeader1("header1TitleLogIn3");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divLogIn3");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showLogIn4Form() {
-	showBlock("divLogIn4");
-	showHeader1("header1TitleLogIn4");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divLogIn4");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showLogOut1Form() {
-	showBlock("divLogOut1");
-	showHeader1("header1TitleLogOut1");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divLogOut1");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showLogOut2Form() {
-	showBlock("divLogOut2");
-	showHeader1("header1TitleLogOut2");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divLogOut2");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showChangeEmail1Form() {
-	showBlock("divChangeEmail1");
-	showHeader1("header1TitleChangeEmail1");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divChangeEmail1");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showChangeEmail2Form() {
-	showBlock("divChangeEmail2");
-	showHeader1("header1TitleChangeEmail2");
-
 	// Captcha (optional).
 	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varnameChangeEmailIsCaptchaNeeded));
 	let captchaId = sessionStorage.getItem(varnameChangeEmailCaptchaId);
@@ -630,23 +692,37 @@ function showChangeEmail2Form() {
 	let cptImage = document.getElementById(fiid11_image);
 	let cptAnswerTr = document.getElementById("formHolderChangeEmail2CaptchaAnswer");
 	let cptAnswer = document.getElementById(fiid11);
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divChangeEmail2");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 	setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer);
 }
 
 function showChangeEmail3Form() {
-	showBlock("divChangeEmail3");
-	showHeader1("header1TitleChangeEmail3");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divChangeEmail3");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showChangePwd1Form() {
-	showBlock("divChangePwd1");
-	showHeader1("header1TitleChangePwd1");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divChangePwd1");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 }
 
 function showChangePwd2Form() {
-	showBlock("divChangePwd2");
-	showHeader1("header1TitleChangePwd2");
-
 	// Captcha (optional).
 	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varnameChangePwdIsCaptchaNeeded));
 	let captchaId = sessionStorage.getItem(varnameChangePwdCaptchaId);
@@ -654,12 +730,40 @@ function showChangePwd2Form() {
 	let cptImage = document.getElementById(fiid16_image);
 	let cptAnswerTr = document.getElementById("formHolderChangePwd2CaptchaAnswer");
 	let cptAnswer = document.getElementById(fiid16);
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divChangePwd2");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
 	setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer);
 }
 
 function showChangePwd3Form() {
-	showBlock("divChangePwd3");
-	showHeader1("header1TitleChangePwd3");
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divChangePwd3");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
+}
+
+async function showUserPage() {
+	let resp = await getSelfRoles();
+	if (resp == null) {
+		return;
+	}
+	let userParams = resp.result;
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divUserPage");
+	showBlock(p);
+	addActionPanel(p, true);
+	addPageHead(p, settings.SiteName, true);
+	fillUserPage(userParams);
 }
 
 async function showBB() {
@@ -684,12 +788,13 @@ async function showBB() {
 	}
 	let nodes = [];
 	createTreeOfSections(rootSection, sectionsMap, 1, nodes);
+	let settings = getSettings();
 
 	// Draw.
-	showBlock("divBB");
 	let p = document.getElementById("divBB");
-	let settings = getSettings();
-	addPageHead(p, settings.SiteName);
+	showBlock(p);
+	addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false);
 	processSectionNodes(p, nodes, forumsMap);
 }
 
@@ -724,12 +829,13 @@ async function showSection() {
 	let curSection = sectionsMap.get(sectionId);
 	let curLevel = findCurrentNodeLevel(allNodes, sectionId);
 	createTreeOfSections(curSection, sectionsMap, curLevel, nodes);
+	let settings = getSettings();
 
 	// Draw.
-	showBlock("divBB");
 	let p = document.getElementById("divBB");
-	let settings = getSettings();
-	addPageHead(p, settings.SiteName);
+	showBlock(p);
+	addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false);
 	processSectionNodes(p, nodes, forumsMap);
 }
 
@@ -755,12 +861,13 @@ async function showForum() {
 	if (threadsMap == null) {
 		return;
 	}
+	let settings = getSettings();
 
 	// Draw.
-	showBlock("divBB");
 	let p = document.getElementById("divBB");
-	let settings = getSettings();
-	addPageHead(p, settings.SiteName);
+	showBlock(p);
+	addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false);
 	addPaginator(p, pageNumber, pageCount, "forumPagePrev", "forumPageNext");
 	processForumAndThreads(p, forum, threadsMap);
 }
@@ -1458,12 +1565,71 @@ function makeCaptchaImageUrl(captchaId) {
 	return captchaPath + "?id=" + captchaId;
 }
 
-function addPageHead(el, text) {
+function addPageHead(el, text, atTop) {
+	let settings = getSettings();
+	let isLoggedInB = isLoggedIn(settings);
+
+	// Draw.
+	let cn = "pageHead";
 	let div = document.createElement("DIV");
-	div.className = "pageHead";
-	div.id = "pageHead";
-	div.textContent = text;
-	el.appendChild(div);
+	div.className = cn;
+	div.id = cn;
+
+	let tbl = document.createElement("TABLE");
+	let tr = document.createElement("TR");
+	let tdL = document.createElement("TD");
+	tdL.className = cn + "L";
+	tdL.id = cn + "L";
+	tdL.textContent = text;
+	tr.appendChild(tdL);
+	let tdR = document.createElement("TD");
+	tdR.className = cn + "R";
+	tdR.id = cn + "R";
+	if (isLoggedInB) {
+		tdR.innerHTML = '<form><input type="button" value="Account" class="btnAccount" onclick="onBtnAccountClick(this)" /></form>';
+	} else {
+		tdR.cssText = '';
+	}
+	tr.appendChild(tdR);
+	tbl.appendChild(tr);
+	div.appendChild(tbl);
+
+	if (atTop) {
+		el.insertBefore(div, el.firstChild);
+	} else {
+		el.appendChild(div);
+	}
+}
+
+function addActionPanel(el, atTop) {
+	let cn = "actionPanel";
+	let div = document.createElement("DIV");
+	div.className = cn;
+	div.id = cn;
+
+	let tbl = document.createElement("TABLE");
+	let tr = document.createElement("TR");
+	let td = document.createElement("TD");
+	td.innerHTML = '<form><input type="button" value="Go to Index" class="btnGoToIndex" onclick="onBtnGoToIndexClick(this)" /></form>';
+	tr.appendChild(td);
+	tbl.appendChild(tr);
+	div.appendChild(tbl);
+
+	if (atTop) {
+		el.insertBefore(div, el.firstChild);
+	} else {
+		el.appendChild(div);
+	}
+}
+
+async function getSelfRoles() {
+	let reqData = new ApiRequest(actionName_getSelfRoles, {});
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
 }
 
 async function listSectionsAndForums() {
@@ -1723,4 +1889,80 @@ function preparePageVariable(sp) {
 
 	mca_gvc.Page = pageNumber;
 	return true;
+}
+
+function fillUserPage(userParams) {
+	document.getElementById(fiid18).value = userParams.name;
+	document.getElementById(fiid19).value = userParams.email;
+	document.getElementById(fiid20).value = prettyTime(userParams.regTime);
+
+	let roles = [];
+	if (userParams.isAdministrator) {
+		roles.push("Administrator");
+	}
+	if (userParams.isModerator) {
+		roles.push("Moderator");
+	}
+	if (userParams.isAuthor) {
+		roles.push("Author");
+	}
+	if (userParams.isWriter) {
+		roles.push("Writer");
+	}
+	if (userParams.isReader) {
+		roles.push("Reader");
+	}
+	let rolesHtml = "";
+	for (let i = 0; i < roles.length; i++) {
+		if (roles[i] !== "Administrator") {
+			rolesHtml += '<span class="userPageRole">' + roles[i] + '</span>';
+		} else {
+			rolesHtml += '<span class="userPageRole"><a href="' + adminPage + '" target="_blank" rel="noopener noreferrer">' + roles[i] + '</a></span>';
+		}
+	}
+	let tr = document.getElementById(fid21_tr);
+	tr.children[1].innerHTML = rolesHtml;
+
+}
+
+function prettyTime(timeStr) {
+	if (timeStr === null) {
+		return "";
+	}
+	if (timeStr.length === 0) {
+		return "";
+	}
+
+	let t = new Date(timeStr);
+	let monthN = t.getUTCMonth() + 1; // Months in JavaScript start with 0 !
+
+	return t.getUTCDate().toString().padStart(2, '0') + "." +
+		monthN.toString().padStart(2, '0') + "." +
+		t.getUTCFullYear().toString().padStart(4, '0') + " " +
+		t.getUTCHours().toString().padStart(2, '0') + ":" +
+		t.getUTCMinutes().toString().padStart(2, '0');
+}
+
+async function onBtnChangeEmailClick(btn) {
+	let url = qpChangeEmailStep1;
+	await redirectPage(false, url);
+}
+
+async function onBtnChangePwdClick(btn) {
+	let url = qpChangePwdStep1;
+	await redirectPage(false, url);
+}
+
+async function onBtnLogOutSelfClick(btn) {
+	let url = qpLogOutStep1;
+	await redirectPage(false, url);
+}
+
+async function onBtnAccountClick(btn) {
+	let url = qpSelfPage;
+	await redirectPage(false, url);
+}
+
+async function onBtnGoToIndexClick(btn) {
+	await redirectToMainPage();
 }

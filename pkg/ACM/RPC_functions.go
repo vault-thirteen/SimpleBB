@@ -1963,7 +1963,10 @@ func (srv *Server) getSelfRoles(p *am.GetSelfRolesParams) (result *am.GetSelfRol
 	}
 
 	result = &am.GetSelfRolesResult{
-		UserId: thisUserData.User.Id,
+		UserId:  thisUserData.User.Id,
+		Name:    thisUserData.User.Name,
+		Email:   thisUserData.User.Email,
+		RegTime: thisUserData.User.RegTime,
 	}
 
 	result.UserRoles = cm.UserRoles{
