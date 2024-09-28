@@ -29,6 +29,7 @@ const (
 	FuncGetUserSession = "GetUserSession"
 
 	// User properties.
+	FuncGetUserName        = "GetUserName"
 	FuncGetUserRoles       = "GetUserRoles"
 	FuncViewUserParameters = "ViewUserParameters"
 	FuncSetUserRoleAuthor  = "SetUserRoleAuthor"

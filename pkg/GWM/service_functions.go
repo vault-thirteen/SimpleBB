@@ -508,6 +508,40 @@ func (srv *Server) GetUserSession(ar *api.Request, _ *http.Request, hrw http.Res
 	return
 }
 
+func (srv *Server) GetUserName(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params am.GetUserNameParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{
+		Auth: ar.Authorisation,
+	}
+
+	var result = new(am.GetUserNameResult)
+	var re *jrm1.RpcError
+	re, err = srv.acmServiceClient.MakeRequest(context.Background(), ac.FuncGetUserName, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_ACM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{
+		Action: ar.Action,
+		Result: result,
+	}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
 func (srv *Server) GetUserRoles(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
 	var params am.GetUserRolesParams

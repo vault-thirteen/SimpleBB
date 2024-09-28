@@ -15,7 +15,7 @@ window.onpageshow = function (event) {
 // Path to initial settings for a loader script.
 settingsPath = "settings.json";
 settingsRootPath = "/";
-adminPage = "admin.html";
+adminPage = "/admin";
 settingsExpirationDuration = 60;
 redirectDelay = 5;
 
@@ -83,6 +83,7 @@ qpn = {
 	Section: "section",
 	Forum: "forum",
 	Thread: "thread",
+	Message: "message",
 }
 
 // Form Input Elements.
@@ -131,6 +132,7 @@ err = {
 	RootSectionNotFound: "root section is not found",
 	SectionNotFound: "section is not found",
 	ThreadNotFound: "thread is not found",
+	MessageNotFound: "message is not found",
 	DuplicateMapKey: "duplicate map key",
 	UnknownVariant: "unknown variant",
 	PreviousPageDoesNotExist: "previous page does not exist",
@@ -153,6 +155,9 @@ actionName = {
 	ListSectionsAndForums: "listSectionsAndForums",
 	ListForumAndThreadsOnPage: "listForumAndThreadsOnPage",
 	GetSelfRoles: "getSelfRoles",
+	ListThreadAndMessagesOnPage: "listThreadAndMessagesOnPage",
+	GetMessage: "getMessage",
+	GetUserName: "getUserName",
 }
 
 // Section settings.
@@ -165,14 +170,36 @@ sectionMarginDelta = 10;
 
 // Global variables.
 class GlobalVariablesContainer {
-	constructor(id, page, pages) {
+	constructor(id, page, pages, unc) {
 		this.Id = id;
 		this.Page = page;
 		this.Pages = pages;
+		this.UNC = unc;
 	}
 }
 
-mca_gvc = new GlobalVariablesContainer(0, 0, 0);
+class UserNameCache {
+	constructor() {
+		this.m = new Map();
+	}
+
+	async GetName(userId) {
+		if (this.m.has(userId)) {
+			return this.m.get(userId);
+		}
+
+		let resp = await getUserName(userId);
+		if (resp == null) {
+			return null;
+		}
+
+		let userName = resp.result.userName;
+		this.m.set(userId, userName);
+		return userName;
+	}
+}
+
+mca_gvc = new GlobalVariablesContainer(0, 0, 0, new UserNameCache());
 
 // Settings class.
 class Settings {
@@ -295,6 +322,25 @@ class Parameters_ListForumAndThreadsOnPage {
 	}
 }
 
+class Parameters_ListThreadAndMessagesOnPage {
+	constructor(threadId, page) {
+		this.ThreadId = threadId;
+		this.Page = page;
+	}
+}
+
+class Parameters_GetMessage {
+	constructor(messageId) {
+		this.MessageId = messageId;
+	}
+}
+
+class Parameters_GetUserName {
+	constructor(userId) {
+		this.UserId = userId;
+	}
+}
+
 class SectionNode {
 	constructor(section, level) {
 		this.Section = section;
@@ -312,7 +358,7 @@ class ApiResponse {
 }
 
 // Entry point for loader script.
-async function loadPage() {
+async function onPageLoad() {
 	let pageFirstLoadTime = getPageFirstLoadTime();
 	updatePageCurrentLoadTime();
 	await updateSettingsIfNeeded();
@@ -418,6 +464,22 @@ async function loadPage() {
 			return;
 		}
 		await showForum();
+		return;
+	}
+
+	if (sp.has(qpn.Thread)) {
+		if ((!prepareIdVariable(sp)) || (!preparePageVariable(sp))) {
+			return;
+		}
+		await showThread();
+		return;
+	}
+
+	if (sp.has(qpn.Message)) {
+		if ((!prepareIdVariable(sp))) {
+			return;
+		}
+		await showMessage();
 		return;
 	}
 
@@ -788,11 +850,11 @@ async function showBB() {
 		console.error(err.RootSectionNotFound);
 	}
 	let rootSection = sections[rootSectionIdx];
-	let sectionsMap = putSectionsIntoMap(sections);
+	let sectionsMap = putArrayItemsIntoMap(sections);
 	if (sectionsMap == null) {
 		return;
 	}
-	let forumsMap = putForumsIntoMap(forums);
+	let forumsMap = putArrayItemsIntoMap(forums);
 	if (forumsMap == null) {
 		return;
 	}
@@ -821,11 +883,11 @@ async function showSection() {
 		console.error(err.RootSectionNotFound);
 	}
 	let rootSection = sections[rootSectionIdx];
-	let sectionsMap = putSectionsIntoMap(sections);
+	let sectionsMap = putArrayItemsIntoMap(sections);
 	if (sectionsMap == null) {
 		return;
 	}
-	let forumsMap = putForumsIntoMap(forums);
+	let forumsMap = putArrayItemsIntoMap(forums);
 	if (forumsMap == null) {
 		return;
 	}
@@ -870,7 +932,7 @@ async function showForum() {
 
 	let forum = resp.result.fatop;
 	let threads = resp.result.fatop.threads;
-	let threadsMap = putThreadsIntoMap(threads);
+	let threadsMap = putArrayItemsIntoMap(threads);
 	if (threadsMap == null) {
 		return;
 	}
@@ -883,6 +945,59 @@ async function showForum() {
 	addActionPanel(p, false);
 	addPaginator(p, pageNumber, pageCount, "forumPagePrev", "forumPageNext");
 	processForumAndThreads(p, forum, threadsMap);
+}
+
+async function showThread() {
+	let threadId = mca_gvc.Id;
+	let pageNumber = mca_gvc.Page;
+	let resp = await listThreadAndMessagesOnPage(threadId, pageNumber);
+	if (resp == null) {
+		return;
+	}
+	let pageCount = resp.result.tamop.totalPages;
+	if (pageCount === undefined) {
+		pageCount = 1;
+	}
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	if (pageNumber > pageCount) {
+		console.error(err.PageNotFound);
+		return;
+	}
+
+	let thread = resp.result.tamop;
+	let messages = resp.result.tamop.messages;
+	let messagesMap = putArrayItemsIntoMap(messages);
+	if (messagesMap == null) {
+		return;
+	}
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divBB");
+	showBlock(p);
+	addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false);
+	addPaginator(p, pageNumber, pageCount, "threadPagePrev", "threadPageNext");
+	processThreadAndMessages(p, thread, messagesMap);
+}
+
+async function showMessage() {
+	let messageId = mca_gvc.Id;
+	let resp = await getMessage(messageId);
+	if (resp == null) {
+		return;
+	}
+	let message = resp.result.message;
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divBB");
+	showBlock(p);
+	addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false);
+	processMessage(p, message);
 }
 
 function setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer) {
@@ -1666,6 +1781,28 @@ async function listForumAndThreadsOnPage(forumId, page) {
 	return resp.JsonObject;
 }
 
+async function listThreadAndMessagesOnPage(threadId, page) {
+	let params = new Parameters_ListThreadAndMessagesOnPage(threadId, page);
+	let reqData = new ApiRequest(actionName.ListThreadAndMessagesOnPage, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function getMessage(messageId) {
+	let params = new Parameters_GetMessage(messageId);
+	let reqData = new ApiRequest(actionName.GetMessage, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
 function getRootSectionIdx(sections) {
 	for (let i = 0; i < sections.length; i++) {
 		if (sections[i].parent == null) {
@@ -1673,18 +1810,6 @@ function getRootSectionIdx(sections) {
 		}
 		return null;
 	}
-}
-
-function putSectionsIntoMap(sections) {
-	return putArrayItemsIntoMap(sections);
-}
-
-function putForumsIntoMap(forums) {
-	return putArrayItemsIntoMap(forums);
-}
-
-function putThreadsIntoMap(threads) {
-	return putArrayItemsIntoMap(threads);
 }
 
 function putArrayItemsIntoMap(a) {
@@ -1733,7 +1858,7 @@ function processSectionNodes(p, nodes, forumsMap) {
 		divSection.id = "section_" + node.Section.id;
 		ml = sectionMarginDelta * node.Level;
 		divSection.style.cssText = "margin-left: " + ml + "px";
-		url = qp.Prefix + qpn.Section + "&" + qpn.Id + "=" + node.Section.id;
+		url = composeUrlForSection(node.Section.id);
 		divSection.innerHTML = "<a href='" + url + "'>" + node.Section.name + "</a>";
 		p.appendChild(divSection);
 
@@ -1751,7 +1876,7 @@ function processSectionNodes(p, nodes, forumsMap) {
 			divForum.id = "forum_" + forumId;
 			ml = sectionMarginDelta * (node.Level + 1);
 			divForum.style.cssText = "margin-left: " + ml + "px";
-			url = qp.Prefix + qpn.Forum + "&" + qpn.Id + "=" + forumId;
+			url = composeUrlForForum(forumId);
 			divForum.innerHTML = "<a href='" + url + "'>" + forum.name + "</a>";
 			p.appendChild(divForum);
 		}
@@ -1767,7 +1892,7 @@ function processForumAndThreads(p, forum, threadsMap) {
 	divForum.id = "forum_" + forum.forumId;
 	ml = sectionMarginDelta;
 	divForum.style.cssText = "margin-left: " + ml + "px";
-	url = qp.Prefix + qpn.Forum + "&" + qpn.Id + "=" + forum.forumId;
+	url = composeUrlForForum(forum.forumId);
 	divForum.innerHTML = "<a href='" + url + "'>" + forum.forumName + "</a>";
 	p.appendChild(divForum);
 
@@ -1786,11 +1911,84 @@ function processForumAndThreads(p, forum, threadsMap) {
 			divThread.id = "thread_" + thread.id;
 			ml = sectionMarginDelta * 2;
 			divThread.style.cssText = "margin-left: " + ml + "px";
-			url = qp.Prefix + qpn.Thread + "&" + qpn.Id + "=" + threadId;
+			url = composeUrlForThread(threadId);
 			divThread.innerHTML = "<a href='" + url + "'>" + thread.name + "</a>";
 			p.appendChild(divThread);
 		}
 	}
+}
+
+async function processThreadAndMessages(p, thread, messagesMap) {
+	let divThread, divMessage, ml, url, messageIds, messageId, message, txt, creatorName;
+
+	divThread = document.createElement("DIV");
+	divThread.className = "thread";
+	divThread.id = "thread_" + thread.threadId;
+	ml = sectionMarginDelta;
+	divThread.style.cssText = "margin-left: " + ml + "px";
+	url = composeUrlForThread(thread.threadId);
+	divThread.innerHTML = "<a href='" + url + "'>" + thread.threadName + "</a>";
+	p.appendChild(divThread);
+
+	messageIds = thread.messageIds;
+	if (messageIds != null) {
+		for (let i = 0; i < messageIds.length; i++) {
+			messageId = messageIds[i];
+			if (!messagesMap.has(messageId)) {
+				console.error(err.MessageNotFound);
+				return;
+			}
+			message = messagesMap.get(messageId);
+
+			// Header.
+			divMsgHdr = document.createElement("DIV");
+			divMsgHdr.className = "messageHeader";
+			divMsgHdr.id = "messageHeader_" + message.id;
+			ml = sectionMarginDelta * 2;
+			divMsgHdr.style.cssText = "margin-left: " + ml + "px";
+			url = composeUrlForMessage(messageId);
+			txt = "<a href='" + url + "'>" + prettyTime(message.creator.time) + "</a>";
+			creatorName = await getMessageCreatorName(message.creator.userId);
+			txt += ' by ' + creatorName;
+			divMsgHdr.innerHTML = txt;
+			p.appendChild(divMsgHdr);
+
+			// Body.
+			divMsgBody = document.createElement("DIV");
+			divMsgBody.className = "messageBody";
+			divMsgBody.id = "messageBody_" + message.id;
+			ml = sectionMarginDelta * 2;
+			divMsgBody.style.cssText = "margin-left: " + ml + "px";
+			divMsgBody.textContent = message.text;
+			p.appendChild(divMsgBody);
+		}
+	}
+}
+
+async function processMessage(p, message) {
+	let divMsgHdr, divMsgBody, ml, url, txt, creatorName;
+
+	// Header.
+	divMsgHdr = document.createElement("DIV");
+	divMsgHdr.className = "messageHeader";
+	divMsgHdr.id = "messageHeader_" + message.id;
+	ml = sectionMarginDelta * 2;
+	divMsgHdr.style.cssText = "margin-left: " + ml + "px";
+	url = composeUrlForMessage(message.id);
+	creatorName = await getMessageCreatorName(message.creator.userId);
+	txt = "<a href='" + url + "'>" + prettyTime(message.creator.time) + "</a>";
+	txt += ' by ' + creatorName;
+	divMsgHdr.innerHTML = txt;
+	p.appendChild(divMsgHdr);
+
+	// Body.
+	divMsgBody = document.createElement("DIV");
+	divMsgBody.className = "messageBody";
+	divMsgBody.id = "messageBody_" + message.id;
+	ml = sectionMarginDelta * 2;
+	divMsgBody.style.cssText = "margin-left: " + ml + "px";
+	divMsgBody.textContent = message.text;
+	p.appendChild(divMsgBody);
 }
 
 function findCurrentNodeLevel(allNodes, sectionId) {
@@ -1850,6 +2048,17 @@ function addClickEventHandler(btn, variant) {
 			});
 			return;
 
+		case "threadPagePrev":
+			btn.addEventListener("click", async (e) => {
+				await onBtnPrevClick_threadPage(btn);
+			});
+			return;
+
+		case "threadPageNext":
+			btn.addEventListener("click", async (e) => {
+				await onBtnNextClick_threadPage(btn);
+			});
+			return;
 
 		default:
 			console.error(err.UnknownVariant);
@@ -1863,7 +2072,7 @@ async function onBtnPrevClick_forumPage(btn) {
 	}
 
 	mca_gvc.Page--;
-	let url = qp.Prefix + qpn.Forum + "&" + qpn.Id + "=" + mca_gvc.Id + "&" + qpn.Page + "=" + mca_gvc.Page;
+	let url = composeUrlForForumPage(mca_gvc.Id, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
@@ -1874,7 +2083,29 @@ async function onBtnNextClick_forumPage(btn) {
 	}
 
 	mca_gvc.Page++;
-	let url = qp.Prefix + qpn.Forum + "&" + qpn.Id + "=" + mca_gvc.Id + "&" + qpn.Page + "=" + mca_gvc.Page;
+	let url = composeUrlForForumPage(mca_gvc.Id, mca_gvc.Page);
+	await redirectPage(false, url);
+}
+
+async function onBtnPrevClick_threadPage(btn) {
+	if (mca_gvc.Page <= 1) {
+		console.error(err.PreviousPageDoesNotExist);
+		return;
+	}
+
+	mca_gvc.Page--;
+	let url = composeUrlForThreadPage(mca_gvc.Id, mca_gvc.Page);
+	await redirectPage(false, url);
+}
+
+async function onBtnNextClick_threadPage(btn) {
+	if (mca_gvc.Page >= mca_gvc.Pages) {
+		console.error(err.NextPageDoesNotExist);
+		return;
+	}
+
+	mca_gvc.Page++;
+	let url = composeUrlForThreadPage(mca_gvc.Id, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
@@ -1984,4 +2215,51 @@ async function onBtnAccountClick(btn) {
 
 async function onBtnGoToIndexClick(btn) {
 	await redirectToMainPage();
+}
+
+function composeUrlForSection(sectionId) {
+	return composeUrlForEntity(qpn.Section, sectionId);
+}
+
+function composeUrlForForum(forumId) {
+	return composeUrlForEntity(qpn.Forum, forumId);
+}
+
+function composeUrlForThread(threadId) {
+	return composeUrlForEntity(qpn.Thread, threadId);
+}
+
+function composeUrlForMessage(messageId) {
+	return composeUrlForEntity(qpn.Message, messageId);
+}
+
+function composeUrlForEntity(entityName, entityId) {
+	return qp.Prefix + entityName + "&" + qpn.Id + "=" + entityId;
+}
+
+function composeUrlForForumPage(forumId, page) {
+	return composeUrlForEntityPage(qpn.Forum, forumId, page);
+}
+
+function composeUrlForThreadPage(threadId, page) {
+	return composeUrlForEntityPage(qpn.Thread, threadId, page);
+}
+
+function composeUrlForEntityPage(entityName, entityId, page) {
+	return qp.Prefix + entityName + "&" + qpn.Id + "=" + entityId + "&" + qpn.Page + "=" + page;
+}
+
+async function getMessageCreatorName(userId) {
+	return await mca_gvc.UNC.GetName(userId);
+}
+
+async function getUserName(userId) {
+	let params = new Parameters_GetUserName(userId);
+	let reqData = new ApiRequest(actionName.GetUserName, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
 }

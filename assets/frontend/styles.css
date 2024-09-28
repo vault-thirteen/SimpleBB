@@ -400,6 +400,34 @@ div.thread a {
 	text-decoration: none;
 }
 
+div.messageHeader {
+	margin-right: 15px;
+	margin-top: 10px;
+	margin-bottom: 0;
+	border: 1px solid black;
+	border-bottom: 0;
+	font-size: 14px;
+	background-color: #EEEEEE;
+	padding-left: 15px;
+}
+
+div.messageHeader a {
+	text-decoration: none;
+}
+
+div.messageBody {
+	margin-right: 15px;
+	margin-top: 0;
+	margin-bottom: 5px;
+	border: 1px solid black;
+	font-size: 15px;
+	background-color: white;
+	padding-left: 15px;
+}
+
+div.messageBody a {
+}
+
 .paginator {
 	font-size: 14px;
 	color: grey;

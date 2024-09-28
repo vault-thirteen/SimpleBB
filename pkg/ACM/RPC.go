@@ -42,6 +42,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.ChangePassword,
 		srv.ChangeEmail,
 		srv.GetUserSession,
+		srv.GetUserName,
 		srv.GetUserRoles,
 		srv.ViewUserParameters,
 		srv.SetUserRoleAuthor,
@@ -285,6 +286,22 @@ func (srv *Server) GetUserSession(params *json.RawMessage, _ *jrm1.ResponseMetaD
 }
 
 // User properties.
+
+func (srv *Server) GetUserName(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.GetUserNameParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.GetUserNameResult
+	r, re = srv.getUserName(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
 
 func (srv *Server) GetUserRoles(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
 	var p *am.GetUserRolesParams

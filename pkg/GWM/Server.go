@@ -400,6 +400,10 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 		case srv.frontEnd.FavIcon.UrlPath: // <- /favicon.png
 			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.FavIcon)
 			return
+
+		case gs.FrontEndAdminPath: // <- /admin
+			srv.handleAdminFrontEnd(rw, req, clientIPA)
+			return
 		}
 	}
 
@@ -432,15 +436,10 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 		}
 		srv.handleFrontEnd(rw, req, clientIPA)
 		return
-
-	case gs.FrontEndStaticFileName_AdminHtmlPage: // <- /admin.html
-		srv.handleAdminFrontEnd(rw, req, clientIPA)
-		return
-
-	default:
-		srv.respondNotFound(rw)
-		return
 	}
+
+	srv.respondNotFound(rw)
+	return
 }
 
 func (srv *Server) initStatusCodeMapper() (err error) {
@@ -479,11 +478,11 @@ func (srv *Server) initPublicSettings() (err error) {
 
 func (srv *Server) initFrontEndData() (err error) {
 	frontendAssetsFolder := cm.NormalisePath(srv.settings.SystemSettings.FrontEndAssetsFolder)
-	fep := gs.FrontEndRoot + srv.settings.SystemSettings.FrontEndStaticFilesFolder + "/"
+	fep := gs.FrontEndRoot + srv.settings.SystemSettings.FrontEndStaticFilesFolder + "/" // <- /fe/
 
 	srv.frontEnd = &models.FrontEndData{}
 
-	srv.frontEnd.AdminHtmlPage, err = models.NewFrontEndFileData(gs.FrontEndRoot, gs.FrontEndStaticFileName_AdminHtmlPage, ch.ContentType_HtmlPage, frontendAssetsFolder)
+	srv.frontEnd.AdminHtmlPage, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_AdminHtmlPage, ch.ContentType_HtmlPage, frontendAssetsFolder)
 	if err != nil {
 		return err
 	}
@@ -663,6 +662,7 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_ChangePassword:                         srv.ChangePassword,
 		ApiFunctionName_ChangeEmail:                            srv.ChangeEmail,
 		ApiFunctionName_GetUserSession:                         srv.GetUserSession,
+		ApiFunctionName_GetUserName:                            srv.GetUserName,
 		ApiFunctionName_GetUserRoles:                           srv.GetUserRoles,
 		ApiFunctionName_ViewUserParameters:                     srv.ViewUserParameters,
 		ApiFunctionName_SetUserRoleAuthor:                      srv.SetUserRoleAuthor,

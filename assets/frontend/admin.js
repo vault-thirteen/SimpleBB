@@ -15,8 +15,8 @@ window.onpageshow = function (event) {
 // Settings.
 settingsPath = "settings.json";
 rootPath = "/";
+adminPage = "/admin";
 redirectDelay = 0;
-adminPage = "admin.html";
 
 // Names of Query Parameters.
 qpPrefix = "?"

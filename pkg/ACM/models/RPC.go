@@ -310,6 +310,19 @@ type GetUserSessionResult struct {
 
 // User properties.
 
+type GetUserNameParams struct {
+	cmr.CommonParams
+
+	UserId uint `json:"userId"`
+}
+
+type GetUserNameResult struct {
+	cmr.CommonResult
+
+	UserId   uint   `json:"userId"`
+	UserName string `json:"userName"`
+}
+
 type GetUserRolesParams struct {
 	cmr.CommonParams
 

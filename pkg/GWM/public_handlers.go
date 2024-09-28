@@ -10,6 +10,7 @@ import (
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
+	s "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
 	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
@@ -32,6 +33,7 @@ const (
 	ApiFunctionName_ChangePassword                         = "changePassword"
 	ApiFunctionName_ChangeEmail                            = "changeEmail"
 	ApiFunctionName_GetUserSession                         = "getUserSession"
+	ApiFunctionName_GetUserName                            = "getUserName"
 	ApiFunctionName_GetUserRoles                           = "getUserRoles"
 	ApiFunctionName_ViewUserParameters                     = "viewUserParameters"
 	ApiFunctionName_SetUserRoleAuthor                      = "setUserRoleAuthor"
@@ -187,6 +189,14 @@ func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request, cli
 	// While the number of cases is less than 10..20, the "switch" branching
 	// works faster than other methods.
 	switch req.URL.Path {
+	case srv.frontEnd.AdminHtmlPage.UrlPath:
+		srv.handleAdminFrontEnd(rw, req, clientIPA)
+		return
+
+	case srv.frontEnd.AdminJs.UrlPath:
+		srv.handleAdminFrontEnd(rw, req, clientIPA)
+		return
+
 	case srv.frontEnd.ArgonJs.UrlPath:
 		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.ArgonJs)
 		return
@@ -211,10 +221,6 @@ func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request, cli
 		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.CssStyles)
 		return
 
-	case srv.frontEnd.AdminJs.UrlPath:
-		srv.handleAdminFrontEnd(rw, req, clientIPA)
-		return
-
 	default:
 		srv.respondNotFound(rw)
 		return
@@ -226,7 +232,8 @@ func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request, cli
 func (srv *Server) handleAdminFrontEnd(rw http.ResponseWriter, req *http.Request, clientIPA string) {
 	// Step 1. Filter for fake URL.
 	switch req.URL.Path {
-	case srv.frontEnd.AdminHtmlPage.UrlPath: // <- /admin.html
+	case s.FrontEndAdminPath: // <- /admin
+	case srv.frontEnd.AdminHtmlPage.UrlPath: // <- /fe/admin.html
 	case srv.frontEnd.AdminJs.UrlPath: // <- /fe/admin.js
 	default:
 		srv.respondNotFound(rw)
@@ -246,7 +253,11 @@ func (srv *Server) handleAdminFrontEnd(rw http.ResponseWriter, req *http.Request
 
 	// Step 3. Page selection.
 	switch req.URL.Path {
-	case srv.frontEnd.AdminHtmlPage.UrlPath: // <- /admin.html
+	case s.FrontEndAdminPath: // <- /admin
+		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.AdminHtmlPage)
+		return
+
+	case srv.frontEnd.AdminHtmlPage.UrlPath: // <- /fe/admin.html
 		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.AdminHtmlPage)
 		return
 

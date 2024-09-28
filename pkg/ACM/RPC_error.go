@@ -48,6 +48,7 @@ const (
 	RpcErrorCode_PageIsNotSet                       = 36
 	RpcErrorCode_DatabaseInconsistency              = 37
 	RpcErrorCode_SessionIsNotFound                  = 38
+	RpcErrorCode_UserNameIsNotFound                 = 39
 )
 
 // Messages.
@@ -90,6 +91,7 @@ const (
 	RpcErrorMsg_PageIsNotSet                       = "page is not set"
 	RpcErrorMsg_DatabaseInconsistency              = "database inconsistency"
 	RpcErrorMsg_SessionIsNotFound                  = "session is not found"
+	RpcErrorMsg_UserNameIsNotFound                 = "user name is not found"
 )
 
 // Unique HTTP status codes used in the map:
@@ -138,5 +140,6 @@ func GetMapOfHttpStatusCodesByRpcErrorCodes() map[int]int {
 		RpcErrorCode_PageIsNotSet:                       http.StatusBadRequest,
 		RpcErrorCode_DatabaseInconsistency:              http.StatusInternalServerError,
 		RpcErrorCode_SessionIsNotFound:                  http.StatusNotFound,
+		RpcErrorCode_UserNameIsNotFound:                 http.StatusNotFound,
 	}
 }

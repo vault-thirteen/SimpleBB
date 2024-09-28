@@ -1789,6 +1789,38 @@ func (srv *Server) getUserSession(p *am.GetUserSessionParams) (result *am.GetUse
 
 // User properties.
 
+func (srv *Server) getUserName(p *am.GetUserNameParams) (result *am.GetUserNameResult, re *jrm1.RpcError) {
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	_, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	if p.UserId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
+	}
+
+	result = &am.GetUserNameResult{
+		UserId: p.UserId,
+	}
+
+	var err error
+	var userName *string
+	userName, err = srv.dbo.GetUserNameById(p.UserId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if userName == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserNameIsNotFound, RpcErrorMsg_UserNameIsNotFound, p.UserId)
+	}
+
+	result.UserName = *userName
+
+	return result, nil
+}
+
 func (srv *Server) getUserRoles(p *am.GetUserRolesParams) (result *am.GetUserRolesResult, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()

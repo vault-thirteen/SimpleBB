@@ -567,6 +567,11 @@ func (dbo *DatabaseObject) GetSessionByUserId(userId uint) (session *am.Session,
 	return am.NewSessionFromScannableSource(row)
 }
 
+func (dbo *DatabaseObject) GetUserNameById(userId uint) (userName *string, err error) {
+	row := dbo.PreparedStatement(DbPsid_GetUserNameById).QueryRow(userId)
+	return cm.NewStringFromScannableSource(row)
+}
+
 func (dbo *DatabaseObject) GetUserById(userId uint) (user *am.User, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserById).QueryRow(userId)
 	return am.NewUserFromScannableSource(row)

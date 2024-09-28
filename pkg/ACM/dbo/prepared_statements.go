@@ -79,6 +79,7 @@ const (
 	DbPsid_CountRegistrationsReadyForApproval     = 69
 	DbPsid_GetListOfRegistrationsReadyForApproval = 70
 	DbPsid_RejectRegistrationRequest              = 71
+	DbPsid_GetUserNameById                        = 72
 )
 
 func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
@@ -371,6 +372,10 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 
 	// 71.
 	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ?;`, dbo.tableNames.PreRegisteredUsers)
+	qs = append(qs, q)
+
+	// 72.
+	q = fmt.Sprintf(`SELECT Name FROM %s WHERE Id = ?;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	return qs
