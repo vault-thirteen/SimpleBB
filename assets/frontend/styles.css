@@ -214,13 +214,22 @@ table.acpMenu td {
 .btnChangePwd,
 .btnLogOutSelf,
 .btnAccount,
-.btnGoToIndex {
+.btnGoToIndex,
+.btnGoToThread,
+.btnGoToForum,
+.btnGoToSection {
 	border: 1px solid grey;
 	color: grey;
 	cursor: pointer;
 	font-size: 16px;
 	font-family: "DejaVu Sans", serif;
 	width: 128px;
+}
+
+.btnGoToThread,
+.btnGoToForum,
+.btnGoToSection {
+	width: 192px;
 }
 
 .btnBack {

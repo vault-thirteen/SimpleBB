@@ -902,12 +902,17 @@ async function showSection() {
 	let curLevel = findCurrentNodeLevel(allNodes, sectionId);
 	createTreeOfSections(curSection, sectionsMap, curLevel, nodes);
 	let settings = getSettings();
+	let parentId = curSection.parent;
 
 	// Draw.
 	let p = document.getElementById("divBB");
 	showBlock(p);
 	addPageHead(p, settings.SiteName, false);
-	addActionPanel(p, false);
+	if (parentId != null) {
+		addActionPanel(p, false, "section", parentId);
+	} else {
+		addActionPanel(p, false);
+	}
 	processSectionNodes(p, nodes, forumsMap);
 }
 
@@ -937,12 +942,13 @@ async function showForum() {
 		return;
 	}
 	let settings = getSettings();
+	let parentId = forum.forumSectionId;
 
 	// Draw.
 	let p = document.getElementById("divBB");
 	showBlock(p);
 	addPageHead(p, settings.SiteName, false);
-	addActionPanel(p, false);
+	addActionPanel(p, false, "section", parentId);
 	addPaginator(p, pageNumber, pageCount, "forumPagePrev", "forumPageNext");
 	processForumAndThreads(p, forum, threadsMap);
 }
@@ -973,14 +979,15 @@ async function showThread() {
 		return;
 	}
 	let settings = getSettings();
+	let parentId = thread.threadForumId;
 
 	// Draw.
 	let p = document.getElementById("divBB");
 	showBlock(p);
 	addPageHead(p, settings.SiteName, false);
-	addActionPanel(p, false);
+	addActionPanel(p, false, "forum", parentId);
 	addPaginator(p, pageNumber, pageCount, "threadPagePrev", "threadPageNext");
-	processThreadAndMessages(p, thread, messagesMap);
+	await processThreadAndMessages(p, thread, messagesMap);
 }
 
 async function showMessage() {
@@ -991,13 +998,14 @@ async function showMessage() {
 	}
 	let message = resp.result.message;
 	let settings = getSettings();
+	let parentId = message.threadId;
 
 	// Draw.
 	let p = document.getElementById("divBB");
 	showBlock(p);
 	addPageHead(p, settings.SiteName, false);
-	addActionPanel(p, false);
-	processMessage(p, message);
+	addActionPanel(p, false, "thread", parentId);
+	await processMessage(p, message);
 }
 
 function setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer) {
@@ -1729,7 +1737,7 @@ function addPageHead(el, text, atTop) {
 	}
 }
 
-function addActionPanel(el, atTop) {
+function addActionPanel(el, atTop, type, parentId) {
 	let cn = "actionPanel";
 	let div = document.createElement("DIV");
 	div.className = cn;
@@ -1740,6 +1748,30 @@ function addActionPanel(el, atTop) {
 	let td = document.createElement("TD");
 	td.innerHTML = '<form><input type="button" value="Go to Index" class="btnGoToIndex" onclick="onBtnGoToIndexClick(this)" /></form>';
 	tr.appendChild(td);
+
+	switch (type) {
+		case "thread":
+			td = document.createElement("TD");
+			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
+				'<input type="button" value="Back to Thread" class="btnGoToThread" onclick="onBtnGoToThreadClick(' + parentId + ')" />';
+			tr.appendChild(td);
+			break;
+
+		case "forum":
+			td = document.createElement("TD");
+			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
+				'<input type="button" value="Back to Forum" class="btnGoToForum" onclick="onBtnGoToForumClick(' + parentId + ')" />';
+			tr.appendChild(td);
+			break;
+
+		case "section":
+			td = document.createElement("TD");
+			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
+				'<input type="button" value="Back to Section" class="btnGoToSection" onclick="onBtnGoToSectionClick(' + parentId + ')" />';
+			tr.appendChild(td);
+			break;
+	}
+
 	tbl.appendChild(tr);
 	div.appendChild(tbl);
 
@@ -2215,6 +2247,21 @@ async function onBtnAccountClick(btn) {
 
 async function onBtnGoToIndexClick(btn) {
 	await redirectToMainPage();
+}
+
+async function onBtnGoToThreadClick(parentId) {
+	let url = composeUrlForThread(parentId);
+	await redirectPage(false, url);
+}
+
+async function onBtnGoToForumClick(parentId) {
+	let url = composeUrlForForum(parentId);
+	await redirectPage(false, url);
+}
+
+async function onBtnGoToSectionClick(parentId) {
+	let url = composeUrlForSection(parentId);
+	await redirectPage(false, url);
 }
 
 function composeUrlForSection(sectionId) {
