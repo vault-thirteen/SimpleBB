@@ -10,10 +10,11 @@ const (
 	IncidentType_PasswordMismatch         = 7
 	IncidentType_PasswordChangeHacking    = 8
 	IncidentType_EmailChangeHacking       = 9
+	IncidentType_FakeIPA                  = 10
 )
 
 const (
-	IncidentTypesCount = 9
+	IncidentTypesCount = 10
 )
 
 type IncidentType byte

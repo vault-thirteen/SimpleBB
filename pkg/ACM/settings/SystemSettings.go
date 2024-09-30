@@ -44,6 +44,7 @@ type BlockTimePerIncident struct {
 	PasswordMismatch         uint `json:"passwordMismatch"`         // 7.
 	PasswordChangeHacking    uint `json:"passwordChangeHacking"`    // 8.
 	EmailChangeHacking       uint `json:"emailChangeHacking"`       // 9.
+	FakeIPA                  uint `json:"fakeIPA"`                  // 10.
 }
 
 func (s SystemSettings) Check() (err error) {
@@ -74,7 +75,8 @@ func (s SystemSettings) Check() (err error) {
 			(s.BlockTimePerIncident.CaptchaAnswerMismatch == 0) ||
 			(s.BlockTimePerIncident.PasswordMismatch == 0) ||
 			(s.BlockTimePerIncident.PasswordChangeHacking == 0) ||
-			(s.BlockTimePerIncident.EmailChangeHacking == 0) {
+			(s.BlockTimePerIncident.EmailChangeHacking == 0) ||
+			(s.BlockTimePerIncident.FakeIPA == 0) {
 			return errors.New(c.MsgSystemSettingError)
 		}
 	}

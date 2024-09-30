@@ -1,11 +1,11 @@
 package acm
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"log"
-	"net"
 	"net/mail"
 	"time"
 
@@ -116,9 +116,14 @@ func (srv *Server) mustBeAnAuthToken(auth *cmr.Auth) (ud *am.UserData, re *jrm1.
 	}
 
 	var err error
-	ud, err = srv.getUserDataByAuthToken(auth.Token, auth.UserIPAB)
+	ud, err = srv.getUserDataByAuthToken(auth.Token)
 	if err != nil {
 		srv.incidentManager.ReportIncident(am.IncidentType_FakeToken, "", auth.UserIPAB)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
+	}
+
+	if bytes.Compare(auth.UserIPAB, ud.Session.UserIPAB) != 0 {
+		srv.incidentManager.ReportIncident(am.IncidentType_FakeIPA, "", auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
 
@@ -126,8 +131,9 @@ func (srv *Server) mustBeAnAuthToken(auth *cmr.Auth) (ud *am.UserData, re *jrm1.
 }
 
 // getUserDataByAuthToken validates the token and returns information about the
-// When 'userData' is set (not null), all its fields are also set (not null).
-func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (userData *am.UserData, err error) {
+// user and its session. When 'userData' is set (not null), all its fields are
+// also set (not null).
+func (srv *Server) getUserDataByAuthToken(authToken string) (userData *am.UserData, err error) {
 	var userId, sessionId uint
 	userId, sessionId, err = srv.jwtkm.ValidateToken(authToken)
 	if err != nil {
@@ -159,8 +165,7 @@ func (srv *Server) getUserDataByAuthToken(authToken string, userIPAB net.IP) (us
 	}
 
 	if (userData.Session == nil) ||
-		(userData.Session.Id != sessionId) ||
-		(!userIPAB.Equal(userData.Session.UserIPAB)) {
+		(userData.Session.Id != sessionId) {
 		return nil, errors.New(ErrAuthData)
 	}
 

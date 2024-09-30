@@ -58,7 +58,8 @@
       "captchaAnswerMismatch": 60,
       "passwordMismatch": 60,
       "passwordChangeHacking": 300,
-      "emailChangeHacking": 300
+      "emailChangeHacking": 300,
+      "fakeIPA": 300
     },
     "isDebugMode": false
   },

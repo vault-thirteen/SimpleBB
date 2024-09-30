@@ -67,6 +67,7 @@ func initBlockTimePerIncidentType(blockTimePerIncident *s.BlockTimePerIncident) 
 	blockTimePerIncidentType[am.IncidentType_PasswordMismatch] = blockTimePerIncident.PasswordMismatch
 	blockTimePerIncidentType[am.IncidentType_PasswordChangeHacking] = blockTimePerIncident.PasswordChangeHacking
 	blockTimePerIncidentType[am.IncidentType_EmailChangeHacking] = blockTimePerIncident.EmailChangeHacking
+	blockTimePerIncidentType[am.IncidentType_FakeIPA] = blockTimePerIncident.FakeIPA
 
 	return blockTimePerIncidentType
 }
