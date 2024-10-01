@@ -542,7 +542,6 @@ async function updateSettingsIfNeeded() {
 	if (settingsLoadTimeStr != null) {
 		settingsAge = timeNow - Number(settingsLoadTimeStr);
 	}
-	console.debug("settingsAge:", settingsAge);
 
 	if ((settingsLoadTimeStr == null) || (settingsAge > settingsExpirationDuration)) {
 		await updateSettings();
@@ -1024,8 +1023,6 @@ function setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptI
 }
 
 async function onReg1Submit(btn) {
-	console.debug("onReg1Submit");
-
 	// Send the request.
 	let h3Field = document.getElementById("header3TextReg1");
 	let errField = document.getElementById("header4TextReg1");
@@ -1054,8 +1051,6 @@ async function onReg1Submit(btn) {
 }
 
 async function onReg2Submit(btn) {
-	console.debug("onReg2Submit");
-
 	// Send the request.
 	let h3Field = document.getElementById("header3TextReg2");
 	let errField = document.getElementById("header4TextReg2");
@@ -1089,8 +1084,6 @@ async function onReg2Submit(btn) {
 }
 
 async function onReg3Submit(btn) {
-	console.debug("onReg3Submit");
-
 	// Check the input.
 	let pwd = document.getElementById(fi.id4).value;
 	let pwdErrFlag = document.getElementById(fi.id4_errflag);
@@ -1137,8 +1130,6 @@ async function onReg3Submit(btn) {
 }
 
 async function onLogIn1Submit(btn) {
-	console.debug("onLogIn1Submit");
-
 	// Send the request.
 	let h3Field = document.getElementById("header3TextLogIn1");
 	let errField = document.getElementById("header4TextLogIn1");
@@ -1179,8 +1170,6 @@ async function onLogIn1Submit(btn) {
 }
 
 async function onLogIn2Submit(btn) {
-	console.debug("onLogIn2Submit");
-
 	let errField = document.getElementById("header4TextLogIn2");
 	let h3Field = document.getElementById("header3TextLogIn2");
 
@@ -1235,8 +1224,6 @@ async function onLogIn2Submit(btn) {
 }
 
 async function onLogIn3Submit(btn) {
-	console.log("onLogIn3Submit");
-
 	let errField = document.getElementById("header4TextLogIn3");
 	let h3Field = document.getElementById("header3TextLogIn3");
 
@@ -1281,8 +1268,6 @@ async function onLogIn3Submit(btn) {
 }
 
 async function onLogOut1Submit(btn) {
-	console.debug("onLogOut1Submit");
-
 	let errField = document.getElementById("header4TextLogOut1");
 	let h3Field = document.getElementById("header3TextLogOut1");
 
@@ -1314,8 +1299,6 @@ async function onLogOut1Submit(btn) {
 }
 
 async function onChangeEmail1Submit(btn) {
-	console.debug("onChangeEmail1Submit");
-
 	// Send the request.
 	let h3Field = document.getElementById("header3TextChangeEmail1");
 	let errField = document.getElementById("header4TextChangeEmail1");
@@ -1323,7 +1306,6 @@ async function onChangeEmail1Submit(btn) {
 	let params = new Parameters_ChangeEmail1(1, newEmail);
 	let reqData = new ApiRequest(actionName.ChangeEmail, params);
 	let resp = await sendApiRequest(reqData);
-	console.debug("resp.JsonObject:", resp.JsonObject);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
@@ -1356,8 +1338,6 @@ async function onChangeEmail1Submit(btn) {
 }
 
 async function onChangeEmail2Submit(btn) {
-	console.debug("onChangeEmail2Submit");
-
 	let h3Field = document.getElementById("header3TextChangeEmail2");
 	let errField = document.getElementById("header4TextChangeEmail2");
 
@@ -1382,7 +1362,6 @@ async function onChangeEmail2Submit(btn) {
 	let params = new Parameters_ChangeEmail2(2, requestId, authChallengeResponse, vCodeOld, vCodeNew, captchaAnswer);
 	let reqData = new ApiRequest(actionName.ChangeEmail, params);
 	let resp = await sendApiRequest(reqData);
-	console.debug("resp.JsonObject:", resp.JsonObject);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
@@ -1419,8 +1398,6 @@ async function onChangeEmail2Submit(btn) {
 }
 
 async function onChangePwd1Submit(btn) {
-	console.debug("onChangePwd1Submit");
-
 	// Send the request.
 	let h3Field = document.getElementById("header3TextChangePwd1");
 	let errField = document.getElementById("header4TextChangePwd1");
@@ -1428,7 +1405,6 @@ async function onChangePwd1Submit(btn) {
 	let params = new Parameters_ChangePwd1(1, newPwd);
 	let reqData = new ApiRequest(actionName.ChangePwd, params);
 	let resp = await sendApiRequest(reqData);
-	console.debug("resp.JsonObject:", resp.JsonObject);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
@@ -1461,8 +1437,6 @@ async function onChangePwd1Submit(btn) {
 }
 
 async function onChangePwd2Submit(btn) {
-	console.debug("onChangePwd2Submit");
-
 	let h3Field = document.getElementById("header3TextChangePwd2");
 	let errField = document.getElementById("header4TextChangePwd2");
 
@@ -1486,7 +1460,6 @@ async function onChangePwd2Submit(btn) {
 	let params = new Parameters_ChangePwd2(2, requestId, authChallengeResponse, vcode, captchaAnswer);
 	let reqData = new ApiRequest(actionName.ChangePwd, params);
 	let resp = await sendApiRequest(reqData);
-	console.debug("resp.JsonObject:", resp.JsonObject);
 	if (!resp.IsOk) {
 		errField.innerHTML = composeErrorText(resp.ErrorText);
 		// Redirect to the main page on error.
@@ -1527,7 +1500,6 @@ async function sleep(ms) {
 }
 
 async function sendApiRequest(data) {
-	//console.debug("sendApiRequest", "data:", data);
 	let settings = getSettings();
 	let url = settingsRootPath + settings.ApiFolder;
 	let resp;
@@ -1586,7 +1558,6 @@ async function redirectToMainPage(wait) {
 }
 
 function disableButton(btn) {
-	//console.debug(btn);
 	switch (btn.tagName) {
 		case "INPUT":
 			btn.value = "";
@@ -1865,6 +1836,10 @@ function putArrayItemsIntoMap(a) {
 // createTreeOfSections creates a tree of sections.
 // 'nodes' is an output parameter.
 function createTreeOfSections(section, sectionsMap, level, nodes) {
+	if (section == null) {
+		return;
+	}
+
 	nodes.push(new SectionNode(section, level));
 
 	if (section.childType !== sectionChildType.Section) {

@@ -217,7 +217,14 @@ table.acpMenu td {
 .btnGoToIndex,
 .btnGoToThread,
 .btnGoToForum,
-.btnGoToSection {
+.btnGoToSection,
+.btnProceed,
+.btnCreateRootSection,
+.btnCreateNormalSection,
+.btnChangeSectionName,
+.btnChangeSectionParent,
+.btnMoveSection,
+.btnDeleteSection {
 	border: 1px solid grey;
 	color: grey;
 	cursor: pointer;
@@ -260,8 +267,24 @@ table.acpMenu td {
 
 .btnReject,
 .btnLogOut,
-.btnDisableRole {
+.btnDisableRole,
+.btnDeleteSection {
 	color: crimson;
+}
+
+.btnProceed {
+	margin-top: 5px;
+}
+
+.btnCreateRootSection,
+.btnCreateNormalSection {
+	color: green;
+}
+
+.btnChangeSectionName,
+.btnChangeSectionParent,
+.btnMoveSection {
+	color: orange;
 }
 
 .acpMenu,
@@ -279,6 +302,7 @@ table.acpMenu td {
 	font-size: 18px;
 	background-color: bisque;
 	padding-left: 10px;
+	padding-right: 10px;
 }
 
 .subpagePaginator {
@@ -464,4 +488,28 @@ span.userPageRole a {
 
 .actionPanel {
 	margin-bottom: 10px;
+}
+
+div.sectionManager div.title {
+	font-weight: bold;
+}
+
+div.sectionManager div {
+	margin-bottom: 3px;
+}
+
+div.sectionManager fieldset input {
+	border: 1px solid grey;
+}
+
+label.action {
+	margin-left: 5px;
+}
+
+label.parameter {
+	margin-right: 5px;
+}
+
+div.actionSuccess {
+	color: green;
 }

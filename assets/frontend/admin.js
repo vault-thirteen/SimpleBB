@@ -28,24 +28,31 @@ qpn = {
 	ListOfLoggedUsers: "listOfLoggedUsers",
 	RegistrationsReadyForApproval: "registrationsReadyForApproval",
 	UserPage: "userPage",
+	ManagerOfSections: "manageSections",
 }
 
 // Action names.
 actionName = {
-	GetListOfAllUsers: "getListOfAllUsers",
-	GetListOfRegistrationsReadyForApproval: "getListOfRegistrationsReadyForApproval",
+	AddSection: "addSection",
 	ApproveAndRegisterUser: "approveAndRegisterUser",
-	RejectRegistrationRequest: "rejectRegistrationRequest",
-	GetListOfLoggedUsers: "getListOfLoggedUsers",
-	ViewUserParameters: "viewUserParameters",
-	LogUserOutA: "logUserOutA",
-	IsUserLoggedIn: "isUserLoggedIn",
-	SetUserRoleAuthor: "setUserRoleAuthor",
-	SetUserRoleWriter: "setUserRoleWriter",
-	SetUserRoleReader: "setUserRoleReader",
 	BanUser: "banUser",
-	UnbanUser: "unbanUser",
+	ChangeSectionName: "changeSectionName",
+	ChangeSectionParent: "changeSectionParent",
+	DeleteSection: "deleteSection",
+	GetListOfAllUsers: "getListOfAllUsers",
+	GetListOfLoggedUsers: "getListOfLoggedUsers",
+	GetListOfRegistrationsReadyForApproval: "getListOfRegistrationsReadyForApproval",
 	GetUserSession: "getUserSession",
+	IsUserLoggedIn: "isUserLoggedIn",
+	LogUserOutA: "logUserOutA",
+	MoveSectionDown: "moveSectionDown",
+	MoveSectionUp: "moveSectionUp",
+	RejectRegistrationRequest: "rejectRegistrationRequest",
+	SetUserRoleAuthor: "setUserRoleAuthor",
+	SetUserRoleReader: "setUserRoleReader",
+	SetUserRoleWriter: "setUserRoleWriter",
+	UnbanUser: "unbanUser",
+	ViewUserParameters: "viewUserParameters",
 }
 
 // Messages.
@@ -67,6 +74,8 @@ err = {
 	PreviousPageDoesNotExist: "previous page does not exist",
 	NextPageDoesNotExist: "next page does not exist",
 	UnknownVariant: "unknown variant",
+	NameIsNotSet: "name is not set",
+	ParentIsNotSet: "parent is not set",
 }
 
 // User role names.
@@ -197,6 +206,45 @@ class Parameters_GetUserSession {
 	}
 }
 
+class Parameters_AddSection {
+	constructor(parent, name) {
+		this.Parent = parent;
+		this.Name = name;
+	}
+}
+
+class Parameters_ChangeSectionName {
+	constructor(sectionId, name) {
+		this.SectionId = sectionId;
+		this.Name = name;
+	}
+}
+
+class Parameters_ChangeSectionParent {
+	constructor(sectionId, parent) {
+		this.SectionId = sectionId;
+		this.Parent = parent;
+	}
+}
+
+class Parameters_MoveSectionUp {
+	constructor(sectionId) {
+		this.SectionId = sectionId;
+	}
+}
+
+class Parameters_MoveSectionDown {
+	constructor(sectionId) {
+		this.SectionId = sectionId;
+	}
+}
+
+class Parameters_DeleteSection {
+	constructor(sectionId) {
+		this.SectionId = sectionId;
+	}
+}
+
 class ApiResponse {
 	constructor(isOk, jsonObject, statusCode, errorText) {
 		this.IsOk = isOk;
@@ -250,6 +298,12 @@ async function onPageLoad() {
 		return;
 	}
 
+	if (sp.has(qpn.ManagerOfSections)) {
+		await showPage_ManagerOfSections();
+		return;
+	}
+
+
 	showPage_MainMenu();
 }
 
@@ -295,6 +349,10 @@ async function onGoLoggedUsersClick(btn) {
 
 async function onGoListAllUsersClick(btn) {
 	await redirectToSubPage(true, qpPrefix + qpn.ListOfUsers);
+}
+
+async function onGoManageSectionsClick(btn) {
+	await redirectToSubPage(true, qpPrefix + qpn.ManagerOfSections);
 }
 
 async function redirectToSubPage(wait, qp) {
@@ -433,6 +491,16 @@ async function showPage_UserPage() {
 	fillUserPage("subpageUserPage", userParams, userLogInState);
 }
 
+async function showPage_ManagerOfSections() {
+	// Draw.
+	let p = document.getElementById("subpage");
+	p.style.display = "block";
+	addBtnBack(p);
+	addTitle(p, "Management of Sections");
+	addDiv(p, "sectionManager");
+	fillSectionManager("sectionManager");
+}
+
 function addBtnBack(el) {
 	let btn = document.createElement("INPUT");
 	btn.type = "button";
@@ -535,7 +603,7 @@ async function onBtnPrevClick_userList(btn) {
 	}
 
 	mca_gvc.Page--;
-	let url = qpPrefix + qpn.ListOfUsers + "&" + qpn.Page + "=" + mca_gvc.Page;
+	let url = composeUrlForAdminPage(qpn.ListOfUsers, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
@@ -546,7 +614,7 @@ async function onBtnNextClick_userList(btn) {
 	}
 
 	mca_gvc.Page++;
-	let url = qpPrefix + qpn.ListOfUsers + "&" + qpn.Page + "=" + mca_gvc.Page;
+	let url = composeUrlForAdminPage(qpn.ListOfUsers, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
@@ -557,7 +625,7 @@ async function onBtnPrevClick_logged(btn) {
 	}
 
 	mca_gvc.Page--;
-	let url = qpPrefix + qpn.ListOfLoggedUsers + "&" + qpn.Page + "=" + mca_gvc.Page;
+	let url = composeUrlForAdminPage(qpn.ListOfLoggedUsers, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
@@ -568,7 +636,7 @@ async function onBtnNextClick_logged(btn) {
 	}
 
 	mca_gvc.Page++;
-	let url = qpPrefix + qpn.ListOfLoggedUsers + "&" + qpn.Page + "=" + mca_gvc.Page;
+	let url = composeUrlForAdminPage(qpn.ListOfLoggedUsers, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
@@ -579,7 +647,7 @@ async function onBtnPrevClick_rrfa(btn) {
 	}
 
 	mca_gvc.Page--;
-	let url = qpPrefix + qpn.RegistrationsReadyForApproval + "&" + qpn.Page + "=" + mca_gvc.Page;
+	let url = composeUrlForAdminPage(qpn.RegistrationsReadyForApproval, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
@@ -590,7 +658,7 @@ async function onBtnNextClick_rrfa(btn) {
 	}
 
 	mca_gvc.Page++;
-	let url = qpPrefix + qpn.RegistrationsReadyForApproval + "&" + qpn.Page + "=" + mca_gvc.Page;
+	let url = composeUrlForAdminPage(qpn.RegistrationsReadyForApproval, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
@@ -1345,4 +1413,403 @@ function fillUserPage(elClass, userParams, userLogInState) {
 	}
 
 	div.appendChild(tbl);
+}
+
+function fillSectionManager(elClass) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let fs = document.createElement("FIELDSET");
+	div.appendChild(fs);
+
+	let actionNames = ["Select an action", "Create a root section", "Create a normal section",
+		"Change section's name", "Change section's parent", "Move section up & down", "Delete a section"];
+	for (let i = 0; i < actionNames.length; i++) {
+		let d = document.createElement("DIV");
+		if (i === 0) {
+			d.className = "title";
+			d.textContent = actionNames[i];
+		} else {
+			d.innerHTML = '<input type="radio" name="action" id="action_' + i + '" value="' + actionNames[i] + '" />' +
+				'<label class="action" for="action_' + i + '">' + actionNames[i] + '</label>';
+
+		}
+		fs.appendChild(d);
+	}
+
+	let d = document.createElement("DIV");
+	d.innerHTML = '<input type="button" class="btnProceed" value="Proceed" onclick="onSectionManagerBtnProceedClick(this)">';
+	fs.appendChild(d);
+}
+
+function onSectionManagerBtnProceedClick(btn) {
+	// Input.
+	let selectedActionIdx = 0;
+	let pp = btn.parentNode.parentNode;
+	for (i = 0; i < pp.childNodes.length; i++) {
+		let ch = pp.childNodes[i];
+		if (ch.childNodes[0].checked === true) {
+			selectedActionIdx = i;
+			break;
+		}
+	}
+	if (selectedActionIdx < 1) {
+		return;
+	}
+
+	// Disable the parent form.
+	btn.disabled = true;
+	for (i = 0; i < pp.childNodes.length; i++) {
+		let ch = pp.childNodes[i];
+		ch.childNodes[0].disabled = true;
+	}
+
+	let sm = document.getElementById("sectionManager");
+	let fs = document.createElement("FIELDSET");
+	sm.appendChild(fs);
+
+	let d = document.createElement("DIV");
+	d.className = "title";
+	d.textContent = "Section Parameters";
+	fs.appendChild(d);
+
+	switch (selectedActionIdx) {
+		case 1: // Create a root section.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="name">Name</label>' +
+				'<input type="text" name="name" id="name" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnCreateRootSection" value="Create" onclick="onBtnCreateRootSectionClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 2: // Create a normal section.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="name">Name</label>' +
+				'<input type="text" name="name" id="name" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent section">Parent</label>' +
+				'<input type="text" name="parent" id="parent" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnCreateNormalSection" value="Create" onclick="onBtnCreateNormalSectionClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 3: // Change section's name.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed section">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="name" title="New name of the section">New Name</label>' +
+				'<input type="text" name="name" id="name" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnChangeSectionName" value="Change Name" onclick="onBtnChangeSectionNameClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 4: // Change section's parent.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed section">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="newParent" title="ID of the new parent">New Parent</label>' +
+				'<input type="text" name="newParent" id="newParent" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnChangeSectionParent" value="Change Parent" onclick="onBtnChangeSectionParentClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 5: // Move section up & down.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the moved section">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnMoveSection" value="Move Up" onclick="onBtnMoveSectionUpClick(this)">' +
+				'<span class="subpageSpacerA">&nbsp;</span>' +
+				'<input type="button" class="btnMoveSection" value="Move Down" onclick="onBtnMoveSectionDownClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 6: // Delete a section.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the section to delete">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnDeleteSection" value="Delete" onclick="onBtnDeleteSectionClick(this)">';
+			fs.appendChild(d);
+			break;
+	}
+}
+
+async function onBtnCreateRootSectionClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let name = pp.childNodes[1].childNodes[1].value;
+	if (name.length < 1) {
+		console.error(err.NameIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await addSection(null, name);
+	if (resp == null) {
+		return;
+	}
+	let sectionId = resp.result.sectionId;
+	disableParentForm(btn, pp, false);
+	let txt = "A root section was created. ID=" + sectionId.toString() + ".";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnCreateNormalSectionClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let name = pp.childNodes[1].childNodes[1].value;
+	if (name.length < 1) {
+		console.error(err.NameIsNotSet);
+		return;
+	}
+	let parent = Number(pp.childNodes[2].childNodes[1].value);
+	if (parent < 1) {
+		console.error(err.ParentIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await addSection(parent, name);
+	if (resp == null) {
+		return;
+	}
+	let sectionId = resp.result.sectionId;
+	disableParentForm(btn, pp, false);
+	let txt = "A normal section was created. ID=" + sectionId.toString() + ".";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnChangeSectionNameClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let sectionId = Number(pp.childNodes[1].childNodes[1].value);
+	if (sectionId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+	let newName = pp.childNodes[2].childNodes[1].value;
+	if (newName.length < 1) {
+		console.error(err.NameIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await changeSectionName(sectionId, newName);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Section name was changed.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnChangeSectionParentClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let sectionId = Number(pp.childNodes[1].childNodes[1].value);
+	if (sectionId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+	let newParent = Number(pp.childNodes[2].childNodes[1].value);
+	if (newParent < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await changeSectionParent(sectionId, newParent);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Section was moved to a new parent.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnMoveSectionUpClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let sectionId = Number(pp.childNodes[1].childNodes[1].value);
+	if (sectionId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await moveSectionUp(sectionId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, true);
+	let txt = "Section was moved up.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnMoveSectionDownClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let sectionId = Number(pp.childNodes[1].childNodes[1].value);
+	if (sectionId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await moveSectionDown(sectionId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, true);
+	let txt = "Section was moved down.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnDeleteSectionClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let sectionId = Number(pp.childNodes[1].childNodes[1].value);
+	if (sectionId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await deleteSection(sectionId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Section was deleted.";
+	showActionSuccess(btn, txt);
+}
+
+function composeUrlForAdminPage(func, page) {
+	return qp.Prefix + func + "&" + qpn.Page + "=" + page;
+}
+
+async function addSection(parent, name) {
+	let params = new Parameters_AddSection(parent, name);
+	let reqData = new ApiRequest(actionName.AddSection, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function changeSectionName(sectionId, name) {
+	let params = new Parameters_ChangeSectionName(sectionId, name);
+	let reqData = new ApiRequest(actionName.ChangeSectionName, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function changeSectionParent(sectionId, newParent) {
+	let params = new Parameters_ChangeSectionParent(sectionId, newParent);
+	let reqData = new ApiRequest(actionName.ChangeSectionParent, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function moveSectionUp(sectionId) {
+	let params = new Parameters_MoveSectionUp(sectionId);
+	let reqData = new ApiRequest(actionName.MoveSectionUp, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function moveSectionDown(sectionId) {
+	let params = new Parameters_MoveSectionDown(sectionId);
+	let reqData = new ApiRequest(actionName.MoveSectionDown, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function deleteSection(sectionId) {
+	let params = new Parameters_DeleteSection(sectionId);
+	let reqData = new ApiRequest(actionName.DeleteSection, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+function disableParentForm(btn, pp, ignoreButton) {
+	if (!ignoreButton) {
+		btn.disabled = true;
+	}
+
+	let el;
+	for (i = 0; i < pp.childNodes.length; i++) {
+		let ch = pp.childNodes[i];
+		for (j = 0; j < ch.childNodes.length; j++) {
+			el = ch.childNodes[j];
+
+			if (el !== btn) {
+				el.disabled = true;
+			} else {
+				if (!ignoreButton) {
+					el.disabled = true;
+				}
+			}
+		}
+	}
+}
+
+function showActionSuccess(btn, txt) {
+	let ppp = btn.parentNode.parentNode.parentNode;
+	let d = document.createElement("DIV");
+	d.className = "actionSuccess";
+	d.textContent = txt;
+	ppp.appendChild(d);
 }
