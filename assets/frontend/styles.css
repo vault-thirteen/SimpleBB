@@ -224,7 +224,21 @@ table.acpMenu td {
 .btnChangeSectionName,
 .btnChangeSectionParent,
 .btnMoveSection,
-.btnDeleteSection {
+.btnDeleteSection,
+.btnCreateForum,
+.btnChangeForumName,
+.btnChangeForumParent,
+.btnMoveForum,
+.btnDeleteForum,
+.btnCreateThread,
+.btnChangeThreadName,
+.btnChangeThreadParent,
+.btnMoveThread,
+.btnDeleteThread,
+.btnCreateMessage,
+.btnChangeMessageText,
+.btnChangeMessageParent,
+.btnDeleteMessage {
 	border: 1px solid grey;
 	color: grey;
 	cursor: pointer;
@@ -268,7 +282,11 @@ table.acpMenu td {
 .btnReject,
 .btnLogOut,
 .btnDisableRole,
-.btnDeleteSection {
+.btnDeleteSection,
+.btnDeleteForum,
+.btnDeleteThread,
+.btnChangeMessageText,
+.btnDeleteMessage {
 	color: crimson;
 }
 
@@ -277,13 +295,23 @@ table.acpMenu td {
 }
 
 .btnCreateRootSection,
-.btnCreateNormalSection {
+.btnCreateNormalSection,
+.btnCreateForum,
+.btnCreateThread,
+.btnCreateMessage {
 	color: green;
 }
 
 .btnChangeSectionName,
 .btnChangeSectionParent,
-.btnMoveSection {
+.btnMoveSection,
+.btnChangeForumName,
+.btnChangeForumParent,
+.btnMoveForum,
+.btnChangeThreadName,
+.btnChangeThreadParent,
+.btnMoveThread,
+.btnChangeMessageParent {
 	color: orange;
 }
 
@@ -490,15 +518,24 @@ span.userPageRole a {
 	margin-bottom: 10px;
 }
 
-div.sectionManager div.title {
+div.sectionManager div.title,
+div.forumManager div.title,
+div.threadManager div.title,
+div.messageManager div.title {
 	font-weight: bold;
 }
 
-div.sectionManager div {
+div.sectionManager div,
+div.forumManager div,
+div.threadManager div,
+div.messageManager div {
 	margin-bottom: 3px;
 }
 
-div.sectionManager fieldset input {
+div.sectionManager fieldset input,
+div.forumManager fieldset input,
+div.threadManager fieldset input,
+div.messageManager fieldset input {
 	border: 1px solid grey;
 }
 
@@ -512,4 +549,13 @@ label.parameter {
 
 div.actionSuccess {
 	color: green;
+}
+
+span.messageCreatorName,
+span.messageEditorName {
+	font-weight: bold;
+}
+
+span.messageEditorTime {
+	color: orange;
 }

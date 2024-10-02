@@ -923,7 +923,7 @@ async function showForum() {
 		return;
 	}
 	let pageCount = resp.result.fatop.totalPages;
-	if (pageCount === undefined) {
+	if ((pageCount === undefined) || (pageCount === 0)) {
 		pageCount = 1;
 	}
 	mca_gvc.Pages = pageCount;
@@ -960,7 +960,7 @@ async function showThread() {
 		return;
 	}
 	let pageCount = resp.result.tamop.totalPages;
-	if (pageCount === undefined) {
+	if ((pageCount === undefined) || (pageCount === 0)) {
 		pageCount = 1;
 	}
 	mca_gvc.Pages = pageCount;
@@ -1926,7 +1926,7 @@ function processForumAndThreads(p, forum, threadsMap) {
 }
 
 async function processThreadAndMessages(p, thread, messagesMap) {
-	let divThread, divMessage, ml, url, messageIds, messageId, message, txt, creatorName;
+	let divThread, ml, url, messageIds, messageId, message, txt;
 
 	divThread = document.createElement("DIV");
 	divThread.className = "thread";
@@ -1938,37 +1938,37 @@ async function processThreadAndMessages(p, thread, messagesMap) {
 	p.appendChild(divThread);
 
 	messageIds = thread.messageIds;
-	if (messageIds != null) {
-		for (let i = 0; i < messageIds.length; i++) {
-			messageId = messageIds[i];
-			if (!messagesMap.has(messageId)) {
-				console.error(err.MessageNotFound);
-				return;
-			}
-			message = messagesMap.get(messageId);
+	if (messageIds == null) {
+		return
+	}
 
-			// Header.
-			divMsgHdr = document.createElement("DIV");
-			divMsgHdr.className = "messageHeader";
-			divMsgHdr.id = "messageHeader_" + message.id;
-			ml = sectionMarginDelta * 2;
-			divMsgHdr.style.cssText = "margin-left: " + ml + "px";
-			url = composeUrlForMessage(messageId);
-			txt = "<a href='" + url + "'>" + prettyTime(message.creator.time) + "</a>";
-			creatorName = await getMessageCreatorName(message.creator.userId);
-			txt += ' by ' + creatorName;
-			divMsgHdr.innerHTML = txt;
-			p.appendChild(divMsgHdr);
-
-			// Body.
-			divMsgBody = document.createElement("DIV");
-			divMsgBody.className = "messageBody";
-			divMsgBody.id = "messageBody_" + message.id;
-			ml = sectionMarginDelta * 2;
-			divMsgBody.style.cssText = "margin-left: " + ml + "px";
-			divMsgBody.textContent = message.text;
-			p.appendChild(divMsgBody);
+	let divMsgHdr, divMsgBody;
+	for (let i = 0; i < messageIds.length; i++) {
+		messageId = messageIds[i];
+		if (!messagesMap.has(messageId)) {
+			console.error(err.MessageNotFound);
+			return;
 		}
+		message = messagesMap.get(messageId);
+
+		// Header.
+		divMsgHdr = document.createElement("DIV");
+		divMsgHdr.className = "messageHeader";
+		divMsgHdr.id = "messageHeader_" + message.id;
+		ml = sectionMarginDelta * 2;
+		divMsgHdr.style.cssText = "margin-left: " + ml + "px";
+		txt = await composeMessageHeaderText(message);
+		divMsgHdr.innerHTML = txt;
+		p.appendChild(divMsgHdr);
+
+		// Body.
+		divMsgBody = document.createElement("DIV");
+		divMsgBody.className = "messageBody";
+		divMsgBody.id = "messageBody_" + message.id;
+		ml = sectionMarginDelta * 2;
+		divMsgBody.style.cssText = "margin-left: " + ml + "px";
+		divMsgBody.textContent = message.text;
+		p.appendChild(divMsgBody);
 	}
 }
 
@@ -1981,10 +1981,7 @@ async function processMessage(p, message) {
 	divMsgHdr.id = "messageHeader_" + message.id;
 	ml = sectionMarginDelta * 2;
 	divMsgHdr.style.cssText = "margin-left: " + ml + "px";
-	url = composeUrlForMessage(message.id);
-	creatorName = await getMessageCreatorName(message.creator.userId);
-	txt = "<a href='" + url + "'>" + prettyTime(message.creator.time) + "</a>";
-	txt += ' by ' + creatorName;
+	txt = await composeMessageHeaderText(message);
 	divMsgHdr.innerHTML = txt;
 	p.appendChild(divMsgHdr);
 
@@ -2284,4 +2281,21 @@ async function getUserName(userId) {
 		return null;
 	}
 	return resp.JsonObject;
+}
+
+async function composeMessageHeaderText(message) {
+	let messageId = message.id;
+	let url = composeUrlForMessage(messageId);
+	let creatorName = await getMessageCreatorName(message.creator.userId);
+	let txt = "<a href='" + url + "'>" + prettyTime(message.creator.time) + "</a>" +
+		' by <span class="messageCreatorName">' + creatorName + '</span>';
+
+	let editorId = message.editor.userId;
+	if (editorId != null) {
+		let editorName = await getMessageCreatorName(editorId);
+		txt += ', edited by <span class="messageEditorName">' + editorName + '</span>' +
+			' on <span class="messageEditorTime">' + prettyTime(message.editor.time) + '</span>';
+	}
+
+	return txt;
 }

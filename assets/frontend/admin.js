@@ -29,24 +29,43 @@ qpn = {
 	RegistrationsReadyForApproval: "registrationsReadyForApproval",
 	UserPage: "userPage",
 	ManagerOfSections: "manageSections",
+	ManagerOfForums: "manageForums",
+	ManagerOfThreads: "managerOfThreads",
+	ManagerOfMessages: "managerOfMessages",
 }
 
 // Action names.
 actionName = {
+	AddForum: "addForum",
 	AddSection: "addSection",
+	AddThread: "addThread",
+	AddMessage: "addMessage",
 	ApproveAndRegisterUser: "approveAndRegisterUser",
 	BanUser: "banUser",
+	ChangeForumName: "changeForumName",
+	ChangeForumSection: "changeForumSection",
+	ChangeMessageText: "changeMessageText",
+	ChangeMessageThread: "changeMessageThread",
 	ChangeSectionName: "changeSectionName",
 	ChangeSectionParent: "changeSectionParent",
+	ChangeThreadName: "changeThreadName",
+	ChangeThreadForum: "changeThreadForum",
+	DeleteForum: "deleteForum",
 	DeleteSection: "deleteSection",
+	DeleteThread: "deleteThread",
+	DeleteMessage: "deleteMessage",
 	GetListOfAllUsers: "getListOfAllUsers",
 	GetListOfLoggedUsers: "getListOfLoggedUsers",
 	GetListOfRegistrationsReadyForApproval: "getListOfRegistrationsReadyForApproval",
 	GetUserSession: "getUserSession",
 	IsUserLoggedIn: "isUserLoggedIn",
 	LogUserOutA: "logUserOutA",
+	MoveForumDown: "moveForumDown",
+	MoveForumUp: "moveForumUp",
 	MoveSectionDown: "moveSectionDown",
 	MoveSectionUp: "moveSectionUp",
+	MoveThreadDown: "moveThreadDown",
+	MoveThreadUp: "moveThreadUp",
 	RejectRegistrationRequest: "rejectRegistrationRequest",
 	SetUserRoleAuthor: "setUserRoleAuthor",
 	SetUserRoleReader: "setUserRoleReader",
@@ -76,6 +95,7 @@ err = {
 	UnknownVariant: "unknown variant",
 	NameIsNotSet: "name is not set",
 	ParentIsNotSet: "parent is not set",
+	TextIsNotSet: "text is not set",
 }
 
 // User role names.
@@ -213,6 +233,27 @@ class Parameters_AddSection {
 	}
 }
 
+class Parameters_AddForum {
+	constructor(parent, name) {
+		this.SectionId = parent;
+		this.Name = name;
+	}
+}
+
+class Parameters_AddThread {
+	constructor(parent, name) {
+		this.ForumId = parent;
+		this.Name = name;
+	}
+}
+
+class Parameters_AddMessage {
+	constructor(parent, text) {
+		this.ThreadId = parent;
+		this.Text = text;
+	}
+}
+
 class Parameters_ChangeSectionName {
 	constructor(sectionId, name) {
 		this.SectionId = sectionId;
@@ -220,10 +261,52 @@ class Parameters_ChangeSectionName {
 	}
 }
 
+class Parameters_ChangeForumName {
+	constructor(forumId, name) {
+		this.ForumId = forumId;
+		this.Name = name;
+	}
+}
+
+class Parameters_ChangeThreadName {
+	constructor(threadId, name) {
+		this.ThreadId = threadId;
+		this.Name = name;
+	}
+}
+
+class Parameters_ChangeMessageText {
+	constructor(messageId, text) {
+		this.MessageId = messageId;
+		this.Text = text;
+	}
+}
+
 class Parameters_ChangeSectionParent {
 	constructor(sectionId, parent) {
 		this.SectionId = sectionId;
 		this.Parent = parent;
+	}
+}
+
+class Parameters_ChangeForumSection {
+	constructor(forumId, sectionId) {
+		this.ForumId = forumId;
+		this.SectionId = sectionId; // Parent.
+	}
+}
+
+class Parameters_ChangeThreadForum {
+	constructor(threadId, forumId) {
+		this.ThreadId = threadId;
+		this.ForumId = forumId; // Parent.
+	}
+}
+
+class Parameters_ChangeMessageThread {
+	constructor(messageId, threadId) {
+		this.MessageId = messageId;
+		this.ThreadId = threadId; // Parent.
 	}
 }
 
@@ -239,9 +322,51 @@ class Parameters_MoveSectionDown {
 	}
 }
 
+class Parameters_MoveForumUp {
+	constructor(forumId) {
+		this.ForumId = forumId;
+	}
+}
+
+class Parameters_MoveForumDown {
+	constructor(forumId) {
+		this.ForumId = forumId;
+	}
+}
+
+class Parameters_MoveThreadUp {
+	constructor(threadId) {
+		this.ThreadId = threadId;
+	}
+}
+
+class Parameters_MoveThreadDown {
+	constructor(threadId) {
+		this.ThreadId = threadId;
+	}
+}
+
 class Parameters_DeleteSection {
 	constructor(sectionId) {
 		this.SectionId = sectionId;
+	}
+}
+
+class Parameters_DeleteForum {
+	constructor(forumId) {
+		this.ForumId = forumId;
+	}
+}
+
+class Parameters_DeleteThread {
+	constructor(threadId) {
+		this.ThreadId = threadId;
+	}
+}
+
+class Parameters_DeleteMessage {
+	constructor(messageId) {
+		this.MessageId = messageId;
 	}
 }
 
@@ -303,6 +428,20 @@ async function onPageLoad() {
 		return;
 	}
 
+	if (sp.has(qpn.ManagerOfForums)) {
+		await showPage_ManagerOfForums();
+		return;
+	}
+
+	if (sp.has(qpn.ManagerOfThreads)) {
+		await showPage_ManagerOfThreads();
+		return;
+	}
+
+	if (sp.has(qpn.ManagerOfMessages)) {
+		await showPage_ManagerOfMessages();
+		return;
+	}
 
 	showPage_MainMenu();
 }
@@ -353,6 +492,18 @@ async function onGoListAllUsersClick(btn) {
 
 async function onGoManageSectionsClick(btn) {
 	await redirectToSubPage(true, qpPrefix + qpn.ManagerOfSections);
+}
+
+async function onGoManageForumsClick(btn) {
+	await redirectToSubPage(true, qpPrefix + qpn.ManagerOfForums);
+}
+
+async function onGoManageThreadsClick(btn) {
+	await redirectToSubPage(true, qpPrefix + qpn.ManagerOfThreads);
+}
+
+async function onGoManageMessagesClick(btn) {
+	await redirectToSubPage(true, qpPrefix + qpn.ManagerOfMessages);
 }
 
 async function redirectToSubPage(wait, qp) {
@@ -499,6 +650,36 @@ async function showPage_ManagerOfSections() {
 	addTitle(p, "Management of Sections");
 	addDiv(p, "sectionManager");
 	fillSectionManager("sectionManager");
+}
+
+async function showPage_ManagerOfForums() {
+	// Draw.
+	let p = document.getElementById("subpage");
+	p.style.display = "block";
+	addBtnBack(p);
+	addTitle(p, "Management of Forums");
+	addDiv(p, "forumManager");
+	fillForumManager("forumManager");
+}
+
+async function showPage_ManagerOfThreads() {
+	// Draw.
+	let p = document.getElementById("subpage");
+	p.style.display = "block";
+	addBtnBack(p);
+	addTitle(p, "Management of Threads");
+	addDiv(p, "threadManager");
+	fillThreadManager("threadManager");
+}
+
+async function showPage_ManagerOfMessages() {
+	// Draw.
+	let p = document.getElementById("subpage");
+	p.style.display = "block";
+	addBtnBack(p);
+	addTitle(p, "Management of Messages");
+	addDiv(p, "messageManager");
+	fillMessageManager("messageManager");
 }
 
 function addBtnBack(el) {
@@ -1423,46 +1604,64 @@ function fillSectionManager(elClass) {
 
 	let actionNames = ["Select an action", "Create a root section", "Create a normal section",
 		"Change section's name", "Change section's parent", "Move section up & down", "Delete a section"];
-	for (let i = 0; i < actionNames.length; i++) {
-		let d = document.createElement("DIV");
-		if (i === 0) {
-			d.className = "title";
-			d.textContent = actionNames[i];
-		} else {
-			d.innerHTML = '<input type="radio" name="action" id="action_' + i + '" value="' + actionNames[i] + '" />' +
-				'<label class="action" for="action_' + i + '">' + actionNames[i] + '</label>';
-
-		}
-		fs.appendChild(d);
-	}
-
+	createRadioButtonsForActions(fs, actionNames);
 	let d = document.createElement("DIV");
 	d.innerHTML = '<input type="button" class="btnProceed" value="Proceed" onclick="onSectionManagerBtnProceedClick(this)">';
 	fs.appendChild(d);
 }
 
+function fillForumManager(elClass) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let fs = document.createElement("FIELDSET");
+	div.appendChild(fs);
+
+	let actionNames = ["Select an action", "Create a forum", "Change forums's name",
+		"Change forums's parent", "Move forum up & down", "Delete a forum"];
+	createRadioButtonsForActions(fs, actionNames);
+	let d = document.createElement("DIV");
+	d.innerHTML = '<input type="button" class="btnProceed" value="Proceed" onclick="onForumManagerBtnProceedClick(this)">';
+	fs.appendChild(d);
+}
+
+function fillThreadManager(elClass) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let fs = document.createElement("FIELDSET");
+	div.appendChild(fs);
+
+	let actionNames = ["Select an action", "Create a thread", "Change thread's name",
+		"Change thread's parent", "Move thread up & down", "Delete a thread"];
+	createRadioButtonsForActions(fs, actionNames);
+	let d = document.createElement("DIV");
+	d.innerHTML = '<input type="button" class="btnProceed" value="Proceed" onclick="onThreadManagerBtnProceedClick(this)">';
+	fs.appendChild(d);
+}
+
+function fillMessageManager(elClass) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let fs = document.createElement("FIELDSET");
+	div.appendChild(fs);
+
+	let actionNames = ["Select an action",
+		"Create a message", "Change message's text", "Change message's parent", "Delete a message"];
+	createRadioButtonsForActions(fs, actionNames);
+	let d = document.createElement("DIV");
+	d.innerHTML = '<input type="button" class="btnProceed" value="Proceed" onclick="onMessageManagerBtnProceedClick(this)">';
+	fs.appendChild(d);
+}
+
 function onSectionManagerBtnProceedClick(btn) {
-	// Input.
-	let selectedActionIdx = 0;
-	let pp = btn.parentNode.parentNode;
-	for (i = 0; i < pp.childNodes.length; i++) {
-		let ch = pp.childNodes[i];
-		if (ch.childNodes[0].checked === true) {
-			selectedActionIdx = i;
-			break;
-		}
-	}
-	if (selectedActionIdx < 1) {
+	let selectedActionIdx = getSelectedActionIdxBPC(btn);
+	if (selectedActionIdx == null) {
 		return;
 	}
 
-	// Disable the parent form.
 	btn.disabled = true;
-	for (i = 0; i < pp.childNodes.length; i++) {
-		let ch = pp.childNodes[i];
-		ch.childNodes[0].disabled = true;
-	}
+	disableParentFormBPC(btn);
 
+	// Draw.
 	let sm = document.getElementById("sectionManager");
 	let fs = document.createElement("FIELDSET");
 	sm.appendChild(fs);
@@ -1714,6 +1913,643 @@ async function onBtnDeleteSectionClick(btn) {
 	showActionSuccess(btn, txt);
 }
 
+function onForumManagerBtnProceedClick(btn) {
+	let selectedActionIdx = getSelectedActionIdxBPC(btn);
+	if (selectedActionIdx == null) {
+		return;
+	}
+
+	btn.disabled = true;
+	disableParentFormBPC(btn);
+
+	// Draw.
+	let fm = document.getElementById("forumManager");
+	let fs = document.createElement("FIELDSET");
+	fm.appendChild(fs);
+
+	let d = document.createElement("DIV");
+	d.className = "title";
+	d.textContent = "Forum Parameters";
+	fs.appendChild(d);
+
+	switch (selectedActionIdx) {
+		case 1: // Create a forum.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="name">Name</label>' +
+				'<input type="text" name="name" id="name" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent section">Parent</label>' +
+				'<input type="text" name="parent" id="parent" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnCreateForum" value="Create" onclick="onBtnCreateForumClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 2: // Change forum's name.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed forum">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="name" title="New name of the forum">New Name</label>' +
+				'<input type="text" name="name" id="name" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnChangeForumName" value="Change Name" onclick="onBtnChangeForumNameClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 3: // Change forum's parent.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed forum">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="newParent" title="ID of the new parent">New Parent</label>' +
+				'<input type="text" name="newParent" id="newParent" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnChangeForumParent" value="Change Parent" onclick="onBtnChangeForumParentClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 4: // Move forum up & down.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the moved forum">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnMoveForum" value="Move Up" onclick="onBtnMoveForumUpClick(this)">' +
+				'<span class="subpageSpacerA">&nbsp;</span>' +
+				'<input type="button" class="btnMoveForum" value="Move Down" onclick="onBtnMoveForumDownClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 5: // Delete a forum.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the forum to delete">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnDeleteForum" value="Delete" onclick="onBtnDeleteForumClick(this)">';
+			fs.appendChild(d);
+			break;
+	}
+}
+
+async function onBtnCreateForumClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let name = pp.childNodes[1].childNodes[1].value;
+	if (name.length < 1) {
+		console.error(err.NameIsNotSet);
+		return;
+	}
+	let parent = Number(pp.childNodes[2].childNodes[1].value);
+	if (parent < 1) {
+		console.error(err.ParentIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await addForum(parent, name);
+	if (resp == null) {
+		return;
+	}
+	let forumId = resp.result.forumId;
+	disableParentForm(btn, pp, false);
+	let txt = "A forum was created. ID=" + forumId.toString() + ".";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnChangeForumNameClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let forumId = Number(pp.childNodes[1].childNodes[1].value);
+	if (forumId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+	let newName = pp.childNodes[2].childNodes[1].value;
+	if (newName.length < 1) {
+		console.error(err.NameIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await changeForumName(forumId, newName);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Forum name was changed.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnChangeForumParentClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let forumId = Number(pp.childNodes[1].childNodes[1].value);
+	if (forumId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+	let newParent = Number(pp.childNodes[2].childNodes[1].value);
+	if (newParent < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await changeForumSection(forumId, newParent);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Forum was moved to a new parent.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnMoveForumUpClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let forumId = Number(pp.childNodes[1].childNodes[1].value);
+	if (forumId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await moveForumUp(forumId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, true);
+	let txt = "Forum was moved up.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnMoveForumDownClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let forumId = Number(pp.childNodes[1].childNodes[1].value);
+	if (forumId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await moveForumDown(forumId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, true);
+	let txt = "Forum was moved down.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnDeleteForumClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let forumId = Number(pp.childNodes[1].childNodes[1].value);
+	if (forumId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await deleteForum(forumId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Forum was deleted.";
+	showActionSuccess(btn, txt);
+}
+
+function onThreadManagerBtnProceedClick(btn) {
+	let selectedActionIdx = getSelectedActionIdxBPC(btn);
+	if (selectedActionIdx == null) {
+		return;
+	}
+
+	btn.disabled = true;
+	disableParentFormBPC(btn);
+
+	// Draw.
+	let tm = document.getElementById("threadManager");
+	let fs = document.createElement("FIELDSET");
+	tm.appendChild(fs);
+
+	let d = document.createElement("DIV");
+	d.className = "title";
+	d.textContent = "Thread Parameters";
+	fs.appendChild(d);
+
+	switch (selectedActionIdx) {
+		case 1: // Create a thread.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="name">Name</label>' +
+				'<input type="text" name="name" id="name" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent forum">Parent</label>' +
+				'<input type="text" name="parent" id="parent" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnCreateThread" value="Create" onclick="onBtnCreateThreadClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 2: // Change thread's name.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed thread">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="name" title="New name of the thread">New Name</label>' +
+				'<input type="text" name="name" id="name" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnChangeThreadName" value="Change Name" onclick="onBtnChangeThreadNameClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 3: // Change thread's parent.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed thread">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="newParent" title="ID of the new parent">New Parent</label>' +
+				'<input type="text" name="newParent" id="newParent" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnChangeThreadParent" value="Change Parent" onclick="onBtnChangeThreadParentClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 4: // Move thread up & down.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the moved thread">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnMoveThread" value="Move Up" onclick="onBtnMoveThreadUpClick(this)">' +
+				'<span class="subpageSpacerA">&nbsp;</span>' +
+				'<input type="button" class="btnMoveThread" value="Move Down" onclick="onBtnMoveThreadDownClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 5: // Delete a thread.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the thread to delete">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnDeleteThread" value="Delete" onclick="onBtnDeleteThreadClick(this)">';
+			fs.appendChild(d);
+			break;
+	}
+}
+
+async function onBtnCreateThreadClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let name = pp.childNodes[1].childNodes[1].value;
+	if (name.length < 1) {
+		console.error(err.NameIsNotSet);
+		return;
+	}
+	let parent = Number(pp.childNodes[2].childNodes[1].value);
+	if (parent < 1) {
+		console.error(err.ParentIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await addThread(parent, name);
+	if (resp == null) {
+		return;
+	}
+	let threadId = resp.result.threadId;
+	disableParentForm(btn, pp, false);
+	let txt = "A thread was created. ID=" + threadId.toString() + ".";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnChangeThreadNameClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let threadId = Number(pp.childNodes[1].childNodes[1].value);
+	if (threadId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+	let newName = pp.childNodes[2].childNodes[1].value;
+	if (newName.length < 1) {
+		console.error(err.NameIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await changeThreadName(threadId, newName);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Thread name was changed.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnChangeThreadParentClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let threadId = Number(pp.childNodes[1].childNodes[1].value);
+	if (threadId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+	let newParent = Number(pp.childNodes[2].childNodes[1].value);
+	if (newParent < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await changeThreadForum(threadId, newParent);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Thread was moved to a new parent.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnMoveThreadUpClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let threadId = Number(pp.childNodes[1].childNodes[1].value);
+	if (threadId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await moveThreadUp(threadId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, true);
+	let txt = "Thread was moved up.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnMoveThreadDownClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let threadId = Number(pp.childNodes[1].childNodes[1].value);
+	if (threadId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await moveThreadDown(threadId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, true);
+	let txt = "Thread was moved down.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnDeleteThreadClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let threadId = Number(pp.childNodes[1].childNodes[1].value);
+	if (threadId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await deleteThread(threadId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Thread was deleted.";
+	showActionSuccess(btn, txt);
+}
+
+function onMessageManagerBtnProceedClick(btn) {
+	let selectedActionIdx = getSelectedActionIdxBPC(btn);
+	if (selectedActionIdx == null) {
+		return;
+	}
+
+	btn.disabled = true;
+	disableParentFormBPC(btn);
+
+	// Draw.
+	let mm = document.getElementById("messageManager");
+	let fs = document.createElement("FIELDSET");
+	mm.appendChild(fs);
+
+	let d = document.createElement("DIV");
+	d.className = "title";
+	d.textContent = "Message Parameters";
+	fs.appendChild(d);
+
+	switch (selectedActionIdx) {
+		case 1: // Create a message.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="txt">Text</label>' +
+				'<input type="text" name="txt" id="txt" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent thread">Parent</label>' +
+				'<input type="text" name="parent" id="parent" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnCreateMessage" value="Create" onclick="onBtnCreateMessageClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 2: // Change message's text.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed message">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="txt" title="New text of the message">New Text</label>' +
+				'<input type="text" name="txt" id="txt" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnChangeMessageText" value="Change Text" onclick="onBtnChangeMessageTextClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 3: // Change message's parent.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed message">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="newParent" title="ID of the new parent">New Parent</label>' +
+				'<input type="text" name="newParent" id="newParent" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnChangeMessageParent" value="Change Parent" onclick="onBtnChangeMessageParentClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 4: // Delete a message.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the message to delete">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnDeleteMessage" value="Delete" onclick="onBtnDeleteMessageClick(this)">';
+			fs.appendChild(d);
+			break;
+	}
+}
+
+async function onBtnCreateMessageClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let text = pp.childNodes[1].childNodes[1].value;
+	if (text.length < 1) {
+		console.error(err.TextIsNotSet);
+		return;
+	}
+	let parent = Number(pp.childNodes[2].childNodes[1].value);
+	if (parent < 1) {
+		console.error(err.ParentIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await addMessage(parent, text);
+	if (resp == null) {
+		return;
+	}
+	let messageId = resp.result.messageId;
+	disableParentForm(btn, pp, false);
+	let txt = "A message was created. ID=" + messageId.toString() + ".";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnChangeMessageTextClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let messageId = Number(pp.childNodes[1].childNodes[1].value);
+	if (messageId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+	let newText = pp.childNodes[2].childNodes[1].value;
+	if (newText.length < 1) {
+		console.error(err.TextIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await changeMessageText(messageId, newText);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Message text was changed.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnChangeMessageParentClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let messageId = Number(pp.childNodes[1].childNodes[1].value);
+	if (messageId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+	let newParent = Number(pp.childNodes[2].childNodes[1].value);
+	if (newParent < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await changeMessageThread(messageId, newParent);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Message was moved to a new parent.";
+	showActionSuccess(btn, txt);
+}
+
+async function onBtnDeleteMessageClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let messageId = Number(pp.childNodes[1].childNodes[1].value);
+	if (messageId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await deleteMessage(messageId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Message was deleted.";
+	showActionSuccess(btn, txt);
+}
+
 function composeUrlForAdminPage(func, page) {
 	return qp.Prefix + func + "&" + qpn.Page + "=" + page;
 }
@@ -1721,6 +2557,39 @@ function composeUrlForAdminPage(func, page) {
 async function addSection(parent, name) {
 	let params = new Parameters_AddSection(parent, name);
 	let reqData = new ApiRequest(actionName.AddSection, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function addForum(parent, name) {
+	let params = new Parameters_AddForum(parent, name);
+	let reqData = new ApiRequest(actionName.AddForum, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function addThread(parent, name) {
+	let params = new Parameters_AddThread(parent, name);
+	let reqData = new ApiRequest(actionName.AddThread, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function addMessage(parent, text) {
+	let params = new Parameters_AddMessage(parent, text);
+	let reqData = new ApiRequest(actionName.AddMessage, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1740,9 +2609,75 @@ async function changeSectionName(sectionId, name) {
 	return resp.JsonObject;
 }
 
+async function changeForumName(forumId, name) {
+	let params = new Parameters_ChangeForumName(forumId, name);
+	let reqData = new ApiRequest(actionName.ChangeForumName, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function changeThreadName(threadId, name) {
+	let params = new Parameters_ChangeThreadName(threadId, name);
+	let reqData = new ApiRequest(actionName.ChangeThreadName, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function changeMessageText(messageId, text) {
+	let params = new Parameters_ChangeMessageText(messageId, text);
+	let reqData = new ApiRequest(actionName.ChangeMessageText, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
 async function changeSectionParent(sectionId, newParent) {
 	let params = new Parameters_ChangeSectionParent(sectionId, newParent);
 	let reqData = new ApiRequest(actionName.ChangeSectionParent, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function changeForumSection(forumId, newParent) {
+	let params = new Parameters_ChangeForumSection(forumId, newParent);
+	let reqData = new ApiRequest(actionName.ChangeForumSection, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function changeThreadForum(threadId, newParent) {
+	let params = new Parameters_ChangeThreadForum(threadId, newParent);
+	let reqData = new ApiRequest(actionName.ChangeThreadForum, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function changeMessageThread(messageId, newParent) {
+	let params = new Parameters_ChangeMessageThread(messageId, newParent);
+	let reqData = new ApiRequest(actionName.ChangeMessageThread, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1773,9 +2708,86 @@ async function moveSectionDown(sectionId) {
 	return resp.JsonObject;
 }
 
+async function moveForumUp(forumId) {
+	let params = new Parameters_MoveForumUp(forumId);
+	let reqData = new ApiRequest(actionName.MoveForumUp, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function moveForumDown(forumId) {
+	let params = new Parameters_MoveForumDown(forumId);
+	let reqData = new ApiRequest(actionName.MoveForumDown, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function moveThreadUp(threadId) {
+	let params = new Parameters_MoveThreadUp(threadId);
+	let reqData = new ApiRequest(actionName.MoveThreadUp, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function moveThreadDown(threadId) {
+	let params = new Parameters_MoveThreadDown(threadId);
+	let reqData = new ApiRequest(actionName.MoveThreadDown, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
 async function deleteSection(sectionId) {
 	let params = new Parameters_DeleteSection(sectionId);
 	let reqData = new ApiRequest(actionName.DeleteSection, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function deleteForum(forumId) {
+	let params = new Parameters_DeleteForum(forumId);
+	let reqData = new ApiRequest(actionName.DeleteForum, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function deleteThread(threadId) {
+	let params = new Parameters_DeleteThread(threadId);
+	let reqData = new ApiRequest(actionName.DeleteThread, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function deleteMessage(messageId) {
+	let params = new Parameters_DeleteMessage(messageId);
+	let reqData = new ApiRequest(actionName.DeleteMessage, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -1812,4 +2824,43 @@ function showActionSuccess(btn, txt) {
 	d.className = "actionSuccess";
 	d.textContent = txt;
 	ppp.appendChild(d);
+}
+
+function disableParentFormBPC(btn) {
+	let pp = btn.parentNode.parentNode;
+	for (let i = 0; i < pp.childNodes.length; i++) {
+		let ch = pp.childNodes[i];
+		ch.childNodes[0].disabled = true;
+	}
+}
+
+function getSelectedActionIdxBPC(btn) {
+	let selectedActionIdx = 0;
+	let pp = btn.parentNode.parentNode;
+	for (let i = 0; i < pp.childNodes.length; i++) {
+		let ch = pp.childNodes[i];
+		if (ch.childNodes[0].checked === true) {
+			selectedActionIdx = i;
+			break;
+		}
+	}
+	if (selectedActionIdx < 1) {
+		return null;
+	}
+	return selectedActionIdx;
+}
+
+function createRadioButtonsForActions(fs, actionNames) {
+	for (let i = 0; i < actionNames.length; i++) {
+		let d = document.createElement("DIV");
+		if (i === 0) {
+			d.className = "title";
+			d.textContent = actionNames[i];
+		} else {
+			d.innerHTML = '<input type="radio" name="action" id="action_' + i + '" value="' + actionNames[i] + '" />' +
+				'<label class="action" for="action_' + i + '">' + actionNames[i] + '</label>';
+
+		}
+		fs.appendChild(d);
+	}
 }
