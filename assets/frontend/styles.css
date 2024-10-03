@@ -238,7 +238,13 @@ table.acpMenu td {
 .btnCreateMessage,
 .btnChangeMessageText,
 .btnChangeMessageParent,
-.btnDeleteMessage {
+.btnDeleteMessage,
+.btnStartNewThread,
+.btnConfirmThreadStart,
+.btnAddMessage,
+.btnConfirmMessageCreation,
+.btnEditMessage,
+.btnConfirmMessageEdit {
 	border: 1px solid grey;
 	color: grey;
 	cursor: pointer;
@@ -298,8 +304,25 @@ table.acpMenu td {
 .btnCreateNormalSection,
 .btnCreateForum,
 .btnCreateThread,
-.btnCreateMessage {
+.btnCreateMessage,
+.btnStartNewThread,
+.btnConfirmThreadStart,
+.btnAddMessage,
+.btnConfirmMessageCreation,
+.btnConfirmMessageEdit {
 	color: green;
+}
+
+.btnConfirmThreadStart,
+.btnConfirmMessageCreation,
+.btnConfirmMessageEdit {
+	margin-top: 5px;
+}
+
+.btnStartNewThread,
+.btnAddMessage,
+.btnEditMessage {
+	width: 192px;
 }
 
 .btnChangeSectionName,
@@ -311,7 +334,8 @@ table.acpMenu td {
 .btnChangeThreadName,
 .btnChangeThreadParent,
 .btnMoveThread,
-.btnChangeMessageParent {
+.btnChangeMessageParent,
+.btnEditMessage {
 	color: orange;
 }
 
@@ -518,24 +542,37 @@ span.userPageRole a {
 	margin-bottom: 10px;
 }
 
+.bottomActionPanel {
+	margin-top: 10px;
+}
+
 div.sectionManager div.title,
 div.forumManager div.title,
 div.threadManager div.title,
-div.messageManager div.title {
+div.messageManager div.title,
+div.newThreadCreation div.title,
+div.newMessageCreation div.title,
+div.messageEditing div.title {
 	font-weight: bold;
 }
 
 div.sectionManager div,
 div.forumManager div,
 div.threadManager div,
-div.messageManager div {
+div.messageManager div,
+div.newThreadCreation div,
+div.newMessageCreation div,
+div.messageEditing div {
 	margin-bottom: 3px;
 }
 
 div.sectionManager fieldset input,
 div.forumManager fieldset input,
 div.threadManager fieldset input,
-div.messageManager fieldset input {
+div.messageManager fieldset input,
+div.newThreadCreation input,
+div.newMessageCreation input,
+div.messageEditing input {
 	border: 1px solid grey;
 }
 
@@ -558,4 +595,21 @@ span.messageEditorName {
 
 span.messageEditorTime {
 	color: orange;
+}
+
+div.newThreadCreation {
+	margin-top: 10px;
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+input.newThreadName {
+	width: 75%;
+	font-size: 15px;
+}
+
+textarea.newMessageText {
+	width: 75%;
+	height: 128px;
+	font-size: 15px;
 }

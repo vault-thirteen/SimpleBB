@@ -147,17 +147,20 @@ msg = {
 
 // Action names.
 actionName = {
-	RegisterUser: "registerUser",
+	AddMessage: "addMessage",
+	AddThread: "addThread",
+	ChangeEmail: "changeEmail",
+	ChangeMessageText: "changeMessageText",
+	ChangePwd: "changePassword",
+	GetMessage: "getMessage",
+	GetSelfRoles: "getSelfRoles",
+	GetUserName: "getUserName",
+	ListForumAndThreadsOnPage: "listForumAndThreadsOnPage",
+	ListSectionsAndForums: "listSectionsAndForums",
+	ListThreadAndMessagesOnPage: "listThreadAndMessagesOnPage",
 	LogUserIn: "logUserIn",
 	LogUserOut: "logUserOut",
-	ChangeEmail: "changeEmail",
-	ChangePwd: "changePassword",
-	ListSectionsAndForums: "listSectionsAndForums",
-	ListForumAndThreadsOnPage: "listForumAndThreadsOnPage",
-	GetSelfRoles: "getSelfRoles",
-	ListThreadAndMessagesOnPage: "listThreadAndMessagesOnPage",
-	GetMessage: "getMessage",
-	GetUserName: "getUserName",
+	RegisterUser: "registerUser",
 }
 
 // Section settings.
@@ -338,6 +341,27 @@ class Parameters_GetMessage {
 class Parameters_GetUserName {
 	constructor(userId) {
 		this.UserId = userId;
+	}
+}
+
+class Parameters_AddThread {
+	constructor(parent, name) {
+		this.ForumId = parent;
+		this.Name = name;
+	}
+}
+
+class Parameters_AddMessage {
+	constructor(parent, text) {
+		this.ThreadId = parent;
+		this.Text = text;
+	}
+}
+
+class Parameters_ChangeMessageText {
+	constructor(messageId, text) {
+		this.MessageId = messageId;
+		this.Text = text;
 	}
 }
 
@@ -950,6 +974,7 @@ async function showForum() {
 	addActionPanel(p, false, "section", parentId);
 	addPaginator(p, pageNumber, pageCount, "forumPagePrev", "forumPageNext");
 	processForumAndThreads(p, forum, threadsMap);
+	await addBottomActionPanel(p, "forum", forumId);
 }
 
 async function showThread() {
@@ -987,6 +1012,7 @@ async function showThread() {
 	addActionPanel(p, false, "forum", parentId);
 	addPaginator(p, pageNumber, pageCount, "threadPagePrev", "threadPageNext");
 	await processThreadAndMessages(p, thread, messagesMap);
+	await addBottomActionPanel(p, "thread", threadId);
 }
 
 async function showMessage() {
@@ -1005,6 +1031,7 @@ async function showMessage() {
 	addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false, "thread", parentId);
 	await processMessage(p, message);
+	await addBottomActionPanel(p, "message", messageId, message);
 }
 
 function setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer) {
@@ -1967,7 +1994,7 @@ async function processThreadAndMessages(p, thread, messagesMap) {
 		divMsgBody.id = "messageBody_" + message.id;
 		ml = sectionMarginDelta * 2;
 		divMsgBody.style.cssText = "margin-left: " + ml + "px";
-		divMsgBody.textContent = message.text;
+		divMsgBody.innerHTML = processMessageText(message.text);
 		p.appendChild(divMsgBody);
 	}
 }
@@ -1991,7 +2018,7 @@ async function processMessage(p, message) {
 	divMsgBody.id = "messageBody_" + message.id;
 	ml = sectionMarginDelta * 2;
 	divMsgBody.style.cssText = "margin-left: " + ml + "px";
-	divMsgBody.textContent = message.text;
+	divMsgBody.innerHTML = processMessageText(message.text);
 	p.appendChild(divMsgBody);
 }
 
@@ -2297,5 +2324,338 @@ async function composeMessageHeaderText(message) {
 			' on <span class="messageEditorTime">' + prettyTime(message.editor.time) + '</span>';
 	}
 
+	return txt;
+}
+
+async function addBottomActionPanel(el, type, parentId, object) {
+	let resp = await getSelfRoles();
+	if (resp == null) {
+		return;
+	}
+	let userParams = resp.result;
+
+	let cn = "bottomActionPanel";
+	let div = document.createElement("DIV");
+	div.className = cn;
+	div.id = cn;
+
+	let tbl = document.createElement("TABLE");
+	let tr = document.createElement("TR");
+
+	switch (type) {
+		case "forum":
+			if (userParams.isAuthor) {
+				td = document.createElement("TD");
+				td.innerHTML = '<form><input type="button" value="Start a new Thread" class="btnStartNewThread" ' +
+					'onclick="onBtnStartNewThreadClick(this, \'' + cn + '\', ' + parentId + ')" /></form>';
+				tr.appendChild(td);
+			}
+			break;
+
+		case "thread":
+			if (userParams.isWriter) {
+				td = document.createElement("TD");
+				td.innerHTML = '<form><input type="button" value="Add a Message" class="btnAddMessage" ' +
+					'onclick="onBtnAddMessageClick(this, \'' + cn + '\', ' + parentId + ')" /></form>';
+				tr.appendChild(td);
+			}
+			break;
+
+		case "message":
+			let canEditMsg = canMessageBeEdited(object, userParams);
+			if (canEditMsg) {
+				td = document.createElement("TD");
+				td.innerHTML = '<form><input type="button" value="Edit Message" class="btnEditMessage" ' +
+					'onclick="onBtnEditMessageClick(this, \'' + cn + '\', ' + parentId + ')" /></form>';
+				tr.appendChild(td);
+			}
+			break;
+	}
+
+	tbl.appendChild(tr);
+	div.appendChild(tbl);
+	el.appendChild(div);
+}
+
+async function onBtnStartNewThreadClick(btn, panelCN, forumId) {
+	disableButton(btn);
+	let p = document.getElementById(panelCN);
+	let div = document.createElement("DIV");
+	div.className = "newThreadCreation";
+	div.id = "newThreadCreation";
+	p.appendChild(div);
+
+	// Draw.
+	let d = document.createElement("DIV");
+	d.className = "title";
+	d.textContent = "New Thread Parameters";
+	div.appendChild(d);
+	d = document.createElement("DIV");
+	d.innerHTML = '<label class="parameter" for="name">Name</label>' +
+		'<input type="text" name="name" id="name" value="" class="newThreadName" />';
+	div.appendChild(d);
+	d = document.createElement("DIV");
+	d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent forum" hidden="hidden">Parent</label>' +
+		'<input type="text" name="parent" id="parent" value="' + forumId + '" readonly="readonly" hidden="hidden"/>';
+	div.appendChild(d);
+	d = document.createElement("DIV");
+	d.innerHTML = '<input type="button" class="btnConfirmThreadStart" value="Confirm" onclick="onBtnConfirmThreadStartClick(this)">';
+	div.appendChild(d);
+}
+
+async function onBtnAddMessageClick(btn, panelCN, threadId) {
+	disableButton(btn);
+	let p = document.getElementById(panelCN);
+	let div = document.createElement("DIV");
+	div.className = "newMessageCreation";
+	div.id = "newMessageCreation";
+	p.appendChild(div);
+
+	// Draw.
+	let d = document.createElement("DIV");
+	d.className = "title";
+	d.textContent = "New Message Parameters";
+	div.appendChild(d);
+	d = document.createElement("DIV");
+	d.innerHTML = '<label class="parameter" for="txt">Text</label>' +
+		'<textarea name="txt" id="txt" class="newMessageText"></textarea>';
+	div.appendChild(d);
+	d = document.createElement("DIV");
+	d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent thread" hidden="hidden">Parent</label>' +
+		'<input type="text" name="parent" id="parent" value="' + threadId + '" readonly="readonly" hidden="hidden"/>';
+	div.appendChild(d);
+	d = document.createElement("DIV");
+	d.innerHTML = '<input type="button" class="btnConfirmMessageCreation" value="Send Message" onclick="onBtnConfirmMessageCreationClick(this)">';
+	div.appendChild(d);
+}
+
+async function onBtnEditMessageClick(btn, panelCN, messageId) {
+	// Get edited message.
+	let resp = await getMessage(messageId);
+	if (resp == null) {
+		return;
+	}
+	let message = resp.result.message;
+	let msgText = message.text;
+
+	disableButton(btn);
+	let p = document.getElementById(panelCN);
+	let div = document.createElement("DIV");
+	div.className = "messageEditing";
+	div.id = "messageEditing";
+	p.appendChild(div);
+
+	// Draw.
+	let d = document.createElement("DIV");
+	d.className = "title";
+	d.textContent = "Message Editing";
+	div.appendChild(d);
+	d = document.createElement("DIV");
+	d.innerHTML = '<label class="parameter" for="txt">Text</label>' +
+		'<textarea name="txt" id="txt" class="newMessageText">' + escapeHtml(msgText) + '</textarea>';
+	div.appendChild(d);
+	d = document.createElement("DIV");
+	d.innerHTML = '<label class="parameter" for="id" title="ID of edited message" hidden="hidden">ID</label>' +
+		'<input type="text" name="id" id="id" value="' + messageId + '" readonly="readonly" hidden="hidden"/>';
+	div.appendChild(d);
+	d = document.createElement("DIV");
+	d.innerHTML = '<input type="button" class="btnConfirmMessageEdit" value="Save Message" onclick="onBtnConfirmMessageEditClick(this)">';
+	div.appendChild(d);
+}
+
+async function onBtnConfirmThreadStartClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let name = pp.childNodes[1].childNodes[1].value;
+	if (name.length < 1) {
+		console.error(err.NameIsNotSet);
+		return;
+	}
+	let parent = Number(pp.childNodes[2].childNodes[1].value);
+	if (parent < 1) {
+		console.error(err.ParentIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await addThread(parent, name);
+	if (resp == null) {
+		return;
+	}
+	let threadId = resp.result.threadId;
+	disableParentForm(btn, pp, false);
+	let txt = "A thread was created. ID=" + threadId.toString() + ".";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
+async function onBtnConfirmMessageCreationClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let text = pp.childNodes[1].childNodes[1].value;
+	if (text.length < 1) {
+		console.error(err.TextIsNotSet);
+		return;
+	}
+	let parent = Number(pp.childNodes[2].childNodes[1].value);
+	if (parent < 1) {
+		console.error(err.ParentIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await addMessage(parent, text);
+	if (resp == null) {
+		return;
+	}
+	let messageId = resp.result.messageId;
+	disableParentForm(btn, pp, false);
+	let txt = "A message was created. ID=" + messageId.toString() + ".";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
+async function onBtnConfirmMessageEditClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let newText = pp.childNodes[1].childNodes[1].value;
+	if (newText.length < 1) {
+		console.error(err.TextIsNotSet);
+		return;
+	}
+	let messageId = Number(pp.childNodes[2].childNodes[1].value);
+	if (messageId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await changeMessageText(messageId, newText);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Message text was changed.";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
+async function addThread(parent, name) {
+	let params = new Parameters_AddThread(parent, name);
+	let reqData = new ApiRequest(actionName.AddThread, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function addMessage(parent, text) {
+	let params = new Parameters_AddMessage(parent, text);
+	let reqData = new ApiRequest(actionName.AddMessage, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function changeMessageText(messageId, text) {
+	let params = new Parameters_ChangeMessageText(messageId, text);
+	let reqData = new ApiRequest(actionName.ChangeMessageText, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+function disableParentForm(btn, pp, ignoreButton) {
+	if (!ignoreButton) {
+		btn.disabled = true;
+	}
+
+	let el;
+	for (i = 0; i < pp.childNodes.length; i++) {
+		let ch = pp.childNodes[i];
+		for (j = 0; j < ch.childNodes.length; j++) {
+			el = ch.childNodes[j];
+
+			if (el !== btn) {
+				el.disabled = true;
+			} else {
+				if (!ignoreButton) {
+					el.disabled = true;
+				}
+			}
+		}
+	}
+}
+
+function showActionSuccess(btn, txt) {
+	let ppp = btn.parentNode.parentNode.parentNode;
+	let d = document.createElement("DIV");
+	d.className = "actionSuccess";
+	d.textContent = txt;
+	ppp.appendChild(d);
+}
+
+async function reloadPage(wait) {
+	if (wait) {
+		await sleep(redirectDelay * 1000);
+	}
+	location.reload();
+}
+
+function canMessageBeEdited(message, userParams) {
+	if (userParams.isModerator) {
+		return true;
+	}
+
+	if (!userParams.isWriter) {
+		return false;
+	}
+
+	let messageCreator = message.creator.userId;
+	if (messageCreator !== userParams.userId) {
+		return false;
+	}
+
+	let messageToC = new Date(message.creator.time);
+	let touchTime = messageToC;
+	if ((message.editor.time != null)) {
+		let messageToE = new Date(message.editor.time);
+		if (messageToE > messageToC) {
+			touchTime = messageToE;
+		}
+	}
+
+	let settings = getSettings();
+	let timeNow = Date.now();
+	let timePassed = (timeNow - touchTime) / 1000;
+	if (timePassed < settings.MessageEditTime) {
+		return true;
+	}
+
+	return false;
+}
+
+function escapeHtml(text) {
+	let div = document.createElement('div');
+	div.textContent = text;
+	return div.innerHTML;
+}
+
+function processMessageText(msgText) {
+	let txt = escapeHtml(msgText);
+	txt = txt.replaceAll("\r\n", '<br>');
+	txt = txt.replaceAll("\n", '<br>');
+	txt = txt.replaceAll("\r", '<br>');
 	return txt;
 }

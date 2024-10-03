@@ -16,10 +16,12 @@ window.onpageshow = function (event) {
 settingsPath = "settings.json";
 rootPath = "/";
 adminPage = "/admin";
-redirectDelay = 0;
+redirectDelay = 3;
 
 // Names of Query Parameters.
-qpPrefix = "?"
+qp = {
+	Prefix: "?",
+}
 
 qpn = {
 	Id: "id",
@@ -479,31 +481,31 @@ async function fetchSettings() {
 }
 
 async function onGoRegApprovalClick(btn) {
-	await redirectToSubPage(true, qpPrefix + qpn.RegistrationsReadyForApproval);
+	await redirectToSubPage(false, qp.Prefix + qpn.RegistrationsReadyForApproval);
 }
 
 async function onGoLoggedUsersClick(btn) {
-	await redirectToSubPage(true, qpPrefix + qpn.ListOfLoggedUsers);
+	await redirectToSubPage(false, qp.Prefix + qpn.ListOfLoggedUsers);
 }
 
 async function onGoListAllUsersClick(btn) {
-	await redirectToSubPage(true, qpPrefix + qpn.ListOfUsers);
+	await redirectToSubPage(false, qp.Prefix + qpn.ListOfUsers);
 }
 
 async function onGoManageSectionsClick(btn) {
-	await redirectToSubPage(true, qpPrefix + qpn.ManagerOfSections);
+	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfSections);
 }
 
 async function onGoManageForumsClick(btn) {
-	await redirectToSubPage(true, qpPrefix + qpn.ManagerOfForums);
+	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfForums);
 }
 
 async function onGoManageThreadsClick(btn) {
-	await redirectToSubPage(true, qpPrefix + qpn.ManagerOfThreads);
+	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfThreads);
 }
 
 async function onGoManageMessagesClick(btn) {
-	await redirectToSubPage(true, qpPrefix + qpn.ManagerOfMessages);
+	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfMessages);
 }
 
 async function redirectToSubPage(wait, qp) {
@@ -688,7 +690,7 @@ function addBtnBack(el) {
 	btn.className = "btnBack";
 	btn.value = "Go Back";
 	btn.addEventListener("click", async (e) => {
-		await redirectToMainMenu(true);
+		await redirectToMainMenu(false);
 	})
 	el.appendChild(btn);
 }
@@ -1160,7 +1162,7 @@ async function onBtnLogOutUPClick(userId) {
 	if (!resp.result.ok) {
 		return;
 	}
-	reloadPage();
+	await reloadPage(false);
 }
 
 async function onBtnEnableRoleUPClick(role, userId) {
@@ -1192,7 +1194,7 @@ async function onBtnEnableRoleUPClick(role, userId) {
 	if (!resp.result.ok) {
 		return;
 	}
-	reloadPage();
+	await reloadPage(false);
 }
 
 async function onBtnDisableRoleUPClick(role, userId) {
@@ -1224,7 +1226,7 @@ async function onBtnDisableRoleUPClick(role, userId) {
 	if (!resp.result.ok) {
 		return;
 	}
-	reloadPage();
+	await reloadPage(false);
 }
 
 async function approveAndRegisterUser(email) {
@@ -1332,10 +1334,13 @@ async function getUserSession(userId) {
 }
 
 function composeUserPageLink(userId) {
-	return qpPrefix + qpn.UserPage + "&" + qpn.Id + "=" + userId;
+	return qp.Prefix + qpn.UserPage + "&" + qpn.Id + "=" + userId;
 }
 
-function reloadPage() {
+async function reloadPage(wait) {
+	if (wait) {
+		await sleep(redirectDelay * 1000);
+	}
 	location.reload();
 }
 
@@ -1766,6 +1771,7 @@ async function onBtnCreateRootSectionClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "A root section was created. ID=" + sectionId.toString() + ".";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnCreateNormalSectionClick(btn) {
@@ -1791,6 +1797,7 @@ async function onBtnCreateNormalSectionClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "A normal section was created. ID=" + sectionId.toString() + ".";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnChangeSectionNameClick(btn) {
@@ -1818,6 +1825,7 @@ async function onBtnChangeSectionNameClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Section name was changed.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnChangeSectionParentClick(btn) {
@@ -1845,6 +1853,7 @@ async function onBtnChangeSectionParentClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Section was moved to a new parent.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnMoveSectionUpClick(btn) {
@@ -1867,6 +1876,7 @@ async function onBtnMoveSectionUpClick(btn) {
 	disableParentForm(btn, pp, true);
 	let txt = "Section was moved up.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnMoveSectionDownClick(btn) {
@@ -1889,6 +1899,7 @@ async function onBtnMoveSectionDownClick(btn) {
 	disableParentForm(btn, pp, true);
 	let txt = "Section was moved down.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnDeleteSectionClick(btn) {
@@ -1911,6 +1922,7 @@ async function onBtnDeleteSectionClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Section was deleted.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 function onForumManagerBtnProceedClick(btn) {
@@ -2022,6 +2034,7 @@ async function onBtnCreateForumClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "A forum was created. ID=" + forumId.toString() + ".";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnChangeForumNameClick(btn) {
@@ -2049,6 +2062,7 @@ async function onBtnChangeForumNameClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Forum name was changed.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnChangeForumParentClick(btn) {
@@ -2076,6 +2090,7 @@ async function onBtnChangeForumParentClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Forum was moved to a new parent.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnMoveForumUpClick(btn) {
@@ -2098,6 +2113,7 @@ async function onBtnMoveForumUpClick(btn) {
 	disableParentForm(btn, pp, true);
 	let txt = "Forum was moved up.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnMoveForumDownClick(btn) {
@@ -2120,6 +2136,7 @@ async function onBtnMoveForumDownClick(btn) {
 	disableParentForm(btn, pp, true);
 	let txt = "Forum was moved down.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnDeleteForumClick(btn) {
@@ -2142,6 +2159,7 @@ async function onBtnDeleteForumClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Forum was deleted.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 function onThreadManagerBtnProceedClick(btn) {
@@ -2253,6 +2271,7 @@ async function onBtnCreateThreadClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "A thread was created. ID=" + threadId.toString() + ".";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnChangeThreadNameClick(btn) {
@@ -2280,6 +2299,7 @@ async function onBtnChangeThreadNameClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Thread name was changed.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnChangeThreadParentClick(btn) {
@@ -2307,6 +2327,7 @@ async function onBtnChangeThreadParentClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Thread was moved to a new parent.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnMoveThreadUpClick(btn) {
@@ -2329,6 +2350,7 @@ async function onBtnMoveThreadUpClick(btn) {
 	disableParentForm(btn, pp, true);
 	let txt = "Thread was moved up.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnMoveThreadDownClick(btn) {
@@ -2351,6 +2373,7 @@ async function onBtnMoveThreadDownClick(btn) {
 	disableParentForm(btn, pp, true);
 	let txt = "Thread was moved down.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnDeleteThreadClick(btn) {
@@ -2373,6 +2396,7 @@ async function onBtnDeleteThreadClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Thread was deleted.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 function onMessageManagerBtnProceedClick(btn) {
@@ -2472,6 +2496,7 @@ async function onBtnCreateMessageClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "A message was created. ID=" + messageId.toString() + ".";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnChangeMessageTextClick(btn) {
@@ -2499,6 +2524,7 @@ async function onBtnChangeMessageTextClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Message text was changed.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnChangeMessageParentClick(btn) {
@@ -2526,6 +2552,7 @@ async function onBtnChangeMessageParentClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Message was moved to a new parent.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 async function onBtnDeleteMessageClick(btn) {
@@ -2548,6 +2575,7 @@ async function onBtnDeleteMessageClick(btn) {
 	disableParentForm(btn, pp, false);
 	let txt = "Message was deleted.";
 	showActionSuccess(btn, txt);
+	await reloadPage(true);
 }
 
 function composeUrlForAdminPage(func, page) {
