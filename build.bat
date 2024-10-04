@@ -11,6 +11,7 @@ SET config_file_ext=json
 SET acm_folder=ACM
 SET gw_folder=GWM
 SET mm_folder=MM
+SET nm_folder=NM
 SET jwt_folder=JWT
 SET captcha_folder=RCS
 SET captcha_images_folder=rcs_img
@@ -49,6 +50,8 @@ COPY "%cert_dir%\%acm_folder%" "%build_dir%\%cert_dir%\%acm_folder%\"
 MKDIR "%build_dir%\%sql_dir%\%acm_folder%"
 MKDIR "%build_dir%\%sql_dir%\%acm_folder%\%sql_init_dir%"
 COPY "%sql_dir%\%acm_folder%\%sql_init_dir%" "%build_dir%\%sql_dir%\%acm_folder%\%sql_init_dir%\"
+MKDIR "%build_dir%\%cert_dir%\%jwt_folder%"
+COPY "%cert_dir%\%jwt_folder%" "%build_dir%\%cert_dir%\%jwt_folder%\"
 
 :: 2. Gateway Module.
 ECHO 2. Gateway Module
@@ -83,13 +86,28 @@ CD ".\..\..\"
 COPY "%config_dir%\%mm_folder%.%config_file_ext%" "%build_dir%\"
 MKDIR "%build_dir%\%cert_dir%\%mm_folder%"
 COPY "%cert_dir%\%mm_folder%" "%build_dir%\%cert_dir%\%mm_folder%\"
-MKDIR "%build_dir%\%cert_dir%\%jwt_folder%"
-COPY "%cert_dir%\%jwt_folder%" "%build_dir%\%cert_dir%\%jwt_folder%\"
 MKDIR "%build_dir%\%sql_dir%\%mm_folder%\%sql_init_dir%"
 COPY "%sql_dir%\%mm_folder%\%sql_init_dir%" "%build_dir%\%sql_dir%\%mm_folder%\%sql_init_dir%\"
 
-:: 4. Captcha Module.
-ECHO 4. Captcha Module
+:: 4. Notification Module.
+ECHO 4. Notification Module
+
+:: Build the Notification module (service).
+CD "%exe_dir%\%nm_folder%"
+go build
+IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
+MOVE "%nm_folder%.exe" ".\..\..\%build_dir%\"
+CD ".\..\..\"
+
+:: Copy related files for the Notification module (service).
+COPY "%config_dir%\%nm_folder%.%config_file_ext%" "%build_dir%\"
+MKDIR "%build_dir%\%cert_dir%\%nm_folder%"
+COPY "%cert_dir%\%nm_folder%" "%build_dir%\%cert_dir%\%nm_folder%\"
+MKDIR "%build_dir%\%sql_dir%\%nm_folder%\%sql_init_dir%"
+COPY "%sql_dir%\%nm_folder%\%sql_init_dir%" "%build_dir%\%sql_dir%\%nm_folder%\%sql_init_dir%\"
+
+:: 5. Captcha Module.
+ECHO 5. Captcha Module
 
 :: Build the Captcha module (service).
 CD "%exe_dir%\%captcha_folder%"
@@ -102,8 +120,8 @@ CD ".\..\..\"
 COPY "%config_dir%\%captcha_folder%.%config_file_ext%" "%build_dir%\"
 MKDIR "%build_dir%\%captcha_images_folder%"
 
-:: 5. SMTP Module.
-ECHO 5. SMTP Module
+:: 6. SMTP Module.
+ECHO 6. SMTP Module
 
 :: Build the SMTP module (service).
 CD "%exe_dir%\%smtp_folder%"
@@ -115,19 +133,19 @@ CD ".\..\..\"
 :: Copy related files for the SMTP module (service).
 COPY "%config_dir%\%smtp_folder%.%config_file_ext%" "%build_dir%\"
 
-:: 6. Auxiliary tools.
-ECHO 6. Auxiliary tools
+:: 7. Auxiliary tools.
+ECHO 7. Auxiliary tools
 
-:: 6.1. Argon tool.
-ECHO 6.1. Argon tool
+:: 7.1. Argon tool.
+ECHO 7.1. Argon tool
 CD "%tool_folder%\%argon2_tool_folder%"
 go build
 IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
 MOVE "%argon2_tool_folder%.exe" ".\..\..\%build_dir%\%tool_folder%\"
 CD ".\..\..\"
 
-:: 6.2. JWT tool.
-ECHO 6.2. JWT tool
+:: 7.2. JWT tool.
+ECHO 7.2. JWT tool
 CD "%tool_folder%\%jwt_tool_folder%"
 go build
 IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%

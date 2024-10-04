@@ -692,9 +692,9 @@ func (dbo *DatabaseObject) RejectRegistrationRequest(id uint) (err error) {
 	return nil
 }
 
-func (dbo *DatabaseObject) SaveIncident(incidentType am.IncidentType, email string, userIPAB net.IP) (err error) {
+func (dbo *DatabaseObject) SaveIncident(module cm.Module, incidentType cm.IncidentType, email string, userIPAB net.IP) (err error) {
 	var result sql.Result
-	result, err = dbo.PreparedStatement(DbPsid_SaveIncident).Exec(incidentType, email, userIPAB)
+	result, err = dbo.PreparedStatement(DbPsid_SaveIncident).Exec(module, incidentType, email, userIPAB)
 	if err != nil {
 		return err
 	}
@@ -712,9 +712,9 @@ func (dbo *DatabaseObject) SaveIncident(incidentType am.IncidentType, email stri
 	return nil
 }
 
-func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(incidentType am.IncidentType, email string) (err error) {
+func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module cm.Module, incidentType cm.IncidentType, email string) (err error) {
 	var result sql.Result
-	result, err = dbo.PreparedStatement(DbPsid_SaveIncidentWithoutUserIPA).Exec(incidentType, email)
+	result, err = dbo.PreparedStatement(DbPsid_SaveIncidentWithoutUserIPA).Exec(module, incidentType, email)
 	if err != nil {
 		return err
 	}

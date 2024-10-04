@@ -1,9 +1,14 @@
 package app
 
+import (
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+)
+
 const (
 	ServiceName_ACM  = "Access Control Module"
 	ServiceName_GWM  = "Gateway Module"
 	ServiceName_MM   = "Message Module"
+	ServiceName_NM   = "Notification Module"
 	ServiceName_RCS  = "Captcha Module"
 	ServiceName_SMTP = "SMTP Module"
 )
@@ -12,6 +17,7 @@ const (
 	ConfigurationFilePathDefault_ACM  = "ACM.json"
 	ConfigurationFilePathDefault_GWM  = "GWM.json"
 	ConfigurationFilePathDefault_MM   = "MM.json"
+	ConfigurationFilePathDefault_NM   = "NM.json"
 	ConfigurationFilePathDefault_RCS  = "RCS.json"
 	ConfigurationFilePathDefault_SMTP = "SMTP.json"
 )
@@ -20,14 +26,16 @@ const (
 	ServiceShortName_ACM  = "ACM"
 	ServiceShortName_GWM  = "GWM"
 	ServiceShortName_MM   = "MM"
+	ServiceShortName_NM   = "NM"
 	ServiceShortName_RCS  = "RCS"
 	ServiceShortName_SMTP = "SMTP"
 )
 
 const (
-	ModuleId_ACM  = 1
-	ModuleId_GWM  = 2
-	ModuleId_MM   = 3
-	ModuleId_RCS  = 4
-	ModuleId_SMTP = 5
+	ModuleId_ACM  = cm.Module_ACM
+	ModuleId_GWM  = cm.Module_GWM
+	ModuleId_MM   = cm.Module_MM
+	ModuleId_NM   = cm.Module_NM
+	ModuleId_RCS  = cm.Module_RCS
+	ModuleId_SMTP = cm.Module_SMTP
 )

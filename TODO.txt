@@ -1,0 +1,8 @@
+* NM
+	- Limit new notifications
+	- Delete old read notifications
+	- Mecanism for system requests
+* Message Hash Sum Check
+* Message Editor
+* SQL Indices
+* Cache (?)

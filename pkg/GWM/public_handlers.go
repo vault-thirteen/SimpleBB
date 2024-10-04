@@ -75,6 +75,15 @@ const (
 	ApiFunctionName_ListForumAndThreads         = "listForumAndThreads"
 	ApiFunctionName_ListForumAndThreadsOnPage   = "listForumAndThreadsOnPage"
 	ApiFunctionName_ListSectionsAndForums       = "listSectionsAndForums"
+
+	// NM.
+	ApiFunctionName_AddNotification          = "addNotification"
+	ApiFunctionName_GetNotification          = "getNotification"
+	ApiFunctionName_GetAllNotifications      = "getAllNotifications"
+	ApiFunctionName_GetUnreadNotifications   = "getUnreadNotifications"
+	ApiFunctionName_CountUnreadNotifications = "countUnreadNotifications"
+	ApiFunctionName_MarkNotificationAsRead   = "markNotificationAsRead"
+	ApiFunctionName_DeleteNotification       = "deleteNotification"
 )
 
 func (srv *Server) handlePublicSettings(rw http.ResponseWriter, req *http.Request) {

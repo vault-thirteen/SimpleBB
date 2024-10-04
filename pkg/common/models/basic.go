@@ -39,3 +39,18 @@ func NewValueFromScannableSource[T any](src IScannable) (*T, error) {
 
 	return &value, nil
 }
+
+func NewNonNullValueFromScannableSource[T any](src IScannable) (T, error) {
+	var value T
+
+	err := src.Scan(&value)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return value, nil
+		} else {
+			return value, err
+		}
+	}
+
+	return value, nil
+}

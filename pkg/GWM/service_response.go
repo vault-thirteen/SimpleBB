@@ -22,7 +22,7 @@ func (srv *Server) processInternalServerError(rw http.ResponseWriter, err error)
 
 // processRpcError finds an appropriate HTTP status code and message text for
 // an RPC error and responds via HTTP.
-func (srv *Server) processRpcError(moduleId byte, re *jrm1.RpcError, rw http.ResponseWriter) {
+func (srv *Server) processRpcError(moduleId cm.Module, re *jrm1.RpcError, rw http.ResponseWriter) {
 	var httpStatusCode int
 	var err error
 	httpStatusCode, err = srv.getHttpStatusCodeByRpcErrorCode(moduleId, re.Code.Int())

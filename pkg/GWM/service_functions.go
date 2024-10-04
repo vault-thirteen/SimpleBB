@@ -11,6 +11,8 @@ import (
 	api "github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
 	mc "github.com/vault-thirteen/SimpleBB/pkg/MM/client"
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
+	nc "github.com/vault-thirteen/SimpleBB/pkg/NM/client"
+	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
@@ -1739,6 +1741,211 @@ func (srv *Server) ListSectionsAndForums(ar *api.Request, _ *http.Request, hrw h
 	}
 	if re != nil {
 		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+// NM.
+
+func (srv *Server) AddNotification(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params nm.AddNotificationParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(nm.AddNotificationResult)
+	var re *jrm1.RpcError
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncAddNotification, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_NM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) GetNotification(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params nm.GetNotificationParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(nm.GetNotificationResult)
+	var re *jrm1.RpcError
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncGetNotification, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_NM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) GetAllNotifications(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params nm.GetAllNotificationsParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(nm.GetAllNotificationsResult)
+	var re *jrm1.RpcError
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncGetAllNotifications, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_NM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) GetUnreadNotifications(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params nm.GetUnreadNotificationsParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(nm.GetUnreadNotificationsResult)
+	var re *jrm1.RpcError
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncGetUnreadNotifications, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_NM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) CountUnreadNotifications(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params nm.CountUnreadNotificationsParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(nm.CountUnreadNotificationsResult)
+	var re *jrm1.RpcError
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncCountUnreadNotifications, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_NM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) MarkNotificationAsRead(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params nm.MarkNotificationAsReadParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(nm.MarkNotificationAsReadResult)
+	var re *jrm1.RpcError
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncMarkNotificationAsRead, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_NM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) DeleteNotification(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params nm.DeleteNotificationParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(nm.DeleteNotificationResult)
+	var re *jrm1.RpcError
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncDeleteNotification, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_NM, re, hrw)
 		return
 	}
 

@@ -17,6 +17,7 @@ import (
 	sc "github.com/vault-thirteen/SimpleBB/pkg/SMTP/client"
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SMTP/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 	num "github.com/vault-thirteen/auxie/number"
@@ -69,7 +70,7 @@ func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
 func (srv *Server) mustBeAuthUserIPA(auth *cmr.Auth) (re *jrm1.RpcError) {
 	if (auth == nil) ||
 		(len(auth.UserIPA) == 0) {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", nil)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", nil)
 		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
 
@@ -93,7 +94,7 @@ func (srv *Server) mustBeNoAuthToken(auth *cmr.Auth) (re *jrm1.RpcError) {
 	}
 
 	if len(auth.Token) > 0 {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
 		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -111,19 +112,19 @@ func (srv *Server) mustBeAnAuthToken(auth *cmr.Auth) (ud *am.UserData, re *jrm1.
 	}
 
 	if len(auth.Token) == 0 {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
 
 	var err error
 	ud, err = srv.getUserDataByAuthToken(auth.Token)
 	if err != nil {
-		srv.incidentManager.ReportIncident(am.IncidentType_FakeToken, "", auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_FakeToken, "", auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
 
 	if bytes.Compare(auth.UserIPAB, ud.Session.UserIPAB) != 0 {
-		srv.incidentManager.ReportIncident(am.IncidentType_FakeIPA, "", auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_FakeIPA, "", auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
 

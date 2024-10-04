@@ -22,6 +22,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
 	gs "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
 	m "github.com/vault-thirteen/SimpleBB/pkg/MM"
+	n "github.com/vault-thirteen/SimpleBB/pkg/NM"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
@@ -69,12 +70,14 @@ type Server struct {
 	// Clients for external services.
 	acmServiceClient *cc.Client
 	mmServiceClient  *cc.Client
+	nmServiceClient  *cc.Client
 	captchaProxy     *httputil.ReverseProxy
 
 	// Mapping of HTTP status codes by RPC error code for various services.
 	commonHttpStatusCodesByRpcErrorCode map[int]int
 	acmHttpStatusCodesByRpcErrorCode    map[int]int
 	mmHttpStatusCodesByRpcErrorCode     map[int]int
+	nmHttpStatusCodesByRpcErrorCode     map[int]int
 
 	// Public settings.
 	publicSettingsFileData []byte // Cached file contents in JSON format.
@@ -446,6 +449,7 @@ func (srv *Server) initStatusCodeMapper() (err error) {
 	srv.commonHttpStatusCodesByRpcErrorCode = c.GetMapOfHttpStatusCodesByRpcErrorCodes()
 	srv.acmHttpStatusCodesByRpcErrorCode = a.GetMapOfHttpStatusCodesByRpcErrorCodes()
 	srv.mmHttpStatusCodesByRpcErrorCode = m.GetMapOfHttpStatusCodesByRpcErrorCodes()
+	srv.nmHttpStatusCodesByRpcErrorCode = n.GetMapOfHttpStatusCodesByRpcErrorCodes()
 
 	return nil
 }
@@ -559,6 +563,20 @@ func (srv *Server) createClientsForExternalServices() (err error) {
 		return err
 	}
 
+	// NM module.
+	var nmSCS = &cset.ServiceClientSettings{
+		Schema:                      srv.settings.NmSettings.Schema,
+		Host:                        srv.settings.NmSettings.Host,
+		Port:                        srv.settings.NmSettings.Port,
+		Path:                        srv.settings.NmSettings.Path,
+		EnableSelfSignedCertificate: srv.settings.NmSettings.EnableSelfSignedCertificate,
+	}
+
+	srv.nmServiceClient, err = cc.NewClientWithSCS(nmSCS, app.ServiceShortName_NM)
+	if err != nil {
+		return err
+	}
+
 	// Proxy for captcha images.
 	targetAddr := cc.UrlSchemeHttp + "://" + net.JoinHostPort(srv.settings.SystemSettings.CaptchaImgServerHost, strconv.FormatUint(uint64(srv.settings.SystemSettings.CaptchaImgServerPort), 10))
 	var targetUrl *url.URL
@@ -581,6 +599,12 @@ func (srv *Server) pingClientsForExternalServices() (err error) {
 
 	// MM module.
 	err = srv.mmServiceClient.Ping(true)
+	if err != nil {
+		return err
+	}
+
+	// NM module.
+	err = srv.nmServiceClient.Ping(true)
 	if err != nil {
 		return err
 	}
@@ -645,6 +669,15 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_ListForumAndThreads,
 		ApiFunctionName_ListForumAndThreadsOnPage,
 		ApiFunctionName_ListSectionsAndForums,
+
+		// NM.
+		ApiFunctionName_AddNotification,
+		ApiFunctionName_GetNotification,
+		ApiFunctionName_GetAllNotifications,
+		ApiFunctionName_GetUnreadNotifications,
+		ApiFunctionName_CountUnreadNotifications,
+		ApiFunctionName_MarkNotificationAsRead,
+		ApiFunctionName_DeleteNotification,
 	}
 
 	srv.apiHandlers = map[string]api.RequestHandler{
@@ -704,6 +737,15 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_ListForumAndThreads:         srv.ListForumAndThreads,
 		ApiFunctionName_ListForumAndThreadsOnPage:   srv.ListForumAndThreadsOnPage,
 		ApiFunctionName_ListSectionsAndForums:       srv.ListSectionsAndForums,
+
+		// NM.
+		ApiFunctionName_AddNotification:          srv.AddNotification,
+		ApiFunctionName_GetNotification:          srv.GetNotification,
+		ApiFunctionName_GetAllNotifications:      srv.GetAllNotifications,
+		ApiFunctionName_GetUnreadNotifications:   srv.GetUnreadNotifications,
+		ApiFunctionName_CountUnreadNotifications: srv.CountUnreadNotifications,
+		ApiFunctionName_MarkNotificationAsRead:   srv.MarkNotificationAsRead,
+		ApiFunctionName_DeleteNotification:       srv.DeleteNotification,
 	}
 
 	return nil

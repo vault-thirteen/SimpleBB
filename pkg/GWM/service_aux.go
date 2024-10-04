@@ -8,6 +8,7 @@ import (
 
 	s "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 	hh "github.com/vault-thirteen/auxie/http-helper"
 )
@@ -70,7 +71,7 @@ func (srv *Server) getClientIPAddress(req *http.Request) (cipa string, err error
 	}
 }
 
-func (srv *Server) getHttpStatusCodeByRpcErrorCode(moduleId byte, rpcErrorCode int) (httpStatusCode int, err error) {
+func (srv *Server) getHttpStatusCodeByRpcErrorCode(moduleId cm.Module, rpcErrorCode int) (httpStatusCode int, err error) {
 	var ok bool
 
 	httpStatusCode, ok = srv.commonHttpStatusCodesByRpcErrorCode[rpcErrorCode]
@@ -87,6 +88,12 @@ func (srv *Server) getHttpStatusCodeByRpcErrorCode(moduleId byte, rpcErrorCode i
 
 	case app.ModuleId_MM:
 		httpStatusCode, ok = srv.mmHttpStatusCodesByRpcErrorCode[rpcErrorCode]
+		if ok {
+			return httpStatusCode, nil
+		}
+
+	case app.ModuleId_NM:
+		httpStatusCode, ok = srv.nmHttpStatusCodesByRpcErrorCode[rpcErrorCode]
 		if ok {
 			return httpStatusCode, nil
 		}

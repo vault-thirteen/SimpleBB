@@ -8,7 +8,7 @@
   "db": {
     "driverName": "mysql",
     "net": "tcp",
-    "host": "192.168.0.1",
+    "host": "localhost",
     "port": 3306,
     "dbName": "test",
     "user": "test",

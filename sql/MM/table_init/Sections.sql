@@ -14,4 +14,5 @@ CREATE TABLE IF NOT EXISTS Sections
 
     PRIMARY KEY (Id),
     INDEX idx_Parent USING BTREE (Parent)
+    /* TODO: Indices */
 );

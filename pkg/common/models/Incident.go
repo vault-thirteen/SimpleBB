@@ -13,8 +13,9 @@ const (
 
 type Incident struct {
 	Id      uint
-	Time    time.Time
+	Module  byte
 	Type    IncidentType
+	Time    time.Time
 	Email   string
 	UserIPA net.IP
 }

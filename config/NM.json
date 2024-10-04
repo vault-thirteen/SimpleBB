@@ -1,9 +1,9 @@
 {
   "https": {
     "host": "localhost",
-    "port": 2002,
-    "certFile": "cert\\MM\\server-cert.pem",
-    "keyFile": "cert\\MM\\server-key.pem"
+    "port": 2007,
+    "certFile": "cert\\NM\\server-cert.pem",
+    "keyFile": "cert\\NM\\server-key.pem"
   },
   "db": {
     "driverName": "mysql",
@@ -21,17 +21,19 @@
     },
     "tableNamePrefix": "v1",
     "tablesToInit": [
-      "Sections",
-      "Forums",
-      "Threads",
-      "Messages"
+      "Incidents",
+      "Notifications"
     ],
-    "tableInitScriptsFolder": "sql\\MM\\table_init"
+    "tableInitScriptsFolder": "sql\\NM\\table_init"
   },
   "system": {
-    "messageEditTime": 300,
-    "pageSize": 20,
-    "newThreadsAtTop": true,
+    "notificationTtl": 604800,
+    "notificationCountLimit": 32,
+    "isTableOfIncidentsUsed": true,
+    "blockTimePerIncident": {
+      "illegalAccessAttempt": 60,
+      "readingNotificationOfOtherUsers": 60
+    },
     "isDebugMode": false
   },
   "acm": {
@@ -40,5 +42,11 @@
     "port": 2001,
     "path": "/",
     "enableSelfSignedCertificate": true
+  },
+  "gwm": {
+    "schema": "http",
+    "host": "localhost",
+    "port": 2006,
+    "path": "/"
   }
 }

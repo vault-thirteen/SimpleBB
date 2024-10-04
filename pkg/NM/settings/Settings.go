@@ -11,15 +11,6 @@ import (
 	ver "github.com/vault-thirteen/auxie/Versioneer"
 )
 
-const (
-	ClientIPAddressSource_Direct       = 1
-	ClientIPAddressSource_CustomHeader = 2
-)
-
-const (
-	ErrUnknownClientIPAddressSource = "unknown client IP address source"
-)
-
 // Settings is Server's settings.
 type Settings struct {
 	// Path to the file with these settings.
@@ -28,15 +19,13 @@ type Settings struct {
 	// Program versioning information.
 	VersionInfo *ver.Versioneer `json:"-"`
 
-	IntHttpSettings  `json:"intHttp"`
-	ExtHttpsSettings `json:"extHttps"`
-	DbSettings       `json:"db"`
-	SystemSettings   `json:"system"`
+	HttpsSettings  `json:"https"`
+	DbSettings     `json:"db"`
+	SystemSettings `json:"system"`
 
 	// External services.
 	AcmSettings cs.ServiceClientSettings `json:"acm"`
-	MmSettings  cs.ServiceClientSettings `json:"mm"`
-	NmSettings  cs.ServiceClientSettings `json:"nm"`
+	GwmSettings cs.ServiceClientSettings `json:"gwm"`
 }
 
 func NewSettingsFromFile(filePath string, versionInfo *ver.Versioneer) (stn *Settings, err error) {
@@ -77,14 +66,8 @@ func (stn *Settings) Check() (err error) {
 		return err
 	}
 
-	// Int. HTTP.
-	err = stn.IntHttpSettings.Check()
-	if err != nil {
-		return err
-	}
-
-	// Ext. HTTPS.
-	err = stn.ExtHttpsSettings.Check()
+	// HTTPS.
+	err = stn.HttpsSettings.Check()
 	if err != nil {
 		return err
 	}
@@ -107,14 +90,9 @@ func (stn *Settings) Check() (err error) {
 		return cs.DetailedScsError(app.ServiceShortName_ACM, err)
 	}
 
-	err = stn.MmSettings.Check()
+	err = stn.GwmSettings.Check()
 	if err != nil {
-		return cs.DetailedScsError(app.ServiceShortName_MM, err)
-	}
-
-	err = stn.NmSettings.Check()
-	if err != nil {
-		return cs.DetailedScsError(app.ServiceShortName_NM, err)
+		return cs.DetailedScsError(app.ServiceShortName_GWM, err)
 	}
 
 	return nil

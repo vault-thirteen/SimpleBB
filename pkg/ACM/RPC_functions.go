@@ -114,7 +114,7 @@ func (srv *Server) registerUserStep2(p *am.RegisterUserParams) (result *am.Regis
 
 	if !ok {
 		// Verification code can not be guessed.
-		srv.incidentManager.ReportIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
 
 		// Delete the pre-registered user.
 		err = srv.dbo.DeletePreRegUserIfNotApprovedByEmail(p.Email)
@@ -198,7 +198,7 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 	}
 
 	if !ok {
-		srv.incidentManager.ReportIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_VerificationCodeIsWrong, RpcErrorMsg_VerificationCodeIsWrong, nil)
 	}
 
@@ -249,7 +249,7 @@ func (srv *Server) getListOfRegistrationsReadyForApproval(p *am.GetListOfRegistr
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -284,7 +284,7 @@ func (srv *Server) rejectRegistrationRequest(p *am.RejectRegistrationRequestPara
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -308,7 +308,7 @@ func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (r
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, p.Email, p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -390,7 +390,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	areUserSessionsPresent := sessionsCount > 0
 	if areUserSessionsPresent {
-		srv.incidentManager.ReportIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -408,7 +408,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	areUserPreSessionsPresent := preSessionsCount > 0
 	if areUserPreSessionsPresent {
-		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -513,7 +513,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	areUserSessionsPresent := sessionsCount > 0
 	if areUserSessionsPresent {
-		srv.incidentManager.ReportIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -530,7 +530,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if preSessionsCount != 1 {
-		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -554,7 +554,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 	if preSession == nil {
 		// Request Id code can not be guessed.
-		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -566,7 +566,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	// Check the Request ID (indirectly).
 	if preSession.UserId != userId {
-		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -578,7 +578,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	// Check the IP address.
 	if !p.Auth.UserIPAB.Equal(preSession.UserIPAB) {
-		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -602,7 +602,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 		}
 
 		if !ccr.IsSuccess {
-			srv.incidentManager.ReportIncident(am.IncidentType_CaptchaAnswerMismatch, p.Email, p.Auth.UserIPAB)
+			srv.incidentManager.ReportIncident(cm.IncidentType_CaptchaAnswerMismatch, p.Email, p.Auth.UserIPAB)
 
 			err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 			if err != nil {
@@ -628,7 +628,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if !ok {
-		srv.incidentManager.ReportIncident(am.IncidentType_PasswordMismatch, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PasswordMismatch, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -736,7 +736,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	areUserSessionsPresent := sessionsCount > 0
 	if areUserSessionsPresent {
-		srv.incidentManager.ReportIncident(am.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_DoubleLogInAttempt, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -753,7 +753,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	if preSessionsCount != 1 {
-		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -777,7 +777,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 	if preSession == nil {
 		// Request Id code can not be guessed.
-		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -789,7 +789,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	// Check the Request ID (indirectly).
 	if preSession.UserId != userId {
-		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -801,7 +801,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	// Check the IP address.
 	if !p.Auth.UserIPAB.Equal(preSession.UserIPAB) {
-		srv.incidentManager.ReportIncident(am.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PreSessionHacking, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -820,7 +820,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	if !ok {
 		// Verification code can not be guessed.
-		srv.incidentManager.ReportIncident(am.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_VerificationCodeMismatch, p.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadLogInTimeByEmail(p.Email)
 		if err != nil {
@@ -927,7 +927,7 @@ func (srv *Server) logUserOutA(p *am.LogUserOutAParams) (result *am.LogUserOutAR
 
 	// Check permissions.
 	if !callerData.User.IsAdministrator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1019,7 +1019,7 @@ func (srv *Server) getListOfAllUsers(p *am.GetListOfAllUsersParams) (result *am.
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1109,7 +1109,7 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 	}
 
 	if passwordChangesCount > 0 {
-		srv.incidentManager.ReportIncident(am.IncidentType_PasswordChangeHacking, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PasswordChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1216,7 +1216,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 	}
 
 	if passwordChangesCount != 1 {
-		srv.incidentManager.ReportIncident(am.IncidentType_PasswordChangeHacking, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PasswordChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1245,7 +1245,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 	}
 	if pcr == nil {
 		// Request Id code can not be guessed.
-		srv.incidentManager.ReportIncident(am.IncidentType_PasswordChangeHacking, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PasswordChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1257,7 +1257,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 
 	// Check the Request ID (indirectly).
 	if (pcr.UserId != ud.User.Id) || (pcr.RequestId == nil) {
-		srv.incidentManager.ReportIncident(am.IncidentType_PasswordChangeHacking, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PasswordChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1269,7 +1269,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 
 	// Check the IP address.
 	if !p.Auth.UserIPAB.Equal(pcr.UserIPAB) {
-		srv.incidentManager.ReportIncident(am.IncidentType_PasswordChangeHacking, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PasswordChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1293,7 +1293,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 		}
 
 		if !ccr.IsSuccess {
-			srv.incidentManager.ReportIncident(am.IncidentType_CaptchaAnswerMismatch, ud.User.Email, p.Auth.UserIPAB)
+			srv.incidentManager.ReportIncident(cm.IncidentType_CaptchaAnswerMismatch, ud.User.Email, p.Auth.UserIPAB)
 
 			err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 			if err != nil {
@@ -1319,7 +1319,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 	}
 
 	if !ok {
-		srv.incidentManager.ReportIncident(am.IncidentType_PasswordMismatch, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PasswordMismatch, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1344,7 +1344,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 
 	if !ok {
 		// Verification code can not be guessed.
-		srv.incidentManager.ReportIncident(am.IncidentType_VerificationCodeMismatch, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_VerificationCodeMismatch, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1438,7 +1438,7 @@ func (srv *Server) changeEmailStep1(p *am.ChangeEmailParams, ud *am.UserData) (r
 	}
 
 	if emailChangesCount > 0 {
-		srv.incidentManager.ReportIncident(am.IncidentType_EmailChangeHacking, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_EmailChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1557,7 +1557,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 	}
 
 	if emailChangesCount != 1 {
-		srv.incidentManager.ReportIncident(am.IncidentType_EmailChangeHacking, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_EmailChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1589,7 +1589,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 	}
 	if ecr == nil {
 		// Request Id code can not be guessed.
-		srv.incidentManager.ReportIncident(am.IncidentType_EmailChangeHacking, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_EmailChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1601,7 +1601,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 
 	// Check the Request ID (indirectly).
 	if (ecr.UserId != ud.User.Id) || (ecr.RequestId == nil) {
-		srv.incidentManager.ReportIncident(am.IncidentType_EmailChangeHacking, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_EmailChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1613,7 +1613,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 
 	// Check the IP address.
 	if !p.Auth.UserIPAB.Equal(ecr.UserIPAB) {
-		srv.incidentManager.ReportIncident(am.IncidentType_EmailChangeHacking, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_EmailChangeHacking, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1637,7 +1637,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 		}
 
 		if !ccr.IsSuccess {
-			srv.incidentManager.ReportIncident(am.IncidentType_CaptchaAnswerMismatch, ud.User.Email, p.Auth.UserIPAB)
+			srv.incidentManager.ReportIncident(cm.IncidentType_CaptchaAnswerMismatch, ud.User.Email, p.Auth.UserIPAB)
 
 			err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 			if err != nil {
@@ -1663,7 +1663,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 	}
 
 	if !ok {
-		srv.incidentManager.ReportIncident(am.IncidentType_PasswordMismatch, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_PasswordMismatch, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1688,7 +1688,7 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 
 	if !ok {
 		// Verification codes can not be guessed.
-		srv.incidentManager.ReportIncident(am.IncidentType_VerificationCodeMismatch, ud.User.Email, p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_VerificationCodeMismatch, ud.User.Email, p.Auth.UserIPAB)
 
 		err = srv.dbo.UpdateUserLastBadActionTimeById(ud.User.Id)
 		if err != nil {
@@ -1765,7 +1765,7 @@ func (srv *Server) getUserSession(p *am.GetUserSessionParams) (result *am.GetUse
 
 	// Check permissions.
 	if !callerData.User.IsAdministrator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1873,7 +1873,7 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1914,7 +1914,7 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1943,7 +1943,7 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1972,7 +1972,7 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 
 	// Check permissions.
 	if !thisUserData.User.IsAdministrator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -2027,7 +2027,7 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, re *j
 
 	// Check permissions.
 	if !thisUserData.User.IsModerator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -2073,7 +2073,7 @@ func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult,
 
 	// Check permissions.
 	if !thisUserData.User.IsModerator {
-		srv.incidentManager.ReportIncident(am.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 

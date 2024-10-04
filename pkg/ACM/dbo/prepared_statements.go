@@ -3,6 +3,8 @@ package dbo
 import (
 	"database/sql"
 	"fmt"
+
+	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 )
 
 // Indices of prepared statements.
@@ -223,11 +225,11 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 34.
-	q = fmt.Sprintf(`INSERT INTO %s (Type, Email, UserIPAB) VALUES (?, ?, ?);`, dbo.tableNames.Incidents)
+	q = fmt.Sprintf(cdbo.Query_SaveIncident, dbo.tableNames.Incidents)
 	qs = append(qs, q)
 
 	// 35.
-	q = fmt.Sprintf(`INSERT INTO %s (Type, Email) VALUES (?, ?);`, dbo.tableNames.Incidents)
+	q = fmt.Sprintf(cdbo.Query_SaveIncidentWithoutUserIPA, dbo.tableNames.Incidents)
 	qs = append(qs, q)
 
 	// 36.

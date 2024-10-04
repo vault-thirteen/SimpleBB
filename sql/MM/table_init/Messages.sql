@@ -12,4 +12,5 @@ CREATE TABLE IF NOT EXISTS Messages
     EditorTime    datetime,                                -- 8B --
 
     PRIMARY KEY (Id)
+    /* TODO: Indices */
 );

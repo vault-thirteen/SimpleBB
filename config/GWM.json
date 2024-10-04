@@ -12,11 +12,11 @@
   "db": {
     "driverName": "mysql",
     "net": "tcp",
-    "host": "192.168.0.1",
+    "host": "localhost",
     "port": 3306,
-    "dbName": "test3",
-    "user": "test3",
-    "password": "test3",
+    "dbName": "test",
+    "user": "test",
+    "password": "test",
     "allowNativePasswords": true,
     "checkConnLiveness": true,
     "maxAllowedPacket": 64000000,
@@ -62,6 +62,13 @@
     "schema": "https",
     "host": "localhost",
     "port": 2002,
+    "path": "/",
+    "enableSelfSignedCertificate": true
+  },
+  "nm": {
+    "schema": "https",
+    "host": "localhost",
+    "port": 2007,
     "path": "/",
     "enableSelfSignedCertificate": true
   }

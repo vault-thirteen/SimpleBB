@@ -12,4 +12,5 @@ CREATE TABLE IF NOT EXISTS Threads
     EditorTime    datetime,
 
     PRIMARY KEY (Id)
+    /* TODO: Indices */
 );

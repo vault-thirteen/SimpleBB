@@ -10,10 +10,10 @@ import (
 	"time"
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
-	"github.com/vault-thirteen/SimpleBB/pkg/ACM/dbo"
-	s "github.com/vault-thirteen/SimpleBB/pkg/ACM/settings"
 	gc "github.com/vault-thirteen/SimpleBB/pkg/GWM/client"
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
+	"github.com/vault-thirteen/SimpleBB/pkg/NM/dbo"
+	s "github.com/vault-thirteen/SimpleBB/pkg/NM/settings"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
@@ -59,15 +59,7 @@ func NewIncidentManager(
 func initBlockTimePerIncidentType(blockTimePerIncident *s.BlockTimePerIncident) (blockTimePerIncidentType [cm.IncidentTypesCount + 1]uint) {
 	// The "zero"-indexed element is empty because it is not used.
 	blockTimePerIncidentType[cm.IncidentType_IllegalAccessAttempt] = blockTimePerIncident.IllegalAccessAttempt
-	blockTimePerIncidentType[cm.IncidentType_FakeToken] = blockTimePerIncident.FakeToken
-	blockTimePerIncidentType[cm.IncidentType_VerificationCodeMismatch] = blockTimePerIncident.VerificationCodeMismatch
-	blockTimePerIncidentType[cm.IncidentType_DoubleLogInAttempt] = blockTimePerIncident.DoubleLogInAttempt
-	blockTimePerIncidentType[cm.IncidentType_PreSessionHacking] = blockTimePerIncident.PreSessionHacking
-	blockTimePerIncidentType[cm.IncidentType_CaptchaAnswerMismatch] = blockTimePerIncident.CaptchaAnswerMismatch
-	blockTimePerIncidentType[cm.IncidentType_PasswordMismatch] = blockTimePerIncident.PasswordMismatch
-	blockTimePerIncidentType[cm.IncidentType_PasswordChangeHacking] = blockTimePerIncident.PasswordChangeHacking
-	blockTimePerIncidentType[cm.IncidentType_EmailChangeHacking] = blockTimePerIncident.EmailChangeHacking
-	blockTimePerIncidentType[cm.IncidentType_FakeIPA] = blockTimePerIncident.FakeIPA
+	blockTimePerIncidentType[cm.IncidentType_ReadingNotificationOfOtherUsers] = blockTimePerIncident.ReadingNotificationOfOtherUsers
 
 	return blockTimePerIncidentType
 }
@@ -161,9 +153,9 @@ func (im *IncidentManager) logError(err error) {
 
 func (im *IncidentManager) saveIncident(inc *cm.Incident) (err error) {
 	if inc.UserIPA == nil {
-		err = im.dbo.SaveIncidentWithoutUserIPA(app.ModuleId_ACM, inc.Type, inc.Email)
+		err = im.dbo.SaveIncidentWithoutUserIPA(app.ModuleId_NM, inc.Type, inc.Email)
 	} else {
-		err = im.dbo.SaveIncident(app.ModuleId_ACM, inc.Type, inc.Email, inc.UserIPA)
+		err = im.dbo.SaveIncident(app.ModuleId_NM, inc.Type, inc.Email, inc.UserIPA)
 	}
 	if err != nil {
 		return err
