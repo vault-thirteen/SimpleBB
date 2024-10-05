@@ -147,6 +147,14 @@ func (srv *Server) Stop() (err error) {
 	return nil
 }
 
+func (srv *Server) GetSubRoutinesWG() *sync.WaitGroup {
+	return srv.subRoutines
+}
+
+func (srv *Server) GetMustStopAB() *atomic.Bool {
+	return srv.mustStop
+}
+
 func (srv *Server) startHttpServer() {
 	go func() {
 		var listenError error

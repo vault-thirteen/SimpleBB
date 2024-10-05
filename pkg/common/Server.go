@@ -8,5 +8,3 @@ const (
 	ServiceNextPingAttemptDelaySec = 5
 	ServicePingAttemptsCount       = 12
 )
-
-type ScheduledFnSimple = func() error

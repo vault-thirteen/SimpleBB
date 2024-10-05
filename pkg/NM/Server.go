@@ -56,6 +56,9 @@ type Server struct {
 
 	// Incident manager.
 	incidentManager *im.IncidentManager
+
+	// Scheduler.
+	scheduler *cm.Scheduler
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -110,6 +113,8 @@ func NewServer(s cm.ISettings) (srv *Server, err error) {
 		return nil, err
 	}
 
+	srv.initScheduler()
+
 	return srv, nil
 }
 
@@ -132,9 +137,10 @@ func (srv *Server) Start() (err error) {
 
 	srv.startHttpServer()
 
-	srv.subRoutines.Add(2)
+	srv.subRoutines.Add(3)
 	go srv.listenForHttpErrors()
 	go srv.listenForDbErrors()
+	go srv.scheduler.Run()
 
 	err = srv.incidentManager.Start()
 	if err != nil {
@@ -187,6 +193,14 @@ func (srv *Server) Stop() (err error) {
 	srv.ssp.CompleteStop()
 
 	return nil
+}
+
+func (srv *Server) GetSubRoutinesWG() *sync.WaitGroup {
+	return srv.subRoutines
+}
+
+func (srv *Server) GetMustStopAB() *atomic.Bool {
+	return srv.mustStop
 }
 
 func (srv *Server) startHttpServer() {
@@ -308,6 +322,13 @@ func (srv *Server) initIncidentManager() (err error) {
 	srv.incidentManager = im.NewIncidentManager(srv.settings.SystemSettings.IsTableOfIncidentsUsed, srv.dbo, srv.gwmServiceClient, &srv.settings.SystemSettings.BlockTimePerIncident)
 
 	return nil
+}
+
+func (srv *Server) initScheduler() {
+	funcs60 := []cm.ScheduledFn{
+		srv.clearNotifications,
+	}
+	srv.scheduler = cm.NewScheduler(srv, funcs60)
 }
 
 func (srv *Server) ReportStart() {

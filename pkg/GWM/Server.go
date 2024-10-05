@@ -84,6 +84,9 @@ type Server struct {
 
 	// Front End Data.
 	frontEnd *models.FrontEndData
+
+	// Scheduler.
+	scheduler *cm.Scheduler
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -168,6 +171,8 @@ func NewServer(s cm.ISettings) (srv *Server, err error) {
 		}
 	}
 
+	srv.initScheduler()
+
 	return srv, nil
 }
 
@@ -198,7 +203,7 @@ func (srv *Server) Start() (err error) {
 	srv.subRoutines.Add(3)
 	go srv.listenForHttpErrors()
 	go srv.listenForDbErrors()
-	go srv.runScheduler()
+	go srv.scheduler.Run()
 
 	err = srv.pingClientsForExternalServices()
 	if err != nil {
@@ -248,6 +253,14 @@ func (srv *Server) Stop() (err error) {
 	srv.ssp.CompleteStop()
 
 	return nil
+}
+
+func (srv *Server) GetSubRoutinesWG() *sync.WaitGroup {
+	return srv.subRoutines
+}
+
+func (srv *Server) GetMustStopAB() *atomic.Bool {
+	return srv.mustStop
 }
 
 func (srv *Server) startHttpServerInt() {
@@ -320,52 +333,6 @@ func (srv *Server) listenForDbErrors() {
 	}
 
 	log.Println(c.MsgDbNetworkErrorListenerHasStopped)
-}
-
-func (srv *Server) runScheduler() {
-	defer srv.subRoutines.Done()
-
-	var funcsToRunEveryMinute = []c.ScheduledFnSimple{
-		srv.clearIPAddresses,
-	}
-
-	// Time counter.
-	// It counts seconds and resets every 24 hours.
-	var tc uint = 1
-	const SecondsInDay = 86400 // 60*60*24.
-	var err error
-
-	for {
-		if srv.mustStop.Load() {
-			break
-		}
-
-		// Periodical tasks.
-
-		// Every minute.
-		if tc%60 == 0 {
-			for _, fn := range funcsToRunEveryMinute {
-				err = fn()
-				if err != nil {
-					log.Println(err)
-				}
-			}
-		}
-
-		// Every hour.
-		if tc%3600 == 0 {
-			// ...
-		}
-
-		// Next tick.
-		if tc == SecondsInDay {
-			tc = 0
-		}
-		tc++
-		time.Sleep(time.Second)
-	}
-
-	log.Println(c.MsgSchedulerHasStopped)
 }
 
 // HTTP router for internal requests.
@@ -749,6 +716,13 @@ func (srv *Server) initApiFunctions() (err error) {
 	}
 
 	return nil
+}
+
+func (srv *Server) initScheduler() {
+	funcs60 := []cm.ScheduledFn{
+		srv.clearIPAddresses,
+	}
+	srv.scheduler = cm.NewScheduler(srv, funcs60)
 }
 
 func (srv *Server) ReportStart() {
