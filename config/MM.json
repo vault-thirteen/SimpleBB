@@ -40,5 +40,12 @@
     "port": 2001,
     "path": "/",
     "enableSelfSignedCertificate": true
+  },
+  "nm": {
+    "schema": "https",
+    "host": "localhost",
+    "port": 2007,
+    "path": "/",
+    "enableSelfSignedCertificate": true
   }
 }

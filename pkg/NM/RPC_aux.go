@@ -122,6 +122,7 @@ func (srv *Server) mustBeAnAuthToken(auth *cmr.Auth) (userRoles *am.GetSelfRoles
 
 // Other functions.
 
+// getUserSelfRoles reads roles of the RPC caller (user) from ACM module.
 func (srv *Server) getUserSelfRoles(auth *cmr.Auth) (userRoles *am.GetSelfRolesResult, re *jrm1.RpcError) {
 	var params = am.GetSelfRolesParams{
 		CommonParams: cmr.CommonParams{

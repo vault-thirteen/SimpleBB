@@ -49,4 +49,5 @@ const (
 	MsgFPingingModule              = "Pinging the %s module ..."
 	MsgFModuleIsBroken             = "%s module is broken"
 	MsgFServiceClientSettingsError = "%s service client settings error: %s"
+	MsgFSynchronisingWithModule    = "Synchronising with %s module ..."
 )

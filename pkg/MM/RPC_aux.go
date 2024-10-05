@@ -10,6 +10,8 @@ import (
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
+	nc "github.com/vault-thirteen/SimpleBB/pkg/NM/client"
+	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
@@ -95,6 +97,7 @@ func (srv *Server) mustBeAnAuthToken(auth *cmr.Auth) (userRoles *am.GetSelfRoles
 
 // Other functions.
 
+// getUserSelfRoles reads roles of the RPC caller (user) from ACM module.
 func (srv *Server) getUserSelfRoles(auth *cmr.Auth) (userRoles *am.GetSelfRolesResult, re *jrm1.RpcError) {
 	var params = am.GetSelfRolesParams{
 		CommonParams: cmr.CommonParams{
@@ -129,6 +132,52 @@ func (srv *Server) doTestA(wg *sync.WaitGroup, errChan chan error) {
 	if re != nil {
 		errChan <- re.AsError()
 	}
+}
+
+// getDKeyForNM receives a DKey from Notification module.
+func (srv *Server) getDKeyForNM() (dKey *string, re *jrm1.RpcError) {
+	params := nm.GetDKeyParams{}
+	result := new(nm.GetDKeyResult)
+	var err error
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncGetDKey, params, result)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
+	}
+	if re != nil {
+		return nil, re
+	}
+
+	// DKey must be non-empty.
+	if len(result.DKey) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_ModuleSynchronisation, c.RpcErrorMsg_ModuleSynchronisation, nil)
+	}
+
+	return &result.DKey, nil
+}
+
+// sendNotificationToUser sends a system notification to a user.
+func (srv *Server) sendNotificationToUser(userId uint, text string) (re *jrm1.RpcError) {
+	params := nm.AddNotificationSParams{
+		DKeyParams: cmr.DKeyParams{
+			// DKey is set during module start-up, so it is non-null.
+			DKey: *srv.dKeyForNM,
+		},
+		UserId: userId,
+		Text:   text,
+	}
+	result := new(nm.AddNotificationSResult)
+	var err error
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncAddNotificationS, params, result)
+	if err != nil {
+		srv.logError(err)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
+	}
+	if re != nil {
+		return re
+	}
+
+	return nil
 }
 
 func (srv *Server) getMessageTextChecksum(msgText string) (checksum uint32) {

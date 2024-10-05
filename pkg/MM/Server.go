@@ -52,9 +52,13 @@ type Server struct {
 
 	// Clients for external services.
 	acmServiceClient *cc.Client
+	nmServiceClient  *cc.Client
 
 	// CRC32 Table.
 	crcTable *crc32.Table
+
+	// DKeys.
+	dKeyForNM *string
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -136,6 +140,11 @@ func (srv *Server) Start() (err error) {
 	go srv.listenForDbErrors()
 
 	err = srv.pingClientsForExternalServices()
+	if err != nil {
+		return err
+	}
+
+	err = srv.synchroniseModules(true)
 	if err != nil {
 		return err
 	}
@@ -266,6 +275,20 @@ func (srv *Server) createClientsForExternalServices() (err error) {
 		return err
 	}
 
+	// NM module.
+	var nmSCS = &cset.ServiceClientSettings{
+		Schema:                      srv.settings.NmSettings.Schema,
+		Host:                        srv.settings.NmSettings.Host,
+		Port:                        srv.settings.NmSettings.Port,
+		Path:                        srv.settings.NmSettings.Path,
+		EnableSelfSignedCertificate: srv.settings.NmSettings.EnableSelfSignedCertificate,
+	}
+
+	srv.nmServiceClient, err = cc.NewClientWithSCS(nmSCS, app.ServiceShortName_NM)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -274,6 +297,31 @@ func (srv *Server) pingClientsForExternalServices() (err error) {
 	err = srv.acmServiceClient.Ping(true)
 	if err != nil {
 		return err
+	}
+
+	// NM module.
+	err = srv.nmServiceClient.Ping(true)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (srv *Server) synchroniseModules(verbose bool) (err error) {
+	// NM module.
+	if verbose {
+		fmt.Print(fmt.Sprintf(c.MsgFSynchronisingWithModule, app.ServiceShortName_NM))
+	}
+
+	var re *jrm1.RpcError
+	srv.dKeyForNM, re = srv.getDKeyForNM()
+	if re != nil {
+		return re.AsError()
+	}
+
+	if verbose {
+		fmt.Println(c.MsgOK)
 	}
 
 	return nil
