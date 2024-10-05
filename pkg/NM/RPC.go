@@ -30,12 +30,14 @@ func (srv *Server) initRpc() (err error) {
 	fns := []jrm1.RpcFunction{
 		srv.Ping,
 		srv.AddNotification,
+		srv.AddNotificationS,
 		srv.GetNotification,
 		srv.GetAllNotifications,
 		srv.GetUnreadNotifications,
 		srv.CountUnreadNotifications,
 		srv.MarkNotificationAsRead,
 		srv.DeleteNotification,
+		srv.GetDKey,
 		srv.ShowDiagnosticData,
 		srv.Test,
 	}
@@ -67,6 +69,22 @@ func (srv *Server) AddNotification(params *json.RawMessage, _ *jrm1.ResponseMeta
 
 	var r *nm.AddNotificationResult
 	r, re = srv.addNotification(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) AddNotificationS(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.AddNotificationSParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.AddNotificationSResult
+	r, re = srv.addNotificationS(p)
 	if re != nil {
 		return nil, re
 	}
@@ -171,6 +189,22 @@ func (srv *Server) DeleteNotification(params *json.RawMessage, _ *jrm1.ResponseM
 }
 
 // Other.
+
+func (srv *Server) GetDKey(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.GetDKeyParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.GetDKeyResult
+	r, re = srv.getDKey(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
 
 func (srv *Server) ShowDiagnosticData(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
 	var p *nm.ShowDiagnosticDataParams

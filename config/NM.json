@@ -29,10 +29,12 @@
   "system": {
     "notificationTtl": 604800,
     "notificationCountLimit": 32,
+    "dKeySize": 16,
     "isTableOfIncidentsUsed": true,
     "blockTimePerIncident": {
       "illegalAccessAttempt": 60,
-      "readingNotificationOfOtherUsers": 60
+      "readingNotificationOfOtherUsers": 60,
+      "wrongDKey": 60
     },
     "isDebugMode": false
   },

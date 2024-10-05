@@ -10,6 +10,7 @@ import (
 type SystemSettings struct {
 	NotificationTtl        uint `json:"notificationTtl"`
 	NotificationCountLimit uint `json:"notificationCountLimit"`
+	DKeySize               uint `json:"dKeySize"`
 
 	// This setting must be synchronised with settings of the Gateway module.
 	IsTableOfIncidentsUsed bool `json:"isTableOfIncidentsUsed"`
@@ -24,18 +25,21 @@ type SystemSettings struct {
 type BlockTimePerIncident struct {
 	IllegalAccessAttempt            uint `json:"illegalAccessAttempt"`            // 1.
 	ReadingNotificationOfOtherUsers uint `json:"readingNotificationOfOtherUsers"` // 2.
+	WrongDKey                       uint `json:"wrongDKey"`                       // 3.
 }
 
 func (s SystemSettings) Check() (err error) {
 	if (s.NotificationTtl == 0) ||
-		(s.NotificationCountLimit == 0) {
+		(s.NotificationCountLimit == 0) ||
+		(s.DKeySize == 0) {
 		return errors.New(c.MsgSystemSettingError)
 	}
 
 	// Incidents.
 	if s.IsTableOfIncidentsUsed {
 		if (s.BlockTimePerIncident.IllegalAccessAttempt == 0) ||
-			(s.BlockTimePerIncident.ReadingNotificationOfOtherUsers == 0) {
+			(s.BlockTimePerIncident.ReadingNotificationOfOtherUsers == 0) ||
+			(s.BlockTimePerIncident.WrongDKey == 0) {
 			return errors.New(c.MsgSystemSettingError)
 		}
 	}

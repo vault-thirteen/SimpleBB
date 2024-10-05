@@ -20,6 +20,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/dk"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cset "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
@@ -59,6 +60,9 @@ type Server struct {
 
 	// Scheduler.
 	scheduler *cm.Scheduler
+
+	// Keys.
+	dKey *dk.DKey
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -109,6 +113,11 @@ func NewServer(s cm.ISettings) (srv *Server, err error) {
 	}
 
 	err = srv.initIncidentManager()
+	if err != nil {
+		return nil, err
+	}
+
+	err = srv.initKeys()
 	if err != nil {
 		return nil, err
 	}
@@ -329,6 +338,15 @@ func (srv *Server) initScheduler() {
 		srv.clearNotifications,
 	}
 	srv.scheduler = cm.NewScheduler(srv, funcs60)
+}
+
+func (srv *Server) initKeys() (err error) {
+	srv.dKey, err = dk.NewDKey(int(srv.settings.SystemSettings.DKeySize))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (srv *Server) ReportStart() {

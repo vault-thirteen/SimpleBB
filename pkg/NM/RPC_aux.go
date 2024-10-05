@@ -10,6 +10,7 @@ import (
 	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 )
@@ -51,6 +52,16 @@ func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
 
 // Token-related functions.
 
+// mustBeNoAuth ensures that authorisation is not used.
+func (srv *Server) mustBeNoAuth(auth *cmr.Auth) (re *jrm1.RpcError) {
+	if auth != nil {
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", auth.UserIPAB)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	return nil
+}
+
 // mustBeAuthUserIPA ensures that user's IP address is set. If it is not set,
 // an error is returned and the caller of this function must stop and return
 // this error.
@@ -65,6 +76,23 @@ func (srv *Server) mustBeAuthUserIPA(auth *cmr.Auth) (re *jrm1.RpcError) {
 	if err != nil {
 		srv.logError(err)
 		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
+	}
+
+	return nil
+}
+
+// mustBeNoAuthToken ensures that an authorisation token is not present. If the
+// token is present, an error is returned and the caller of this function must
+// stop and return this error.
+func (srv *Server) mustBeNoAuthToken(auth *cmr.Auth) (re *jrm1.RpcError) {
+	re = srv.mustBeAuthUserIPA(auth)
+	if re != nil {
+		return re
+	}
+
+	if len(auth.Token) > 0 {
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", nil)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	return nil

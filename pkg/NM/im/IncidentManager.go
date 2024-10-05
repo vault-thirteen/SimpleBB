@@ -60,6 +60,7 @@ func initBlockTimePerIncidentType(blockTimePerIncident *s.BlockTimePerIncident) 
 	// The "zero"-indexed element is empty because it is not used.
 	blockTimePerIncidentType[cm.IncidentType_IllegalAccessAttempt] = blockTimePerIncident.IllegalAccessAttempt
 	blockTimePerIncidentType[cm.IncidentType_ReadingNotificationOfOtherUsers] = blockTimePerIncident.ReadingNotificationOfOtherUsers
+	blockTimePerIncidentType[cm.IncidentType_WrongDKey] = blockTimePerIncident.WrongDKey
 
 	return blockTimePerIncidentType
 }

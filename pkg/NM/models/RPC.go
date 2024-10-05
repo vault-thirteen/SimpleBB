@@ -25,6 +25,21 @@ type AddNotificationResult struct {
 	NotificationId uint `json:"notificationId"`
 }
 
+type AddNotificationSParams struct {
+	cmr.CommonParams
+	cmr.DKeyParams
+
+	UserId uint   `json:"userId"`
+	Text   string `json:"text"`
+}
+
+type AddNotificationSResult struct {
+	cmr.CommonResult
+
+	// ID of the created notification.
+	NotificationId uint `json:"notificationId"`
+}
+
 type GetNotificationParams struct {
 	cmr.CommonParams
 
@@ -93,6 +108,16 @@ type DeleteNotificationResult struct {
 }
 
 // Other.
+
+type GetDKeyParams struct {
+	cmr.CommonParams
+}
+
+type GetDKeyResult struct {
+	cmr.CommonResult
+
+	DKey string `json:"dKey"`
+}
 
 type ShowDiagnosticDataParams struct{}
 

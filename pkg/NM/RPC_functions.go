@@ -16,6 +16,7 @@ import (
 // Notification.
 
 // addNotification creates a new notification.
+// This method is used to send notifications by administrators.
 func (srv *Server) addNotification(p *nm.AddNotificationParams) (result *nm.AddNotificationResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
@@ -45,6 +46,43 @@ func (srv *Server) addNotification(p *nm.AddNotificationParams) (result *nm.AddN
 	}
 
 	result = &nm.AddNotificationResult{
+		NotificationId: uint(insertedNotificationId),
+	}
+
+	return result, nil
+}
+
+// addNotificationS creates a new notification.
+// This method is used to send notifications by the system.
+func (srv *Server) addNotificationS(p *nm.AddNotificationSParams) (result *nm.AddNotificationSResult, re *jrm1.RpcError) {
+	re = srv.mustBeNoAuth(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check the DKey.
+	if !srv.dKey.CheckString(p.DKey) {
+		srv.incidentManager.ReportIncident(cm.IncidentType_WrongDKey, "", nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	// Check parameters.
+	if p.UserId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
+	}
+	if len(p.Text) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_TextIsNotSet, RpcErrorMsg_TextIsNotSet, nil)
+	}
+
+	insertedNotificationId, err := srv.dbo.InsertNewNotification(p.UserId, p.Text)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &nm.AddNotificationSResult{
 		NotificationId: uint(insertedNotificationId),
 	}
 
@@ -272,6 +310,19 @@ func (srv *Server) deleteNotification(p *nm.DeleteNotificationParams) (result *n
 }
 
 // Other.
+
+func (srv *Server) getDKey(p *nm.GetDKeyParams) (result *nm.GetDKeyResult, re *jrm1.RpcError) {
+	re = srv.mustBeNoAuth(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	result = &nm.GetDKeyResult{
+		DKey: srv.dKey.GetString(),
+	}
+
+	return result, nil
+}
 
 func (srv *Server) showDiagnosticData() (result *nm.ShowDiagnosticDataResult, re *jrm1.RpcError) {
 	result = &nm.ShowDiagnosticDataResult{}

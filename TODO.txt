@@ -1,6 +1,5 @@
 * NM
 	- Limit new notifications
-	- Mechanism for system requests
 * Message Hash Sum Check
 * Message Editor
 * SQL Indices

@@ -11,6 +11,7 @@ const (
 
 	// Notification.
 	FuncAddNotification          = "AddNotification"
+	FuncAddNotificationS         = "AddNotificationS"
 	FuncGetNotification          = "GetNotification"
 	FuncGetAllNotifications      = "GetAllNotifications"
 	FuncGetUnreadNotifications   = "GetUnreadNotifications"
@@ -19,5 +20,7 @@ const (
 	FuncDeleteNotification       = "DeleteNotification"
 
 	// Other.
+	FuncGetDKey            = "GetDKey"
 	FuncShowDiagnosticData = cc.FuncShowDiagnosticData
+	FuncTest               = "Test"
 )

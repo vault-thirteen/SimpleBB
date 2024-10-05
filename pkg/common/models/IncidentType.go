@@ -12,10 +12,11 @@ const (
 	IncidentType_EmailChangeHacking              = 9
 	IncidentType_FakeIPA                         = 10
 	IncidentType_ReadingNotificationOfOtherUsers = 11
+	IncidentType_WrongDKey                       = 12
 )
 
 const (
-	IncidentTypesCount = 11
+	IncidentTypesCount = 12
 )
 
 type IncidentType byte
