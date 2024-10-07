@@ -244,13 +244,29 @@ table.acpMenu td {
 .btnAddMessage,
 .btnConfirmMessageCreation,
 .btnEditMessage,
-.btnConfirmMessageEdit {
+.btnConfirmMessageEdit,
+.btnNotificationsOff,
+.btnNotificationsOn,
+.btnCreateNotification,
+.btnDeleteNotification,
+.btnMarkNotificationAsReadU,
+.btnDeleteNotificationU,
+.btnShowFullNotificationU {
 	border: 1px solid grey;
 	color: grey;
 	cursor: pointer;
 	font-size: 16px;
 	font-family: "DejaVu Sans", serif;
 	width: 128px;
+}
+
+.btnNotificationsOff,
+.btnNotificationsOn {
+	width: 32px;
+}
+
+.btnNotificationsOn {
+	background-color: gold;
 }
 
 .btnGoToThread,
@@ -270,8 +286,25 @@ table.acpMenu td {
 }
 
 .btnAccept,
-.btnEnableRole {
+.btnEnableRole,
+.btnMarkNotificationAsReadU {
 	color: darkgreen;
+}
+
+.btnDeleteNotificationU,
+.btnShowFullNotificationU,
+.btnMarkNotificationAsReadU {
+	margin: 1px;
+	width: 36px;
+	height: 36px;
+	font-size: 12px;
+}
+
+table.notificationList td.lastCol {
+	width: 0.1%;
+	min-width: 76px;
+	max-width: 76px;
+	padding: 0;
 }
 
 .btnChangeEmail,
@@ -292,7 +325,9 @@ table.acpMenu td {
 .btnDeleteForum,
 .btnDeleteThread,
 .btnChangeMessageText,
-.btnDeleteMessage {
+.btnDeleteMessage,
+.btnDeleteNotification,
+.btnDeleteNotificationU {
 	color: crimson;
 }
 
@@ -309,7 +344,8 @@ table.acpMenu td {
 .btnConfirmThreadStart,
 .btnAddMessage,
 .btnConfirmMessageCreation,
-.btnConfirmMessageEdit {
+.btnConfirmMessageEdit,
+.btnCreateNotification {
 	color: green;
 }
 
@@ -371,15 +407,27 @@ table.acpMenu td {
 table.subpageListOfUsers,
 table.subpageListOfRRFA,
 table.subpageListOfLoggedUsers,
-table.subpageUserPage {
+table.subpageUserPage,
+table.notificationList {
 	border: 1px solid black;
 	text-align: right;
+}
+
+table.notificationList {
+	width: 100%;
+}
+
+div.notificationListTitle {
+	color: black;
+	font-size: 16px;
+	margin-bottom: 5px;
 }
 
 table.subpageListOfUsers th,
 table.subpageListOfRRFA th,
 table.subpageListOfLoggedUsers th,
-table.subpageUserPage th {
+table.subpageUserPage th,
+table.notificationList th {
 	border: 1px solid black;
 	padding: 3px;
 	background-color: bisque;
@@ -389,9 +437,40 @@ table.subpageUserPage th {
 table.subpageListOfUsers td,
 table.subpageListOfRRFA td,
 table.subpageListOfLoggedUsers td,
-table.subpageUserPage td {
+table.subpageUserPage td,
+table.notificationList td {
 	border: 1px solid black;
 	padding: 3px;
+}
+
+table.notificationList td {
+	vertical-align: top;
+	text-align: left;
+}
+
+table.notificationList td.unread {
+	font-weight: bold;
+}
+
+table.notificationList td.read {
+	color: green;
+}
+
+table.notificationList td.deleted {
+	color: grey;
+	text-decoration: line-through;
+}
+
+table.notificationList td table td.visible {
+	display: table-cell;
+	padding: 0;
+	border: 0;
+}
+
+table.notificationList td table td.hidden {
+	display: none;
+	padding: 0;
+	border: 0;
 }
 
 table.subpageListOfUsers tr:nth-child(even),
@@ -552,7 +631,8 @@ div.threadManager div.title,
 div.messageManager div.title,
 div.newThreadCreation div.title,
 div.newMessageCreation div.title,
-div.messageEditing div.title {
+div.messageEditing div.title,
+div.notificationManager div.title {
 	font-weight: bold;
 }
 
@@ -562,7 +642,8 @@ div.threadManager div,
 div.messageManager div,
 div.newThreadCreation div,
 div.newMessageCreation div,
-div.messageEditing div {
+div.messageEditing div,
+div.notificationManager div {
 	margin-bottom: 3px;
 }
 
@@ -572,7 +653,8 @@ div.threadManager fieldset input,
 div.messageManager fieldset input,
 div.newThreadCreation input,
 div.newMessageCreation input,
-div.messageEditing input {
+div.messageEditing input,
+div.notificationManager input {
 	border: 1px solid grey;
 }
 
@@ -613,3 +695,4 @@ textarea.newMessageText {
 	height: 128px;
 	font-size: 15px;
 }
+

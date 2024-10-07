@@ -1,5 +1,6 @@
-* NM
-	- Limit new notifications
+* Subscriptions
+* Limit new notifications
+* Notification Templates
 * Message Hash Sum Check
 * Message Editor
 * SQL Indices

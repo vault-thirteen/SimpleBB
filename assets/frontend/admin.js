@@ -34,14 +34,16 @@ qpn = {
 	ManagerOfForums: "manageForums",
 	ManagerOfThreads: "managerOfThreads",
 	ManagerOfMessages: "managerOfMessages",
+	ManagerOfNotifications: "managerOfNotifications",
 }
 
 // Action names.
 actionName = {
 	AddForum: "addForum",
+	AddMessage: "addMessage",
+	AddNotification: "addNotification",
 	AddSection: "addSection",
 	AddThread: "addThread",
-	AddMessage: "addMessage",
 	ApproveAndRegisterUser: "approveAndRegisterUser",
 	BanUser: "banUser",
 	ChangeForumName: "changeForumName",
@@ -53,9 +55,10 @@ actionName = {
 	ChangeThreadName: "changeThreadName",
 	ChangeThreadForum: "changeThreadForum",
 	DeleteForum: "deleteForum",
+	DeleteMessage: "deleteMessage",
+	DeleteNotification: "deleteNotification",
 	DeleteSection: "deleteSection",
 	DeleteThread: "deleteThread",
-	DeleteMessage: "deleteMessage",
 	GetListOfAllUsers: "getListOfAllUsers",
 	GetListOfLoggedUsers: "getListOfLoggedUsers",
 	GetListOfRegistrationsReadyForApproval: "getListOfRegistrationsReadyForApproval",
@@ -372,6 +375,19 @@ class Parameters_DeleteMessage {
 	}
 }
 
+class Parameters_AddNotification {
+	constructor(userId, text) {
+		this.UserId = userId;
+		this.Text = text;
+	}
+}
+
+class Parameters_DeleteNotification {
+	constructor(notificationId) {
+		this.NotificationId = notificationId;
+	}
+}
+
 class ApiResponse {
 	constructor(isOk, jsonObject, statusCode, errorText) {
 		this.IsOk = isOk;
@@ -445,6 +461,11 @@ async function onPageLoad() {
 		return;
 	}
 
+	if (sp.has(qpn.ManagerOfNotifications)) {
+		await showPage_ManagerOfNotifications();
+		return;
+	}
+
 	showPage_MainMenu();
 }
 
@@ -506,6 +527,10 @@ async function onGoManageThreadsClick(btn) {
 
 async function onGoManageMessagesClick(btn) {
 	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfMessages);
+}
+
+async function onGoManageNotificationsClick(btn) {
+	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfNotifications);
 }
 
 async function redirectToSubPage(wait, qp) {
@@ -682,6 +707,16 @@ async function showPage_ManagerOfMessages() {
 	addTitle(p, "Management of Messages");
 	addDiv(p, "messageManager");
 	fillMessageManager("messageManager");
+}
+
+async function showPage_ManagerOfNotifications() {
+	// Draw.
+	let p = document.getElementById("subpage");
+	p.style.display = "block";
+	addBtnBack(p);
+	addTitle(p, "Management of Notifications");
+	addDiv(p, "notificationManager");
+	fillNotificationManager("notificationManager");
 }
 
 function addBtnBack(el) {
@@ -1657,6 +1692,19 @@ function fillMessageManager(elClass) {
 	fs.appendChild(d);
 }
 
+function fillNotificationManager(elClass) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let fs = document.createElement("FIELDSET");
+	div.appendChild(fs);
+
+	let actionNames = ["Select an action", "Create a notification", "Delete a notification"];
+	createRadioButtonsForActions(fs, actionNames);
+	let d = document.createElement("DIV");
+	d.innerHTML = '<input type="button" class="btnProceed" value="Proceed" onclick="onNotificationManagerBtnProceedClick(this)">';
+	fs.appendChild(d);
+}
+
 function onSectionManagerBtnProceedClick(btn) {
 	let selectedActionIdx = getSelectedActionIdxBPC(btn);
 	if (selectedActionIdx == null) {
@@ -2473,6 +2521,52 @@ function onMessageManagerBtnProceedClick(btn) {
 	}
 }
 
+function onNotificationManagerBtnProceedClick(btn) {
+	let selectedActionIdx = getSelectedActionIdxBPC(btn);
+	if (selectedActionIdx == null) {
+		return;
+	}
+
+	btn.disabled = true;
+	disableParentFormBPC(btn);
+
+	// Draw.
+	let nm = document.getElementById("notificationManager");
+	let fs = document.createElement("FIELDSET");
+	nm.appendChild(fs);
+
+	let d = document.createElement("DIV");
+	d.className = "title";
+	d.textContent = "Notification Parameters";
+	fs.appendChild(d);
+
+	switch (selectedActionIdx) {
+		case 1: // Create a notification.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="txt">Text</label>' +
+				'<input type="text" name="txt" id="txt" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="user" title="ID of a user">User</label>' +
+				'<input type="text" name="user" id="user" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnCreateNotification" value="Create" onclick="onBtnCreateNotificationClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 2: // Delete a notification.
+			d = document.createElement("DIV");
+			d.innerHTML = '<label class="parameter" for="id" title="ID of the notification to delete">ID</label>' +
+				'<input type="text" name="id" id="id" value="" />';
+			fs.appendChild(d);
+			d = document.createElement("DIV");
+			d.innerHTML = '<input type="button" class="btnDeleteNotification" value="Delete" onclick="onBtnDeleteNotificationClick(this)">';
+			fs.appendChild(d);
+			break;
+	}
+}
+
 async function onBtnCreateMessageClick(btn) {
 	// Input.
 	let pp = btn.parentNode.parentNode;
@@ -2495,6 +2589,32 @@ async function onBtnCreateMessageClick(btn) {
 	let messageId = resp.result.messageId;
 	disableParentForm(btn, pp, false);
 	let txt = "A message was created. ID=" + messageId.toString() + ".";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
+async function onBtnCreateNotificationClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let text = pp.childNodes[1].childNodes[1].value;
+	if (text.length < 1) {
+		console.error(err.TextIsNotSet);
+		return;
+	}
+	let userId = Number(pp.childNodes[2].childNodes[1].value);
+	if (userId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await addNotification(userId, text);
+	if (resp == null) {
+		return;
+	}
+	let notificationId = resp.result.notificationId;
+	disableParentForm(btn, pp, false);
+	let txt = "A notification was created. ID=" + notificationId.toString() + ".";
 	showActionSuccess(btn, txt);
 	await reloadPage(true);
 }
@@ -2574,6 +2694,29 @@ async function onBtnDeleteMessageClick(btn) {
 	}
 	disableParentForm(btn, pp, false);
 	let txt = "Message was deleted.";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
+async function onBtnDeleteNotificationClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let notificationId = Number(pp.childNodes[1].childNodes[1].value);
+	if (notificationId < 1) {
+		console.error(err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await deleteNotification(notificationId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Notification was deleted.";
 	showActionSuccess(btn, txt);
 	await reloadPage(true);
 }
@@ -2891,4 +3034,26 @@ function createRadioButtonsForActions(fs, actionNames) {
 		}
 		fs.appendChild(d);
 	}
+}
+
+async function addNotification(userId, text) {
+	let params = new Parameters_AddNotification(userId, text);
+	let reqData = new ApiRequest(actionName.AddNotification, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function deleteNotification(notificationId) {
+	let params = new Parameters_DeleteNotification(notificationId);
+	let reqData = new ApiRequest(actionName.DeleteNotification, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
 }

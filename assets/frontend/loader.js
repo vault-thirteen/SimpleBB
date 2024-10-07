@@ -75,6 +75,7 @@ qp = {
 	ChangePwdStep2: "?changePwd2",
 	ChangePwdStep3: "?changePwd3",
 	SelfPage: "?selfPage",
+	Notifications: "?notifications",
 }
 
 qpn = {
@@ -152,12 +153,16 @@ actionName = {
 	ChangeEmail: "changeEmail",
 	ChangeMessageText: "changeMessageText",
 	ChangePwd: "changePassword",
+	CountUnreadNotifications: "countUnreadNotifications",
+	DeleteNotification: "deleteNotification",
+	GetAllNotifications: "getAllNotifications",
 	GetMessage: "getMessage",
 	GetSelfRoles: "getSelfRoles",
 	GetUserName: "getUserName",
 	ListForumAndThreadsOnPage: "listForumAndThreadsOnPage",
 	ListSectionsAndForums: "listSectionsAndForums",
 	ListThreadAndMessagesOnPage: "listThreadAndMessagesOnPage",
+	MarkNotificationAsRead: "markNotificationAsRead",
 	LogUserIn: "logUserIn",
 	LogUserOut: "logUserOut",
 	RegisterUser: "registerUser",
@@ -365,6 +370,18 @@ class Parameters_ChangeMessageText {
 	}
 }
 
+class Parameters_MarkNotificationAsRead {
+	constructor(notificationId) {
+		this.NotificationId = notificationId;
+	}
+}
+
+class Parameters_DeleteNotification {
+	constructor(notificationId) {
+		this.NotificationId = notificationId;
+	}
+}
+
 class SectionNode {
 	constructor(section, level) {
 		this.Section = section;
@@ -391,38 +408,38 @@ async function onPageLoad() {
 	// Redirect to registration.
 	switch (curPage) {
 		case qp.RegistrationStep1:
-			showReg1Form();
+			await showReg1Form();
 			return;
 
 		case qp.RegistrationStep2:
-			showReg2Form();
+			await showReg2Form();
 			return;
 
 		case qp.RegistrationStep3:
-			showReg3Form();
+			await showReg3Form();
 			return;
 
 		case qp.RegistrationStep4:
-			showReg4Form();
+			await showReg4Form();
 			return;
 	}
 
 	// Redirect to logging in.
 	switch (curPage) {
 		case qp.LogInStep1:
-			showLogIn1Form();
+			await showLogIn1Form();
 			return;
 
 		case qp.LogInStep2:
-			showLogIn2Form();
+			await showLogIn2Form();
 			return;
 
 		case qp.LogInStep3:
-			showLogIn3Form();
+			await showLogIn3Form();
 			return;
 
 		case qp.LogInStep4:
-			showLogIn4Form();
+			await showLogIn4Form();
 			await redirectToMainPage(true);
 			return;
 	}
@@ -430,46 +447,50 @@ async function onPageLoad() {
 	let settings = getSettings();
 	let isLoggedInB = isLoggedIn(settings);
 	if (!isLoggedInB) {
-		showLogIn1Form();
+		await showLogIn1Form();
 		return;
 	}
 
 	// Pages for logged users.
 	switch (curPage) {
 		case qp.LogOutStep1:
-			showLogOut1Form();
+			await showLogOut1Form();
 			return;
 
 		case qp.LogOutStep2:
-			showLogOut2Form();
+			await showLogOut2Form();
 			return;
 
 		case qp.ChangeEmailStep1:
-			showChangeEmail1Form();
+			await showChangeEmail1Form();
 			return;
 
 		case qp.ChangeEmailStep2:
-			showChangeEmail2Form();
+			await showChangeEmail2Form();
 			return;
 
 		case qp.ChangeEmailStep3:
-			showChangeEmail3Form();
+			await showChangeEmail3Form();
 			return;
 
 		case qp.ChangePwdStep1:
-			showChangePwd1Form();
+			await showChangePwd1Form();
 			return;
 
 		case qp.ChangePwdStep2:
-			showChangePwd2Form();
+			await showChangePwd2Form();
 			return;
 
 		case qp.ChangePwdStep3:
-			showChangePwd3Form();
+			await showChangePwd3Form();
 			return;
 
 		case qp.SelfPage:
 			await showUserPage();
+			return;
+
+		case qp.Notifications:
+			await showNotificationsPage();
 			return;
 	}
 
@@ -661,57 +682,57 @@ function showBlock(block) {
 	block.style.display = "block";
 }
 
-function showReg1Form() {
+async function showReg1Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divReg1");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showReg2Form() {
+async function showReg2Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divReg2");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showReg3Form() {
+async function showReg3Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divReg3");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showReg4Form() {
+async function showReg4Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divReg4");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showLogIn1Form() {
+async function showLogIn1Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divLogIn1");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showLogIn2Form() {
+async function showLogIn2Form() {
 	// Captcha (optional).
 	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varname.LogInIsCaptchaNeeded));
 	let captchaId = sessionStorage.getItem(varname.LogInCaptchaId);
@@ -725,61 +746,61 @@ function showLogIn2Form() {
 	let p = document.getElementById("divLogIn2");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 	setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer);
 }
 
-function showLogIn3Form() {
+async function showLogIn3Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divLogIn3");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showLogIn4Form() {
+async function showLogIn4Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divLogIn4");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showLogOut1Form() {
+async function showLogOut1Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divLogOut1");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showLogOut2Form() {
+async function showLogOut2Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divLogOut2");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showChangeEmail1Form() {
+async function showChangeEmail1Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divChangeEmail1");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showChangeEmail2Form() {
+async function showChangeEmail2Form() {
 	// Captcha (optional).
 	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varname.ChangeEmailIsCaptchaNeeded));
 	let captchaId = sessionStorage.getItem(varname.ChangeEmailCaptchaId);
@@ -793,31 +814,31 @@ function showChangeEmail2Form() {
 	let p = document.getElementById("divChangeEmail2");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 	setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer);
 }
 
-function showChangeEmail3Form() {
+async function showChangeEmail3Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divChangeEmail3");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showChangePwd1Form() {
+async function showChangePwd1Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divChangePwd1");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
-function showChangePwd2Form() {
+async function showChangePwd2Form() {
 	// Captcha (optional).
 	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varname.ChangePwdIsCaptchaNeeded));
 	let captchaId = sessionStorage.getItem(varname.ChangePwdCaptchaId);
@@ -831,18 +852,18 @@ function showChangePwd2Form() {
 	let p = document.getElementById("divChangePwd2");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 	setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer);
 }
 
-function showChangePwd3Form() {
+async function showChangePwd3Form() {
 	let settings = getSettings();
 
 	// Draw.
 	let p = document.getElementById("divChangePwd3");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 }
 
 async function showUserPage() {
@@ -857,7 +878,7 @@ async function showUserPage() {
 	let p = document.getElementById("divUserPage");
 	showBlock(p);
 	addActionPanel(p, true);
-	addPageHead(p, settings.SiteName, true);
+	await addPageHead(p, settings.SiteName, true);
 	fillUserPage(userParams);
 }
 
@@ -888,7 +909,7 @@ async function showBB() {
 	// Draw.
 	let p = document.getElementById("divBB");
 	showBlock(p);
-	addPageHead(p, settings.SiteName, false);
+	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false);
 	processSectionNodes(p, nodes, forumsMap);
 }
@@ -930,7 +951,7 @@ async function showSection() {
 	// Draw.
 	let p = document.getElementById("divBB");
 	showBlock(p);
-	addPageHead(p, settings.SiteName, false);
+	await addPageHead(p, settings.SiteName, false);
 	if (parentId != null) {
 		addActionPanel(p, false, "section", parentId);
 	} else {
@@ -970,7 +991,7 @@ async function showForum() {
 	// Draw.
 	let p = document.getElementById("divBB");
 	showBlock(p);
-	addPageHead(p, settings.SiteName, false);
+	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false, "section", parentId);
 	addPaginator(p, pageNumber, pageCount, "forumPagePrev", "forumPageNext");
 	processForumAndThreads(p, forum, threadsMap);
@@ -1008,7 +1029,7 @@ async function showThread() {
 	// Draw.
 	let p = document.getElementById("divBB");
 	showBlock(p);
-	addPageHead(p, settings.SiteName, false);
+	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false, "forum", parentId);
 	addPaginator(p, pageNumber, pageCount, "threadPagePrev", "threadPageNext");
 	await processThreadAndMessages(p, thread, messagesMap);
@@ -1028,7 +1049,7 @@ async function showMessage() {
 	// Draw.
 	let p = document.getElementById("divBB");
 	showBlock(p);
-	addPageHead(p, settings.SiteName, false);
+	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false, "thread", parentId);
 	await processMessage(p, message);
 	await addBottomActionPanel(p, "message", messageId, message);
@@ -1699,9 +1720,17 @@ function makeCaptchaImageUrl(captchaId) {
 	return captchaPath + "?id=" + captchaId;
 }
 
-function addPageHead(el, text, atTop) {
+async function addPageHead(el, text, atTop) {
 	let settings = getSettings();
 	let isLoggedInB = isLoggedIn(settings);
+	let unreadNotificationsCount = -1;
+	if (isLoggedInB) {
+		let resp = await countUnreadNotifications();
+		if (resp == null) {
+			return;
+		}
+		unreadNotificationsCount = resp.result.unc;
+	}
 
 	// Draw.
 	let cn = "pageHead";
@@ -1720,7 +1749,15 @@ function addPageHead(el, text, atTop) {
 	tdR.className = cn + "R";
 	tdR.id = cn + "R";
 	if (isLoggedInB) {
-		tdR.innerHTML = '<form><input type="button" value="Account" class="btnAccount" onclick="onBtnAccountClick(this)" /></form>';
+		let html;
+		html = '<table><tr>';
+		if (unreadNotificationsCount > 0) {
+			html += '<td><input type="button" value=" ☼ " class="btnNotificationsOn" onclick="onBtnNotificationsClick(this)" /></td>';
+		} else {
+			html += '<td><input type="button" value=" ☼ " class="btnNotificationsOff" onclick="onBtnNotificationsClick(this)" /></td>';
+		}
+		html += '<td><input type="button" value="Account" class="btnAccount" onclick="onBtnAccountClick(this)" /></td>' + '</tr></table>';
+		tdR.innerHTML = html;
 	} else {
 		tdR.cssText = '';
 	}
@@ -2244,6 +2281,11 @@ async function onBtnAccountClick(btn) {
 	await redirectPage(false, url);
 }
 
+async function onBtnNotificationsClick(btn) {
+	let url = qp.Notifications;
+	await redirectPage(false, url);
+}
+
 async function onBtnGoToIndexClick(btn) {
 	await redirectToMainPage();
 }
@@ -2658,4 +2700,249 @@ function processMessageText(msgText) {
 	txt = txt.replaceAll("\n", '<br>');
 	txt = txt.replaceAll("\r", '<br>');
 	return txt;
+}
+
+async function countUnreadNotifications() {
+	let reqData = new ApiRequest(actionName.CountUnreadNotifications, {});
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function showNotificationsPage() {
+	let resp = await getAllNotifications();
+	if (resp == null) {
+		return;
+	}
+	let notifications = resp.result.notifications;
+	notifications.sort(notificationsComparer);
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divBB");
+	showBlock(p);
+	await addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false);
+	addDiv(p, "notificationList");
+	fillListOfNotifications("notificationList", notifications);
+}
+
+function notificationsComparer(a, b) {
+	if (a.toc < b.toc) {
+		return 1;
+	}
+	if (a.toc > b.toc) {
+		return -1;
+	}
+	return 0;
+}
+
+function addDiv(el, x) {
+	let div = document.createElement("DIV");
+	div.className = x;
+	div.id = x;
+	el.appendChild(div);
+}
+
+async function getAllNotifications() {
+	let reqData = new ApiRequest(actionName.GetAllNotifications, {});
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+function fillListOfNotifications(elClass, notifications) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+
+	// Title.
+	let title = document.createElement("DIV");
+	title.className = elClass + 'Title';
+	title.textContent = 'Notifications';
+	div.appendChild(title);
+
+	// Table.
+	let tbl = document.createElement("TABLE");
+	tbl.className = elClass;
+
+	// Header.
+	let tr = document.createElement("TR");
+	let ths = ["#", "Time", "Text", "Actions"];
+	let th;
+	for (let i = 0; i < ths.length; i++) {
+		th = document.createElement("TH");
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+	div.appendChild(tbl);
+
+	let columnsWithHtml = [2, 3];
+
+	// Cells.
+	let notification, actions;
+	for (let i = 0; i < notifications.length; i++) {
+		notification = notifications[i];
+
+		tr = document.createElement("TR");
+		let tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = prettyTime(notification.toc);
+		tds[2] = splitNotificationTextCell(notification.text);
+
+		actions = '<input type="button" class="btnShowFullNotificationU" value="Show" onclick="onBtnShowFullNotificationClick(this)">';
+		if (!notification.isRead) {
+			actions += '<input type="button" class="btnMarkNotificationAsReadU" value="Read" onclick="onBtnMarkNotificationAsReadClick(this, ' + notification.id + ')">';
+		} else {
+			actions += '<input type="button" class="btnDeleteNotificationU" value="DEL" onclick="onBtnDeleteNotificationClick(this, ' + notification.id + ')">';
+		}
+		tds[3] = actions;
+
+		let td;
+		let jLast = tds.length - 1;
+		for (let j = 0; j < tds.length; j++) {
+			td = document.createElement("TD");
+
+			if (j === 0) {
+				td.className = "numCol";
+			} else {
+				if (j === jLast) {
+					td.className += "lastCol";
+				} else {
+					if (!notification.isRead) {
+						td.className = "unread";
+					}
+				}
+			}
+
+			if (columnsWithHtml.includes(j)) {
+				td.innerHTML = tds[j];
+			} else {
+				td.textContent = tds[j];
+			}
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+}
+
+async function onBtnMarkNotificationAsReadClick(btn, notificationId) {
+	let resp = await markNotificationAsRead(notificationId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+
+	// Change the 'unread' class in the table's row.
+	let tr = btn.parentNode.parentNode;
+	let td;
+	for (let i = 0; i < tr.childNodes.length; i++) {
+		td = tr.childNodes[i];
+		if (td.className === 'unread') {
+			td.className = 'read';
+		}
+	}
+
+	// Hide the button.
+	disableButton(btn);
+}
+
+async function onBtnDeleteNotificationClick(btn, notificationId) {
+	let resp = await deleteNotification(notificationId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+
+	// Change the 'unread' class in the table's row.
+	let tr = btn.parentNode.parentNode;
+	let td;
+	for (let i = 0; i < tr.childNodes.length; i++) {
+		td = tr.childNodes[i];
+		if (td.className === '') {
+			td.className = 'deleted';
+		}
+	}
+
+	// Hide the button.
+	disableButton(btn);
+}
+
+async function onBtnShowFullNotificationClick(btn) {
+	let tr = btn.parentNode.parentNode;
+	let td = tr.childNodes[2];
+	let subtableTbody = td.childNodes[0].childNodes[0];
+	let childShort = subtableTbody.childNodes[0].childNodes[0];
+	let childFull = subtableTbody.childNodes[1].childNodes[0];
+
+	if (childShort.className === 'visible') {
+		btn.value = "Hide";
+		childShort.className = 'hidden';
+		childFull.className = 'visible';
+	} else {
+		btn.value = "Show";
+		childFull.className = 'hidden';
+		childShort.className = 'visible';
+	}
+}
+
+async function markNotificationAsRead(notificationId) {
+	let params = new Parameters_MarkNotificationAsRead(notificationId);
+	let reqData = new ApiRequest(actionName.MarkNotificationAsRead, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function deleteNotification(notificationId) {
+	let params = new Parameters_DeleteNotification(notificationId);
+	let reqData = new ApiRequest(actionName.DeleteNotification, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+function composeNotificationShortText(fullText) {
+	let wordsCountMax = 8;
+	let segmenter = new Intl.Segmenter([], {granularity: 'word'});
+	let segmentedText = segmenter.segment(fullText);
+	let words = [...segmentedText].filter(s => s.isWordLike).map(s => s.segment);
+	if (words.length <= wordsCountMax) {
+		return fullText;
+	}
+	let shortTextWOP = words.slice(1, wordsCountMax + 1).join(" ");
+	return shortTextWOP + " ...";
+}
+
+function splitNotificationTextCell(fullText) {
+	let shortText = composeNotificationShortText(fullText);
+	let html = '<table>' +
+		'<tr><td class="visible">' + shortText + '</td></tr>' +
+		'<tr><td class="hidden">' + fullText + '</td></tr>' +
+		'</table>';
+	return html;
 }
