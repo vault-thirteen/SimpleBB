@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
@@ -55,4 +56,12 @@ func NewMessageFromScannableSource(src cm.IScannable) (msg *Message, err error) 
 	}
 
 	return msg, nil
+}
+
+func (m *Message) GetLastTouchTime() time.Time {
+	if m.Editor.Time == nil {
+		return m.Creator.Time
+	}
+
+	return *m.Editor.Time
 }

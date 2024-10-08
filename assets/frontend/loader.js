@@ -156,6 +156,7 @@ actionName = {
 	CountUnreadNotifications: "countUnreadNotifications",
 	DeleteNotification: "deleteNotification",
 	GetAllNotifications: "getAllNotifications",
+	GetLatestMessageOfThread: "getLatestMessageOfThread",
 	GetMessage: "getMessage",
 	GetSelfRoles: "getSelfRoles",
 	GetUserName: "getUserName",
@@ -379,6 +380,12 @@ class Parameters_MarkNotificationAsRead {
 class Parameters_DeleteNotification {
 	constructor(notificationId) {
 		this.NotificationId = notificationId;
+	}
+}
+
+class Parameters_GetLatestMessageOfThread {
+	constructor(threadId) {
+		this.ThreadId = threadId;
 	}
 }
 
@@ -995,7 +1002,7 @@ async function showForum() {
 	addActionPanel(p, false, "section", parentId);
 	addPaginator(p, pageNumber, pageCount, "forumPagePrev", "forumPageNext");
 	processForumAndThreads(p, forum, threadsMap);
-	await addBottomActionPanel(p, "forum", forumId);
+	await addBottomActionPanel(p, "forum", forumId, forum);
 }
 
 async function showThread() {
@@ -1033,7 +1040,7 @@ async function showThread() {
 	addActionPanel(p, false, "forum", parentId);
 	addPaginator(p, pageNumber, pageCount, "threadPagePrev", "threadPageNext");
 	await processThreadAndMessages(p, thread, messagesMap);
-	await addBottomActionPanel(p, "thread", threadId);
+	await addBottomActionPanel(p, "thread", threadId, thread);
 }
 
 async function showMessage() {
@@ -2369,7 +2376,7 @@ async function composeMessageHeaderText(message) {
 	return txt;
 }
 
-async function addBottomActionPanel(el, type, parentId, object) {
+async function addBottomActionPanel(el, type, objectId, object) {
 	let resp = await getSelfRoles();
 	if (resp == null) {
 		return;
@@ -2389,26 +2396,32 @@ async function addBottomActionPanel(el, type, parentId, object) {
 			if (userParams.isAuthor) {
 				td = document.createElement("TD");
 				td.innerHTML = '<form><input type="button" value="Start a new Thread" class="btnStartNewThread" ' +
-					'onclick="onBtnStartNewThreadClick(this, \'' + cn + '\', ' + parentId + ')" /></form>';
+					'onclick="onBtnStartNewThreadClick(this, \'' + cn + '\', ' + objectId + ')" /></form>';
 				tr.appendChild(td);
 			}
 			break;
 
 		case "thread":
-			if (userParams.isWriter) {
+			let resp = await getLatestMessageOfThread(objectId);
+			if (resp == null) {
+				return;
+			}
+			let latestMessageInThread = resp.result.message;
+			let canAddMsg = canUserAddMessage(userParams, latestMessageInThread);
+			if (canAddMsg) {
 				td = document.createElement("TD");
 				td.innerHTML = '<form><input type="button" value="Add a Message" class="btnAddMessage" ' +
-					'onclick="onBtnAddMessageClick(this, \'' + cn + '\', ' + parentId + ')" /></form>';
+					'onclick="onBtnAddMessageClick(this, \'' + cn + '\', ' + objectId + ')" /></form>';
 				tr.appendChild(td);
 			}
 			break;
 
 		case "message":
-			let canEditMsg = canMessageBeEdited(object, userParams);
+			let canEditMsg = canUserEditMessage(userParams, object);
 			if (canEditMsg) {
 				td = document.createElement("TD");
 				td.innerHTML = '<form><input type="button" value="Edit Message" class="btnEditMessage" ' +
-					'onclick="onBtnEditMessageClick(this, \'' + cn + '\', ' + parentId + ')" /></form>';
+					'onclick="onBtnEditMessageClick(this, \'' + cn + '\', ' + objectId + ')" /></form>';
 				tr.appendChild(td);
 			}
 			break;
@@ -2653,39 +2666,6 @@ async function reloadPage(wait) {
 		await sleep(redirectDelay * 1000);
 	}
 	location.reload();
-}
-
-function canMessageBeEdited(message, userParams) {
-	if (userParams.isModerator) {
-		return true;
-	}
-
-	if (!userParams.isWriter) {
-		return false;
-	}
-
-	let messageCreator = message.creator.userId;
-	if (messageCreator !== userParams.userId) {
-		return false;
-	}
-
-	let messageToC = new Date(message.creator.time);
-	let touchTime = messageToC;
-	if ((message.editor.time != null)) {
-		let messageToE = new Date(message.editor.time);
-		if (messageToE > messageToC) {
-			touchTime = messageToE;
-		}
-	}
-
-	let settings = getSettings();
-	let timeNow = Date.now();
-	let timePassed = (timeNow - touchTime) / 1000;
-	if (timePassed < settings.MessageEditTime) {
-		return true;
-	}
-
-	return false;
 }
 
 function escapeHtml(text) {
@@ -2945,4 +2925,73 @@ function splitNotificationTextCell(fullText) {
 		'<tr><td class="hidden">' + fullText + '</td></tr>' +
 		'</table>';
 	return html;
+}
+
+function getMessageMaxEditTime(message, settings) {
+	let lastTouchTime = getMessageLastTouchTime(message);
+	return addTimeSec(lastTouchTime, settings.MessageEditTime);
+}
+
+function getMessageLastTouchTime(message) {
+	if (message.editor.time == null) {
+		return new Date(message.creator.time);
+	}
+	return new Date(message.editor.time);
+}
+
+function addTimeSec(t, deltaSec) {
+	return new Date(t.getTime() + deltaSec * 1000);
+}
+
+async function getLatestMessageOfThread(threadId) {
+	let params = new Parameters_GetLatestMessageOfThread(threadId);
+	let reqData = new ApiRequest(actionName.GetLatestMessageOfThread, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+function canUserEditMessage(userParams, message) {
+	if (userParams.isModerator) {
+		return true;
+	}
+
+	if (!userParams.isWriter) {
+		return false;
+	}
+
+	if (userParams.userId !== message.creator.userId) {
+		return false;
+	}
+
+	let messageMaxEditTime = getMessageMaxEditTime(message, getSettings());
+	if (Date.now() < messageMaxEditTime) {
+		return true
+	}
+
+	return false;
+}
+
+function canUserAddMessage(userParams, latestMessageInThread) {
+	if (!userParams.isWriter) {
+		return false;
+	}
+
+	if (latestMessageInThread == null) {
+		return true;
+	}
+
+	if (latestMessageInThread.creator.userId !== userParams.userId) {
+		return true;
+	}
+
+	let messageMaxEditTime = getMessageMaxEditTime(latestMessageInThread, getSettings());
+	if (Date.now() < messageMaxEditTime) {
+		return false;
+	}
+
+	return true;
 }

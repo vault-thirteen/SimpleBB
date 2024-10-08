@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"sync"
-	"time"
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
@@ -1639,11 +1638,6 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 		return nil, re
 	}
 
-	// Check permissions.
-	if !userRoles.IsWriter {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
 	// Check parameters.
 	if p.ThreadId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
@@ -1651,6 +1645,19 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 
 	if len(p.Text) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageTextIsNotSet, RpcErrorMsg_MessageTextIsNotSet, nil)
+	}
+
+	// Get the latest message in the thread.
+	var latestMessageInThread *mm.Message
+	latestMessageInThread, re = srv.getLatestMessageOfThreadH(userRoles, p.ThreadId)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	canIAddMessage := srv.canUserAddMessage(userRoles, latestMessageInThread)
+	if !canIAddMessage {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Ensure that a parent exists.
@@ -1743,41 +1750,6 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 		return nil, re
 	}
 
-	// Check permissions.
-	var ok = false
-	if userRoles.IsModerator {
-		ok = true
-	} else {
-		// User can edit its own messages if they are not too old.
-		if userRoles.IsWriter {
-			var creatorUserId uint
-			var ToC time.Time
-			var ToE *time.Time
-			var err error
-			creatorUserId, ToC, ToE, err = srv.dbo.GetMessageCreatorAndTimeById(p.MessageId)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-
-			if userRoles.UserId == creatorUserId {
-				var lastTouchTime time.Time
-				if ToE != nil {
-					lastTouchTime = *ToE
-				} else {
-					lastTouchTime = ToC
-				}
-
-				if time.Now().Before(lastTouchTime.Add(time.Second * time.Duration(srv.settings.SystemSettings.MessageEditTime))) {
-					ok = true
-				}
-			}
-		}
-	}
-
-	if !ok {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
 	// Check parameters.
 	if p.MessageId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIdIsNotSet, RpcErrorMsg_MessageIdIsNotSet, nil)
@@ -1787,17 +1759,23 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageTextIsNotSet, RpcErrorMsg_MessageTextIsNotSet, nil)
 	}
 
-	var n int
-	var err error
-	n, err = srv.dbo.CountMessagesById(p.MessageId)
+	// Get the edited message.
+	message, err := srv.dbo.GetMessageById(p.MessageId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	if n == 0 {
+	if message == nil {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
 	}
 
+	// Check permissions.
+	canIEditMessage := srv.canUserEditMessage(userRoles, message)
+	if !canIEditMessage {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Edit the message.
 	messageTextChecksum := srv.getMessageTextChecksum(p.Text)
 
 	err = srv.dbo.SetMessageTextById(p.MessageId, p.Text, messageTextChecksum, userRoles.UserId)
@@ -1974,50 +1952,11 @@ func (srv *Server) getLatestMessageOfThread(p *mm.GetLatestMessageOfThreadParams
 		return nil, re
 	}
 
-	// Check permissions.
-	if !userRoles.IsReader {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
+	result = &mm.GetLatestMessageOfThreadResult{}
 
-	// Check parameters.
-	if p.ThreadId == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
-	}
-
-	// Get the thread.
-	var thread *mm.Thread
-	var err error
-	thread, err = srv.dbo.GetThreadById(p.ThreadId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	if thread == nil {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
-	}
-
-	if thread.Messages == nil {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
-	}
-
-	latestMessageId := thread.Messages.LastElement()
-	if latestMessageId == nil {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
-	}
-
-	// Read the message.
-	var message *mm.Message
-	message, err = srv.dbo.GetMessageById(*latestMessageId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	if message == nil {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
-	}
-
-	result = &mm.GetLatestMessageOfThreadResult{
-		Message: message,
+	result.Message, re = srv.getLatestMessageOfThreadH(userRoles, p.ThreadId)
+	if re != nil {
+		return nil, re
 	}
 
 	return result, nil

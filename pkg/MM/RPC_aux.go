@@ -6,10 +6,12 @@ import (
 	"hash/crc32"
 	"log"
 	"sync"
+	"time"
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
+	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	nc "github.com/vault-thirteen/SimpleBB/pkg/NM/client"
 	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
@@ -186,4 +188,129 @@ func (srv *Server) getMessageTextChecksum(msgText string) (checksum uint32) {
 
 func (srv *Server) checkMessageTextChecksum(msgText string, checksum uint32) (ok bool) {
 	return srv.getMessageTextChecksum(msgText) == checksum
+}
+
+// canUserEditMessage checks whether a user (specified by the 'userRoles'
+// argument) can edit a message (specified as an 'message' argument).
+func (srv *Server) canUserEditMessage(userRoles *am.GetSelfRolesResult, message *mm.Message) (ok bool) {
+	// Are you stupid, kido ?
+	if (userRoles == nil) || (message == nil) {
+		return false
+	}
+
+	// Moderators have extended rights to edit messages of any users.
+	if userRoles.IsModerator {
+		return true
+	}
+
+	// Writers can edit their own messages.
+	if !userRoles.IsWriter {
+		return false
+	}
+
+	// User can not edit messages created by other users.
+	if userRoles.UserId != message.Creator.UserId {
+		return false
+	}
+
+	// User can edit its own messages if they are not too old.
+	if time.Now().Before(srv.getMessageMaxEditTime(message)) {
+		return true
+	}
+
+	return false
+}
+
+// canUserAddMessage checks whether a user (specified by the 'userRoles'
+// argument) can add a new message into a thread in case when there is a
+// [latest] message in the thread (specified as an 'latestMessageInThread'
+// argument). If the thread is empty, i.e. no latest message is available, it
+// must be set as null.
+func (srv *Server) canUserAddMessage(userRoles *am.GetSelfRolesResult, latestMessageInThread *mm.Message) (ok bool) {
+	// Are you stupid, kido ?
+	if userRoles == nil {
+		return false
+	}
+
+	// Only writers can add new messages.
+	if !userRoles.IsWriter {
+		return false
+	}
+
+	// If there is no latest message in the thread, the thread is empty.
+	if latestMessageInThread == nil {
+		return true
+	}
+
+	// If the latest message in the thread was written by another [that] user,
+	// this user can add a new message.
+	if latestMessageInThread.Creator.UserId != userRoles.UserId {
+		return true
+	}
+
+	// If the user is trying to add its another message into a thread, we must
+	// check for collision. If the latest message can be edited, it should be
+	// edited, and another new message is not allowed.
+	if time.Now().Before(srv.getMessageMaxEditTime(latestMessageInThread)) {
+		return false
+	}
+
+	return true
+}
+
+// getLatestMessageOfThreadH is a helper function used by other functions to
+// get the latest message of a thread.
+func (srv *Server) getLatestMessageOfThreadH(userRoles *am.GetSelfRolesResult, threadId uint) (message *mm.Message, re *jrm1.RpcError) {
+	if userRoles == nil {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check permissions.
+	if !userRoles.IsReader {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check parameters.
+	if threadId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
+	}
+
+	// Get the thread.
+	var thread *mm.Thread
+	var err error
+	thread, err = srv.dbo.GetThreadById(threadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if thread == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	if thread.Messages == nil {
+		return nil, nil
+	}
+
+	latestMessageId := thread.Messages.LastElement()
+	if latestMessageId == nil {
+		return nil, nil
+	}
+
+	// Read the message.
+	message, err = srv.dbo.GetMessageById(*latestMessageId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if message == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	}
+
+	return message, nil
+}
+
+// getMessageMaxEditTime returns the time border after which message editing is
+// not allowed for an ordinary (non-moderator) user.
+func (srv *Server) getMessageMaxEditTime(message *mm.Message) time.Time {
+	return message.GetLastTouchTime().Add(time.Second * time.Duration(srv.settings.SystemSettings.MessageEditTime))
 }
