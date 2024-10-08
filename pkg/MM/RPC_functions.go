@@ -1963,6 +1963,66 @@ func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResu
 	return result, nil
 }
 
+// getLatestMessageOfThread reads the latest message of a thread.
+func (srv *Server) getLatestMessageOfThread(p *mm.GetLatestMessageOfThreadParams) (result *mm.GetLatestMessageOfThreadResult, re *jrm1.RpcError) {
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsReader {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check parameters.
+	if p.ThreadId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
+	}
+
+	// Get the thread.
+	var thread *mm.Thread
+	var err error
+	thread, err = srv.dbo.GetThreadById(p.ThreadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if thread == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	if thread.Messages == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	}
+
+	latestMessageId := thread.Messages.LastElement()
+	if latestMessageId == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	}
+
+	// Read the message.
+	var message *mm.Message
+	message, err = srv.dbo.GetMessageById(*latestMessageId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if message == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	}
+
+	result = &mm.GetLatestMessageOfThreadResult{
+		Message: message,
+	}
+
+	return result, nil
+}
+
 // deleteMessage removes a message.
 func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMessageResult, re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()

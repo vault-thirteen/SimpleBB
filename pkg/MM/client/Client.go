@@ -37,11 +37,12 @@ const (
 	FuncDeleteThread      = "DeleteThread"
 
 	// Message.
-	FuncAddMessage          = "AddMessage"
-	FuncChangeMessageText   = "ChangeMessageText"
-	FuncChangeMessageThread = "ChangeMessageThread"
-	FuncGetMessage          = "GetMessage"
-	FuncDeleteMessage       = "DeleteMessage"
+	FuncAddMessage               = "AddMessage"
+	FuncChangeMessageText        = "ChangeMessageText"
+	FuncChangeMessageThread      = "ChangeMessageThread"
+	FuncGetMessage               = "GetMessage"
+	FuncGetLatestMessageOfThread = "GetLatestMessageOfThread"
+	FuncDeleteMessage            = "DeleteMessage"
 
 	// Composite objects.
 	FuncListThreadAndMessages       = "ListThreadAndMessages"

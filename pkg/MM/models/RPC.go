@@ -372,6 +372,18 @@ type GetMessageResult struct {
 	Message *Message `json:"message"`
 }
 
+type GetLatestMessageOfThreadParams struct {
+	cmr.CommonParams
+
+	ThreadId uint `json:"threadId"`
+}
+
+type GetLatestMessageOfThreadResult struct {
+	cmr.CommonResult
+
+	Message *Message `json:"message"`
+}
+
 type DeleteMessageParams struct {
 	cmr.CommonParams
 

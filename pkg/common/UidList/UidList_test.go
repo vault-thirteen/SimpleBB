@@ -443,3 +443,32 @@ func Test_OnPage(t *testing.T) {
 	ulxx = nil
 	aTest.MustBeEqual(ul.OnPage(1, 1), ulxx)
 }
+
+func Test_LastElement(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+	var err error
+	var nullElement *uint = nil
+
+	// Test #1.
+	ul, err = NewFromArray(nil)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual(ul.LastElement(), nullElement)
+
+	// Test #2.
+	ul, err = NewFromArray([]uint{})
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual(ul.LastElement(), nullElement)
+
+	// Test #3.
+	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5})
+	aTest.MustBeNoError(err)
+	aTest.MustBeDifferent(ul.LastElement(), nullElement)
+	aTest.MustBeEqual(*ul.LastElement(), uint(5))
+
+	// Test #4.
+	ul, err = NewFromArray([]uint{1})
+	aTest.MustBeNoError(err)
+	aTest.MustBeDifferent(ul.LastElement(), nullElement)
+	aTest.MustBeEqual(*ul.LastElement(), uint(1))
+}

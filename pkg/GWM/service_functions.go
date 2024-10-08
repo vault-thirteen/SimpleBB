@@ -1576,6 +1576,35 @@ func (srv *Server) GetMessage(ar *api.Request, _ *http.Request, hrw http.Respons
 	return
 }
 
+func (srv *Server) GetLatestMessageOfThread(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params mm.GetLatestMessageOfThreadParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(mm.GetLatestMessageOfThreadResult)
+	var re *jrm1.RpcError
+	re, err = srv.mmServiceClient.MakeRequest(context.Background(), mc.FuncGetLatestMessageOfThread, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_MM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
 func (srv *Server) DeleteMessage(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
 	var params mm.DeleteMessageParams

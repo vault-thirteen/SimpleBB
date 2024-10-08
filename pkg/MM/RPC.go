@@ -54,6 +54,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.ChangeMessageText,
 		srv.ChangeMessageThread,
 		srv.GetMessage,
+		srv.GetLatestMessageOfThread,
 		srv.DeleteMessage,
 		srv.ListThreadAndMessages,
 		srv.ListThreadAndMessagesOnPage,
@@ -481,6 +482,22 @@ func (srv *Server) GetMessage(params *json.RawMessage, _ *jrm1.ResponseMetaData)
 
 	var r *mm.GetMessageResult
 	r, re = srv.getMessage(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) GetLatestMessageOfThread(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.GetLatestMessageOfThreadParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.GetLatestMessageOfThreadResult
+	r, re = srv.getLatestMessageOfThread(p)
 	if re != nil {
 		return nil, re
 	}

@@ -325,3 +325,23 @@ func (ul *UidList) OnPage(pageNumber uint, pageSize uint) (ulop *UidList) {
 
 	return &x
 }
+
+func (ul *UidList) LastElement() (lastElement *uint) {
+	if ul == nil {
+		return nil
+	}
+
+	if *ul == nil {
+		return nil
+	}
+
+	if len(*ul) == 0 {
+		return nil
+	}
+
+	// Last index in array.
+	iLast := uint(len(*ul) - 1)
+
+	x := (*ul)[iLast]
+	return &x
+}

@@ -69,6 +69,7 @@ const (
 	ApiFunctionName_ChangeMessageText           = "changeMessageText"
 	ApiFunctionName_ChangeMessageThread         = "changeMessageThread"
 	ApiFunctionName_GetMessage                  = "getMessage"
+	ApiFunctionName_GetLatestMessageOfThread    = "getLatestMessageOfThread"
 	ApiFunctionName_DeleteMessage               = "deleteMessage"
 	ApiFunctionName_ListThreadAndMessages       = "listThreadAndMessages"
 	ApiFunctionName_ListThreadAndMessagesOnPage = "listThreadAndMessagesOnPage"
