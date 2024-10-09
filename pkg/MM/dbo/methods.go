@@ -188,13 +188,13 @@ func (dbo *DatabaseObject) GetMessageCreatorAndTimeById(messageId uint) (creator
 	return creatorUserId, ToC, ToE, nil
 }
 
-func (dbo *DatabaseObject) GetMessageThreadById(messageId uint) (thread uint, err error) {
-	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetMessageThreadById).QueryRow(messageId).Scan(&thread)
+func (dbo *DatabaseObject) GetMessageThreadById(messageId uint) (threadId uint, err error) {
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetMessageThreadById).QueryRow(messageId).Scan(&threadId)
 	if err != nil {
 		return cdbo.IdOnError, err
 	}
 
-	return thread, nil
+	return threadId, nil
 }
 
 func (dbo *DatabaseObject) GetSectionById(sectionId uint) (section *mm.Section, err error) {
@@ -248,13 +248,13 @@ func (dbo *DatabaseObject) GetThreadById(threadId uint) (thread *mm.Thread, err 
 	return thread, nil
 }
 
-func (dbo *DatabaseObject) GetThreadForumById(threadId uint) (forum uint, err error) {
-	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetThreadForumById).QueryRow(threadId).Scan(&forum)
+func (dbo *DatabaseObject) GetThreadForumById(threadId uint) (forumId uint, err error) {
+	err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetThreadForumById).QueryRow(threadId).Scan(&forumId)
 	if err != nil {
 		return cdbo.IdOnError, err
 	}
 
-	return forum, nil
+	return forumId, nil
 }
 
 func (dbo *DatabaseObject) GetThreadMessagesById(threadId uint) (messages *ul.UidList, err error) {

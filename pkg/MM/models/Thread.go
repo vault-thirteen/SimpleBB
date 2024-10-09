@@ -36,12 +36,13 @@ func NewThread() (thr *Thread) {
 
 func NewThreadFromScannableSource(src cm.IScannable) (thr *Thread, err error) {
 	thr = NewThread()
+	var x = ul.New()
 
 	err = src.Scan(
 		&thr.Id,
 		&thr.ForumId,
 		&thr.Name,
-		&thr.Messages,
+		x, //&thr.Messages,
 		&thr.Creator.UserId,
 		&thr.Creator.Time,
 		&thr.Editor.UserId,
@@ -55,5 +56,6 @@ func NewThreadFromScannableSource(src cm.IScannable) (thr *Thread, err error) {
 		}
 	}
 
+	thr.Messages = x
 	return thr, nil
 }
