@@ -18,7 +18,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = make([]string, 0)
 
 	// 0.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserIPAB = ?;`, dbo.tableNames.IPAddresses)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE UserIPAB = ?;`, dbo.tableNames.IPAddresses)
 	qs = append(qs, q)
 
 	// 1.

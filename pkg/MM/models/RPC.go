@@ -311,6 +311,19 @@ type DeleteThreadResult struct {
 	OK bool `json:"ok"`
 }
 
+type ThreadExistsSParams struct {
+	cmr.CommonParams
+	cmr.DKeyParams
+
+	ThreadId uint `json:"threadId"`
+}
+
+type ThreadExistsSResult struct {
+	cmr.CommonResult
+
+	Exists bool `json:"exists"`
+}
+
 // Message.
 
 type AddMessageParams struct {
@@ -459,6 +472,16 @@ type ListSectionsAndForumsResult struct {
 }
 
 // Other.
+
+type GetDKeyParams struct {
+	cmr.CommonParams
+}
+
+type GetDKeyResult struct {
+	cmr.CommonResult
+
+	DKey string `json:"dKey"`
+}
 
 type ShowDiagnosticDataParams struct{}
 

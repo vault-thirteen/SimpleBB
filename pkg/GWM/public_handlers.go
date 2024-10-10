@@ -85,6 +85,11 @@ const (
 	ApiFunctionName_CountUnreadNotifications = "countUnreadNotifications"
 	ApiFunctionName_MarkNotificationAsRead   = "markNotificationAsRead"
 	ApiFunctionName_DeleteNotification       = "deleteNotification"
+
+	// SM.
+	ApiFunctionName_AddSubscription      = "addSubscription"
+	ApiFunctionName_GetUserSubscriptions = "getUserSubscriptions"
+	ApiFunctionName_DeleteSubscription   = "deleteSubscription"
 )
 
 func (srv *Server) handlePublicSettings(rw http.ResponseWriter, req *http.Request) {
@@ -191,7 +196,7 @@ func (srv *Server) handleCaptcha(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	srv.captchaProxy.ServeHTTP(rw, req)
+	srv.rcsProxy.ServeHTTP(rw, req)
 }
 
 // handleFrontEnd serves static files for the front end part.

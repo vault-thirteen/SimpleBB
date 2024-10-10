@@ -36,12 +36,13 @@ func NewForum() (frm *Forum) {
 
 func NewForumFromScannableSource(src cm.IScannable) (forum *Forum, err error) {
 	forum = NewForum()
+	var x = ul.New()
 
 	err = src.Scan(
 		&forum.Id,
 		&forum.SectionId,
 		&forum.Name,
-		&forum.Threads,
+		x, //&forum.Threads,
 		&forum.Creator.UserId,
 		&forum.Creator.Time,
 		&forum.Editor.UserId,
@@ -55,5 +56,6 @@ func NewForumFromScannableSource(src cm.IScannable) (forum *Forum, err error) {
 		}
 	}
 
+	forum.Threads = x
 	return forum, nil
 }

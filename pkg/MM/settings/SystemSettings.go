@@ -8,6 +8,7 @@ import (
 
 // SystemSettings are system settings.
 type SystemSettings struct {
+	DKeySize        uint `json:"dKeySize"`
 	MessageEditTime uint `json:"messageEditTime"`
 	PageSize        uint `json:"pageSize"`
 
@@ -26,7 +27,8 @@ type SystemSettings struct {
 }
 
 func (s SystemSettings) Check() (err error) {
-	if (s.MessageEditTime == 0) ||
+	if (s.DKeySize == 0) ||
+		(s.MessageEditTime == 0) ||
 		(s.PageSize == 0) {
 		return errors.New(c.MsgSystemSettingError)
 	}

@@ -20,6 +20,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/dk"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cset "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
@@ -53,12 +54,17 @@ type Server struct {
 	// Clients for external services.
 	acmServiceClient *cc.Client
 	nmServiceClient  *cc.Client
+	smServiceClient  *cc.Client
 
 	// CRC32 Table.
 	crcTable *crc32.Table
 
-	// DKeys.
+	// Internal DKeys.
+	dKeyI *dk.DKey
+
+	// External DKeys.
 	dKeyForNM *string
+	dKeyForSM *string
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -109,6 +115,11 @@ func NewServer(s cm.ISettings) (srv *Server, err error) {
 	}
 
 	err = srv.createClientsForExternalServices()
+	if err != nil {
+		return nil, err
+	}
+
+	err = srv.initKeys()
 	if err != nil {
 		return nil, err
 	}
@@ -262,31 +273,51 @@ func (srv *Server) httpRouter(rw http.ResponseWriter, req *http.Request) {
 
 func (srv *Server) createClientsForExternalServices() (err error) {
 	// ACM module.
-	var acmSCS = &cset.ServiceClientSettings{
-		Schema:                      srv.settings.AcmSettings.Schema,
-		Host:                        srv.settings.AcmSettings.Host,
-		Port:                        srv.settings.AcmSettings.Port,
-		Path:                        srv.settings.AcmSettings.Path,
-		EnableSelfSignedCertificate: srv.settings.AcmSettings.EnableSelfSignedCertificate,
-	}
+	{
+		var acmSCS = &cset.ServiceClientSettings{
+			Schema:                      srv.settings.AcmSettings.Schema,
+			Host:                        srv.settings.AcmSettings.Host,
+			Port:                        srv.settings.AcmSettings.Port,
+			Path:                        srv.settings.AcmSettings.Path,
+			EnableSelfSignedCertificate: srv.settings.AcmSettings.EnableSelfSignedCertificate,
+		}
 
-	srv.acmServiceClient, err = cc.NewClientWithSCS(acmSCS, app.ServiceShortName_ACM)
-	if err != nil {
-		return err
+		srv.acmServiceClient, err = cc.NewClientWithSCS(acmSCS, app.ServiceShortName_ACM)
+		if err != nil {
+			return err
+		}
 	}
 
 	// NM module.
-	var nmSCS = &cset.ServiceClientSettings{
-		Schema:                      srv.settings.NmSettings.Schema,
-		Host:                        srv.settings.NmSettings.Host,
-		Port:                        srv.settings.NmSettings.Port,
-		Path:                        srv.settings.NmSettings.Path,
-		EnableSelfSignedCertificate: srv.settings.NmSettings.EnableSelfSignedCertificate,
+	{
+		var nmSCS = &cset.ServiceClientSettings{
+			Schema:                      srv.settings.NmSettings.Schema,
+			Host:                        srv.settings.NmSettings.Host,
+			Port:                        srv.settings.NmSettings.Port,
+			Path:                        srv.settings.NmSettings.Path,
+			EnableSelfSignedCertificate: srv.settings.NmSettings.EnableSelfSignedCertificate,
+		}
+
+		srv.nmServiceClient, err = cc.NewClientWithSCS(nmSCS, app.ServiceShortName_NM)
+		if err != nil {
+			return err
+		}
 	}
 
-	srv.nmServiceClient, err = cc.NewClientWithSCS(nmSCS, app.ServiceShortName_NM)
-	if err != nil {
-		return err
+	// SM module.
+	{
+		var smSCS = &cset.ServiceClientSettings{
+			Schema:                      srv.settings.SmSettings.Schema,
+			Host:                        srv.settings.SmSettings.Host,
+			Port:                        srv.settings.SmSettings.Port,
+			Path:                        srv.settings.SmSettings.Path,
+			EnableSelfSignedCertificate: srv.settings.SmSettings.EnableSelfSignedCertificate,
+		}
+
+		srv.smServiceClient, err = cc.NewClientWithSCS(smSCS, app.ServiceShortName_SM)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -294,15 +325,27 @@ func (srv *Server) createClientsForExternalServices() (err error) {
 
 func (srv *Server) pingClientsForExternalServices() (err error) {
 	// ACM module.
-	err = srv.acmServiceClient.Ping(true)
-	if err != nil {
-		return err
+	{
+		err = srv.acmServiceClient.Ping(true)
+		if err != nil {
+			return err
+		}
 	}
 
 	// NM module.
-	err = srv.nmServiceClient.Ping(true)
-	if err != nil {
-		return err
+	{
+		err = srv.nmServiceClient.Ping(true)
+		if err != nil {
+			return err
+		}
+	}
+
+	// SM module.
+	{
+		err = srv.smServiceClient.Ping(true)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -310,18 +353,37 @@ func (srv *Server) pingClientsForExternalServices() (err error) {
 
 func (srv *Server) synchroniseModules(verbose bool) (err error) {
 	// NM module.
-	if verbose {
-		fmt.Print(fmt.Sprintf(c.MsgFSynchronisingWithModule, app.ServiceShortName_NM))
+	{
+		if verbose {
+			fmt.Print(fmt.Sprintf(c.MsgFSynchronisingWithModule, app.ServiceShortName_NM))
+		}
+
+		var re *jrm1.RpcError
+		srv.dKeyForNM, re = srv.getDKeyForNM()
+		if re != nil {
+			return re.AsError()
+		}
+
+		if verbose {
+			fmt.Println(c.MsgOK)
+		}
 	}
 
-	var re *jrm1.RpcError
-	srv.dKeyForNM, re = srv.getDKeyForNM()
-	if re != nil {
-		return re.AsError()
-	}
+	// SM module.
+	{
+		if verbose {
+			fmt.Print(fmt.Sprintf(c.MsgFSynchronisingWithModule, app.ServiceShortName_SM))
+		}
 
-	if verbose {
-		fmt.Println(c.MsgOK)
+		var re *jrm1.RpcError
+		srv.dKeyForSM, re = srv.getDKeyForSM()
+		if re != nil {
+			return re.AsError()
+		}
+
+		if verbose {
+			fmt.Println(c.MsgOK)
+		}
 	}
 
 	return nil
@@ -329,6 +391,15 @@ func (srv *Server) synchroniseModules(verbose bool) (err error) {
 
 func (srv *Server) initCRC() (err error) {
 	srv.crcTable = crc32.IEEETable
+
+	return nil
+}
+
+func (srv *Server) initKeys() (err error) {
+	srv.dKeyI, err = dk.NewDKey(int(srv.settings.SystemSettings.DKeySize))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

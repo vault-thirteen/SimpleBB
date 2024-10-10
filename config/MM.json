@@ -29,6 +29,7 @@
     "tableInitScriptsFolder": "sql\\MM\\table_init"
   },
   "system": {
+    "dKeySize": 16,
     "messageEditTime": 300,
     "pageSize": 20,
     "newThreadsAtTop": true,
@@ -45,6 +46,13 @@
     "schema": "https",
     "host": "localhost",
     "port": 2007,
+    "path": "/",
+    "enableSelfSignedCertificate": true
+  },
+  "sm": {
+    "schema": "https",
+    "host": "localhost",
+    "port": 2008,
     "path": "/",
     "enableSelfSignedCertificate": true
   }

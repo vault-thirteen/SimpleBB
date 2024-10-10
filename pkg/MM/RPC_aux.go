@@ -14,7 +14,10 @@ import (
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	nc "github.com/vault-thirteen/SimpleBB/pkg/NM/client"
 	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
+	sc "github.com/vault-thirteen/SimpleBB/pkg/SM/client"
+	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 )
@@ -55,6 +58,15 @@ func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
 }
 
 // Token-related functions.
+
+// mustBeNoAuth ensures that authorisation is not used.
+func (srv *Server) mustBeNoAuth(auth *cmr.Auth) (re *jrm1.RpcError) {
+	if auth != nil {
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	return nil
+}
 
 // mustBeAuthUserIPA ensures that user's IP address is set. If it is not set,
 // an error is returned and the caller of this function must stop and return
@@ -158,6 +170,28 @@ func (srv *Server) getDKeyForNM() (dKey *string, re *jrm1.RpcError) {
 	return &result.DKey, nil
 }
 
+// getDKeyForSM receives a DKey from Subscription module.
+func (srv *Server) getDKeyForSM() (dKey *string, re *jrm1.RpcError) {
+	params := sm.GetDKeyParams{}
+	result := new(sm.GetDKeyResult)
+	var err error
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncGetDKey, params, result)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
+	}
+	if re != nil {
+		return nil, re
+	}
+
+	// DKey must be non-empty.
+	if len(result.DKey) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_ModuleSynchronisation, c.RpcErrorMsg_ModuleSynchronisation, nil)
+	}
+
+	return &result.DKey, nil
+}
+
 // sendNotificationToUser sends a system notification to a user.
 func (srv *Server) sendNotificationToUser(userId uint, text string) (re *jrm1.RpcError) {
 	params := nm.AddNotificationSParams{
@@ -171,6 +205,30 @@ func (srv *Server) sendNotificationToUser(userId uint, text string) (re *jrm1.Rp
 	result := new(nm.AddNotificationSResult)
 	var err error
 	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncAddNotificationS, params, result)
+	if err != nil {
+		srv.logError(err)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
+	}
+	if re != nil {
+		return re
+	}
+
+	return nil
+}
+
+// clearSubscriptionsOfDeletedThread clears remains of subscriptions of a
+// deleted thread.
+func (srv *Server) clearSubscriptionsOfDeletedThread(threadId uint) (re *jrm1.RpcError) {
+	params := sm.ClearThreadSubscriptionsSParams{
+		DKeyParams: cmr.DKeyParams{
+			// DKey is set during module start-up, so it is non-null.
+			DKey: *srv.dKeyForSM,
+		},
+		ThreadId: threadId,
+	}
+	result := new(sm.ClearThreadSubscriptionsSResult)
+	var err error
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncClearThreadSubscriptionsS, params, result)
 	if err != nil {
 		srv.logError(err)
 		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
@@ -313,4 +371,70 @@ func (srv *Server) getLatestMessageOfThreadH(userRoles *am.GetSelfRolesResult, t
 // not allowed for an ordinary (non-moderator) user.
 func (srv *Server) getMessageMaxEditTime(message *mm.Message) time.Time {
 	return message.GetLastTouchTime().Add(time.Second * time.Duration(srv.settings.SystemSettings.MessageEditTime))
+}
+
+// deleteThreadH is a helper function used by other functions to delete a
+// thread.
+func (srv *Server) deleteThreadH(p *mm.DeleteThreadParams) (re *jrm1.RpcError) {
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return re
+	}
+
+	// Check permissions.
+	if !userRoles.IsAdministrator {
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check parameters.
+	if p.ThreadId == 0 {
+		return jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
+	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	// Read the thread.
+	var thread *mm.Thread
+	var err error
+	thread, err = srv.dbo.GetThreadById(p.ThreadId)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	if thread == nil {
+		return jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	// Check for children.
+	if thread.Messages.Size() > 0 {
+		return jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotEmpty, RpcErrorMsg_ThreadIsNotEmpty, nil)
+	}
+
+	// Update the link.
+	var linkThreads *ul.UidList
+	linkThreads, err = srv.dbo.GetForumThreadsById(thread.ForumId)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	err = linkThreads.RemoveItem(p.ThreadId)
+	if err != nil {
+		srv.logError(err)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetForumThreadsById(thread.ForumId, linkThreads)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	// Delete the thread.
+	err = srv.dbo.DeleteThreadById(p.ThreadId)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	return nil
 }

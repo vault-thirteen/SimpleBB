@@ -48,12 +48,13 @@ func NewSection() (sec *Section) {
 
 func NewSectionFromScannableSource(src cm.IScannable) (sec *Section, err error) {
 	sec = NewSection()
+	var x = ul.New()
 
 	err = src.Scan(
 		&sec.Id,
 		&sec.Parent,
 		&sec.ChildType,
-		&sec.Children,
+		x, //&sec.Children,
 		&sec.Name,
 		&sec.Creator.UserId,
 		&sec.Creator.Time,
@@ -68,5 +69,6 @@ func NewSectionFromScannableSource(src cm.IScannable) (sec *Section, err error) 
 		}
 	}
 
+	sec.Children = x
 	return sec, nil
 }

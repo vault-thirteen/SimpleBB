@@ -101,7 +101,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 3.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Email = ? AND VerificationCode = ?;`, dbo.tableNames.PreRegisteredUsers)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE Email = ? AND VerificationCode = ?;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 4.
@@ -145,11 +145,11 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 14.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserId = (SELECT Id FROM %s WHERE Email = ?);`, dbo.tableNames.Sessions, dbo.tableNames.Users)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE UserId = (SELECT Id FROM %s WHERE Email = ?);`, dbo.tableNames.Sessions, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 15.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserId = (SELECT Id FROM %s WHERE Email = ?);`, dbo.tableNames.PreSessions, dbo.tableNames.Users)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE UserId = (SELECT Id FROM %s WHERE Email = ?);`, dbo.tableNames.PreSessions, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 16.
@@ -197,7 +197,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 27.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE RequestId = ? AND VerificationCode = ? AND IsEmailSent = TRUE;`, dbo.tableNames.PreSessions)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE RequestId = ? AND VerificationCode = ? AND IsEmailSent = TRUE;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 28.
@@ -237,7 +237,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 37.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserId = ?;`, dbo.tableNames.Sessions)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE UserId = ?;`, dbo.tableNames.Sessions)
 	qs = append(qs, q)
 
 	// 38.
@@ -285,7 +285,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 49.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserId = ?;`, dbo.tableNames.PasswordChanges)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE UserId = ?;`, dbo.tableNames.PasswordChanges)
 	qs = append(qs, q)
 
 	// 50.
@@ -309,7 +309,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 55.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE RequestId = ? AND VerificationCode = ? AND IsEmailSent = TRUE;`, dbo.tableNames.PasswordChanges)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE RequestId = ? AND VerificationCode = ? AND IsEmailSent = TRUE;`, dbo.tableNames.PasswordChanges)
 	qs = append(qs, q)
 
 	// 56.
@@ -321,7 +321,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 58.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE UserId = ?;`, dbo.tableNames.EmailChanges)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE UserId = ?;`, dbo.tableNames.EmailChanges)
 	qs = append(qs, q)
 
 	// 59.
@@ -337,7 +337,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 62.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE RequestId = ? AND VerificationCodeOld = ? AND IsOldEmailSent = TRUE AND VerificationCodeNew = ? AND IsNewEmailSent = TRUE;`, dbo.tableNames.EmailChanges)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE RequestId = ? AND VerificationCodeOld = ? AND IsOldEmailSent = TRUE AND VerificationCodeNew = ? AND IsNewEmailSent = TRUE;`, dbo.tableNames.EmailChanges)
 	qs = append(qs, q)
 
 	// 63.

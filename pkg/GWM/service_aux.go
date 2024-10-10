@@ -97,6 +97,12 @@ func (srv *Server) getHttpStatusCodeByRpcErrorCode(moduleId cm.Module, rpcErrorC
 		if ok {
 			return httpStatusCode, nil
 		}
+
+	case app.ModuleId_SM:
+		httpStatusCode, ok = srv.smHttpStatusCodesByRpcErrorCode[rpcErrorCode]
+		if ok {
+			return httpStatusCode, nil
+		}
 	}
 
 	return 0, fmt.Errorf(ErrFUnknownRpcErrorCode, rpcErrorCode)
