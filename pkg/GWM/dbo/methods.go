@@ -8,10 +8,13 @@ import (
 	"net"
 
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 
 func (dbo *DatabaseObject) CountBlocksByIPAddress(ipa net.IP) (n int, err error) {
-	err = dbo.PreparedStatement(DbPsid_CountBlocksByIPAddress).QueryRow(ipa).Scan(&n)
+	row := dbo.PreparedStatement(DbPsid_CountBlocksByIPAddress).QueryRow(ipa)
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}

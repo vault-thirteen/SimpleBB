@@ -95,8 +95,10 @@ func (dbo *DatabaseObject) AttachVerificationCodeToPreSession(userId uint, reque
 }
 
 func (dbo *DatabaseObject) CheckVerificationCodeForLogIn(requestId string, code string) (ok bool, err error) {
+	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodeForLogIn).QueryRow(requestId, code)
+
 	var n int
-	err = dbo.PreparedStatement(DbPsid_CheckVerificationCodeForLogIn).QueryRow(requestId, code).Scan(&n)
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return false, err
 	}
@@ -109,8 +111,10 @@ func (dbo *DatabaseObject) CheckVerificationCodeForLogIn(requestId string, code 
 }
 
 func (dbo *DatabaseObject) CheckVerificationCodeForPwdChange(requestId string, code string) (ok bool, err error) {
+	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodeForPwdChange).QueryRow(requestId, code)
+
 	var n int
-	err = dbo.PreparedStatement(DbPsid_CheckVerificationCodeForPwdChange).QueryRow(requestId, code).Scan(&n)
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return false, err
 	}
@@ -123,8 +127,10 @@ func (dbo *DatabaseObject) CheckVerificationCodeForPwdChange(requestId string, c
 }
 
 func (dbo *DatabaseObject) CheckVerificationCodeForPreReg(email, code string) (ok bool, err error) {
+	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodeForPreReg).QueryRow(email, code)
+
 	var n int
-	err = dbo.PreparedStatement(DbPsid_CheckVerificationCodeForPreReg).QueryRow(email, code).Scan(&n)
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return false, err
 	}
@@ -137,8 +143,10 @@ func (dbo *DatabaseObject) CheckVerificationCodeForPreReg(email, code string) (o
 }
 
 func (dbo *DatabaseObject) CheckVerificationCodesForEmailChange(requestId string, codeOld string, codeNew string) (ok bool, err error) {
+	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodesForEmailChange).QueryRow(requestId, codeOld, codeNew)
+
 	var n int
-	err = dbo.PreparedStatement(DbPsid_CheckVerificationCodesForEmailChange).QueryRow(requestId, codeOld, codeNew).Scan(&n)
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return false, err
 	}
@@ -151,7 +159,9 @@ func (dbo *DatabaseObject) CheckVerificationCodesForEmailChange(requestId string
 }
 
 func (dbo *DatabaseObject) CountAllUsers() (n int, err error) {
-	err = dbo.PreparedStatement(DbPsid_CountAllUsers).QueryRow().Scan(&n)
+	row := dbo.PreparedStatement(DbPsid_CountAllUsers).QueryRow()
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -160,7 +170,9 @@ func (dbo *DatabaseObject) CountAllUsers() (n int, err error) {
 }
 
 func (dbo *DatabaseObject) CountRegistrationsReadyForApproval() (n int, err error) {
-	err = dbo.PreparedStatement(DbPsid_CountRegistrationsReadyForApproval).QueryRow().Scan(&n)
+	row := dbo.PreparedStatement(DbPsid_CountRegistrationsReadyForApproval).QueryRow()
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -169,7 +181,9 @@ func (dbo *DatabaseObject) CountRegistrationsReadyForApproval() (n int, err erro
 }
 
 func (dbo *DatabaseObject) CountEmailChangesByUserId(userId uint) (n int, err error) {
-	err = dbo.PreparedStatement(DbPsid_CountEmailChangesByUserId).QueryRow(userId).Scan(&n)
+	row := dbo.PreparedStatement(DbPsid_CountEmailChangesByUserId).QueryRow(userId)
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -178,7 +192,9 @@ func (dbo *DatabaseObject) CountEmailChangesByUserId(userId uint) (n int, err er
 }
 
 func (dbo *DatabaseObject) CountPasswordChangesByUserId(userId uint) (n int, err error) {
-	err = dbo.PreparedStatement(DbPsid_CountPasswordChangesByUserId).QueryRow(userId).Scan(&n)
+	row := dbo.PreparedStatement(DbPsid_CountPasswordChangesByUserId).QueryRow(userId)
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -187,7 +203,9 @@ func (dbo *DatabaseObject) CountPasswordChangesByUserId(userId uint) (n int, err
 }
 
 func (dbo *DatabaseObject) CountPreSessionsByUserEmail(email string) (n int, err error) {
-	err = dbo.PreparedStatement(DbPsid_CountPreSessionsByUserEmail).QueryRow(email).Scan(&n)
+	row := dbo.PreparedStatement(DbPsid_CountPreSessionsByUserEmail).QueryRow(email)
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -196,7 +214,9 @@ func (dbo *DatabaseObject) CountPreSessionsByUserEmail(email string) (n int, err
 }
 
 func (dbo *DatabaseObject) CountSessionsByUserEmail(email string) (n int, err error) {
-	err = dbo.PreparedStatement(DbPsid_CountSessionsByUserEmail).QueryRow(email).Scan(&n)
+	row := dbo.PreparedStatement(DbPsid_CountSessionsByUserEmail).QueryRow(email)
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -205,7 +225,9 @@ func (dbo *DatabaseObject) CountSessionsByUserEmail(email string) (n int, err er
 }
 
 func (dbo *DatabaseObject) CountSessionsByUserId(userId uint) (n int, err error) {
-	err = dbo.PreparedStatement(DbPsid_CountSessionsByUserId).QueryRow(userId).Scan(&n)
+	row := dbo.PreparedStatement(DbPsid_CountSessionsByUserId).QueryRow(userId)
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -214,7 +236,9 @@ func (dbo *DatabaseObject) CountSessionsByUserId(userId uint) (n int, err error)
 }
 
 func (dbo *DatabaseObject) CountUsersWithEmailAbleToLogIn(email string) (n int, err error) {
-	err = dbo.PreparedStatement(DbPsid_CountUsersWithEmailAbleToLogIn).QueryRow(email).Scan(&n)
+	row := dbo.PreparedStatement(DbPsid_CountUsersWithEmailAbleToLogIn).QueryRow(email)
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -223,7 +247,9 @@ func (dbo *DatabaseObject) CountUsersWithEmailAbleToLogIn(email string) (n int, 
 }
 
 func (dbo *DatabaseObject) CountUsersWithEmail(email string) (n int, err error) {
-	err = dbo.PreparedStatement(DbPsid_CountUsersWithEmail).QueryRow(email, email).Scan(&n)
+	row := dbo.PreparedStatement(DbPsid_CountUsersWithEmail).QueryRow(email, email)
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -232,7 +258,9 @@ func (dbo *DatabaseObject) CountUsersWithEmail(email string) (n int, err error) 
 }
 
 func (dbo *DatabaseObject) CountUsersWithName(name string) (n int, err error) {
-	err = dbo.PreparedStatement(DbPsid_CountUsersWithName).QueryRow(name, name).Scan(&n)
+	row := dbo.PreparedStatement(DbPsid_CountUsersWithName).QueryRow(name, name)
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -578,7 +606,9 @@ func (dbo *DatabaseObject) GetUserById(userId uint) (user *am.User, err error) {
 }
 
 func (dbo *DatabaseObject) GetUserIdByEmail(email string) (id uint, err error) {
-	err = dbo.PreparedStatement(DbPsid_GetUserIdByEmail).QueryRow(email).Scan(&id)
+	row := dbo.PreparedStatement(DbPsid_GetUserIdByEmail).QueryRow(email)
+
+	id, err = cm.NewNonNullValueFromScannableSource[uint](row)
 	if err != nil {
 		return cdbo.IdOnError, err
 	}
