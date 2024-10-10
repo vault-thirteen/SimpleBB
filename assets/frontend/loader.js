@@ -149,6 +149,7 @@ msg = {
 // Action names.
 actionName = {
 	AddMessage: "addMessage",
+	AddSubscription: "addSubscription",
 	AddThread: "addThread",
 	ChangeEmail: "changeEmail",
 	ChangeMessageText: "changeMessageText",
@@ -159,6 +160,7 @@ actionName = {
 	GetLatestMessageOfThread: "getLatestMessageOfThread",
 	GetMessage: "getMessage",
 	GetSelfRoles: "getSelfRoles",
+	GetSelfSubscriptions: "getSelfSubscriptions",
 	GetUserName: "getUserName",
 	ListForumAndThreadsOnPage: "listForumAndThreadsOnPage",
 	ListSectionsAndForums: "listSectionsAndForums",
@@ -386,6 +388,13 @@ class Parameters_DeleteNotification {
 class Parameters_GetLatestMessageOfThread {
 	constructor(threadId) {
 		this.ThreadId = threadId;
+	}
+}
+
+class Parameters_AddSubscription {
+	constructor(threadId, userId) {
+		this.ThreadId = threadId;
+		this.UserId = userId;
 	}
 }
 
@@ -2407,11 +2416,29 @@ async function addBottomActionPanel(el, type, objectId, object) {
 				return;
 			}
 			let latestMessageInThread = resp.result.message;
+
+			resp = await getSelfSubscriptions();
+			if (resp == null) {
+				return;
+			}
+			let userId = resp.result.userSubscriptions.userId;
+			let subscriptions = resp.result.userSubscriptions.threadIds;
+			let isUserSubscribed = false;
+			if (subscriptions != null) {
+				isUserSubscribed = subscriptions.includes(objectId);
+			}
+
 			let canAddMsg = canUserAddMessage(userParams, latestMessageInThread);
 			if (canAddMsg) {
 				td = document.createElement("TD");
 				td.innerHTML = '<form><input type="button" value="Add a Message" class="btnAddMessage" ' +
 					'onclick="onBtnAddMessageClick(this, \'' + cn + '\', ' + objectId + ')" /></form>';
+				tr.appendChild(td);
+			}
+			if (!isUserSubscribed) {
+				td = document.createElement("TD");
+				td.innerHTML = '<form><input type="button" value="Subscribe" class="btnSubscribe" ' +
+					'onclick="onBtnSubscribeClick(this, ' + objectId + ', ' + userId + ')" /></form>';
 				tr.appendChild(td);
 			}
 			break;
@@ -2482,6 +2509,17 @@ async function onBtnAddMessageClick(btn, panelCN, threadId) {
 	d = document.createElement("DIV");
 	d.innerHTML = '<input type="button" class="btnConfirmMessageCreation" value="Send Message" onclick="onBtnConfirmMessageCreationClick(this)">';
 	div.appendChild(d);
+}
+
+async function onBtnSubscribeClick(btn, threadId, userId) {
+	let resp = await addSubscription(threadId, userId);
+	if (resp == null) {
+		return;
+	}
+	if (resp.result.ok !== true) {
+		return;
+	}
+	disableButton(btn);
 }
 
 async function onBtnEditMessageClick(btn, panelCN, messageId) {
@@ -2994,4 +3032,25 @@ function canUserAddMessage(userParams, latestMessageInThread) {
 	}
 
 	return true;
+}
+
+async function getSelfSubscriptions() {
+	let reqData = new ApiRequest(actionName.GetSelfSubscriptions, {});
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function addSubscription(threadId, userId) {
+	let params = new Parameters_AddSubscription(threadId, userId);
+	let reqData = new ApiRequest(actionName.AddSubscription, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
 }
