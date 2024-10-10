@@ -24,6 +24,16 @@ type AddSubscriptionResult struct {
 	OK bool `json:"ok"`
 }
 
+type GetSelfSubscriptionsParams struct {
+	cmr.CommonParams
+}
+
+type GetSelfSubscriptionsResult struct {
+	cmr.CommonResult
+
+	UserSubscriptions *UserSubscriptions `json:"userSubscriptions"`
+}
+
 type GetUserSubscriptionsParams struct {
 	cmr.CommonParams
 

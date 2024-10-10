@@ -122,6 +122,29 @@ func (srv *Server) addSubscription(p *sm.AddSubscriptionParams) (result *sm.AddS
 	return result, nil
 }
 
+// getSelfSubscriptions reads subscriptions of the current user.
+func (srv *Server) getSelfSubscriptions(p *sm.GetSelfSubscriptionsParams) (result *sm.GetSelfSubscriptionsResult, re *jrm1.RpcError) {
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsReader {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	result = &sm.GetSelfSubscriptionsResult{}
+
+	result.UserSubscriptions, re = srv.getUserSubscriptionsH(userRoles.UserId)
+	if re != nil {
+		return nil, re
+	}
+
+	return result, nil
+}
+
 // getUserSubscriptions reads user subscriptions.
 func (srv *Server) getUserSubscriptions(p *sm.GetUserSubscriptionsParams) (result *sm.GetUserSubscriptionsResult, re *jrm1.RpcError) {
 	var userRoles *am.GetSelfRolesResult
@@ -143,31 +166,11 @@ func (srv *Server) getUserSubscriptions(p *sm.GetUserSubscriptionsParams) (resul
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
+	result = &sm.GetUserSubscriptionsResult{}
 
-	// Read Subscriptions.
-	var us *sm.UserSubscriptions
-	var err error
-	us, err = srv.dbo.GetUserSubscriptions(p.UserId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	if us == nil {
-		err = srv.dbo.InitUserSubscriptions(p.UserId)
-		if err != nil {
-			return nil, srv.databaseError(err)
-		}
-
-		us, err = srv.dbo.GetUserSubscriptions(p.UserId)
-		if err != nil {
-			return nil, srv.databaseError(err)
-		}
-	}
-
-	result = &sm.GetUserSubscriptionsResult{
-		UserSubscriptions: us,
+	result.UserSubscriptions, re = srv.getUserSubscriptionsH(p.UserId)
+	if re != nil {
+		return nil, re
 	}
 
 	return result, nil

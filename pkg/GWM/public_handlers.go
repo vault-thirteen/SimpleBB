@@ -88,6 +88,7 @@ const (
 
 	// SM.
 	ApiFunctionName_AddSubscription      = "addSubscription"
+	ApiFunctionName_GetSelfSubscriptions = "getSelfSubscriptions"
 	ApiFunctionName_GetUserSubscriptions = "getUserSubscriptions"
 	ApiFunctionName_DeleteSubscription   = "deleteSubscription"
 )

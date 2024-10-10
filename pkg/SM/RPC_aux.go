@@ -321,3 +321,30 @@ func (srv *Server) checkIfThreadExists(threadId uint) (exists bool, re *jrm1.Rpc
 
 	return result.Exists, nil
 }
+
+// getUserSubscriptionsH is a helper function to read user's subscriptions.
+func (srv *Server) getUserSubscriptionsH(userId uint) (us *sm.UserSubscriptions, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	// Read Subscriptions.
+	var err error
+	us, err = srv.dbo.GetUserSubscriptions(userId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if us == nil {
+		err = srv.dbo.InitUserSubscriptions(userId)
+		if err != nil {
+			return nil, srv.databaseError(err)
+		}
+
+		us, err = srv.dbo.GetUserSubscriptions(userId)
+		if err != nil {
+			return nil, srv.databaseError(err)
+		}
+	}
+
+	return us, nil
+}
