@@ -11,7 +11,7 @@ import (
 type UserSubscriptions struct {
 	Id      uint        `json:"id"`
 	UserId  uint        `json:"userId"`
-	Threads *ul.UidList `json:"threadId"`
+	Threads *ul.UidList `json:"threadIds"`
 }
 
 func NewUserSubscriptions() (us *UserSubscriptions) {
