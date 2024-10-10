@@ -59,6 +59,18 @@ type GetThreadSubscribersSResult struct {
 	ThreadSubscriptions *ThreadSubscriptions `json:"threadSubscriptions"`
 }
 
+type DeleteSelfSubscriptionParams struct {
+	cmr.CommonParams
+
+	ThreadId uint `json:"threadId"`
+}
+
+type DeleteSelfSubscriptionResult struct {
+	cmr.CommonResult
+
+	OK bool `json:"ok"`
+}
+
 type DeleteSubscriptionParams struct {
 	cmr.CommonParams
 

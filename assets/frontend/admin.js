@@ -566,6 +566,7 @@ async function showPage_ListOfUsers() {
 		return;
 	}
 	let pageCount = resp.result.totalPages;
+	pageCount = repairUndefinedPageCount(pageCount);
 	mca_gvc.Pages = pageCount;
 
 	// Check page number for overflow.
@@ -595,6 +596,7 @@ async function showPage_ListOfLoggedUsers() {
 	let userIds = resp.result.loggedUserIds;
 	let userCount = userIds.length;
 	let pageCount = Math.ceil(userCount / mca_gvc.Settings.PageSize);
+	pageCount = repairUndefinedPageCount(pageCount);
 	mca_gvc.Pages = pageCount;
 
 	// Check page number for overflow.
@@ -603,7 +605,7 @@ async function showPage_ListOfLoggedUsers() {
 		return;
 	}
 
-	let userIdsOnPage = calculateUserIdsOnPage(userIds, pageNumber, mca_gvc.Settings.PageSize);
+	let userIdsOnPage = calculateItemsOnPage(userIds, pageNumber, mca_gvc.Settings.PageSize);
 
 	// Draw.
 	let p = document.getElementById("subpage");
@@ -622,6 +624,7 @@ async function showPage_RegistrationsReadyForApproval() {
 		return;
 	}
 	let pageCount = resp.result.totalPages;
+	pageCount = repairUndefinedPageCount(pageCount);
 	mca_gvc.Pages = pageCount;
 
 	// Check page number for overflow.
@@ -977,8 +980,7 @@ async function fillListOfRRFA(elClass, rrfas) {
 
 	// Header.
 	let tr = document.createElement("TR");
-	let ths = [
-		"#", "ID", "PreRegTime", "E-Mail", "Name", "Actions"];
+	let ths = ["#", "ID", "PreRegTime", "E-Mail", "Name", "Actions"];
 	let th;
 	for (let i = 0; i < ths.length; i++) {
 		th = document.createElement("TH");
@@ -1286,9 +1288,9 @@ async function rejectRegistrationRequest(id) {
 	return resp.JsonObject;
 }
 
-function calculateUserIdsOnPage(allIds, pageN, pageSize) {
-	let x = Math.min(pageN * pageSize, allIds.length);
-	return allIds.slice((pageN - 1) * pageSize, x);
+function calculateItemsOnPage(items, pageN, pageSize) {
+	let x = Math.min(pageN * pageSize, items.length);
+	return items.slice((pageN - 1) * pageSize, x);
 }
 
 async function logUserOutA(userId) {
@@ -3056,4 +3058,15 @@ async function deleteNotification(notificationId) {
 		return null;
 	}
 	return resp.JsonObject;
+}
+
+function repairUndefinedPageCount(pageCount) {
+	// Unfortunately JavaScript can compare a number with 'undefined' !
+	if (pageCount === undefined) {
+		return 1;
+	}
+	if (pageCount === 0) {
+		return 1;
+	}
+	return pageCount;
 }

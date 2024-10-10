@@ -118,6 +118,17 @@ table.formHolder {
 	letter-spacing: 1px;
 }
 
+.f18 input,
+.f19 input,
+.f19 input,
+.f20 input,
+.f21 input,
+.f22 input {
+	width: 100%;
+	font-family: "DejaVu Sans Mono", monospace;
+	font-size: 13px;
+}
+
 /* pwd */
 .f2 input,
 .f4 input,
@@ -252,7 +263,10 @@ table.acpMenu td {
 .btnMarkNotificationAsReadU,
 .btnDeleteNotificationU,
 .btnShowFullNotificationU,
-.btnSubscribe {
+.btnSubscribe,
+.btnManageSubscriptions,
+.btnBackToAccount,
+.btnUnsubscribe {
 	border: 1px solid grey;
 	color: grey;
 	cursor: pointer;
@@ -266,13 +280,19 @@ table.acpMenu td {
 	width: 32px;
 }
 
+.btnGoToIndex {
+	width: 32px;
+	padding: 4px;
+}
+
 .btnNotificationsOn {
 	background-color: gold;
 }
 
 .btnGoToThread,
 .btnGoToForum,
-.btnGoToSection {
+.btnGoToSection,
+.btnBackToAccount {
 	width: 192px;
 }
 
@@ -284,6 +304,7 @@ table.acpMenu td {
 .btnNext {
 	font-size: 14px;
 	color: grey;
+	width: 32px;
 }
 
 .btnAccept,
@@ -309,7 +330,8 @@ table.notificationList td.lastCol {
 }
 
 .btnChangeEmail,
-.btnChangePwd {
+.btnChangePwd,
+.btnManageSubscriptions {
 	color: sandybrown;
 	width: 192px;
 }
@@ -328,7 +350,8 @@ table.notificationList td.lastCol {
 .btnChangeMessageText,
 .btnDeleteMessage,
 .btnDeleteNotification,
-.btnDeleteNotificationU {
+.btnDeleteNotificationU,
+.btnUnsubscribe {
 	color: crimson;
 }
 
@@ -409,7 +432,8 @@ table.subpageListOfUsers,
 table.subpageListOfRRFA,
 table.subpageListOfLoggedUsers,
 table.subpageUserPage,
-table.notificationList {
+table.notificationList,
+table.subpageListOfSubscriptions {
 	border: 1px solid black;
 	text-align: right;
 }
@@ -428,7 +452,8 @@ table.subpageListOfUsers th,
 table.subpageListOfRRFA th,
 table.subpageListOfLoggedUsers th,
 table.subpageUserPage th,
-table.notificationList th {
+table.notificationList th,
+table.subpageListOfSubscriptions th {
 	border: 1px solid black;
 	padding: 3px;
 	background-color: bisque;
@@ -439,7 +464,8 @@ table.subpageListOfUsers td,
 table.subpageListOfRRFA td,
 table.subpageListOfLoggedUsers td,
 table.subpageUserPage td,
-table.notificationList td {
+table.notificationList td,
+table.subpageListOfSubscriptions td {
 	border: 1px solid black;
 	padding: 3px;
 }
@@ -477,14 +503,16 @@ table.notificationList td table td.hidden {
 table.subpageListOfUsers tr:nth-child(even),
 table.subpageListOfRRFA tr:nth-child(even),
 table.subpageListOfLoggedUsers tr:nth-child(even),
-table.subpageUserPage tr:nth-child(even) {
+table.subpageUserPage tr:nth-child(even),
+table.subpageListOfSubscriptions tr:nth-child(even) {
 	background-color: white;
 }
 
 table.subpageListOfUsers tr:nth-child(odd),
 table.subpageListOfRRFA tr:nth-child(odd),
 table.subpageListOfLoggedUsers tr:nth-child(odd),
-table.subpageUserPage tr:nth-child(odd) {
+table.subpageUserPage tr:nth-child(odd),
+table.subpageListOfSubscriptions tr:nth-child(odd) {
 	background-color: #E8E8E8;
 }
 

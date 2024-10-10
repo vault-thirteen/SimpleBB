@@ -87,10 +87,11 @@ const (
 	ApiFunctionName_DeleteNotification       = "deleteNotification"
 
 	// SM.
-	ApiFunctionName_AddSubscription      = "addSubscription"
-	ApiFunctionName_GetSelfSubscriptions = "getSelfSubscriptions"
-	ApiFunctionName_GetUserSubscriptions = "getUserSubscriptions"
-	ApiFunctionName_DeleteSubscription   = "deleteSubscription"
+	ApiFunctionName_AddSubscription        = "addSubscription"
+	ApiFunctionName_GetSelfSubscriptions   = "getSelfSubscriptions"
+	ApiFunctionName_GetUserSubscriptions   = "getUserSubscriptions"
+	ApiFunctionName_DeleteSelfSubscription = "deleteSelfSubscription"
+	ApiFunctionName_DeleteSubscription     = "deleteSubscription"
 )
 
 func (srv *Server) handlePublicSettings(rw http.ResponseWriter, req *http.Request) {

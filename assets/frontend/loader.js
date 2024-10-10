@@ -85,6 +85,7 @@ qpn = {
 	Forum: "forum",
 	Thread: "thread",
 	Message: "message",
+	SubscriptionsPage: "subscriptions",
 }
 
 // Form Input Elements.
@@ -114,6 +115,7 @@ fi = {
 	id19: "f19i",
 	id20: "f20i",
 	id21_tr: "f21tr",
+	id22: "f22i",
 }
 
 // Errors.
@@ -156,11 +158,13 @@ actionName = {
 	ChangePwd: "changePassword",
 	CountUnreadNotifications: "countUnreadNotifications",
 	DeleteNotification: "deleteNotification",
+	DeleteSelfSubscription: "deleteSelfSubscription",
 	GetAllNotifications: "getAllNotifications",
 	GetLatestMessageOfThread: "getLatestMessageOfThread",
 	GetMessage: "getMessage",
 	GetSelfRoles: "getSelfRoles",
 	GetSelfSubscriptions: "getSelfSubscriptions",
+	GetThread: "getThread",
 	GetUserName: "getUserName",
 	ListForumAndThreadsOnPage: "listForumAndThreadsOnPage",
 	ListSectionsAndForums: "listSectionsAndForums",
@@ -398,6 +402,18 @@ class Parameters_AddSubscription {
 	}
 }
 
+class Parameters_GetThread {
+	constructor(threadId) {
+		this.ThreadId = threadId;
+	}
+}
+
+class Parameters_DeleteSelfSubscription {
+	constructor(threadId) {
+		this.ThreadId = threadId;
+	}
+}
+
 class SectionNode {
 	constructor(section, level) {
 		this.Section = section;
@@ -510,8 +526,18 @@ async function onPageLoad() {
 			return;
 	}
 
-	// Show the bulletin board.
 	let sp = new URLSearchParams(curPage);
+
+	// Subscriptions.
+	if (sp.has(qpn.SubscriptionsPage)) {
+		if (!preparePageVariable(sp)) {
+			return;
+		}
+		await showPage_Subscriptions();
+		return;
+	}
+
+	// Show the bulletin board.
 	if (sp.has(qpn.Section)) {
 		if (!prepareIdVariable(sp)) {
 			return;
@@ -895,7 +921,7 @@ async function showUserPage() {
 	showBlock(p);
 	addActionPanel(p, true);
 	await addPageHead(p, settings.SiteName, true);
-	fillUserPage(userParams);
+	await fillUserPage(userParams);
 }
 
 async function showBB() {
@@ -984,9 +1010,7 @@ async function showForum() {
 		return;
 	}
 	let pageCount = resp.result.fatop.totalPages;
-	if ((pageCount === undefined) || (pageCount === 0)) {
-		pageCount = 1;
-	}
+	pageCount = repairUndefinedPageCount(pageCount);
 	mca_gvc.Pages = pageCount;
 
 	// Check page number for overflow.
@@ -1022,9 +1046,7 @@ async function showThread() {
 		return;
 	}
 	let pageCount = resp.result.tamop.totalPages;
-	if ((pageCount === undefined) || (pageCount === 0)) {
-		pageCount = 1;
-	}
+	pageCount = repairUndefinedPageCount(pageCount);
 	mca_gvc.Pages = pageCount;
 
 	// Check page number for overflow.
@@ -1797,7 +1819,7 @@ function addActionPanel(el, atTop, type, parentId) {
 	let tbl = document.createElement("TABLE");
 	let tr = document.createElement("TR");
 	let td = document.createElement("TD");
-	td.innerHTML = '<form><input type="button" value="Go to Index" class="btnGoToIndex" onclick="onBtnGoToIndexClick(this)" /></form>';
+	td.innerHTML = '<form><input type="button" value="🏠" class="btnGoToIndex" onclick="onBtnGoToIndexClick(this)" /></form>';
 	tr.appendChild(td);
 
 	switch (type) {
@@ -2098,7 +2120,7 @@ function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
 	btnPrev.type = "button";
 	btnPrev.className = "btnPrev";
 	btnPrev.id = "btnPrev";
-	btnPrev.value = "Previous Page";
+	btnPrev.value = "<-";
 	addClickEventHandler(btnPrev, variantPrev);
 	div.appendChild(btnPrev);
 
@@ -2111,7 +2133,7 @@ function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
 	btnNext.type = "button";
 	btnNext.className = "btnNext";
 	btnNext.id = "btnNext";
-	btnNext.value = "Next Page";
+	btnNext.value = "->";
 	addClickEventHandler(btnNext, variantNext);
 	div.appendChild(btnNext);
 
@@ -2141,6 +2163,18 @@ function addClickEventHandler(btn, variant) {
 		case "threadPageNext":
 			btn.addEventListener("click", async (e) => {
 				await onBtnNextClick_threadPage(btn);
+			});
+			return;
+
+		case "subscriptionsPrev":
+			btn.addEventListener("click", async (e) => {
+				await onBtnPrevClick_subscriptionsPage(btn);
+			});
+			return;
+
+		case "subscriptionsNext":
+			btn.addEventListener("click", async (e) => {
+				await onBtnNextClick_subscriptionsPage(btn);
 			});
 			return;
 
@@ -2193,6 +2227,28 @@ async function onBtnNextClick_threadPage(btn) {
 	await redirectPage(false, url);
 }
 
+async function onBtnPrevClick_subscriptionsPage(btn) {
+	if (mca_gvc.Page <= 1) {
+		console.error(err.PreviousPageDoesNotExist);
+		return;
+	}
+
+	mca_gvc.Page--;
+	let url = composeUrlForSubscriptionsPage(mca_gvc.Page);
+	await redirectPage(false, url);
+}
+
+async function onBtnNextClick_subscriptionsPage(btn) {
+	if (mca_gvc.Page >= mca_gvc.Pages) {
+		console.error(err.NextPageDoesNotExist);
+		return;
+	}
+
+	mca_gvc.Page++;
+	let url = composeUrlForSubscriptionsPage(mca_gvc.Page);
+	await redirectPage(false, url);
+}
+
 function prepareIdVariable(sp) {
 	if (!sp.has(qpn.Id)) {
 		console.error(err.IdNotSet);
@@ -2225,7 +2281,7 @@ function preparePageVariable(sp) {
 	return true;
 }
 
-function fillUserPage(userParams) {
+async function fillUserPage(userParams) {
 	document.getElementById(fi.id18).value = userParams.name;
 	document.getElementById(fi.id19).value = userParams.email;
 	document.getElementById(fi.id20).value = prettyTime(userParams.regTime);
@@ -2257,6 +2313,16 @@ function fillUserPage(userParams) {
 	let tr = document.getElementById(fi.id21_tr);
 	tr.children[1].innerHTML = rolesHtml;
 
+	resp = await getSelfSubscriptions();
+	if (resp == null) {
+		return;
+	}
+	let subscriptions = resp.result.userSubscriptions.threadIds;
+	let subscriptionsCount = 0;
+	if (subscriptions != null) {
+		subscriptionsCount = subscriptions.length;
+	}
+	document.getElementById(fi.id22).value = subscriptionsCount.toString();
 }
 
 function prettyTime(timeStr) {
@@ -2289,6 +2355,11 @@ async function onBtnChangePwdClick(btn) {
 
 async function onBtnLogOutSelfClick(btn) {
 	let url = qp.LogOutStep1;
+	await redirectPage(false, url);
+}
+
+async function onBtnManageSubscriptionsClick(btn) {
+	let url = qp.Prefix + qpn.SubscriptionsPage;
 	await redirectPage(false, url);
 }
 
@@ -2351,6 +2422,14 @@ function composeUrlForThreadPage(threadId, page) {
 
 function composeUrlForEntityPage(entityName, entityId, page) {
 	return qp.Prefix + entityName + "&" + qpn.Id + "=" + entityId + "&" + qpn.Page + "=" + page;
+}
+
+function composeUrlForSubscriptionsPage(page) {
+	return composeUrlForFuncPage(qpn.SubscriptionsPage, page);
+}
+
+function composeUrlForFuncPage(func, page) {
+	return qp.Prefix + func + "&" + qpn.Page + "=" + page;
 }
 
 async function getMessageCreatorName(userId) {
@@ -3053,4 +3132,188 @@ async function addSubscription(threadId, userId) {
 		return null;
 	}
 	return resp.JsonObject;
+}
+
+async function showPage_Subscriptions() {
+	let pageNumber = mca_gvc.Page;
+	let resp = await getSelfSubscriptions();
+	if (resp == null) {
+		return;
+	}
+	let allSubscriptions = resp.result.userSubscriptions.threadIds;
+	if (allSubscriptions == null) {
+		return;
+	}
+	let subscriptionsCount = allSubscriptions.length;
+	let settings = getSettings();
+	let pageSize = settings.PageSize;
+	let pageCount = Math.ceil(subscriptionsCount / pageSize);
+	pageCount = repairUndefinedPageCount(pageCount);
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	if (pageNumber > pageCount) {
+		console.error(err.PageNotFound);
+		return;
+	}
+
+	let subscriptionsOnPage = calculateItemsOnPage(allSubscriptions, pageNumber, pageSize);
+
+	// Draw.
+	let p = document.getElementById("subpage");
+	p.style.display = "block";
+	addBtnBackToAccount(p);
+	addTitle(p, "Subscriptions");
+	addPaginator(p, pageNumber, pageCount, "subscriptionsPrev", "subscriptionsNext");
+	addDiv(p, "subpageListOfSubscriptions");
+	await fillListOfSubscriptions("subpageListOfSubscriptions", subscriptionsOnPage);
+}
+
+function calculateItemsOnPage(items, pageN, pageSize) {
+	let x = Math.min(pageN * pageSize, items.length);
+	return items.slice((pageN - 1) * pageSize, x);
+}
+
+function addBtnBackToAccount(el) {
+	let btn = document.createElement("INPUT");
+	btn.type = "button";
+	btn.className = "btnBackToAccount";
+	btn.value = "Back to Account";
+	btn.addEventListener("click", async (e) => {
+		await redirectToUserPage(false);
+	})
+	el.appendChild(btn);
+}
+
+async function redirectToUserPage(wait) {
+	let url = qp.SelfPage;
+	await redirectPage(wait, url);
+}
+
+function addTitle(el, text) {
+	let div = document.createElement("DIV");
+	div.className = "subpageTitle";
+	div.id = "subpageTitle";
+	div.textContent = text;
+	el.appendChild(div);
+}
+
+async function fillListOfSubscriptions(elClass, threadIds) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let tbl = document.createElement("TABLE");
+	tbl.className = elClass;
+
+	// Header.
+	let tr = document.createElement("TR");
+	let ths = ["#", "Thread ID", "Thread Name", "Actions"];
+	let th;
+	for (let i = 0; i < ths.length; i++) {
+		th = document.createElement("TH");
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	let columnsWithLink = [1, 2];
+	let columnsWithHtml = [3];
+
+	// Cells.
+	let threadId, threadParams;
+	for (let i = 0; i < threadIds.length; i++) {
+		threadId = threadIds[i];
+
+		// Get thread parameters.
+		resp = await getThread(threadId);
+		if (resp == null) {
+			return;
+		}
+		threadParams = resp.result.thread;
+
+		// Fill data.
+		tr = document.createElement("TR");
+		let tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = threadId.toString();
+		tds[2] = threadParams.name;
+		tds[3] = '<input type="button" class="btnUnsubscribe" value="Unsubscribe" onclick="onBtnUnsubscribeClick(this)">';
+
+		let td, url;
+		for (let j = 0; j < tds.length; j++) {
+			url = composeUrlForThread(threadId);
+			td = document.createElement("TD");
+
+			if (j === 0) {
+				td.className = "numCol";
+			}
+
+			if (columnsWithLink.includes(j)) {
+				td.innerHTML = '<a href="' + url + '">' + tds[j] + '</a>';
+			} else {
+				if (columnsWithHtml.includes(j)) {
+					td.innerHTML = tds[j];
+				} else {
+					td.textContent = tds[j];
+				}
+			}
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	div.appendChild(tbl);
+}
+
+async function getThread(threadId) {
+	let params = new Parameters_GetThread(threadId);
+	let reqData = new ApiRequest(actionName.GetThread, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function onBtnUnsubscribeClick(btn) {
+	let tr = btn.parentElement.parentElement;
+	let threadId = Number(tr.children[1].textContent);
+	let resp = await deleteSelfSubscription(threadId);
+	if (resp == null) {
+		return;
+	}
+	if (!resp.result.ok) {
+		return;
+	}
+	tr.style.display = "none";
+}
+
+async function deleteSelfSubscription(threadId) {
+	let params = new Parameters_DeleteSelfSubscription(threadId);
+	let reqData = new ApiRequest(actionName.DeleteSelfSubscription, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+function repairUndefinedPageCount(pageCount) {
+	// Unfortunately JavaScript can compare a number with 'undefined' !
+	if (pageCount === undefined) {
+		return 1;
+	}
+	if (pageCount === 0) {
+		return 1;
+	}
+	return pageCount;
 }

@@ -239,6 +239,39 @@ func (srv *Server) getThreadSubscribersS(p *sm.GetThreadSubscribersSParams) (res
 	return result, nil
 }
 
+// deleteSelfSubscription deletes a subscription of the caller user.
+func (srv *Server) deleteSelfSubscription(p *sm.DeleteSelfSubscriptionParams) (result *sm.DeleteSelfSubscriptionResult, re *jrm1.RpcError) {
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsReader {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	// Delete subscription.
+	var s = &sm.Subscription{
+		ThreadId: p.ThreadId,
+		UserId:   userRoles.UserId,
+	}
+	re = srv.deleteSubscriptionH(s)
+	if re != nil {
+		return nil, re
+	}
+
+	result = &sm.DeleteSelfSubscriptionResult{
+		OK: true,
+	}
+
+	return result, nil
+}
+
 // deleteSubscription deletes a subscription.
 func (srv *Server) deleteSubscription(p *sm.DeleteSubscriptionParams) (result *sm.DeleteSubscriptionResult, re *jrm1.RpcError) {
 	var userRoles *am.GetSelfRolesResult

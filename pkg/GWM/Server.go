@@ -693,6 +693,7 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_AddSubscription,
 		ApiFunctionName_GetSelfSubscriptions,
 		ApiFunctionName_GetUserSubscriptions,
+		ApiFunctionName_DeleteSelfSubscription,
 		ApiFunctionName_DeleteSubscription,
 	}
 
@@ -765,10 +766,11 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_DeleteNotification:       srv.DeleteNotification,
 
 		// SM.
-		ApiFunctionName_AddSubscription:      srv.AddSubscription,
-		ApiFunctionName_GetSelfSubscriptions: srv.GetSelfSubscriptions,
-		ApiFunctionName_GetUserSubscriptions: srv.GetUserSubscriptions,
-		ApiFunctionName_DeleteSubscription:   srv.DeleteSubscription,
+		ApiFunctionName_AddSubscription:        srv.AddSubscription,
+		ApiFunctionName_GetSelfSubscriptions:   srv.GetSelfSubscriptions,
+		ApiFunctionName_GetUserSubscriptions:   srv.GetUserSubscriptions,
+		ApiFunctionName_DeleteSubscription:     srv.DeleteSubscription,
+		ApiFunctionName_DeleteSelfSubscription: srv.DeleteSelfSubscription,
 	}
 
 	return nil

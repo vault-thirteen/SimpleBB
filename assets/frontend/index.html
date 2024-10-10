@@ -749,6 +749,19 @@
 				<td class="col1">Roles</td>
 				<td class="col2" colspan="2"></td>
 			</tr>
+			<tr>
+				<td class="col1">Subscriptions</td>
+				<td>
+					<form class="f22"><input id="f22i" type="text" name="subscriptionsCount"
+											 autocomplete="off" readonly/></form>
+				</td>
+				<td class="col3">
+					<form>
+						<input type="button" value="Manage Subscriptions" class="btnManageSubscriptions"
+							   onclick="onBtnManageSubscriptionsClick(this)" autocomplete="off"/>
+					</form>
+				</td>
+			</tr>
 		</table>
 		<table class="header3">
 			<tr>
@@ -761,6 +774,7 @@
 			</tr>
 		</table>
 	</div>
+	<div id="subpage" class="subpage"></div>
 	<div id="divBB" class="divBB"></div>
 </div>
 </body>

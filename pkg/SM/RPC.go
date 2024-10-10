@@ -33,6 +33,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.GetSelfSubscriptions,
 		srv.GetUserSubscriptions,
 		srv.GetThreadSubscribersS,
+		srv.DeleteSelfSubscription,
 		srv.DeleteSubscription,
 		srv.DeleteSubscriptionS,
 		srv.ClearThreadSubscriptionsS,
@@ -116,6 +117,22 @@ func (srv *Server) GetThreadSubscribersS(params *json.RawMessage, _ *jrm1.Respon
 
 	var r *sm.GetThreadSubscribersSResult
 	r, re = srv.getThreadSubscribersS(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) DeleteSelfSubscription(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *sm.DeleteSelfSubscriptionParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *sm.DeleteSelfSubscriptionResult
+	r, re = srv.deleteSelfSubscription(p)
 	if re != nil {
 		return nil, re
 	}
