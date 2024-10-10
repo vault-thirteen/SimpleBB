@@ -19,9 +19,6 @@ import (
 
 // addSection inserts a new section as a root section or as a sub-section.
 func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -37,6 +34,9 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	if len(p.Name) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionNameIsNotSet, RpcErrorMsg_SectionNameIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// If parent is not set, the new section is a root section.
 	// Only a single root section may exist.
@@ -127,9 +127,6 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 
 // changeSectionName renames a section.
 func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.ChangeSectionNameResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -149,6 +146,9 @@ func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.
 	if len(p.Name) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionNameIsNotSet, RpcErrorMsg_SectionNameIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var n int
 	var err error
@@ -175,9 +175,6 @@ func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.
 
 // changeSectionParent moves a section from an old parent to a new parent.
 func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result *mm.ChangeSectionParentResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -197,6 +194,9 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	if p.Parent == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var n int
 	var err error
@@ -316,9 +316,6 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 
 // getSection reads a section.
 func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -334,6 +331,9 @@ func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResu
 	if p.SectionId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Read the section.
 	var section *mm.Section
@@ -355,9 +355,6 @@ func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResu
 
 // moveSectionUp moves a section up by one position if possible.
 func (srv *Server) moveSectionUp(p *mm.MoveSectionUpParams) (result *mm.MoveSectionUpResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -373,6 +370,9 @@ func (srv *Server) moveSectionUp(p *mm.MoveSectionUpParams) (result *mm.MoveSect
 	if p.SectionId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved section.
 	var n int
@@ -436,9 +436,6 @@ func (srv *Server) moveSectionUp(p *mm.MoveSectionUpParams) (result *mm.MoveSect
 
 // moveSectionDown moves a section down by one position if possible.
 func (srv *Server) moveSectionDown(p *mm.MoveSectionDownParams) (result *mm.MoveSectionDownResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -454,6 +451,9 @@ func (srv *Server) moveSectionDown(p *mm.MoveSectionDownParams) (result *mm.Move
 	if p.SectionId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved section.
 	var n int
@@ -517,9 +517,6 @@ func (srv *Server) moveSectionDown(p *mm.MoveSectionDownParams) (result *mm.Move
 
 // deleteSection removes a section.
 func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSectionResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -535,6 +532,9 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 	if p.SectionId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Read the section.
 	var section *mm.Section
@@ -602,9 +602,6 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 
 // addForum inserts a new forum into a section.
 func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -624,6 +621,9 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, re
 	if len(p.Name) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumNameIsNotSet, RpcErrorMsg_ForumNameIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Ensure that a section exists.
 	n, err := srv.dbo.CountSectionsById(p.SectionId)
@@ -686,9 +686,6 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, re
 
 // changeForumName renames a forum.
 func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.ChangeForumNameResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -708,6 +705,9 @@ func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.Chan
 	if len(p.Name) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumNameIsNotSet, RpcErrorMsg_ForumNameIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var n int
 	var err error
@@ -734,9 +734,6 @@ func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.Chan
 
 // changeForumSection moves a forum from an old section to a new section.
 func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *mm.ChangeForumSectionResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -756,6 +753,9 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	if p.SectionId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIdIsNotSet, RpcErrorMsg_SectionIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var n int
 	var err error
@@ -871,9 +871,6 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 
 // getForum reads a forum.
 func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -889,6 +886,9 @@ func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, re
 	if p.ForumId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Read the forum.
 	var forum *mm.Forum
@@ -911,9 +911,6 @@ func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, re
 
 // moveForumUp moves a forum up by one position if possible.
 func (srv *Server) moveForumUp(p *mm.MoveForumUpParams) (result *mm.MoveForumUpResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -929,6 +926,9 @@ func (srv *Server) moveForumUp(p *mm.MoveForumUpParams) (result *mm.MoveForumUpR
 	if p.ForumId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved forum.
 	var n int
@@ -989,9 +989,6 @@ func (srv *Server) moveForumUp(p *mm.MoveForumUpParams) (result *mm.MoveForumUpR
 
 // moveForumDown moves a forum down by one position if possible.
 func (srv *Server) moveForumDown(p *mm.MoveForumDownParams) (result *mm.MoveForumDownResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1007,6 +1004,9 @@ func (srv *Server) moveForumDown(p *mm.MoveForumDownParams) (result *mm.MoveForu
 	if p.ForumId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved forum.
 	var n int
@@ -1067,9 +1067,6 @@ func (srv *Server) moveForumDown(p *mm.MoveForumDownParams) (result *mm.MoveForu
 
 // deleteForum removes a forum.
 func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1085,6 +1082,9 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 	if p.ForumId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Read the forum.
 	var forum *mm.Forum
@@ -1146,9 +1146,6 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 
 // addThread inserts a new thread into a forum.
 func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1168,6 +1165,9 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 	if len(p.Name) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadNameIsNotSet, RpcErrorMsg_ThreadNameIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Ensure that a forum exists.
 	var err error
@@ -1214,9 +1214,6 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 
 // changeThreadName renames a thread.
 func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.ChangeThreadNameResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1236,6 +1233,9 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 	if len(p.Name) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadNameIsNotSet, RpcErrorMsg_ThreadNameIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var n int
 	var err error
@@ -1262,9 +1262,6 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 
 // changeThreadForum moves a thread from an old forum to a new forum.
 func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.ChangeThreadForumResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1284,6 +1281,9 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	if p.ForumId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var n int
 	var err error
@@ -1373,9 +1373,6 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 
 // getThread reads a thread.
 func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1391,6 +1388,9 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 	if p.ThreadId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Read the thread.
 	var thread *mm.Thread
@@ -1413,9 +1413,6 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 
 // moveThreadUp moves a thread up by one position if possible.
 func (srv *Server) moveThreadUp(p *mm.MoveThreadUpParams) (result *mm.MoveThreadUpResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1431,6 +1428,9 @@ func (srv *Server) moveThreadUp(p *mm.MoveThreadUpParams) (result *mm.MoveThread
 	if p.ThreadId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved thread.
 	var n int
@@ -1486,9 +1486,6 @@ func (srv *Server) moveThreadUp(p *mm.MoveThreadUpParams) (result *mm.MoveThread
 
 // moveThreadDown moves a thread down by one position if possible.
 func (srv *Server) moveThreadDown(p *mm.MoveThreadDownParams) (result *mm.MoveThreadDownResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1504,6 +1501,9 @@ func (srv *Server) moveThreadDown(p *mm.MoveThreadDownParams) (result *mm.MoveTh
 	if p.ThreadId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved thread.
 	var n int
@@ -1592,13 +1592,13 @@ func (srv *Server) threadExistsS(p *mm.ThreadExistsSParams) (result *mm.ThreadEx
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	// Check parameters.
 	if p.ThreadId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Count threads.
 	var n int
@@ -1619,9 +1619,6 @@ func (srv *Server) threadExistsS(p *mm.ThreadExistsSParams) (result *mm.ThreadEx
 
 // addMessage inserts a new message into a thread.
 func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1636,6 +1633,9 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 	if len(p.Text) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageTextIsNotSet, RpcErrorMsg_MessageTextIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Get the latest message in the thread.
 	var latestMessageInThread *mm.Message
@@ -1731,9 +1731,6 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 
 // changeMessageText changes text of a message.
 func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.ChangeMessageTextResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1748,6 +1745,9 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 	if len(p.Text) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageTextIsNotSet, RpcErrorMsg_MessageTextIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Get the edited message.
 	message, err := srv.dbo.GetMessageById(p.MessageId)
@@ -1782,9 +1782,6 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 
 // changeMessageThread moves a message from an old thread to a new thread.
 func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result *mm.ChangeMessageThreadResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1804,6 +1801,9 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	if p.ThreadId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var n int
 	var err error
@@ -1893,9 +1893,6 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 
 // getMessage reads a message.
 func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1911,6 +1908,9 @@ func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResu
 	if p.MessageId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIdIsNotSet, RpcErrorMsg_MessageIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Read the message.
 	var message *mm.Message
@@ -1933,14 +1933,14 @@ func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResu
 
 // getLatestMessageOfThread reads the latest message of a thread.
 func (srv *Server) getLatestMessageOfThread(p *mm.GetLatestMessageOfThreadParams) (result *mm.GetLatestMessageOfThreadResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
 		return nil, re
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	result = &mm.GetLatestMessageOfThreadResult{}
 
@@ -1954,9 +1954,6 @@ func (srv *Server) getLatestMessageOfThread(p *mm.GetLatestMessageOfThreadParams
 
 // deleteMessage removes a message.
 func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMessageResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -1972,6 +1969,9 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 	if p.MessageId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIdIsNotSet, RpcErrorMsg_MessageIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Read the message.
 	var message *mm.Message
@@ -2020,9 +2020,6 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 
 // listThreadAndMessages reads a thread and all its messages.
 func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (result *mm.ListThreadAndMessagesResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -2038,6 +2035,9 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 	if p.ThreadId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Read the thread.
 	var thread *mm.Thread
@@ -2071,9 +2071,6 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 
 // listThreadAndMessagesOnPage reads a thread and its messages on a selected page.
 func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPageParams) (result *mm.ListThreadAndMessagesOnPageResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -2093,6 +2090,9 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 	if p.Page == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Read the thread.
 	var thread *mm.Thread
@@ -2136,9 +2136,6 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 
 // listForumAndThreads reads a forum and all its threads.
 func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result *mm.ListForumAndThreadsResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -2154,6 +2151,9 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 	if p.ForumId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIdIsNotSet, RpcErrorMsg_ForumIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Read the forum.
 	var forum *mm.Forum
@@ -2187,9 +2187,6 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 
 // listForumAndThreadsOnPage reads a forum and its threads on a selected page.
 func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPageParams) (result *mm.ListForumAndThreadsOnPageResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -2209,6 +2206,9 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 	if p.Page == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Read the forum.
 	var forum *mm.Forum
@@ -2252,9 +2252,6 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 
 // listSectionsAndForums reads all sections and forums.
 func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (result *mm.ListSectionsAndForumsResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -2265,6 +2262,9 @@ func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (res
 	if !userRoles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Read all the sections.
 	var sections []mm.Section

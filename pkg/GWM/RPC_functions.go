@@ -10,9 +10,6 @@ import (
 // RPC functions.
 
 func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockIPAddressResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	if !srv.settings.SystemSettings.IsFirewallUsed {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_FirewallIsDisabled, RpcErrorMsg_FirewallIsDisabled, nil)
 	}
@@ -31,6 +28,9 @@ func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockI
 		srv.logError(err)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Search for an existing record.
 	var n int
@@ -56,9 +56,6 @@ func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockI
 }
 
 func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *gm.IsIPAddressBlockedResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	if !srv.settings.SystemSettings.IsFirewallUsed {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_FirewallIsDisabled, RpcErrorMsg_FirewallIsDisabled, nil)
 	}
@@ -73,6 +70,9 @@ func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *g
 		srv.logError(err)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Authorisation, c.RpcErrorMsg_Authorisation, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Search for an existing record.
 	var n int

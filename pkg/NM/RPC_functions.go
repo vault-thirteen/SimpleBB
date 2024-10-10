@@ -18,9 +18,6 @@ import (
 // addNotification creates a new notification.
 // This method is used to send notifications by administrators.
 func (srv *Server) addNotification(p *nm.AddNotificationParams) (result *nm.AddNotificationResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -36,9 +33,13 @@ func (srv *Server) addNotification(p *nm.AddNotificationParams) (result *nm.AddN
 	if p.UserId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
+
 	if len(p.Text) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_TextIsNotSet, RpcErrorMsg_TextIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	insertedNotificationId, err := srv.dbo.InsertNewNotification(p.UserId, p.Text)
 	if err != nil {
@@ -66,16 +67,17 @@ func (srv *Server) addNotificationS(p *nm.AddNotificationSParams) (result *nm.Ad
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	// Check parameters.
 	if p.UserId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
+
 	if len(p.Text) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_TextIsNotSet, RpcErrorMsg_TextIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	insertedNotificationId, err := srv.dbo.InsertNewNotification(p.UserId, p.Text)
 	if err != nil {
@@ -91,9 +93,6 @@ func (srv *Server) addNotificationS(p *nm.AddNotificationSParams) (result *nm.Ad
 
 // getNotification reads a notification.
 func (srv *Server) getNotification(p *nm.GetNotificationParams) (result *nm.GetNotificationResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -109,6 +108,9 @@ func (srv *Server) getNotification(p *nm.GetNotificationParams) (result *nm.GetN
 	if p.NotificationId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_NotificationIdIsNotSet, RpcErrorMsg_NotificationIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Read the notification.
 	notification, err := srv.dbo.GetNotificationById(p.NotificationId)
@@ -136,9 +138,6 @@ func (srv *Server) getNotification(p *nm.GetNotificationParams) (result *nm.GetN
 
 // getAllNotifications reads all notifications for a user.
 func (srv *Server) getAllNotifications(p *nm.GetAllNotificationsParams) (result *nm.GetAllNotificationsResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -149,6 +148,9 @@ func (srv *Server) getAllNotifications(p *nm.GetAllNotificationsParams) (result 
 	if !userRoles.CanLogIn {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Get notifications.
 	notifications, err := srv.dbo.GetAllNotificationsByUserId(userRoles.UserId)
@@ -165,9 +167,6 @@ func (srv *Server) getAllNotifications(p *nm.GetAllNotificationsParams) (result 
 
 // getUnreadNotifications reads all unread notifications for a user.
 func (srv *Server) getUnreadNotifications(p *nm.GetUnreadNotificationsParams) (result *nm.GetUnreadNotificationsResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -178,6 +177,9 @@ func (srv *Server) getUnreadNotifications(p *nm.GetUnreadNotificationsParams) (r
 	if !userRoles.CanLogIn {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Get notifications.
 	notifications, err := srv.dbo.GetUnreadNotifications(userRoles.UserId)
@@ -194,9 +196,6 @@ func (srv *Server) getUnreadNotifications(p *nm.GetUnreadNotificationsParams) (r
 
 // countUnreadNotifications counts unread notifications for a user.
 func (srv *Server) countUnreadNotifications(p *nm.CountUnreadNotificationsParams) (result *nm.CountUnreadNotificationsResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -207,6 +206,9 @@ func (srv *Server) countUnreadNotifications(p *nm.CountUnreadNotificationsParams
 	if !userRoles.CanLogIn {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Count unread notifications.
 	n, err := srv.dbo.CountUnreadNotificationsByUserId(userRoles.UserId)
@@ -223,9 +225,6 @@ func (srv *Server) countUnreadNotifications(p *nm.CountUnreadNotificationsParams
 
 // markNotificationAsRead marks a notification as read by its recipient.
 func (srv *Server) markNotificationAsRead(p *nm.MarkNotificationAsReadParams) (result *nm.MarkNotificationAsReadResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -241,6 +240,9 @@ func (srv *Server) markNotificationAsRead(p *nm.MarkNotificationAsReadParams) (r
 	if p.NotificationId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_NotificationIdIsNotSet, RpcErrorMsg_NotificationIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Get the notification to see its real recipient.
 	notification, err := srv.dbo.GetNotificationById(p.NotificationId)
@@ -277,9 +279,6 @@ func (srv *Server) markNotificationAsRead(p *nm.MarkNotificationAsReadParams) (r
 
 // deleteNotification removes a notification.
 func (srv *Server) deleteNotification(p *nm.DeleteNotificationParams) (result *nm.DeleteNotificationResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -295,6 +294,9 @@ func (srv *Server) deleteNotification(p *nm.DeleteNotificationParams) (result *n
 	if p.NotificationId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_NotificationIdIsNotSet, RpcErrorMsg_NotificationIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Delete the notification.
 	err := srv.dbo.DeleteNotificationById(p.NotificationId)

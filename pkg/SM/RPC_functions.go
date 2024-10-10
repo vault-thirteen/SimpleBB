@@ -16,9 +16,6 @@ import (
 
 // addSubscription creates a subscription.
 func (srv *Server) addSubscription(p *sm.AddSubscriptionParams) (result *sm.AddSubscriptionResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -40,6 +37,9 @@ func (srv *Server) addSubscription(p *sm.AddSubscriptionParams) (result *sm.AddS
 	if p.UserId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the thread.
 	var threadExists bool
@@ -124,9 +124,6 @@ func (srv *Server) addSubscription(p *sm.AddSubscriptionParams) (result *sm.AddS
 
 // getUserSubscriptions reads user subscriptions.
 func (srv *Server) getUserSubscriptions(p *sm.GetUserSubscriptionsParams) (result *sm.GetUserSubscriptionsResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -145,6 +142,9 @@ func (srv *Server) getUserSubscriptions(p *sm.GetUserSubscriptionsParams) (resul
 	if p.UserId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Read Subscriptions.
 	var us *sm.UserSubscriptions
@@ -186,13 +186,13 @@ func (srv *Server) getThreadSubscribersS(p *sm.GetThreadSubscribersSParams) (res
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	// Check parameters.
 	if p.ThreadId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the thread.
 	var threadExists bool
@@ -238,9 +238,6 @@ func (srv *Server) getThreadSubscribersS(p *sm.GetThreadSubscribersSParams) (res
 
 // deleteSubscription deletes a subscription.
 func (srv *Server) deleteSubscription(p *sm.DeleteSubscriptionParams) (result *sm.DeleteSubscriptionResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	var userRoles *am.GetSelfRolesResult
 	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
 	if re != nil {
@@ -254,6 +251,9 @@ func (srv *Server) deleteSubscription(p *sm.DeleteSubscriptionParams) (result *s
 	if userRoles.UserId != p.UserId {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Delete subscription.
 	var s = &sm.Subscription{
@@ -318,13 +318,13 @@ func (srv *Server) clearThreadSubscriptionsS(p *sm.ClearThreadSubscriptionsSPara
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	// Check parameters.
 	if p.ThreadId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the thread.
 	var threadExists bool

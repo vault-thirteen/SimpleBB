@@ -233,13 +233,13 @@ func (srv *Server) registerUserStep3(p *am.RegisterUserParams) (result *am.Regis
 }
 
 func (srv *Server) getListOfRegistrationsReadyForApproval(p *am.GetListOfRegistrationsReadyForApprovalParams) (result *am.GetListOfRegistrationsReadyForApprovalResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	// Check parameters.
 	if p.Page == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var thisUserData *am.UserData
 	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
@@ -1003,13 +1003,13 @@ func (srv *Server) getListOfLoggedUsers(p *am.GetListOfLoggedUsersParams) (resul
 }
 
 func (srv *Server) getListOfAllUsers(p *am.GetListOfAllUsersParams) (result *am.GetListOfAllUsersResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	// Check parameters.
 	if p.Page == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var thisUserData *am.UserData
 	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
@@ -1749,13 +1749,13 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 }
 
 func (srv *Server) getUserSession(p *am.GetUserSessionParams) (result *am.GetUserSessionResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	// Check parameters.
 	if p.UserId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var callerData *am.UserData
 	callerData, re = srv.mustBeAnAuthToken(p.Auth)
@@ -1857,13 +1857,13 @@ func (srv *Server) getUserRoles(p *am.GetUserRolesParams) (result *am.GetUserRol
 }
 
 func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *am.ViewUserParametersResult, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
 	// Check parameters.
 	if p.UserId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	var thisUserData *am.UserData
 	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
@@ -1898,13 +1898,13 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 }
 
 func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.SetUserRoleAuthorResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	// Check parameters.
 	if p.UserId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var thisUserData *am.UserData
 	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
@@ -1927,13 +1927,13 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 }
 
 func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.SetUserRoleWriterResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	// Check parameters.
 	if p.UserId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var thisUserData *am.UserData
 	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
@@ -1956,13 +1956,13 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 }
 
 func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.SetUserRoleReaderResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
 	// Check parameters.
 	if p.UserId == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
 	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	var thisUserData *am.UserData
 	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)

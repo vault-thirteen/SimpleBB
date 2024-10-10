@@ -1,4 +1,3 @@
-* dbo.mutex may be locked too early
 * unified count functions as in SM
 
 * Subscriptions
