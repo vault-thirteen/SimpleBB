@@ -14,6 +14,8 @@ import (
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	nc "github.com/vault-thirteen/SimpleBB/pkg/NM/client"
 	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
+	sc "github.com/vault-thirteen/SimpleBB/pkg/SM/client"
+	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
@@ -55,6 +57,15 @@ func (srv *Server) databaseError(err error) (re *jrm1.RpcError) {
 }
 
 // Token-related functions.
+
+// mustBeNoAuth ensures that authorisation is not used.
+func (srv *Server) mustBeNoAuth(auth *cmr.Auth) (re *jrm1.RpcError) {
+	if auth != nil {
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	return nil
+}
 
 // mustBeAuthUserIPA ensures that user's IP address is set. If it is not set,
 // an error is returned and the caller of this function must stop and return
@@ -158,6 +169,28 @@ func (srv *Server) getDKeyForNM() (dKey *string, re *jrm1.RpcError) {
 	return &result.DKey, nil
 }
 
+// getDKeyForSM receives a DKey from Subscription module.
+func (srv *Server) getDKeyForSM() (dKey *string, re *jrm1.RpcError) {
+	params := sm.GetDKeyParams{}
+	result := new(sm.GetDKeyResult)
+	var err error
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncGetDKey, params, result)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
+	}
+	if re != nil {
+		return nil, re
+	}
+
+	// DKey must be non-empty.
+	if len(result.DKey) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_ModuleSynchronisation, c.RpcErrorMsg_ModuleSynchronisation, nil)
+	}
+
+	return &result.DKey, nil
+}
+
 // sendNotificationToUser sends a system notification to a user.
 func (srv *Server) sendNotificationToUser(userId uint, text string) (re *jrm1.RpcError) {
 	params := nm.AddNotificationSParams{
@@ -171,6 +204,30 @@ func (srv *Server) sendNotificationToUser(userId uint, text string) (re *jrm1.Rp
 	result := new(nm.AddNotificationSResult)
 	var err error
 	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncAddNotificationS, params, result)
+	if err != nil {
+		srv.logError(err)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
+	}
+	if re != nil {
+		return re
+	}
+
+	return nil
+}
+
+// clearSubscriptionsOfDeletedThread clears remains of subscriptions of a
+// deleted thread.
+func (srv *Server) clearSubscriptionsOfDeletedThread(threadId uint) (re *jrm1.RpcError) {
+	params := sm.ClearThreadSubscriptionsSParams{
+		DKeyParams: cmr.DKeyParams{
+			// DKey is set during module start-up, so it is non-null.
+			DKey: *srv.dKeyForNM,
+		},
+		ThreadId: threadId,
+	}
+	result := new(sm.ClearThreadSubscriptionsSResult)
+	var err error
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncClearThreadSubscriptionsS, params, result)
 	if err != nil {
 		srv.logError(err)
 		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)

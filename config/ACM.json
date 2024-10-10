@@ -93,16 +93,16 @@
     "port": 2006,
     "path": "/"
   },
-  "smtp": {
-    "schema": "http",
-    "host": "localhost",
-    "port": 2005,
-    "path": "/"
-  },
   "rcs": {
     "schema": "http",
     "host": "localhost",
     "port": 2003,
+    "path": "/"
+  },
+  "smtp": {
+    "schema": "http",
+    "host": "localhost",
+    "port": 2005,
     "path": "/"
   }
 }

@@ -61,7 +61,7 @@ func (srv *Server) addNotificationS(p *nm.AddNotificationSParams) (result *nm.Ad
 	}
 
 	// Check the DKey.
-	if !srv.dKey.CheckString(p.DKey) {
+	if !srv.dKeyI.CheckString(p.DKey) {
 		srv.incidentManager.ReportIncident(cm.IncidentType_WrongDKey, "", nil)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -318,7 +318,7 @@ func (srv *Server) getDKey(p *nm.GetDKeyParams) (result *nm.GetDKeyResult, re *j
 	}
 
 	result = &nm.GetDKeyResult{
-		DKey: srv.dKey.GetString(),
+		DKey: srv.dKeyI.GetString(),
 	}
 
 	return result, nil

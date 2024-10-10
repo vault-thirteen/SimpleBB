@@ -35,6 +35,7 @@ const (
 	FuncMoveThreadUp      = "MoveThreadUp"
 	FuncMoveThreadDown    = "MoveThreadDown"
 	FuncDeleteThread      = "DeleteThread"
+	FuncThreadExistsS     = "ThreadExistsS"
 
 	// Message.
 	FuncAddMessage               = "AddMessage"
@@ -52,6 +53,7 @@ const (
 	FuncListSectionsAndForums       = "ListSectionsAndForums"
 
 	// Other.
+	FuncGetDKey            = "GetDKey"
 	FuncShowDiagnosticData = cc.FuncShowDiagnosticData
 	FuncTest               = "Test"
 )

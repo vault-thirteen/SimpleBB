@@ -61,8 +61,8 @@ type Server struct {
 	// Scheduler.
 	scheduler *cm.Scheduler
 
-	// Keys.
-	dKey *dk.DKey
+	// Internal DKeys.
+	dKeyI *dk.DKey
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -279,36 +279,40 @@ func (srv *Server) httpRouter(rw http.ResponseWriter, req *http.Request) {
 
 func (srv *Server) createClientsForExternalServices() (err error) {
 	// ACM module.
-	var acmSCS = &cset.ServiceClientSettings{
-		Schema:                      srv.settings.AcmSettings.Schema,
-		Host:                        srv.settings.AcmSettings.Host,
-		Port:                        srv.settings.AcmSettings.Port,
-		Path:                        srv.settings.AcmSettings.Path,
-		EnableSelfSignedCertificate: srv.settings.AcmSettings.EnableSelfSignedCertificate,
-	}
+	{
+		var acmSCS = &cset.ServiceClientSettings{
+			Schema:                      srv.settings.AcmSettings.Schema,
+			Host:                        srv.settings.AcmSettings.Host,
+			Port:                        srv.settings.AcmSettings.Port,
+			Path:                        srv.settings.AcmSettings.Path,
+			EnableSelfSignedCertificate: srv.settings.AcmSettings.EnableSelfSignedCertificate,
+		}
 
-	srv.acmServiceClient, err = cc.NewClientWithSCS(acmSCS, app.ServiceShortName_ACM)
-	if err != nil {
-		return err
+		srv.acmServiceClient, err = cc.NewClientWithSCS(acmSCS, app.ServiceShortName_ACM)
+		if err != nil {
+			return err
+		}
 	}
 
 	// GWM module [optional].
-	if !srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-		fmt.Println(c.MsgIncidentsTableIsDisabled)
-	} else {
-		fmt.Println(c.MsgIncidentsTableIsEnabled)
+	{
+		if !srv.settings.SystemSettings.IsTableOfIncidentsUsed {
+			fmt.Println(c.MsgIncidentsTableIsDisabled)
+		} else {
+			fmt.Println(c.MsgIncidentsTableIsEnabled)
 
-		var gwmSCS = &cset.ServiceClientSettings{
-			Schema:                      srv.settings.GwmSettings.Schema,
-			Host:                        srv.settings.GwmSettings.Host,
-			Port:                        srv.settings.GwmSettings.Port,
-			Path:                        srv.settings.GwmSettings.Path,
-			EnableSelfSignedCertificate: srv.settings.GwmSettings.EnableSelfSignedCertificate,
-		}
+			var gwmSCS = &cset.ServiceClientSettings{
+				Schema:                      srv.settings.GwmSettings.Schema,
+				Host:                        srv.settings.GwmSettings.Host,
+				Port:                        srv.settings.GwmSettings.Port,
+				Path:                        srv.settings.GwmSettings.Path,
+				EnableSelfSignedCertificate: srv.settings.GwmSettings.EnableSelfSignedCertificate,
+			}
 
-		srv.gwmServiceClient, err = cc.NewClientWithSCS(gwmSCS, app.ServiceShortName_GWM)
-		if err != nil {
-			return err
+			srv.gwmServiceClient, err = cc.NewClientWithSCS(gwmSCS, app.ServiceShortName_GWM)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -317,9 +321,19 @@ func (srv *Server) createClientsForExternalServices() (err error) {
 
 func (srv *Server) pingClientsForExternalServices() (err error) {
 	// ACM module.
-	err = srv.acmServiceClient.Ping(true)
-	if err != nil {
-		return err
+	{
+		err = srv.acmServiceClient.Ping(true)
+		if err != nil {
+			return err
+		}
+	}
+
+	// GWM module.
+	{
+		err = srv.gwmServiceClient.Ping(true)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -341,7 +355,7 @@ func (srv *Server) initScheduler() {
 }
 
 func (srv *Server) initKeys() (err error) {
-	srv.dKey, err = dk.NewDKey(int(srv.settings.SystemSettings.DKeySize))
+	srv.dKeyI, err = dk.NewDKey(int(srv.settings.SystemSettings.DKeySize))
 	if err != nil {
 		return err
 	}

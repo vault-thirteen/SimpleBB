@@ -1625,6 +1625,42 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 	return result, nil
 }
 
+// threadExistsS checks whether the specified thread exists or not. This method
+// is used by the system.
+func (srv *Server) threadExistsS(p *mm.ThreadExistsSParams) (result *mm.ThreadExistsSResult, re *jrm1.RpcError) {
+	re = srv.mustBeNoAuth(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check the DKey.
+	if !srv.dKeyI.CheckString(p.DKey) {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	// Check parameters.
+	if p.ThreadId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
+	}
+
+	// Count threads.
+	var n int
+	var err error
+	n, err = srv.dbo.CountThreadsById(p.ThreadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &mm.ThreadExistsSResult{
+		Exists: n == 1,
+	}
+
+	return result, nil
+}
+
 // Message.
 
 // addMessage inserts a new message into a thread.
@@ -2302,6 +2338,19 @@ func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (res
 }
 
 // Other.
+
+func (srv *Server) getDKey(p *mm.GetDKeyParams) (result *mm.GetDKeyResult, re *jrm1.RpcError) {
+	re = srv.mustBeNoAuth(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	result = &mm.GetDKeyResult{
+		DKey: srv.dKeyI.GetString(),
+	}
+
+	return result, nil
+}
 
 func (srv *Server) showDiagnosticData() (result *mm.ShowDiagnosticDataResult, re *jrm1.RpcError) {
 	result = &mm.ShowDiagnosticDataResult{}

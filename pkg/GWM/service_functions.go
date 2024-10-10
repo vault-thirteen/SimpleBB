@@ -8,11 +8,13 @@ import (
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
-	api "github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
+	"github.com/vault-thirteen/SimpleBB/pkg/GWM/models/api"
 	mc "github.com/vault-thirteen/SimpleBB/pkg/MM/client"
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	nc "github.com/vault-thirteen/SimpleBB/pkg/NM/client"
 	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
+	sc "github.com/vault-thirteen/SimpleBB/pkg/SM/client"
+	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
@@ -1975,6 +1977,95 @@ func (srv *Server) DeleteNotification(ar *api.Request, _ *http.Request, hrw http
 	}
 	if re != nil {
 		srv.processRpcError(app.ModuleId_NM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+// SM.
+
+func (srv *Server) AddSubscription(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params sm.AddSubscriptionParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(sm.AddSubscriptionResult)
+	var re *jrm1.RpcError
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncAddSubscription, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_SM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) GetUserSubscriptions(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params sm.GetUserSubscriptionsParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(sm.GetUserSubscriptionsResult)
+	var re *jrm1.RpcError
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncGetUserSubscriptions, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_SM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) DeleteSubscription(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params sm.DeleteSubscriptionParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(sm.DeleteSubscriptionResult)
+	var re *jrm1.RpcError
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncDeleteSubscription, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_SM, re, hrw)
 		return
 	}
 

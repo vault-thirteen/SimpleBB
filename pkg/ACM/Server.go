@@ -56,9 +56,9 @@ type Server struct {
 	vcg *rp.Generator
 
 	// Clients for external services.
-	smtpServiceClient *cc.Client
-	rcsServiceClient  *cc.Client
 	gwmServiceClient  *cc.Client
+	rcsServiceClient  *cc.Client
+	smtpServiceClient *cc.Client
 
 	// Generator of request IDs.
 	ridg *rp.Generator
@@ -311,49 +311,55 @@ func (srv *Server) initVerificationCodeGenerator() (err error) {
 }
 
 func (srv *Server) createClientsForExternalServices() (err error) {
-	// SMTP module.
-	var smtpSCS = &cset.ServiceClientSettings{
-		Schema:                      srv.settings.SmtpSettings.Schema,
-		Host:                        srv.settings.SmtpSettings.Host,
-		Port:                        srv.settings.SmtpSettings.Port,
-		Path:                        srv.settings.SmtpSettings.Path,
-		EnableSelfSignedCertificate: srv.settings.SmtpSettings.EnableSelfSignedCertificate,
-	}
+	// GWM module [optional].
+	{
+		if !srv.settings.SystemSettings.IsTableOfIncidentsUsed {
+			fmt.Println(c.MsgIncidentsTableIsDisabled)
+		} else {
+			fmt.Println(c.MsgIncidentsTableIsEnabled)
 
-	srv.smtpServiceClient, err = cc.NewClientWithSCS(smtpSCS, app.ServiceShortName_SMTP)
-	if err != nil {
-		return err
+			var gwmSCS = &cset.ServiceClientSettings{
+				Schema:                      srv.settings.GwmSettings.Schema,
+				Host:                        srv.settings.GwmSettings.Host,
+				Port:                        srv.settings.GwmSettings.Port,
+				Path:                        srv.settings.GwmSettings.Path,
+				EnableSelfSignedCertificate: srv.settings.GwmSettings.EnableSelfSignedCertificate,
+			}
+
+			srv.gwmServiceClient, err = cc.NewClientWithSCS(gwmSCS, app.ServiceShortName_GWM)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	// RCS module.
-	var rcsSCS = &cset.ServiceClientSettings{
-		Schema:                      srv.settings.RcsSettings.Schema,
-		Host:                        srv.settings.RcsSettings.Host,
-		Port:                        srv.settings.RcsSettings.Port,
-		Path:                        srv.settings.RcsSettings.Path,
-		EnableSelfSignedCertificate: srv.settings.RcsSettings.EnableSelfSignedCertificate,
-	}
-
-	srv.rcsServiceClient, err = cc.NewClientWithSCS(rcsSCS, app.ServiceShortName_RCS)
-	if err != nil {
-		return err
-	}
-
-	// GWM module [optional].
-	if !srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-		fmt.Println(c.MsgIncidentsTableIsDisabled)
-	} else {
-		fmt.Println(c.MsgIncidentsTableIsEnabled)
-
-		var gwmSCS = &cset.ServiceClientSettings{
-			Schema:                      srv.settings.GwmSettings.Schema,
-			Host:                        srv.settings.GwmSettings.Host,
-			Port:                        srv.settings.GwmSettings.Port,
-			Path:                        srv.settings.GwmSettings.Path,
-			EnableSelfSignedCertificate: srv.settings.GwmSettings.EnableSelfSignedCertificate,
+	{
+		var rcsSCS = &cset.ServiceClientSettings{
+			Schema:                      srv.settings.RcsSettings.Schema,
+			Host:                        srv.settings.RcsSettings.Host,
+			Port:                        srv.settings.RcsSettings.Port,
+			Path:                        srv.settings.RcsSettings.Path,
+			EnableSelfSignedCertificate: srv.settings.RcsSettings.EnableSelfSignedCertificate,
 		}
 
-		srv.gwmServiceClient, err = cc.NewClientWithSCS(gwmSCS, app.ServiceShortName_GWM)
+		srv.rcsServiceClient, err = cc.NewClientWithSCS(rcsSCS, app.ServiceShortName_RCS)
+		if err != nil {
+			return err
+		}
+	}
+
+	// SMTP module.
+	{
+		var smtpSCS = &cset.ServiceClientSettings{
+			Schema:                      srv.settings.SmtpSettings.Schema,
+			Host:                        srv.settings.SmtpSettings.Host,
+			Port:                        srv.settings.SmtpSettings.Port,
+			Path:                        srv.settings.SmtpSettings.Path,
+			EnableSelfSignedCertificate: srv.settings.SmtpSettings.EnableSelfSignedCertificate,
+		}
+
+		srv.smtpServiceClient, err = cc.NewClientWithSCS(smtpSCS, app.ServiceShortName_SMTP)
 		if err != nil {
 			return err
 		}
@@ -363,21 +369,27 @@ func (srv *Server) createClientsForExternalServices() (err error) {
 }
 
 func (srv *Server) pingClientsForExternalServices() (err error) {
-	// SMTP module.
-	err = srv.smtpServiceClient.Ping(true)
-	if err != nil {
-		return err
+	// GWM module [optional].
+	{
+		if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
+			err = srv.gwmServiceClient.Ping(true)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	// RCS module.
-	err = srv.rcsServiceClient.Ping(true)
-	if err != nil {
-		return err
+	{
+		err = srv.rcsServiceClient.Ping(true)
+		if err != nil {
+			return err
+		}
 	}
 
-	// GWM module [optional].
-	if srv.settings.SystemSettings.IsTableOfIncidentsUsed {
-		err = srv.gwmServiceClient.Ping(true)
+	// SMTP module.
+	{
+		err = srv.smtpServiceClient.Ping(true)
 		if err != nil {
 			return err
 		}

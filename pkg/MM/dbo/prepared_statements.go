@@ -62,7 +62,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 2.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Id = ?;`, dbo.tableNames.Forums)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE Id = ?;`, dbo.tableNames.Forums)
 	qs = append(qs, q)
 
 	// 3.
@@ -114,7 +114,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 15.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Id = ?;`, dbo.tableNames.Threads)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE Id = ?;`, dbo.tableNames.Threads)
 	qs = append(qs, q)
 
 	// 16.
@@ -174,7 +174,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 30.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Parent IS NULL;`, dbo.tableNames.Sections)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE Parent IS NULL;`, dbo.tableNames.Sections)
 	qs = append(qs, q)
 
 	// 31.
@@ -182,7 +182,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 32.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Id = ?;`, dbo.tableNames.Sections)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE Id = ?;`, dbo.tableNames.Sections)
 	qs = append(qs, q)
 
 	// 33.
@@ -210,7 +210,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 39.
-	q = fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE Id = ?;`, dbo.tableNames.Messages)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE Id = ?;`, dbo.tableNames.Messages)
 	qs = append(qs, q)
 
 	return qs

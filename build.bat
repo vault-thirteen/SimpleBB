@@ -12,6 +12,7 @@ SET acm_folder=ACM
 SET gw_folder=GWM
 SET mm_folder=MM
 SET nm_folder=NM
+SET sm_folder=SM
 SET jwt_folder=JWT
 SET captcha_folder=RCS
 SET captcha_images_folder=rcs_img
@@ -106,8 +107,25 @@ COPY "%cert_dir%\%nm_folder%" "%build_dir%\%cert_dir%\%nm_folder%\"
 MKDIR "%build_dir%\%sql_dir%\%nm_folder%\%sql_init_dir%"
 COPY "%sql_dir%\%nm_folder%\%sql_init_dir%" "%build_dir%\%sql_dir%\%nm_folder%\%sql_init_dir%\"
 
-:: 5. Captcha Module.
-ECHO 5. Captcha Module
+:: 5. Subscription Module.
+ECHO 5. Subscription Module
+
+:: Build the Subscription module (service).
+CD "%exe_dir%\%sm_folder%"
+go build
+IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
+MOVE "%sm_folder%.exe" ".\..\..\%build_dir%\"
+CD ".\..\..\"
+
+:: Copy related files for the Subscription module (service).
+COPY "%config_dir%\%sm_folder%.%config_file_ext%" "%build_dir%\"
+MKDIR "%build_dir%\%cert_dir%\%sm_folder%"
+COPY "%cert_dir%\%sm_folder%" "%build_dir%\%cert_dir%\%sm_folder%\"
+MKDIR "%build_dir%\%sql_dir%\%sm_folder%\%sql_init_dir%"
+COPY "%sql_dir%\%sm_folder%\%sql_init_dir%" "%build_dir%\%sql_dir%\%sm_folder%\%sql_init_dir%\"
+
+:: 6. Captcha Module.
+ECHO 6. Captcha Module
 
 :: Build the Captcha module (service).
 CD "%exe_dir%\%captcha_folder%"
@@ -120,8 +138,8 @@ CD ".\..\..\"
 COPY "%config_dir%\%captcha_folder%.%config_file_ext%" "%build_dir%\"
 MKDIR "%build_dir%\%captcha_images_folder%"
 
-:: 6. SMTP Module.
-ECHO 6. SMTP Module
+:: 7. SMTP Module.
+ECHO 7. SMTP Module
 
 :: Build the SMTP module (service).
 CD "%exe_dir%\%smtp_folder%"
@@ -133,19 +151,19 @@ CD ".\..\..\"
 :: Copy related files for the SMTP module (service).
 COPY "%config_dir%\%smtp_folder%.%config_file_ext%" "%build_dir%\"
 
-:: 7. Auxiliary tools.
-ECHO 7. Auxiliary tools
+:: 8. Auxiliary tools.
+ECHO 8. Auxiliary tools
 
-:: 7.1. Argon tool.
-ECHO 7.1. Argon tool
+:: 8.1. Argon tool.
+ECHO 8.1. Argon tool
 CD "%tool_folder%\%argon2_tool_folder%"
 go build
 IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
 MOVE "%argon2_tool_folder%.exe" ".\..\..\%build_dir%\%tool_folder%\"
 CD ".\..\..\"
 
-:: 7.2. JWT tool.
-ECHO 7.2. JWT tool
+:: 8.2. JWT tool.
+ECHO 8.2. JWT tool
 CD "%tool_folder%\%jwt_tool_folder%"
 go build
 IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%

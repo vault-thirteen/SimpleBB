@@ -23,6 +23,7 @@ import (
 	gs "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
 	m "github.com/vault-thirteen/SimpleBB/pkg/MM"
 	n "github.com/vault-thirteen/SimpleBB/pkg/NM"
+	s "github.com/vault-thirteen/SimpleBB/pkg/SM"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
@@ -71,13 +72,15 @@ type Server struct {
 	acmServiceClient *cc.Client
 	mmServiceClient  *cc.Client
 	nmServiceClient  *cc.Client
-	captchaProxy     *httputil.ReverseProxy
+	rcsProxy         *httputil.ReverseProxy
+	smServiceClient  *cc.Client
 
 	// Mapping of HTTP status codes by RPC error code for various services.
 	commonHttpStatusCodesByRpcErrorCode map[int]int
 	acmHttpStatusCodesByRpcErrorCode    map[int]int
 	mmHttpStatusCodesByRpcErrorCode     map[int]int
 	nmHttpStatusCodesByRpcErrorCode     map[int]int
+	smHttpStatusCodesByRpcErrorCode     map[int]int
 
 	// Public settings.
 	publicSettingsFileData []byte // Cached file contents in JSON format.
@@ -417,6 +420,7 @@ func (srv *Server) initStatusCodeMapper() (err error) {
 	srv.acmHttpStatusCodesByRpcErrorCode = a.GetMapOfHttpStatusCodesByRpcErrorCodes()
 	srv.mmHttpStatusCodesByRpcErrorCode = m.GetMapOfHttpStatusCodesByRpcErrorCodes()
 	srv.nmHttpStatusCodesByRpcErrorCode = n.GetMapOfHttpStatusCodesByRpcErrorCodes()
+	srv.smHttpStatusCodesByRpcErrorCode = s.GetMapOfHttpStatusCodesByRpcErrorCodes()
 
 	return nil
 }
@@ -503,77 +507,115 @@ func (srv *Server) initFrontEndData() (err error) {
 
 func (srv *Server) createClientsForExternalServices() (err error) {
 	// ACM module.
-	var acmSCS = &cset.ServiceClientSettings{
-		Schema:                      srv.settings.AcmSettings.Schema,
-		Host:                        srv.settings.AcmSettings.Host,
-		Port:                        srv.settings.AcmSettings.Port,
-		Path:                        srv.settings.AcmSettings.Path,
-		EnableSelfSignedCertificate: srv.settings.AcmSettings.EnableSelfSignedCertificate,
-	}
+	{
+		var acmSCS = &cset.ServiceClientSettings{
+			Schema:                      srv.settings.AcmSettings.Schema,
+			Host:                        srv.settings.AcmSettings.Host,
+			Port:                        srv.settings.AcmSettings.Port,
+			Path:                        srv.settings.AcmSettings.Path,
+			EnableSelfSignedCertificate: srv.settings.AcmSettings.EnableSelfSignedCertificate,
+		}
 
-	srv.acmServiceClient, err = cc.NewClientWithSCS(acmSCS, app.ServiceShortName_ACM)
-	if err != nil {
-		return err
+		srv.acmServiceClient, err = cc.NewClientWithSCS(acmSCS, app.ServiceShortName_ACM)
+		if err != nil {
+			return err
+		}
 	}
 
 	// MM module.
-	var mmSCS = &cset.ServiceClientSettings{
-		Schema:                      srv.settings.MmSettings.Schema,
-		Host:                        srv.settings.MmSettings.Host,
-		Port:                        srv.settings.MmSettings.Port,
-		Path:                        srv.settings.MmSettings.Path,
-		EnableSelfSignedCertificate: srv.settings.MmSettings.EnableSelfSignedCertificate,
-	}
+	{
+		var mmSCS = &cset.ServiceClientSettings{
+			Schema:                      srv.settings.MmSettings.Schema,
+			Host:                        srv.settings.MmSettings.Host,
+			Port:                        srv.settings.MmSettings.Port,
+			Path:                        srv.settings.MmSettings.Path,
+			EnableSelfSignedCertificate: srv.settings.MmSettings.EnableSelfSignedCertificate,
+		}
 
-	srv.mmServiceClient, err = cc.NewClientWithSCS(mmSCS, app.ServiceShortName_MM)
-	if err != nil {
-		return err
+		srv.mmServiceClient, err = cc.NewClientWithSCS(mmSCS, app.ServiceShortName_MM)
+		if err != nil {
+			return err
+		}
 	}
 
 	// NM module.
-	var nmSCS = &cset.ServiceClientSettings{
-		Schema:                      srv.settings.NmSettings.Schema,
-		Host:                        srv.settings.NmSettings.Host,
-		Port:                        srv.settings.NmSettings.Port,
-		Path:                        srv.settings.NmSettings.Path,
-		EnableSelfSignedCertificate: srv.settings.NmSettings.EnableSelfSignedCertificate,
+	{
+		var nmSCS = &cset.ServiceClientSettings{
+			Schema:                      srv.settings.NmSettings.Schema,
+			Host:                        srv.settings.NmSettings.Host,
+			Port:                        srv.settings.NmSettings.Port,
+			Path:                        srv.settings.NmSettings.Path,
+			EnableSelfSignedCertificate: srv.settings.NmSettings.EnableSelfSignedCertificate,
+		}
+
+		srv.nmServiceClient, err = cc.NewClientWithSCS(nmSCS, app.ServiceShortName_NM)
+		if err != nil {
+			return err
+		}
 	}
 
-	srv.nmServiceClient, err = cc.NewClientWithSCS(nmSCS, app.ServiceShortName_NM)
-	if err != nil {
-		return err
+	// Proxy for captcha images (RCS).
+	{
+		targetAddr := cc.UrlSchemeHttp + "://" + net.JoinHostPort(srv.settings.SystemSettings.CaptchaImgServerHost, strconv.FormatUint(uint64(srv.settings.SystemSettings.CaptchaImgServerPort), 10))
+		var targetUrl *url.URL
+		targetUrl, err = url.Parse(targetAddr)
+		if err != nil {
+			return err
+		}
+
+		srv.rcsProxy = httputil.NewSingleHostReverseProxy(targetUrl)
 	}
 
-	// Proxy for captcha images.
-	targetAddr := cc.UrlSchemeHttp + "://" + net.JoinHostPort(srv.settings.SystemSettings.CaptchaImgServerHost, strconv.FormatUint(uint64(srv.settings.SystemSettings.CaptchaImgServerPort), 10))
-	var targetUrl *url.URL
-	targetUrl, err = url.Parse(targetAddr)
-	if err != nil {
-		return err
-	}
+	// SM module.
+	{
+		var smSCS = &cset.ServiceClientSettings{
+			Schema:                      srv.settings.SmSettings.Schema,
+			Host:                        srv.settings.SmSettings.Host,
+			Port:                        srv.settings.SmSettings.Port,
+			Path:                        srv.settings.SmSettings.Path,
+			EnableSelfSignedCertificate: srv.settings.SmSettings.EnableSelfSignedCertificate,
+		}
 
-	srv.captchaProxy = httputil.NewSingleHostReverseProxy(targetUrl)
+		srv.smServiceClient, err = cc.NewClientWithSCS(smSCS, app.ServiceShortName_SM)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
 
 func (srv *Server) pingClientsForExternalServices() (err error) {
 	// ACM module.
-	err = srv.acmServiceClient.Ping(true)
-	if err != nil {
-		return err
+	{
+		err = srv.acmServiceClient.Ping(true)
+		if err != nil {
+			return err
+		}
 	}
 
 	// MM module.
-	err = srv.mmServiceClient.Ping(true)
-	if err != nil {
-		return err
+	{
+		err = srv.mmServiceClient.Ping(true)
+		if err != nil {
+			return err
+		}
 	}
 
 	// NM module.
-	err = srv.nmServiceClient.Ping(true)
-	if err != nil {
-		return err
+	{
+		err = srv.nmServiceClient.Ping(true)
+		if err != nil {
+			return err
+		}
+	}
+
+	// SM module.
+	{
+		err = srv.smServiceClient.Ping(true)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -646,6 +688,11 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_CountUnreadNotifications,
 		ApiFunctionName_MarkNotificationAsRead,
 		ApiFunctionName_DeleteNotification,
+
+		// SM.
+		ApiFunctionName_AddSubscription,
+		ApiFunctionName_GetUserSubscriptions,
+		ApiFunctionName_DeleteSubscription,
 	}
 
 	srv.apiHandlers = map[string]api.RequestHandler{
@@ -715,6 +762,11 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_CountUnreadNotifications: srv.CountUnreadNotifications,
 		ApiFunctionName_MarkNotificationAsRead:   srv.MarkNotificationAsRead,
 		ApiFunctionName_DeleteNotification:       srv.DeleteNotification,
+
+		// SM.
+		ApiFunctionName_AddSubscription:      srv.AddSubscription,
+		ApiFunctionName_GetUserSubscriptions: srv.GetUserSubscriptions,
+		ApiFunctionName_DeleteSubscription:   srv.DeleteSubscription,
 	}
 
 	return nil

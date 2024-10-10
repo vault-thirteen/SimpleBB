@@ -50,6 +50,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.MoveThreadUp,
 		srv.MoveThreadDown,
 		srv.DeleteThread,
+		srv.ThreadExistsS,
 		srv.AddMessage,
 		srv.ChangeMessageText,
 		srv.ChangeMessageThread,
@@ -61,6 +62,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.ListForumAndThreads,
 		srv.ListForumAndThreadsOnPage,
 		srv.ListSectionsAndForums,
+		srv.GetDKey,
 		srv.ShowDiagnosticData,
 		srv.Test,
 	}
@@ -423,6 +425,22 @@ func (srv *Server) DeleteThread(params *json.RawMessage, _ *jrm1.ResponseMetaDat
 	return r, nil
 }
 
+func (srv *Server) ThreadExistsS(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.ThreadExistsSParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.ThreadExistsSResult
+	r, re = srv.threadExistsS(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
 // Message.
 
 func (srv *Server) AddMessage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
@@ -604,6 +622,22 @@ func (srv *Server) ListSectionsAndForums(params *json.RawMessage, _ *jrm1.Respon
 }
 
 // Other.
+
+func (srv *Server) GetDKey(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.GetDKeyParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.GetDKeyResult
+	r, re = srv.getDKey(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
 
 func (srv *Server) ShowDiagnosticData(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
 	var p *mm.ShowDiagnosticDataParams

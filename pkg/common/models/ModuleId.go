@@ -8,5 +8,6 @@ const (
 	Module_MM   = Module(3)
 	Module_NM   = Module(4)
 	Module_RCS  = Module(5)
-	Module_SMTP = Module(6)
+	Module_SM   = Module(6)
+	Module_SMTP = Module(7)
 )

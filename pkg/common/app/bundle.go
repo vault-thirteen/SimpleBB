@@ -10,6 +10,7 @@ const (
 	ServiceName_MM   = "Message Module"
 	ServiceName_NM   = "Notification Module"
 	ServiceName_RCS  = "Captcha Module"
+	ServiceName_SM   = "Subscription Module"
 	ServiceName_SMTP = "SMTP Module"
 )
 
@@ -19,6 +20,7 @@ const (
 	ConfigurationFilePathDefault_MM   = "MM.json"
 	ConfigurationFilePathDefault_NM   = "NM.json"
 	ConfigurationFilePathDefault_RCS  = "RCS.json"
+	ConfigurationFilePathDefault_SM   = "SM.json"
 	ConfigurationFilePathDefault_SMTP = "SMTP.json"
 )
 
@@ -28,6 +30,7 @@ const (
 	ServiceShortName_MM   = "MM"
 	ServiceShortName_NM   = "NM"
 	ServiceShortName_RCS  = "RCS"
+	ServiceShortName_SM   = "SM"
 	ServiceShortName_SMTP = "SMTP"
 )
 
@@ -37,5 +40,6 @@ const (
 	ModuleId_MM   = cm.Module_MM
 	ModuleId_NM   = cm.Module_NM
 	ModuleId_RCS  = cm.Module_RCS
+	ModuleId_SM   = cm.Module_SM
 	ModuleId_SMTP = cm.Module_SMTP
 )
