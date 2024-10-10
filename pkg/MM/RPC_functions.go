@@ -2,6 +2,7 @@ package mm
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"sync"
 
@@ -1558,64 +1559,17 @@ func (srv *Server) moveThreadDown(p *mm.MoveThreadDownParams) (result *mm.MoveTh
 
 // deleteThread removes a thread.
 func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThreadResult, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
-	var userRoles *am.GetSelfRolesResult
-	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	re = srv.deleteThreadH(p)
 	if re != nil {
 		return nil, re
 	}
 
-	// Check permissions.
-	if !userRoles.IsAdministrator {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	// Check parameters.
-	if p.ThreadId == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
-	}
-
-	// Read the thread.
-	var thread *mm.Thread
-	var err error
-	thread, err = srv.dbo.GetThreadById(p.ThreadId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	if thread == nil {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
-	}
-
-	// Check for children.
-	if thread.Messages.Size() > 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotEmpty, RpcErrorMsg_ThreadIsNotEmpty, nil)
-	}
-
-	// Update the link.
-	var linkThreads *ul.UidList
-	linkThreads, err = srv.dbo.GetForumThreadsById(thread.ForumId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	err = linkThreads.RemoveItem(p.ThreadId)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
-	}
-
-	err = srv.dbo.SetForumThreadsById(thread.ForumId, linkThreads)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	// Delete the thread.
-	err = srv.dbo.DeleteThreadById(p.ThreadId)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	// Ask the SM module to clear the subscriptions.
+	re = srv.clearSubscriptionsOfDeletedThread(p.ThreadId)
+	if re != nil {
+		log.Println(re)
+	} else {
+		log.Println("OK")
 	}
 
 	result = &mm.DeleteThreadResult{
@@ -1638,8 +1592,8 @@ func (srv *Server) threadExistsS(p *mm.ThreadExistsSParams) (result *mm.ThreadEx
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Check parameters.
 	if p.ThreadId == 0 {
