@@ -184,6 +184,17 @@ sectionChildType = {
 }
 sectionMarginDelta = 10;
 
+buttonName = {
+	BackToRoot: "🏠",
+	BackToSection: "Go back",
+	BackToForum: "Go back",
+	BackToThread: "Go back",
+	StartNewThread: "Start a new Thread",
+	SubscribeToThread: "Subscribe",
+	AddMessage: "Add a Message",
+	EditMessage: "Edit Message",
+}
+
 // Global variables.
 class GlobalVariablesContainer {
 	constructor(id, page, pages, unc) {
@@ -1826,28 +1837,28 @@ function addActionPanel(el, atTop, type, parentId) {
 	let tbl = document.createElement("TABLE");
 	let tr = document.createElement("TR");
 	let td = document.createElement("TD");
-	td.innerHTML = '<form><input type="button" value="🏠" class="btnGoToIndex" onclick="onBtnGoToIndexClick(this)" /></form>';
+	td.innerHTML = '<form><input type="button" value="' + buttonName.BackToRoot + '" class="btnGoToIndex" onclick="onBtnGoToIndexClick(this)" /></form>';
 	tr.appendChild(td);
 
 	switch (type) {
 		case "thread":
 			td = document.createElement("TD");
 			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
-				'<input type="button" value="Back to Thread" class="btnGoToThread" onclick="onBtnGoToThreadClick(' + parentId + ')" />';
+				'<input type="button" value="' + buttonName.BackToThread + '" class="btnGoToThread" onclick="onBtnGoToThreadClick(' + parentId + ')" />';
 			tr.appendChild(td);
 			break;
 
 		case "forum":
 			td = document.createElement("TD");
 			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
-				'<input type="button" value="Back to Forum" class="btnGoToForum" onclick="onBtnGoToForumClick(' + parentId + ')" />';
+				'<input type="button" value="' + buttonName.BackToForum + '" class="btnGoToForum" onclick="onBtnGoToForumClick(' + parentId + ')" />';
 			tr.appendChild(td);
 			break;
 
 		case "section":
 			td = document.createElement("TD");
 			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
-				'<input type="button" value="Back to Section" class="btnGoToSection" onclick="onBtnGoToSectionClick(' + parentId + ')" />';
+				'<input type="button" value="' + buttonName.BackToSection + '" class="btnGoToSection" onclick="onBtnGoToSectionClick(' + parentId + ')" />';
 			tr.appendChild(td);
 			break;
 	}
@@ -2320,11 +2331,7 @@ async function fillUserPage(userParams) {
 	let tr = document.getElementById(fi.id21_tr);
 	tr.children[1].innerHTML = rolesHtml;
 
-	resp = await getSelfSubscriptions();
-	if (resp == null) {
-		return;
-	}
-	let subscriptions = resp.result.userSubscriptions.threadIds;
+	let subscriptions = await getSelfSubscriptionsNN();
 	let subscriptionsCount = 0;
 	if (subscriptions != null) {
 		subscriptionsCount = subscriptions.length;
@@ -2485,60 +2492,84 @@ async function addBottomActionPanel(el, type, objectId, object) {
 
 	let tbl = document.createElement("TABLE");
 	let tr = document.createElement("TR");
+	tbl.appendChild(tr);
+	let tdL = document.createElement("TD");
+	tdL.id = "bottomActionPanelLeft";
+	tdL.className = "bottomActionPanelLeft";
+	tr.appendChild(tdL);
+	let tdR = document.createElement("TD");
+	tdR.id = "bottomActionPanelRight";
+	tdR.className = "bottomActionPanelRight";
+	tr.appendChild(tdR);
+	div.appendChild(tbl);
+	el.appendChild(div);
 
 	switch (type) {
 		case "forum":
-			if (userParams.isAuthor) {
-				td = document.createElement("TD");
-				td.innerHTML = '<form><input type="button" value="Start a new Thread" class="btnStartNewThread" ' +
-					'onclick="onBtnStartNewThreadClick(this, \'' + cn + '\', ' + objectId + ')" /></form>';
-				tr.appendChild(td);
-			}
+			await drawBottomActionPanelButtonsForForum(objectId, object, tdL, tdR, userParams, cn);
 			break;
 
 		case "thread":
-			let resp = await getLatestMessageOfThread(objectId);
-			if (resp == null) {
-				return;
-			}
-			let latestMessageInThread = resp.result.message;
-
-			resp = await isSelfSubscribed(objectId);
-			if (resp == null) {
-				return;
-			}
-			let userId = resp.result.userId;
-			let isUserSubscribed = resp.result.isSubscribed;
-
-			let canAddMsg = canUserAddMessage(userParams, latestMessageInThread);
-			if (canAddMsg) {
-				td = document.createElement("TD");
-				td.innerHTML = '<form><input type="button" value="Add a Message" class="btnAddMessage" ' +
-					'onclick="onBtnAddMessageClick(this, \'' + cn + '\', ' + objectId + ')" /></form>';
-				tr.appendChild(td);
-			}
-			if (!isUserSubscribed) {
-				td = document.createElement("TD");
-				td.innerHTML = '<form><input type="button" value="Subscribe" class="btnSubscribe" ' +
-					'onclick="onBtnSubscribeClick(this, ' + objectId + ', ' + userId + ')" /></form>';
-				tr.appendChild(td);
-			}
+			await drawBottomActionPanelButtonsForThread(objectId, object, tdL, tdR, userParams, cn);
 			break;
 
 		case "message":
-			let canEditMsg = canUserEditMessage(userParams, object);
-			if (canEditMsg) {
-				td = document.createElement("TD");
-				td.innerHTML = '<form><input type="button" value="Edit Message" class="btnEditMessage" ' +
-					'onclick="onBtnEditMessageClick(this, \'' + cn + '\', ' + objectId + ')" /></form>';
-				tr.appendChild(td);
-			}
+			await drawBottomActionPanelButtonsForMessage(objectId, object, tdL, tdR, userParams, cn);
 			break;
 	}
+}
 
+async function drawBottomActionPanelButtonsForForum(forumId, forum, tdL, tdR, userParams, panelClass) {
+	if (userParams.isAuthor) {
+		tdR.innerHTML = '<form><input type="button" value="' + buttonName.StartNewThread + '" class="btnStartNewThread" ' +
+			'onclick="onBtnStartNewThreadClick(this, \'' + panelClass + '\', ' + forumId + ')" /></form>';
+	}
+}
+
+async function drawBottomActionPanelButtonsForThread(threadId, thread, tdL, tdR, userParams, panelClass) {
+	let resp = await getLatestMessageOfThread(threadId);
+	if (resp == null) {
+		return;
+	}
+	let latestMessageInThread = resp.result.message;
+
+	resp = await isSelfSubscribed(threadId);
+	if (resp == null) {
+		return;
+	}
+	let userId = resp.result.userId;
+	let isUserSubscribed = resp.result.isSubscribed;
+
+	let tbl = document.createElement("TABLE");
+	let tr = document.createElement("TR");
+
+	if (!isUserSubscribed) {
+		let td = document.createElement("TD");
+		td.innerHTML += '<form><input type="button" value="' + buttonName.SubscribeToThread + '" class="btnSubscribe" ' +
+			'onclick="onBtnSubscribeClick(this, ' + threadId + ', ' + userId + ')" /></form>';
+		tr.appendChild(td);
+	}
+
+	let canAddMsg = canUserAddMessage(userParams, latestMessageInThread);
+	if (canAddMsg) {
+		let td = document.createElement("TD");
+		td.innerHTML += '<form><input type="button" value="' + buttonName.AddMessage + '" class="btnAddMessage" ' +
+			'onclick="onBtnAddMessageClick(this, \'' + panelClass + '\', ' + threadId + ')" /></form>';
+		tr.appendChild(td);
+	}
+	
 	tbl.appendChild(tr);
-	div.appendChild(tbl);
-	el.appendChild(div);
+	tdR.appendChild(tbl);
+}
+
+async function drawBottomActionPanelButtonsForMessage(messageId, message, tdL, tdR, userParams, panelClass) {
+	if (userParams.isAuthor) {
+		let canEditMsg = canUserEditMessage(userParams, message);
+		if (canEditMsg) {
+			tdR.innerHTML = '<form><input type="button" value="' + buttonName.EditMessage + '" class="btnEditMessage" ' +
+				'onclick="onBtnEditMessageClick(this, \'' + panelClass + '\', ' + messageId + ')" /></form>';
+		}
+	}
 }
 
 async function onBtnStartNewThreadClick(btn, panelCN, forumId) {
@@ -3150,14 +3181,7 @@ async function addSubscription(threadId, userId) {
 
 async function showPage_Subscriptions() {
 	let pageNumber = mca_gvc.Page;
-	let resp = await getSelfSubscriptions();
-	if (resp == null) {
-		return;
-	}
-	let allSubscriptions = resp.result.userSubscriptions.threadIds;
-	if (allSubscriptions == null) {
-		return;
-	}
+	let allSubscriptions = await getSelfSubscriptionsNN();
 	let subscriptionsCount = allSubscriptions.length;
 	let settings = getSettings();
 	let pageSize = settings.PageSize;
@@ -3330,4 +3354,16 @@ function repairUndefinedPageCount(pageCount) {
 		return 1;
 	}
 	return pageCount;
+}
+
+async function getSelfSubscriptionsNN() {
+	let resp = await getSelfSubscriptions();
+	if (resp == null) {
+		return;
+	}
+	let allSubscriptions = [];
+	if ((resp.result.userSubscriptions != null) && (resp.result.userSubscriptions.threadIds != null)) {
+		allSubscriptions = resp.result.userSubscriptions.threadIds;
+	}
+	return allSubscriptions;
 }

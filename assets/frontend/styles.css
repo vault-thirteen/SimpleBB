@@ -291,7 +291,11 @@ table.acpMenu td {
 
 .btnGoToThread,
 .btnGoToForum,
-.btnGoToSection,
+.btnGoToSection {
+	width: 96px;
+	height: 32px;
+}
+
 .btnBackToAccount {
 	width: 192px;
 }
@@ -725,3 +729,12 @@ textarea.newMessageText {
 	font-size: 15px;
 }
 
+.bottomActionPanelLeft {
+	width: 100%;
+	text-align: left;
+}
+
+.bottomActionPanelRight {
+	width: auto;
+	text-align: right;
+}

@@ -85,6 +85,10 @@ func (ul *UidList) isUnique() bool {
 
 // Size returns list's size, i.e. it counts the items.
 func (ul *UidList) Size() (n int) {
+	if ul == nil {
+		return 0
+	}
+
 	return len(*ul)
 }
 

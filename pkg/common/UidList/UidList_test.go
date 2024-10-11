@@ -87,18 +87,22 @@ func Test_Size(t *testing.T) {
 	var ul *UidList
 	var err error
 
-	// Test #1. Empty array (slice).
+	// Test #1. Null object.
+	ul = nil
+	aTest.MustBeEqual(ul.Size(), 0)
+
+	// Test #2. Empty array (slice).
 	ul, err = NewFromArray([]uint{})
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(ul.Size(), 0)
 
-	// Test #2. Null array (slice).
+	// Test #3. Null array (slice).
 	var x []uint = nil
 	ul, err = NewFromArray(x)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(ul.Size(), 0)
 
-	// Test #3. Normal array (slice).
+	// Test #4. Normal array (slice).
 	ul, err = NewFromArray([]uint{1, 2, 3})
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(ul.Size(), 3)
