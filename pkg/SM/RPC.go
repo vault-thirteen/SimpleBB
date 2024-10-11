@@ -30,6 +30,8 @@ func (srv *Server) initRpc() (err error) {
 	fns := []jrm1.RpcFunction{
 		srv.Ping,
 		srv.AddSubscription,
+		srv.IsSelfSubscribed,
+		srv.IsUserSubscribed,
 		srv.GetSelfSubscriptions,
 		srv.GetUserSubscriptions,
 		srv.GetThreadSubscribersS,
@@ -69,6 +71,38 @@ func (srv *Server) AddSubscription(params *json.RawMessage, _ *jrm1.ResponseMeta
 
 	var r *sm.AddSubscriptionResult
 	r, re = srv.addSubscription(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) IsSelfSubscribed(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *sm.IsSelfSubscribedParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *sm.IsSelfSubscribedResult
+	r, re = srv.isSelfSubscribed(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) IsUserSubscribed(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *sm.IsUserSubscribedParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *sm.IsUserSubscribedResult
+	r, re = srv.isUserSubscribed(p)
 	if re != nil {
 		return nil, re
 	}

@@ -183,17 +183,8 @@ func (srv *Server) getDKeyForMM() (dKey *string, re *jrm1.RpcError) {
 
 // deleteSubscriptionH is a common function to delete subscriptions.
 func (srv *Server) deleteSubscriptionH(s *sm.Subscription) (re *jrm1.RpcError) {
-	// Check parameters.
-	if s == nil {
-		return jrm1.NewRpcErrorByUser(RpcErrorCode_SubscriptionIsNotFound, RpcErrorMsg_SubscriptionIsNotFound, nil)
-	}
-
-	if s.ThreadId == 0 {
-		return jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
-	}
-	if s.UserId == 0 {
-		return jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
-	}
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
 
 	// Read Subscriptions.
 	var us *sm.UserSubscriptions
@@ -245,6 +236,9 @@ func (srv *Server) deleteSubscriptionH(s *sm.Subscription) (re *jrm1.RpcError) {
 // clearThreadSubscriptionsH is a helper function for clearing subscriptions of
 // a deleted thread.
 func (srv *Server) clearThreadSubscriptionsH(threadId uint) (re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
 	var ts *sm.ThreadSubscriptions
 	var err error
 	ts, err = srv.dbo.GetThreadSubscriptions(threadId)
@@ -324,8 +318,8 @@ func (srv *Server) checkIfThreadExists(threadId uint) (exists bool, re *jrm1.Rpc
 
 // getUserSubscriptionsH is a helper function to read user's subscriptions.
 func (srv *Server) getUserSubscriptionsH(userId uint) (us *sm.UserSubscriptions, re *jrm1.RpcError) {
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
 
 	// Read Subscriptions.
 	var err error
@@ -334,17 +328,29 @@ func (srv *Server) getUserSubscriptionsH(userId uint) (us *sm.UserSubscriptions,
 		return nil, srv.databaseError(err)
 	}
 
-	if us == nil {
-		err = srv.dbo.InitUserSubscriptions(userId)
-		if err != nil {
-			return nil, srv.databaseError(err)
-		}
+	return us, nil
+}
 
-		us, err = srv.dbo.GetUserSubscriptions(userId)
-		if err != nil {
-			return nil, srv.databaseError(err)
-		}
+// isUserSubscribedH is a helper function to check whether the user has a
+// subscription to the thread.
+func (srv *Server) isUserSubscribedH(userId uint, threadId uint) (isSubscribed bool, re *jrm1.RpcError) {
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Read Subscriptions.
+	var us *sm.UserSubscriptions
+	var err error
+	us, err = srv.dbo.GetUserSubscriptions(userId)
+	if err != nil {
+		return false, srv.databaseError(err)
 	}
 
-	return us, nil
+	if us == nil {
+		return false, nil
+	}
+
+	// Search for an item.
+	isSubscribed = us.Threads.HasItem(threadId)
+
+	return isSubscribed, nil
 }

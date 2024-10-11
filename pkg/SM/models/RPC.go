@@ -24,6 +24,35 @@ type AddSubscriptionResult struct {
 	OK bool `json:"ok"`
 }
 
+type IsSelfSubscribedParams struct {
+	cmr.CommonParams
+
+	ThreadId uint `json:"threadId"`
+}
+
+type IsSelfSubscribedResult struct {
+	cmr.CommonResult
+
+	UserId       uint `json:"userId"`
+	ThreadId     uint `json:"threadId"`
+	IsSubscribed bool `json:"isSubscribed"`
+}
+
+type IsUserSubscribedParams struct {
+	cmr.CommonParams
+
+	UserId   uint `json:"userId"`
+	ThreadId uint `json:"threadId"`
+}
+
+type IsUserSubscribedResult struct {
+	cmr.CommonResult
+
+	UserId       uint `json:"userId"`
+	ThreadId     uint `json:"threadId"`
+	IsSubscribed bool `json:"isSubscribed"`
+}
+
 type GetSelfSubscriptionsParams struct {
 	cmr.CommonParams
 }
