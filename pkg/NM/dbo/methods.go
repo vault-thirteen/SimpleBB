@@ -10,7 +10,30 @@ import (
 	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	ae "github.com/vault-thirteen/auxie/errors"
 )
+
+func (dbo *DatabaseObject) CountAllNotificationsByUserId(userId uint) (n int, err error) {
+	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountAllNotificationsByUserId).QueryRow(userId)
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	if err != nil {
+		return cdbo.CountOnError, err
+	}
+
+	return n, nil
+}
+
+func (dbo *DatabaseObject) CountUnreadNotificationsByUserId(userId uint) (n int, err error) {
+	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountUnreadNotificationsByUserId).QueryRow(userId)
+
+	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	if err != nil {
+		return cdbo.CountOnError, err
+	}
+
+	return n, nil
+}
 
 func (dbo *DatabaseObject) DeleteNotificationById(notificationId uint) (err error) {
 	var result sql.Result
@@ -30,17 +53,6 @@ func (dbo *DatabaseObject) DeleteNotificationById(notificationId uint) (err erro
 	}
 
 	return nil
-}
-
-func (dbo *DatabaseObject) GetNotificationById(notificationId uint) (notification *nm.Notification, err error) {
-	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetNotificationById).QueryRow(notificationId)
-
-	notification, err = nm.NewNotificationFromScannableSource(row)
-	if err != nil {
-		return nil, err
-	}
-
-	return notification, nil
 }
 
 func (dbo *DatabaseObject) GetAllNotificationsByUserId(userId uint) (notifications []nm.Notification, err error) {
@@ -67,6 +79,34 @@ func (dbo *DatabaseObject) GetAllNotificationsByUserId(userId uint) (notificatio
 	return notifications, nil
 }
 
+func (dbo *DatabaseObject) GetNotificationById(notificationId uint) (notification *nm.Notification, err error) {
+	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetNotificationById).QueryRow(notificationId)
+
+	notification, err = nm.NewNotificationFromScannableSource(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return notification, nil
+}
+
+func (dbo *DatabaseObject) GetNotificationsByUserIdOnPage(userId uint, pageNumber uint, pageSize uint) (notifications []nm.Notification, err error) {
+	var rows *sql.Rows
+	rows, err = dbo.PreparedStatement(DbPsid_GetNotificationsByUserIdOnPage).Query(userId, pageSize, (pageNumber-1)*pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
+		}
+	}()
+
+	return nm.NewNotificationArrayFromRows(rows)
+}
+
 func (dbo *DatabaseObject) GetUnreadNotifications(userId uint) (notifications []nm.Notification, err error) {
 	notifications = make([]nm.Notification, 0, 8)
 
@@ -89,17 +129,6 @@ func (dbo *DatabaseObject) GetUnreadNotifications(userId uint) (notifications []
 	}
 
 	return notifications, nil
-}
-
-func (dbo *DatabaseObject) CountUnreadNotificationsByUserId(userId uint) (n int, err error) {
-	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountUnreadNotificationsByUserId).QueryRow(userId)
-
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
-	if err != nil {
-		return cdbo.CountOnError, err
-	}
-
-	return n, nil
 }
 
 func (dbo *DatabaseObject) InsertNewNotification(userId uint, text string) (lastInsertedId int64, err error) {

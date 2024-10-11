@@ -8,6 +8,7 @@ import (
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 
@@ -131,6 +132,66 @@ func (srv *Server) getNotification(p *nm.GetNotificationParams) (result *nm.GetN
 	// All clear.
 	result = &nm.GetNotificationResult{
 		Notification: notification,
+	}
+
+	return result, nil
+}
+
+// getNotificationsOnPage reads notifications for a user on the selected page.
+func (srv *Server) getNotificationsOnPage(p *nm.GetNotificationsOnPageParams) (result *nm.GetNotificationsOnPageResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.Page == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
+	}
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.CanLogIn {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Get notifications on page.
+	notifications, err := srv.dbo.GetNotificationsByUserIdOnPage(userRoles.UserId, p.Page, srv.settings.SystemSettings.PageSize)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	// Count all notifications.
+	var allNotificationsCount int
+	allNotificationsCount, err = srv.dbo.CountAllNotificationsByUserId(userRoles.UserId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	nop := nm.NewNotificationsOnPage()
+	{
+		nop.NotificationIds, err = ul.NewFromArray(nm.ListNotificationIds(notifications))
+		if err != nil {
+			srv.logError(err)
+			return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+		}
+
+		nop.Notifications = notifications
+
+		nop.Page = &p.Page
+
+		allNotificationsCountUint := uint(allNotificationsCount)
+		tp := c.CalculateTotalPages(allNotificationsCountUint, srv.settings.SystemSettings.PageSize)
+		nop.TotalPages = &tp
+
+		nop.TotalNotifications = &allNotificationsCountUint
+	}
+
+	result = &nm.GetNotificationsOnPageResult{
+		NotificationsOnPage: nop,
 	}
 
 	return result, nil

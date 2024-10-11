@@ -29,6 +29,7 @@
   "system": {
     "notificationTtl": 604800,
     "notificationCountLimit": 32,
+    "pageSize": 20,
     "dKeySize": 16,
     "isTableOfIncidentsUsed": true,
     "blockTimePerIncident": {

@@ -3,7 +3,6 @@ package acm
 import (
 	"database/sql"
 	"fmt"
-	"math"
 	"time"
 
 	bpp "github.com/vault-thirteen/BytePackedPassword"
@@ -275,7 +274,7 @@ func (srv *Server) getListOfRegistrationsReadyForApproval(p *am.GetListOfRegistr
 
 	result = &am.GetListOfRegistrationsReadyForApprovalResult{
 		Page:         p.Page,
-		TotalPages:   uint(math.Ceil(float64(rrfaCount) / float64(srv.settings.SystemSettings.PageSize))),
+		TotalPages:   c.CalculateTotalPages(uint(rrfaCount), srv.settings.SystemSettings.PageSize),
 		TotalRecords: uint(rrfaCount),
 	}
 
@@ -1070,7 +1069,7 @@ func (srv *Server) getListOfAllUsers(p *am.GetListOfAllUsersParams) (result *am.
 
 	result = &am.GetListOfAllUsersResult{
 		Page:       p.Page,
-		TotalPages: uint(math.Ceil(float64(usersCount) / float64(srv.settings.SystemSettings.PageSize))),
+		TotalPages: c.CalculateTotalPages(uint(usersCount), srv.settings.SystemSettings.PageSize),
 		TotalUsers: uint(usersCount),
 	}
 

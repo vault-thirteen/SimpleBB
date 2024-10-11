@@ -10,6 +10,7 @@ import (
 type SystemSettings struct {
 	NotificationTtl        uint `json:"notificationTtl"`
 	NotificationCountLimit uint `json:"notificationCountLimit"`
+	PageSize               uint `json:"pageSize"`
 	DKeySize               uint `json:"dKeySize"`
 
 	// This setting must be synchronised with settings of the Gateway module.
@@ -31,6 +32,7 @@ type BlockTimePerIncident struct {
 func (s SystemSettings) Check() (err error) {
 	if (s.NotificationTtl == 0) ||
 		(s.NotificationCountLimit == 0) ||
+		(s.PageSize == 0) ||
 		(s.DKeySize == 0) {
 		return errors.New(c.MsgSystemSettingError)
 	}

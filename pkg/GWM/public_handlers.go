@@ -80,6 +80,7 @@ const (
 	// NM.
 	ApiFunctionName_AddNotification          = "addNotification"
 	ApiFunctionName_GetNotification          = "getNotification"
+	ApiFunctionName_GetNotificationsOnPage   = "getNotificationsOnPage"
 	ApiFunctionName_GetAllNotifications      = "getAllNotifications"
 	ApiFunctionName_GetUnreadNotifications   = "getUnreadNotifications"
 	ApiFunctionName_CountUnreadNotifications = "countUnreadNotifications"

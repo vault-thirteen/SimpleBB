@@ -8,6 +8,10 @@ import (
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 
+const (
+	ErrUnexpectedNull = "unexpected null"
+)
+
 type Notification struct {
 	// Identifier of this notification.
 	Id uint `json:"id"`
@@ -52,4 +56,33 @@ func NewNotificationFromScannableSource(src cm.IScannable) (n *Notification, err
 	}
 
 	return n, nil
+}
+
+func NewNotificationArrayFromRows(rows *sql.Rows) (ns []Notification, err error) {
+	ns = []Notification{}
+	var n *Notification
+	for rows.Next() {
+		n, err = NewNotificationFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		if n == nil {
+			return nil, errors.New(ErrUnexpectedNull)
+		}
+
+		ns = append(ns, *n)
+	}
+
+	return ns, nil
+}
+
+func ListNotificationIds(notifications []Notification) (ids []uint) {
+	ids = make([]uint, 0, len(notifications))
+
+	for _, n := range notifications {
+		ids = append(ids, n.Id)
+	}
+
+	return ids
 }

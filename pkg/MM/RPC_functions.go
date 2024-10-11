@@ -3,7 +3,6 @@ package mm
 import (
 	"fmt"
 	"log"
-	"math"
 	"sync"
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
@@ -2144,7 +2143,7 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 		// Total numbers before pagination.
 		tm := uint(tamop.MessageIds.Size())
 		tamop.TotalMessages = &tm
-		tp := uint(math.Ceil(float64(tm) / float64(srv.settings.SystemSettings.PageSize)))
+		tp := c.CalculateTotalPages(tm, srv.settings.SystemSettings.PageSize)
 		tamop.TotalPages = &tp
 
 		// Read messages of a specified page.
@@ -2260,7 +2259,7 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 		// Total numbers before pagination.
 		tt := uint(fatop.ThreadIds.Size())
 		fatop.TotalThreads = &tt
-		tp := uint(math.Ceil(float64(tt) / float64(srv.settings.SystemSettings.PageSize)))
+		tp := c.CalculateTotalPages(tt, srv.settings.SystemSettings.PageSize)
 		fatop.TotalPages = &tp
 
 		// Read threads of a specified page.

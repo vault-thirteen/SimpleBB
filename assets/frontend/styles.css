@@ -326,13 +326,6 @@ table.acpMenu td {
 	font-size: 12px;
 }
 
-table.notificationList td.lastCol {
-	width: 0.1%;
-	min-width: 76px;
-	max-width: 76px;
-	padding: 0;
-}
-
 .btnChangeEmail,
 .btnChangePwd,
 .btnManageSubscriptions {
@@ -504,6 +497,26 @@ table.notificationList td table td.hidden {
 	border: 0;
 }
 
+table.notificationList td.lastCol {
+	width: 0.1%;
+	min-width: 76px;
+	max-width: 76px;
+	padding: 0;
+}
+
+table.notificationList td.numCol {
+	width: 0.1%;
+	min-width: 25px;
+	max-width: 25px;
+	padding: 2px;
+}
+
+table.notificationList td.col2 {
+	width: 0.1%;
+	min-width: 96px;
+	max-width: 96px;
+}
+
 table.subpageListOfUsers tr:nth-child(even),
 table.subpageListOfRRFA tr:nth-child(even),
 table.subpageListOfLoggedUsers tr:nth-child(even),
@@ -574,7 +587,7 @@ div.forum {
 	margin-top: 5px;
 	margin-bottom: 5px;
 	border: 1px solid black;
-	font-size: 18px;
+	font-size: 20px;
 	background-color: white;
 	padding-left: 10px;
 }

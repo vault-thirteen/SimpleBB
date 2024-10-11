@@ -14,6 +14,7 @@ const (
 	FuncAddNotificationS         = "AddNotificationS"
 	FuncGetNotification          = "GetNotification"
 	FuncGetAllNotifications      = "GetAllNotifications"
+	FuncGetNotificationsOnPage   = "GetNotificationsOnPage"
 	FuncGetUnreadNotifications   = "GetUnreadNotifications"
 	FuncCountUnreadNotifications = "CountUnreadNotifications"
 	FuncMarkNotificationAsRead   = "MarkNotificationAsRead"

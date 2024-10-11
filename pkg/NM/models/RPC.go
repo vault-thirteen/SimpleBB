@@ -62,6 +62,18 @@ type GetAllNotificationsResult struct {
 	Notifications []Notification `json:"notifications"`
 }
 
+type GetNotificationsOnPageParams struct {
+	cmr.CommonParams
+
+	Page uint `json:"page"`
+}
+
+type GetNotificationsOnPageResult struct {
+	cmr.CommonResult
+
+	NotificationsOnPage *NotificationsOnPage `json:"nop"`
+}
+
 type GetUnreadNotificationsParams struct {
 	cmr.CommonParams
 }

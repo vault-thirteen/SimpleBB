@@ -14,6 +14,7 @@ const (
 	RpcErrorCode_NotificationIsNotFound    = 4
 	RpcErrorCode_NotificationIsAlreadyRead = 5
 	RpcErrorCode_TestError                 = 6
+	RpcErrorCode_PageIsNotSet              = 7
 )
 
 // Messages.
@@ -24,6 +25,7 @@ const (
 	RpcErrorMsg_NotificationIsNotFound    = "notification is not found"
 	RpcErrorMsg_NotificationIsAlreadyRead = "notification is already read"
 	RpcErrorMsgF_TestError                = "test error: %s"
+	RpcErrorMsg_PageIsNotSet              = "page is not set"
 )
 
 // Unique HTTP status codes used in the map:
@@ -39,5 +41,6 @@ func GetMapOfHttpStatusCodesByRpcErrorCodes() map[int]int {
 		RpcErrorCode_NotificationIsNotFound:    http.StatusNotFound,
 		RpcErrorCode_NotificationIsAlreadyRead: http.StatusConflict,
 		RpcErrorCode_TestError:                 http.StatusInternalServerError,
+		RpcErrorCode_PageIsNotSet:              http.StatusBadRequest,
 	}
 }

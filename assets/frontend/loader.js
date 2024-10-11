@@ -75,7 +75,6 @@ qp = {
 	ChangePwdStep2: "?changePwd2",
 	ChangePwdStep3: "?changePwd3",
 	SelfPage: "?selfPage",
-	Notifications: "?notifications",
 }
 
 qpn = {
@@ -86,6 +85,7 @@ qpn = {
 	Thread: "thread",
 	Message: "message",
 	SubscriptionsPage: "subscriptions",
+	Notifications: "notifications",
 }
 
 // Form Input Elements.
@@ -160,6 +160,7 @@ actionName = {
 	DeleteNotification: "deleteNotification",
 	DeleteSelfSubscription: "deleteSelfSubscription",
 	GetAllNotifications: "getAllNotifications",
+	GetNotificationsOnPage: "getNotificationsOnPage",
 	GetLatestMessageOfThread: "getLatestMessageOfThread",
 	GetMessage: "getMessage",
 	GetSelfRoles: "getSelfRoles",
@@ -432,6 +433,12 @@ class Parameters_IsSelfSubscribed {
 	}
 }
 
+class Parameters_GetNotificationsOnPage {
+	constructor(page) {
+		this.Page = page;
+	}
+}
+
 class SectionNode {
 	constructor(section, level) {
 		this.Section = section;
@@ -538,13 +545,18 @@ async function onPageLoad() {
 		case qp.SelfPage:
 			await showUserPage();
 			return;
-
-		case qp.Notifications:
-			await showNotificationsPage();
-			return;
 	}
 
 	let sp = new URLSearchParams(curPage);
+
+	// Notifications.
+	if (sp.has(qpn.Notifications)) {
+		if (!preparePageVariable(sp)) {
+			return;
+		}
+		await showPage_Notifications();
+		return;
+	}
 
 	// Subscriptions.
 	if (sp.has(qpn.SubscriptionsPage)) {
@@ -943,6 +955,7 @@ async function showUserPage() {
 }
 
 async function showBB() {
+	// Prepare data.
 	let resp = await listSectionsAndForums();
 	if (resp == null) {
 		return;
@@ -971,10 +984,11 @@ async function showBB() {
 	showBlock(p);
 	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false);
-	processSectionNodes(p, nodes, forumsMap);
+	drawSectionsAndForums(p, nodes, forumsMap);
 }
 
 async function showSection() {
+	// Prepare data.
 	let sectionId = mca_gvc.Id;
 	let resp = await listSectionsAndForums();
 	if (resp == null) {
@@ -1017,10 +1031,11 @@ async function showSection() {
 	} else {
 		addActionPanel(p, false);
 	}
-	processSectionNodes(p, nodes, forumsMap);
+	drawSectionsAndForums(p, nodes, forumsMap);
 }
 
 async function showForum() {
+	// Prepare data.
 	let forumId = mca_gvc.Id;
 	let pageNumber = mca_gvc.Page;
 	let resp = await listForumAndThreadsOnPage(forumId, pageNumber);
@@ -1051,12 +1066,12 @@ async function showForum() {
 	showBlock(p);
 	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false, "section", parentId);
-	addPaginator(p, pageNumber, pageCount, "forumPagePrev", "forumPageNext");
-	processForumAndThreads(p, forum, threadsMap);
+	drawForumAndThreads(p, forum, threadsMap);
 	await addBottomActionPanel(p, "forum", forumId, forum);
 }
 
 async function showThread() {
+	// Prepare data.
 	let threadId = mca_gvc.Id;
 	let pageNumber = mca_gvc.Page;
 	let resp = await listThreadAndMessagesOnPage(threadId, pageNumber);
@@ -1087,8 +1102,7 @@ async function showThread() {
 	showBlock(p);
 	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false, "forum", parentId);
-	addPaginator(p, pageNumber, pageCount, "threadPagePrev", "threadPageNext");
-	await processThreadAndMessages(p, thread, messagesMap);
+	await drawThreadAndMessages(p, thread, messagesMap);
 	await addBottomActionPanel(p, "thread", threadId, thread);
 }
 
@@ -1833,7 +1847,6 @@ function addActionPanel(el, atTop, type, parentId) {
 	let div = document.createElement("DIV");
 	div.className = cn;
 	div.id = cn;
-
 	let tbl = document.createElement("TABLE");
 	let tr = document.createElement("TR");
 	let td = document.createElement("TD");
@@ -1975,7 +1988,7 @@ function createTreeOfSections(section, sectionsMap, level, nodes) {
 	}
 }
 
-function processSectionNodes(p, nodes, forumsMap) {
+function drawSectionsAndForums(p, nodes, forumsMap) {
 	let node, divSection, divForum, ml, url, forumId, forum, sectionForums;
 	for (let i = 0; i < nodes.length; i++) {
 		node = nodes[i];
@@ -2011,19 +2024,26 @@ function processSectionNodes(p, nodes, forumsMap) {
 	}
 }
 
-function processForumAndThreads(p, forum, threadsMap) {
-	let divForum, divThread, ml, url, threadIds, threadId, thread;
+function drawForumAndThreads(p, forum, threadsMap) {
+	drawForumName(p, forum);
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, "forumPagePrev", "forumPageNext");
+	drawForumThreads(p, forum, threadsMap);
+}
 
-	divForum = document.createElement("DIV");
+function drawForumName(p, forum) {
+	let divForum = document.createElement("DIV");
 	divForum.className = "forum";
 	divForum.id = "forum_" + forum.forumId;
-	ml = sectionMarginDelta;
+	let ml = sectionMarginDelta;
 	divForum.style.cssText = "margin-left: " + ml + "px";
-	url = composeUrlForForum(forum.forumId);
+	let url = composeUrlForForum(forum.forumId);
 	divForum.innerHTML = "<a href='" + url + "'>" + forum.forumName + "</a>";
 	p.appendChild(divForum);
+}
 
-	threadIds = forum.threadIds;
+function drawForumThreads(p, forum, threadsMap) {
+	let divThread, ml, url, threadId, thread;
+	let threadIds = forum.threadIds;
 	if (threadIds != null) {
 		for (let i = 0; i < threadIds.length; i++) {
 			threadId = threadIds[i];
@@ -2045,24 +2065,30 @@ function processForumAndThreads(p, forum, threadsMap) {
 	}
 }
 
-async function processThreadAndMessages(p, thread, messagesMap) {
-	let divThread, ml, url, messageIds, messageId, message, txt;
+async function drawThreadAndMessages(p, thread, messagesMap) {
+	drawThreadName(p, thread);
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, "threadPagePrev", "threadPageNext");
+	await drawThreadMessages(p, thread, messagesMap);
+}
 
-	divThread = document.createElement("DIV");
+function drawThreadName(p, thread) {
+	let divThread = document.createElement("DIV");
 	divThread.className = "thread";
 	divThread.id = "thread_" + thread.threadId;
-	ml = sectionMarginDelta;
+	let ml = sectionMarginDelta;
 	divThread.style.cssText = "margin-left: " + ml + "px";
-	url = composeUrlForThread(thread.threadId);
+	let url = composeUrlForThread(thread.threadId);
 	divThread.innerHTML = "<a href='" + url + "'>" + thread.threadName + "</a>";
 	p.appendChild(divThread);
+}
 
-	messageIds = thread.messageIds;
+async function drawThreadMessages(p, thread, messagesMap) {
+	let messageIds = thread.messageIds;
 	if (messageIds == null) {
 		return
 	}
 
-	let divMsgHdr, divMsgBody;
+	let divMsgHdr, divMsgBody, ml, messageId, message, txt;
 	for (let i = 0; i < messageIds.length; i++) {
 		messageId = messageIds[i];
 		if (!messagesMap.has(messageId)) {
@@ -2196,6 +2222,18 @@ function addClickEventHandler(btn, variant) {
 			});
 			return;
 
+		case "notificationsPagePrev":
+			btn.addEventListener("click", async (e) => {
+				await onBtnPrevClick_notificationsPage(btn);
+			});
+			return;
+
+		case "notificationsPageNext":
+			btn.addEventListener("click", async (e) => {
+				await onBtnNextClick_notificationsPage(btn);
+			});
+			return;
+
 		default:
 			console.error(err.UnknownVariant);
 	}
@@ -2264,6 +2302,28 @@ async function onBtnNextClick_subscriptionsPage(btn) {
 
 	mca_gvc.Page++;
 	let url = composeUrlForSubscriptionsPage(mca_gvc.Page);
+	await redirectPage(false, url);
+}
+
+async function onBtnPrevClick_notificationsPage(btn) {
+	if (mca_gvc.Page <= 1) {
+		console.error(err.PreviousPageDoesNotExist);
+		return;
+	}
+
+	mca_gvc.Page--;
+	let url = composeUrlForNotificationsPage(mca_gvc.Page);
+	await redirectPage(false, url);
+}
+
+async function onBtnNextClick_notificationsPage(btn) {
+	if (mca_gvc.Page >= mca_gvc.Pages) {
+		console.error(err.NextPageDoesNotExist);
+		return;
+	}
+
+	mca_gvc.Page++;
+	let url = composeUrlForNotificationsPage(mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
@@ -2383,7 +2443,7 @@ async function onBtnAccountClick(btn) {
 }
 
 async function onBtnNotificationsClick(btn) {
-	let url = qp.Notifications;
+	let url = qp.Prefix + qpn.Notifications;
 	await redirectPage(false, url);
 }
 
@@ -2440,6 +2500,10 @@ function composeUrlForEntityPage(entityName, entityId, page) {
 
 function composeUrlForSubscriptionsPage(page) {
 	return composeUrlForFuncPage(qpn.SubscriptionsPage, page);
+}
+
+function composeUrlForNotificationsPage(page) {
+	return composeUrlForFuncPage(qpn.Notifications, page);
 }
 
 function composeUrlForFuncPage(func, page) {
@@ -2557,7 +2621,7 @@ async function drawBottomActionPanelButtonsForThread(threadId, thread, tdL, tdR,
 			'onclick="onBtnAddMessageClick(this, \'' + panelClass + '\', ' + threadId + ')" /></form>';
 		tr.appendChild(td);
 	}
-	
+
 	tbl.appendChild(tr);
 	tdR.appendChild(tbl);
 }
@@ -2843,13 +2907,24 @@ async function countUnreadNotifications() {
 	return resp.JsonObject;
 }
 
-async function showNotificationsPage() {
-	let resp = await getAllNotifications();
+async function showPage_Notifications() {
+	// Prepare data.
+	let pageNumber = mca_gvc.Page;
+	let resp = await getNotificationsOnPage(pageNumber);
 	if (resp == null) {
 		return;
 	}
-	let notifications = resp.result.notifications;
-	notifications.sort(notificationsComparer);
+	let pageCount = resp.result.nop.totalPages;
+	pageCount = repairUndefinedPageCount(pageCount);
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	if (pageNumber > pageCount) {
+		console.error(err.PageNotFound);
+		return;
+	}
+
+	let nop = resp.result.nop;
 	let settings = getSettings();
 
 	// Draw.
@@ -2857,48 +2932,16 @@ async function showNotificationsPage() {
 	showBlock(p);
 	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false);
-	addDiv(p, "notificationList");
-	fillListOfNotifications("notificationList", notifications);
+	drawNotificationsOnPage(p, nop);
 }
 
-function notificationsComparer(a, b) {
-	if (a.toc < b.toc) {
-		return 1;
-	}
-	if (a.toc > b.toc) {
-		return -1;
-	}
-	return 0;
+function drawNotificationsOnPage(p, nop) {
+	drawPageTitle(p, 'Notifications');
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, "notificationsPagePrev", "notificationsPageNext");
+	drawNotifications(p, 'notificationList', nop);
 }
 
-function addDiv(el, x) {
-	let div = document.createElement("DIV");
-	div.className = x;
-	div.id = x;
-	el.appendChild(div);
-}
-
-async function getAllNotifications() {
-	let reqData = new ApiRequest(actionName.GetAllNotifications, {});
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-function fillListOfNotifications(elClass, notifications) {
-	let div = document.getElementById(elClass);
-	div.innerHTML = "";
-
-	// Title.
-	let title = document.createElement("DIV");
-	title.className = elClass + 'Title';
-	title.textContent = 'Notifications';
-	div.appendChild(title);
-
-	// Table.
+function drawNotifications(p, elClass, nop) {
 	let tbl = document.createElement("TABLE");
 	tbl.className = elClass;
 
@@ -2915,14 +2958,14 @@ function fillListOfNotifications(elClass, notifications) {
 		tr.appendChild(th);
 	}
 	tbl.appendChild(tr);
-	div.appendChild(tbl);
+	p.appendChild(tbl);
 
 	let columnsWithHtml = [2, 3];
 
 	// Cells.
 	let notification, actions;
-	for (let i = 0; i < notifications.length; i++) {
-		notification = notifications[i];
+	for (let i = 0; i < nop.notifications.length; i++) {
+		notification = nop.notifications[i];
 
 		tr = document.createElement("TR");
 		let tds = [];
@@ -2949,13 +2992,14 @@ function fillListOfNotifications(elClass, notifications) {
 
 			if (j === 0) {
 				td.className = "numCol";
+			} else if (j === jLast) {
+				td.className = "lastCol";
 			} else {
-				if (j === jLast) {
-					td.className += "lastCol";
-				} else {
-					if (!notification.isRead) {
-						td.className = "unread";
-					}
+				if (!notification.isRead) {
+					td.className = "unread";
+				}
+				if (j === 1) {
+					td.className += " col2";
 				}
 			}
 
@@ -2969,6 +3013,43 @@ function fillListOfNotifications(elClass, notifications) {
 
 		tbl.appendChild(tr);
 	}
+}
+
+function drawPageTitle(p, title) {
+	let d = document.createElement("DIV");
+	d.className = "pageTitle";
+	let ml = sectionMarginDelta;
+	d.style.cssText = "margin-left: " + ml + "px";
+	d.textContent = title;
+	p.appendChild(d);
+}
+
+function addDiv(el, x) {
+	let div = document.createElement("DIV");
+	div.className = x;
+	div.id = x;
+	el.appendChild(div);
+}
+
+async function getAllNotifications() {
+	let reqData = new ApiRequest(actionName.GetAllNotifications, {});
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function getNotificationsOnPage(page) {
+	let params = new Parameters_GetNotificationsOnPage(page);
+	let reqData = new ApiRequest(actionName.GetNotificationsOnPage, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
 }
 
 async function onBtnMarkNotificationAsReadClick(btn, notificationId) {
@@ -3367,3 +3448,4 @@ async function getSelfSubscriptionsNN() {
 	}
 	return allSubscriptions;
 }
+

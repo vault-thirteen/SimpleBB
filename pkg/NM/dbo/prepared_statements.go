@@ -19,6 +19,8 @@ const (
 	DbPsid_GetUnreadNotificationsByUserId   = 7
 	DbPsid_CountUnreadNotificationsByUserId = 8
 	DbPsid_ClearNotifications               = 9
+	DbPsid_GetNotificationsByUserIdOnPage   = 10
+	DbPsid_CountAllNotificationsByUserId    = 11
 )
 
 func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
@@ -63,6 +65,14 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 
 	// 9.
 	q = fmt.Sprintf(`DELETE FROM %s WHERE IsRead IS TRUE AND ToR < ?;`, dbo.tableNames.Notifications)
+	qs = append(qs, q)
+
+	// 10.
+	q = fmt.Sprintf(`SELECT Id, UserId, Text, ToC, IsRead, ToR FROM %s WHERE UserId = ? ORDER BY ToC DESC LIMIT ? OFFSET ?;`, dbo.tableNames.Notifications)
+	qs = append(qs, q)
+
+	// 11.
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE UserId = ?;`, dbo.tableNames.Notifications)
 	qs = append(qs, q)
 
 	return qs
