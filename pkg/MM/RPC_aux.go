@@ -318,21 +318,7 @@ func (srv *Server) canUserAddMessage(userRoles *am.GetSelfRolesResult, latestMes
 
 // getLatestMessageOfThreadH is a helper function used by other functions to
 // get the latest message of a thread.
-func (srv *Server) getLatestMessageOfThreadH(userRoles *am.GetSelfRolesResult, threadId uint) (message *mm.Message, re *jrm1.RpcError) {
-	if userRoles == nil {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	// Check permissions.
-	if !userRoles.IsReader {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	// Check parameters.
-	if threadId == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
-	}
-
+func (srv *Server) getLatestMessageOfThreadH(threadId uint) (message *mm.Message, re *jrm1.RpcError) {
 	// Get the thread.
 	var thread *mm.Thread
 	var err error
@@ -375,30 +361,14 @@ func (srv *Server) getMessageMaxEditTime(message *mm.Message) time.Time {
 
 // deleteThreadH is a helper function used by other functions to delete a
 // thread.
-func (srv *Server) deleteThreadH(p *mm.DeleteThreadParams) (re *jrm1.RpcError) {
-	var userRoles *am.GetSelfRolesResult
-	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
-	if re != nil {
-		return re
-	}
-
-	// Check permissions.
-	if !userRoles.IsAdministrator {
-		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	// Check parameters.
-	if p.ThreadId == 0 {
-		return jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
-	}
-
+func (srv *Server) deleteThreadH(threadId uint) (re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
 	// Read the thread.
 	var thread *mm.Thread
 	var err error
-	thread, err = srv.dbo.GetThreadById(p.ThreadId)
+	thread, err = srv.dbo.GetThreadById(threadId)
 	if err != nil {
 		return srv.databaseError(err)
 	}
@@ -419,7 +389,7 @@ func (srv *Server) deleteThreadH(p *mm.DeleteThreadParams) (re *jrm1.RpcError) {
 		return srv.databaseError(err)
 	}
 
-	err = linkThreads.RemoveItem(p.ThreadId)
+	err = linkThreads.RemoveItem(threadId)
 	if err != nil {
 		srv.logError(err)
 		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
@@ -431,7 +401,7 @@ func (srv *Server) deleteThreadH(p *mm.DeleteThreadParams) (re *jrm1.RpcError) {
 	}
 
 	// Delete the thread.
-	err = srv.dbo.DeleteThreadById(p.ThreadId)
+	err = srv.dbo.DeleteThreadById(threadId)
 	if err != nil {
 		return srv.databaseError(err)
 	}

@@ -65,8 +65,7 @@ type GetListOfRegistrationsReadyForApprovalResult struct {
 type RejectRegistrationRequestParams struct {
 	cmr.CommonParams
 
-	// ID of a registration request.
-	Id uint `json:"id"`
+	RegistrationRequestId uint `json:"registrationRequestId"`
 }
 
 type RejectRegistrationRequestResult struct {

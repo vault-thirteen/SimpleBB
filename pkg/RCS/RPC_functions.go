@@ -36,7 +36,6 @@ func (srv *Server) checkCaptcha(p *rm.CheckCaptchaParams) (result *rm.CheckCaptc
 	if len(p.TaskId) == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_TaskIdIsNotSet, RpcErrorMsg_TaskIdIsNotSet, nil)
 	}
-
 	if p.Value == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_AnswerIsNotSet, RpcErrorMsg_AnswerIsNotSet, nil)
 	}

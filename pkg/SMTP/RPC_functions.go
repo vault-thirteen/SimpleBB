@@ -10,6 +10,17 @@ import (
 // RPC functions.
 
 func (srv *Server) sendMessage(p *sm.SendMessageParams) (result *sm.SendMessageResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if len(p.Recipient) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RecipientIsNotSet, RpcErrorMsg_RecipientIsNotSet, nil)
+	}
+	if len(p.Subject) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SubjectIsNotSet, RpcErrorMsg_SubjectIsNotSet, nil)
+	}
+	if len(p.Message) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotSet, RpcErrorMsg_MessageIsNotSet, nil)
+	}
+
 	srv.mailerGuard.Lock()
 	defer srv.mailerGuard.Unlock()
 

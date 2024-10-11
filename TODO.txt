@@ -4,6 +4,8 @@
  - Notifications
  - Subscriptions
 
+* SUidList
+
 * Subscriptions
 * Limit new notifications
 * Notification Templates
