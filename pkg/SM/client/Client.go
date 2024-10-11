@@ -11,6 +11,8 @@ const (
 
 	// Subscription.
 	FuncAddSubscription           = "AddSubscription"
+	FuncIsSelfSubscribed          = "IsSelfSubscribed"
+	FuncIsUserSubscribed          = "IsUserSubscribed"
 	FuncGetSelfSubscriptions      = "GetSelfSubscriptions"
 	FuncGetUserSubscriptions      = "GetUserSubscriptions"
 	FuncGetThreadSubscribersS     = "GetThreadSubscribersS"
