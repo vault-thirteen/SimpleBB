@@ -7,6 +7,15 @@ import (
 	"github.com/vault-thirteen/auxie/tester"
 )
 
+func Test_New(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+
+	// Test #1.
+	ul = New()
+	aTest.MustBeDifferent(ul, (*UidList)(nil))
+}
+
 func Test_NewFromArray(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList
@@ -35,47 +44,84 @@ func Test_NewFromArray(t *testing.T) {
 	aTest.MustBeAnError(err)
 }
 
-func Test_Size(t *testing.T) {
-	aTest := tester.New(t)
-	var ul *UidList
-	var err error
-
-	// Test #1.
-	ul = nil
-	aTest.MustBeEqual(ul.Size(), 0)
-
-	// Test #2.
-	ul, err = NewFromArray([]uint{})
-	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.Size(), 0)
-
-	// Test #3.
-	ul, err = NewFromArray([]uint{1, 2, 3})
-	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.Size(), 3)
-}
-
 func Test_CheckIntegrity(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList
 	var err error
 
-	// Test #1.
+	// Test #1. Golang is a garbage language.
 	ul = nil
 	err = ul.CheckIntegrity()
-	aTest.MustBeNoError(err)
+	aTest.MustBeAnError(err)
 
-	// Test #2.
+	// Test #2. Unique.
 	tmp := UidList([]uint{1, 2, 3})
 	ul = &tmp
 	err = ul.CheckIntegrity()
 	aTest.MustBeNoError(err)
 
-	// Test #3.
+	// Test #3. Not unique.
 	tmp = UidList([]uint{1, 2, 3, 2})
 	ul = &tmp
 	err = ul.CheckIntegrity()
 	aTest.MustBeAnError(err)
+}
+
+func Test_isUnique(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+
+	// Test #1. Unique.
+	tmp := UidList([]uint{1, 2, 3})
+	ul = &tmp
+	aTest.MustBeEqual(ul.isUnique(), true)
+
+	// Test #2. Not unique.
+	tmp = UidList([]uint{1, 2, 3, 2})
+	ul = &tmp
+	aTest.MustBeEqual(ul.isUnique(), false)
+}
+
+func Test_Size(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+	var err error
+
+	// Test #1. Empty array (slice).
+	ul, err = NewFromArray([]uint{})
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual(ul.Size(), 0)
+
+	// Test #2. Null array (slice).
+	var x []uint = nil
+	ul, err = NewFromArray(x)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual(ul.Size(), 0)
+
+	// Test #3. Normal array (slice).
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual(ul.Size(), 3)
+}
+
+func Test_HasItem(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+	var err error
+
+	// Test #1. Empty list.
+	ul = New()
+	aTest.MustBeEqual(ul.HasItem(1), false)
+
+	// Test #2. Item is not found.
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual(ul.HasItem(4), false)
+
+	// Test #3. Item is found.
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual(ul.HasItem(3), true)
 }
 
 func Test_AddItem(t *testing.T) {
@@ -107,41 +153,162 @@ func Test_AddItem(t *testing.T) {
 	aTest.MustBeEqual([]uint(*ul), []uint{3, 1, 2})
 }
 
+func Test_prependItem(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+
+	// Test.
+	ul = New()
+	ul.prependItem(1)
+	aTest.MustBeEqual([]uint(*ul), []uint{1})
+	ul.prependItem(2)
+	aTest.MustBeEqual([]uint(*ul), []uint{2, 1})
+	ul.prependItem(3)
+	aTest.MustBeEqual([]uint(*ul), []uint{3, 2, 1})
+}
+
+func Test_appendItem(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+
+	// Test.
+	ul = New()
+	ul.appendItem(1)
+	aTest.MustBeEqual([]uint(*ul), []uint{1})
+	ul.appendItem(2)
+	aTest.MustBeEqual([]uint(*ul), []uint{1, 2})
+	ul.appendItem(3)
+	aTest.MustBeEqual([]uint(*ul), []uint{1, 2, 3})
+}
+
+func Test_SearchForItem(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+	var idx int
+	var err error
+
+	// Test #1.
+	ul = New()
+	idx, err = ul.SearchForItem(1)
+	aTest.MustBeAnError(err)
+	aTest.MustBeEqual(idx, IndexOnError)
+
+	// Test #2. Non-existent item.
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	idx, err = ul.SearchForItem(4)
+	aTest.MustBeAnError(err)
+	aTest.MustBeEqual(idx, IndexOnError)
+
+	// Test #3. Item is found.
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	idx, err = ul.SearchForItem(2)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual(idx, 2-1)
+}
+
 func Test_RemoveItem(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList
 	var err error
 
-	// Test #1.
+	// Test #1. Empty list.
 	ul = New()
 	err = ul.RemoveItem(1)
 	aTest.MustBeAnError(err)
 
-	// Test #2. Non-existent item.
-	ul, err = NewFromArray([]uint{1, 2, 3, 4})
-	aTest.MustBeNoError(err)
-	err = ul.RemoveItem(5)
-	aTest.MustBeAnError(err)
-
-	// Test #3. First item.
+	// Test #2. Item is not found.
 	ul, err = NewFromArray([]uint{1, 2, 3})
 	aTest.MustBeNoError(err)
-	err = ul.RemoveItem(1)
-	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(*ul, UidList([]uint{2, 3}))
+	err = ul.RemoveItem(4)
+	aTest.MustBeAnError(err)
 
-	// Test #4. Middle item.
+	// Test #3. Item is found.
 	ul, err = NewFromArray([]uint{1, 2, 3})
 	aTest.MustBeNoError(err)
 	err = ul.RemoveItem(2)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(*ul, UidList([]uint{1, 3}))
+}
 
-	// Test #3.
+func Test_RemoveItemAtPos(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+	var err error
+
+	// Test #1. Position is negative.
+	ul = New()
+	err = ul.RemoveItemAtPos(-1)
+	aTest.MustBeAnError(err)
+
+	// Test #2. Position is too far away.
 	ul, err = NewFromArray([]uint{1, 2, 3})
 	aTest.MustBeNoError(err)
-	err = ul.RemoveItem(3)
+	err = ul.RemoveItemAtPos(4)
+	aTest.MustBeAnError(err)
+
+	// Test #3. Existing position.
+	ul, err = NewFromArray([]uint{1, 2, 3})
 	aTest.MustBeNoError(err)
+	err = ul.RemoveItemAtPos(1)
+	aTest.MustBeNoError(err)
+	aTest.MustBeEqual(*ul, UidList([]uint{1, 3}))
+}
+
+func Test_removeItemAtPos(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+	var err error
+	var lastIndex int
+
+	// Test #1. Single item.
+	ul, err = NewFromArray([]uint{1})
+	aTest.MustBeNoError(err)
+	lastIndex = len(*ul) - 1
+	ul.removeItemAtPos(0, lastIndex)
+	aTest.MustBeEqual(*ul, UidList([]uint{}))
+
+	// Test #2. First item.
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	lastIndex = len(*ul) - 1
+	ul.removeItemAtPos(0, lastIndex)
+	aTest.MustBeEqual(*ul, UidList([]uint{2, 3}))
+
+	// Test #3. Middle item.
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	lastIndex = len(*ul) - 1
+	ul.removeItemAtPos(1, lastIndex)
+	aTest.MustBeEqual(*ul, UidList([]uint{1, 3}))
+
+	// Test #4. Last item.
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	lastIndex = len(*ul) - 1
+	ul.removeItemAtPos(2, lastIndex)
+	aTest.MustBeEqual(*ul, UidList([]uint{1, 2}))
+}
+
+func Test_removeLastItem(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+	var err error
+	var lastIndex int
+
+	// Test #1. Single item.
+	ul, err = NewFromArray([]uint{1})
+	aTest.MustBeNoError(err)
+	lastIndex = len(*ul) - 1
+	ul.removeLastItem(lastIndex)
+	aTest.MustBeEqual(*ul, UidList([]uint{}))
+
+	// Test #2. Several items.
+	ul, err = NewFromArray([]uint{1, 2, 3})
+	aTest.MustBeNoError(err)
+	lastIndex = len(*ul) - 1
+	ul.removeLastItem(lastIndex)
 	aTest.MustBeEqual(*ul, UidList([]uint{1, 2}))
 }
 
@@ -157,38 +324,33 @@ func Test_RaiseItem(t *testing.T) {
 	isAlreadyRaised, err = ul.RaiseItem(4)
 	aTest.MustBeAnError(err)
 
-	// Test #2. Duplicate item.
-	ul = &UidList{1, 2, 3, 2}
-	isAlreadyRaised, err = ul.RaiseItem(2)
-	aTest.MustBeAnError(err)
-
-	// Test #3. No moving is needed.
+	// Test #2. No moving is needed.
 	ul = &UidList{1, 2, 3}
 	isAlreadyRaised, err = ul.RaiseItem(1)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual([]uint(*ul), []uint{1, 2, 3})
 	aTest.MustBeEqual(isAlreadyRaised, true)
+	aTest.MustBeEqual([]uint(*ul), []uint{1, 2, 3})
 
 	// Test #4. Middle item is moved.
 	ul = &UidList{1, 2, 3}
 	isAlreadyRaised, err = ul.RaiseItem(2)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual([]uint(*ul), []uint{2, 1, 3})
 	aTest.MustBeEqual(isAlreadyRaised, false)
+	aTest.MustBeEqual([]uint(*ul), []uint{2, 1, 3})
 
 	// Test #5. Last item is moved.
 	ul = &UidList{1, 2, 3}
 	isAlreadyRaised, err = ul.RaiseItem(3)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual([]uint(*ul), []uint{3, 1, 2})
 	aTest.MustBeEqual(isAlreadyRaised, false)
+	aTest.MustBeEqual([]uint(*ul), []uint{3, 1, 2})
 
-	// Test #6. One item.
+	// Test #6. Single item.
 	ul = &UidList{1}
 	isAlreadyRaised, err = ul.RaiseItem(1)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual([]uint(*ul), []uint{1})
 	aTest.MustBeEqual(isAlreadyRaised, true)
+	aTest.MustBeEqual([]uint(*ul), []uint{1})
 }
 
 func Test_MoveItemUp(t *testing.T) {
@@ -202,29 +364,24 @@ func Test_MoveItemUp(t *testing.T) {
 	err = ul.MoveItemUp(4)
 	aTest.MustBeAnError(err)
 
-	// Test #2. Duplicate item.
-	ul = &UidList{1, 2, 3, 2}
-	err = ul.MoveItemUp(2)
-	aTest.MustBeAnError(err)
-
-	// Test #3. Item is already on top edge.
+	// Test #2. Item is already on top edge.
 	ul = &UidList{1, 2, 3}
 	err = ul.MoveItemUp(1)
 	aTest.MustBeAnError(err)
 
-	// Test #4. Middle item is moved.
+	// Test #3. Middle item is moved.
 	ul = &UidList{1, 2, 3}
 	err = ul.MoveItemUp(2)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual([]uint(*ul), []uint{2, 1, 3})
 
-	// Test #5. Last item is moved.
+	// Test #4. Last item is moved.
 	ul = &UidList{1, 2, 3}
 	err = ul.MoveItemUp(3)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual([]uint(*ul), []uint{1, 3, 2})
 
-	// Test #6. One item.
+	// Test #5. Single item.
 	ul = &UidList{1}
 	err = ul.MoveItemUp(1)
 	aTest.MustBeAnError(err)
@@ -241,29 +398,24 @@ func Test_MoveItemDown(t *testing.T) {
 	err = ul.MoveItemDown(4)
 	aTest.MustBeAnError(err)
 
-	// Test #2. Duplicate item.
-	ul = &UidList{1, 2, 3, 2}
-	err = ul.MoveItemDown(2)
-	aTest.MustBeAnError(err)
-
-	// Test #3. Item is already on bottom edge.
+	// Test #2. Item is already on bottom edge.
 	ul = &UidList{1, 2, 3}
 	err = ul.MoveItemDown(3)
 	aTest.MustBeAnError(err)
 
-	// Test #4. Middle item is moved.
+	// Test #3. Middle item is moved.
 	ul = &UidList{1, 2, 3}
 	err = ul.MoveItemDown(2)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual([]uint(*ul), []uint{1, 3, 2})
 
-	// Test #5. Top item is moved.
+	// Test #4. Top item is moved.
 	ul = &UidList{1, 2, 3}
 	err = ul.MoveItemDown(1)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual([]uint(*ul), []uint{2, 1, 3})
 
-	// Test #6. One item.
+	// Test #5. Single item.
 	ul = &UidList{1}
 	err = ul.MoveItemDown(1)
 	aTest.MustBeAnError(err)
@@ -274,27 +426,28 @@ func Test_Scan(t *testing.T) {
 	var ul *UidList
 	var err error
 
-	// Test #1.
+	// Test #1. Null destination.
 	ul = nil
 	err = ul.Scan(false)
 	aTest.MustBeAnError(err)
 
-	// Test #2.
+	// Test #2. Null source.
 	ul = New()
 	err = ul.Scan(nil)
 	aTest.MustBeNoError(err)
 
-	// Test #3.
+	// Test #3. Data type is string.
 	ul = New()
 	err = ul.Scan("string")
 	aTest.MustBeAnError(err)
 
-	// Test #4.
+	// Test #4. Data type is byte array.
 	ul = New()
 	err = ul.Scan([]byte("[1,2,3]"))
 	aTest.MustBeNoError(err)
 	tmp := UidList([]uint{1, 2, 3})
 	aTest.MustBeEqual(ul, &tmp)
+	aTest.MustBeEqual(ul.Size(), 3)
 
 	// Test #5.
 	ul = New()
@@ -310,6 +463,7 @@ func Test_Scan(t *testing.T) {
 	ul = New()
 	err = ul.Scan([]byte("[]"))
 	aTest.MustBeNoError(err)
+	aTest.MustBeEqual(ul.Size(), 0)
 }
 
 func Test_Value(t *testing.T) {

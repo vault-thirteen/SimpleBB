@@ -1,3 +1,9 @@
+* Search for List of UIDs
+
+* Pagination for:
+ - Notifications
+ - Subscriptions
+
 * Subscriptions
 * Limit new notifications
 * Notification Templates
