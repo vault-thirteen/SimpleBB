@@ -175,8 +175,8 @@ class Parameters_ApproveAndRegisterUser {
 }
 
 class Parameters_RejectRegistrationRequest {
-	constructor(id) {
-		this.Id = id;
+	constructor(registrationRequestId) {
+		this.RegistrationRequestId = registrationRequestId;
 	}
 }
 
@@ -1277,8 +1277,8 @@ async function approveAndRegisterUser(email) {
 	return resp.JsonObject;
 }
 
-async function rejectRegistrationRequest(id) {
-	let params = new Parameters_RejectRegistrationRequest(id);
+async function rejectRegistrationRequest(registrationRequestId) {
+	let params = new Parameters_RejectRegistrationRequest(registrationRequestId);
 	let reqData = new ApiRequest(actionName.RejectRegistrationRequest, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {

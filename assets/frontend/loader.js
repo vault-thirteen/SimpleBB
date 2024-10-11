@@ -166,6 +166,7 @@ actionName = {
 	GetSelfSubscriptions: "getSelfSubscriptions",
 	GetThread: "getThread",
 	GetUserName: "getUserName",
+	IsSelfSubscribed: "isSelfSubscribed",
 	ListForumAndThreadsOnPage: "listForumAndThreadsOnPage",
 	ListSectionsAndForums: "listSectionsAndForums",
 	ListThreadAndMessagesOnPage: "listThreadAndMessagesOnPage",
@@ -409,6 +410,12 @@ class Parameters_GetThread {
 }
 
 class Parameters_DeleteSelfSubscription {
+	constructor(threadId) {
+		this.ThreadId = threadId;
+	}
+}
+
+class Parameters_IsSelfSubscribed {
 	constructor(threadId) {
 		this.ThreadId = threadId;
 	}
@@ -2120,7 +2127,7 @@ function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
 	btnPrev.type = "button";
 	btnPrev.className = "btnPrev";
 	btnPrev.id = "btnPrev";
-	btnPrev.value = "<-";
+	btnPrev.value = "<";
 	addClickEventHandler(btnPrev, variantPrev);
 	div.appendChild(btnPrev);
 
@@ -2133,7 +2140,7 @@ function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
 	btnNext.type = "button";
 	btnNext.className = "btnNext";
 	btnNext.id = "btnNext";
-	btnNext.value = "->";
+	btnNext.value = ">";
 	addClickEventHandler(btnNext, variantNext);
 	div.appendChild(btnNext);
 
@@ -2496,16 +2503,12 @@ async function addBottomActionPanel(el, type, objectId, object) {
 			}
 			let latestMessageInThread = resp.result.message;
 
-			resp = await getSelfSubscriptions();
+			resp = await isSelfSubscribed(objectId);
 			if (resp == null) {
 				return;
 			}
-			let userId = resp.result.userSubscriptions.userId;
-			let subscriptions = resp.result.userSubscriptions.threadIds;
-			let isUserSubscribed = false;
-			if (subscriptions != null) {
-				isUserSubscribed = subscriptions.includes(objectId);
-			}
+			let userId = resp.result.userId;
+			let isUserSubscribed = resp.result.isSubscribed;
 
 			let canAddMsg = canUserAddMessage(userParams, latestMessageInThread);
 			if (canAddMsg) {
@@ -3115,6 +3118,17 @@ function canUserAddMessage(userParams, latestMessageInThread) {
 
 async function getSelfSubscriptions() {
 	let reqData = new ApiRequest(actionName.GetSelfSubscriptions, {});
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function isSelfSubscribed(threadId) {
+	let params = new Parameters_IsSelfSubscribed(threadId);
+	let reqData = new ApiRequest(actionName.IsSelfSubscribed, params);
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));

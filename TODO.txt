@@ -1,5 +1,3 @@
-* Search for List of UIDs
-
 * Pagination for:
  - Notifications
  - Subscriptions
