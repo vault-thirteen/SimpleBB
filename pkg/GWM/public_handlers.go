@@ -62,6 +62,7 @@ const (
 	ApiFunctionName_ChangeThreadName            = "changeThreadName"
 	ApiFunctionName_ChangeThreadForum           = "changeThreadForum"
 	ApiFunctionName_GetThread                   = "getThread"
+	ApiFunctionName_GetThreadNamesByIds         = "getThreadNamesByIds"
 	ApiFunctionName_MoveThreadUp                = "moveThreadUp"
 	ApiFunctionName_MoveThreadDown              = "moveThreadDown"
 	ApiFunctionName_DeleteThread                = "deleteThread"
@@ -88,13 +89,14 @@ const (
 	ApiFunctionName_DeleteNotification       = "deleteNotification"
 
 	// SM.
-	ApiFunctionName_AddSubscription        = "addSubscription"
-	ApiFunctionName_IsSelfSubscribed       = "isSelfSubscribed"
-	ApiFunctionName_IsUserSubscribed       = "isUserSubscribed"
-	ApiFunctionName_GetSelfSubscriptions   = "getSelfSubscriptions"
-	ApiFunctionName_GetUserSubscriptions   = "getUserSubscriptions"
-	ApiFunctionName_DeleteSelfSubscription = "deleteSelfSubscription"
-	ApiFunctionName_DeleteSubscription     = "deleteSubscription"
+	ApiFunctionName_AddSubscription            = "addSubscription"
+	ApiFunctionName_IsSelfSubscribed           = "isSelfSubscribed"
+	ApiFunctionName_IsUserSubscribed           = "isUserSubscribed"
+	ApiFunctionName_GetSelfSubscriptions       = "getSelfSubscriptions"
+	ApiFunctionName_GetSelfSubscriptionsOnPage = "getSelfSubscriptionsOnPage"
+	ApiFunctionName_GetUserSubscriptions       = "getUserSubscriptions"
+	ApiFunctionName_DeleteSelfSubscription     = "deleteSelfSubscription"
+	ApiFunctionName_DeleteSubscription         = "deleteSubscription"
 )
 
 func (srv *Server) handlePublicSettings(rw http.ResponseWriter, req *http.Request) {

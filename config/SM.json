@@ -27,6 +27,7 @@
     "tableInitScriptsFolder": "sql\\SM\\table_init"
   },
   "system": {
+    "pageSize": 20,
     "dKeySize": 16,
     "isDebugMode": false
   },

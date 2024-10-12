@@ -273,6 +273,18 @@ type GetThreadResult struct {
 	Thread *Thread `json:"thread"`
 }
 
+type GetThreadNamesByIdsParams struct {
+	cmr.CommonParams
+
+	ThreadIds []uint `json:"threadIds"`
+}
+
+type GetThreadNamesByIdsResult struct {
+	cmr.CommonResult
+
+	ThreadNames []string `json:"threadNames"`
+}
+
 type MoveThreadUpParams struct {
 	cmr.CommonParams
 

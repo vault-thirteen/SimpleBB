@@ -665,6 +665,7 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_ChangeThreadName,
 		ApiFunctionName_ChangeThreadForum,
 		ApiFunctionName_GetThread,
+		ApiFunctionName_GetThreadNamesByIds,
 		ApiFunctionName_MoveThreadUp,
 		ApiFunctionName_MoveThreadDown,
 		ApiFunctionName_DeleteThread,
@@ -695,6 +696,7 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_IsSelfSubscribed,
 		ApiFunctionName_IsUserSubscribed,
 		ApiFunctionName_GetSelfSubscriptions,
+		ApiFunctionName_GetSelfSubscriptionsOnPage,
 		ApiFunctionName_GetUserSubscriptions,
 		ApiFunctionName_DeleteSelfSubscription,
 		ApiFunctionName_DeleteSubscription,
@@ -744,6 +746,7 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_ChangeThreadName:            srv.ChangeThreadName,
 		ApiFunctionName_ChangeThreadForum:           srv.ChangeThreadForum,
 		ApiFunctionName_GetThread:                   srv.GetThread,
+		ApiFunctionName_GetThreadNamesByIds:         srv.GetThreadNamesByIds,
 		ApiFunctionName_MoveThreadUp:                srv.MoveThreadUp,
 		ApiFunctionName_MoveThreadDown:              srv.MoveThreadDown,
 		ApiFunctionName_DeleteThread:                srv.DeleteThread,
@@ -770,13 +773,14 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_DeleteNotification:       srv.DeleteNotification,
 
 		// SM.
-		ApiFunctionName_AddSubscription:        srv.AddSubscription,
-		ApiFunctionName_IsSelfSubscribed:       srv.IsSelfSubscribed,
-		ApiFunctionName_IsUserSubscribed:       srv.IsUserSubscribed,
-		ApiFunctionName_GetSelfSubscriptions:   srv.GetSelfSubscriptions,
-		ApiFunctionName_GetUserSubscriptions:   srv.GetUserSubscriptions,
-		ApiFunctionName_DeleteSubscription:     srv.DeleteSubscription,
-		ApiFunctionName_DeleteSelfSubscription: srv.DeleteSelfSubscription,
+		ApiFunctionName_AddSubscription:            srv.AddSubscription,
+		ApiFunctionName_IsSelfSubscribed:           srv.IsSelfSubscribed,
+		ApiFunctionName_IsUserSubscribed:           srv.IsUserSubscribed,
+		ApiFunctionName_GetSelfSubscriptions:       srv.GetSelfSubscriptions,
+		ApiFunctionName_GetSelfSubscriptionsOnPage: srv.GetSelfSubscriptionsOnPage,
+		ApiFunctionName_GetUserSubscriptions:       srv.GetUserSubscriptions,
+		ApiFunctionName_DeleteSubscription:         srv.DeleteSubscription,
+		ApiFunctionName_DeleteSelfSubscription:     srv.DeleteSelfSubscription,
 	}
 
 	return nil

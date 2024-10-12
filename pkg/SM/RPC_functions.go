@@ -219,6 +219,34 @@ func (srv *Server) getSelfSubscriptions(p *sm.GetSelfSubscriptionsParams) (resul
 	return result, nil
 }
 
+// getSelfSubscriptionsOnPage reads subscriptions of the current user on the selected page.
+func (srv *Server) getSelfSubscriptionsOnPage(p *sm.GetSelfSubscriptionsOnPageParams) (result *sm.GetSelfSubscriptionsOnPageResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.Page == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
+	}
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsReader {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	result = &sm.GetSelfSubscriptionsOnPageResult{}
+
+	result.SubscriptionsOnPage, re = srv.getUserSubscriptionsOnPageH(userRoles.UserId, p.Page)
+	if re != nil {
+		return nil, re
+	}
+
+	return result, nil
+}
+
 // getUserSubscriptions reads user subscriptions.
 func (srv *Server) getUserSubscriptions(p *sm.GetUserSubscriptionsParams) (result *sm.GetUserSubscriptionsResult, re *jrm1.RpcError) {
 	// Check parameters.

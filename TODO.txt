@@ -1,15 +1,9 @@
-* Pagination for:
- - Subscriptions
-
-* SUidList
-
-* Subscriptions
-
 * Delete old notifications
 * Limit new notifications
-
+* Subscriptions
 * Notification Templates
 * Message Hash Sum Check
+* SUidList
 * Message Editor
 * SQL Indices
 * Cache (?)

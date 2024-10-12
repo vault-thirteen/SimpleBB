@@ -426,6 +426,34 @@ func (dbo *DatabaseObject) ReadSections() (sections []mm.Section, err error) {
 	return sections, nil
 }
 
+func (dbo *DatabaseObject) ReadThreadNamesByIds(threadIds ul.UidList) (threadNames []string, err error) {
+	threadNames = make([]string, 0, threadIds.Size())
+
+	var query string
+	query, err = dbo.dbQuery_ReadThreadNamesByIds(threadIds)
+	if err != nil {
+		return nil, err
+	}
+
+	var rows *sql.Rows
+	rows, err = dbo.DB().Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	var threadName string
+	for rows.Next() {
+		threadName, err = cm.NewNonNullValueFromScannableSource[string](rows)
+		if err != nil {
+			return nil, err
+		}
+
+		threadNames = append(threadNames, threadName)
+	}
+
+	return threadNames, nil
+}
+
 func (dbo *DatabaseObject) ReadThreadsById(threadIds ul.UidList) (threads []mm.Thread, err error) {
 	threads = make([]mm.Thread, 0, threadIds.Size())
 

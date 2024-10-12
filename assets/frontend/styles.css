@@ -430,7 +430,7 @@ table.subpageListOfRRFA,
 table.subpageListOfLoggedUsers,
 table.subpageUserPage,
 table.notificationList,
-table.subpageListOfSubscriptions {
+table.subscriptionsList {
 	border: 1px solid black;
 	text-align: right;
 }
@@ -450,7 +450,7 @@ table.subpageListOfRRFA th,
 table.subpageListOfLoggedUsers th,
 table.subpageUserPage th,
 table.notificationList th,
-table.subpageListOfSubscriptions th {
+table.subscriptionsList th {
 	border: 1px solid black;
 	padding: 3px;
 	background-color: bisque;
@@ -462,7 +462,7 @@ table.subpageListOfRRFA td,
 table.subpageListOfLoggedUsers td,
 table.subpageUserPage td,
 table.notificationList td,
-table.subpageListOfSubscriptions td {
+table.subscriptionsList td {
 	border: 1px solid black;
 	padding: 3px;
 }
@@ -521,7 +521,7 @@ table.subpageListOfUsers tr:nth-child(even),
 table.subpageListOfRRFA tr:nth-child(even),
 table.subpageListOfLoggedUsers tr:nth-child(even),
 table.subpageUserPage tr:nth-child(even),
-table.subpageListOfSubscriptions tr:nth-child(even) {
+table.subscriptionsList tr:nth-child(even) {
 	background-color: white;
 }
 
@@ -529,7 +529,7 @@ table.subpageListOfUsers tr:nth-child(odd),
 table.subpageListOfRRFA tr:nth-child(odd),
 table.subpageListOfLoggedUsers tr:nth-child(odd),
 table.subpageUserPage tr:nth-child(odd),
-table.subpageListOfSubscriptions tr:nth-child(odd) {
+table.subscriptionsList tr:nth-child(odd) {
 	background-color: #E8E8E8;
 }
 
@@ -573,7 +573,7 @@ div.section {
 	margin-top: 5px;
 	margin-bottom: 5px;
 	border: 1px solid black;
-	font-size: 18px;
+	font-size: 20px;
 	background-color: bisque;
 	padding-left: 10px;
 }
@@ -750,4 +750,15 @@ textarea.newMessageText {
 .bottomActionPanelRight {
 	width: auto;
 	text-align: right;
+}
+
+.pageTitle {
+	margin-left: 10px;
+	margin-right: 10px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	border: 1px solid black;
+	font-size: 20px;
+	background-color: white;
+	padding-left: 10px;
 }

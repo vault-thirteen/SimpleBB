@@ -17,7 +17,7 @@ settingsPath = "settings.json";
 settingsRootPath = "/";
 adminPage = "/admin";
 settingsExpirationDuration = 60;
-redirectDelay = 5;
+redirectDelay = 2;
 
 // Names of JavaScript storage variables.
 varname = {
@@ -165,7 +165,9 @@ actionName = {
 	GetMessage: "getMessage",
 	GetSelfRoles: "getSelfRoles",
 	GetSelfSubscriptions: "getSelfSubscriptions",
+	GetSelfSubscriptionsOnPage: "getSelfSubscriptionsOnPage",
 	GetThread: "getThread",
+	GetThreadNamesByIds: "getThreadNamesByIds",
 	GetUserName: "getUserName",
 	IsSelfSubscribed: "isSelfSubscribed",
 	ListForumAndThreadsOnPage: "listForumAndThreadsOnPage",
@@ -439,10 +441,34 @@ class Parameters_GetNotificationsOnPage {
 	}
 }
 
+class Parameters_GetThreadNamesByIds {
+	constructor(threadIds) {
+		this.ThreadIds = threadIds;
+	}
+}
+
+class Parameters_GetSelfSubscriptionsOnPage {
+	constructor(page) {
+		this.Page = page;
+	}
+}
+
 class SectionNode {
 	constructor(section, level) {
 		this.Section = section;
 		this.Level = level;
+	}
+}
+
+class Subscriptions {
+	constructor(userId, threadIds, threadNames, pageNumber, totalPages,
+				totalSubscriptions) {
+		this.UserId = userId;
+		this.ThreadIds = threadIds;
+		this.ThreadNames = threadNames;
+		this.PageNumber = pageNumber;
+		this.TotalPages = totalPages;
+		this.TotalSubscriptions = totalSubscriptions;
 	}
 }
 
@@ -2025,7 +2051,7 @@ function drawSectionsAndForums(p, nodes, forumsMap) {
 }
 
 function drawForumAndThreads(p, forum, threadsMap) {
-	drawForumName(p, forum);
+	drawPageTitle(p, forum.forumName);
 	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, "forumPagePrev", "forumPageNext");
 	drawForumThreads(p, forum, threadsMap);
 }
@@ -2066,7 +2092,7 @@ function drawForumThreads(p, forum, threadsMap) {
 }
 
 async function drawThreadAndMessages(p, thread, messagesMap) {
-	drawThreadName(p, thread);
+	drawPageTitle(p, thread.threadName);
 	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, "threadPagePrev", "threadPageNext");
 	await drawThreadMessages(p, thread, messagesMap);
 }
@@ -3261,12 +3287,10 @@ async function addSubscription(threadId, userId) {
 }
 
 async function showPage_Subscriptions() {
+	// Prepare data.
 	let pageNumber = mca_gvc.Page;
-	let allSubscriptions = await getSelfSubscriptionsNN();
-	let subscriptionsCount = allSubscriptions.length;
-	let settings = getSettings();
-	let pageSize = settings.PageSize;
-	let pageCount = Math.ceil(subscriptionsCount / pageSize);
+	let sop = await getSubscriptions(pageNumber);
+	let pageCount = sop.TotalPages;
 	pageCount = repairUndefinedPageCount(pageCount);
 	mca_gvc.Pages = pageCount;
 
@@ -3276,50 +3300,23 @@ async function showPage_Subscriptions() {
 		return;
 	}
 
-	let subscriptionsOnPage = calculateItemsOnPage(allSubscriptions, pageNumber, pageSize);
+	let settings = getSettings();
 
 	// Draw.
-	let p = document.getElementById("subpage");
-	p.style.display = "block";
-	addBtnBackToAccount(p);
-	addTitle(p, "Subscriptions");
-	addPaginator(p, pageNumber, pageCount, "subscriptionsPrev", "subscriptionsNext");
-	addDiv(p, "subpageListOfSubscriptions");
-	await fillListOfSubscriptions("subpageListOfSubscriptions", subscriptionsOnPage);
+	let p = document.getElementById("divBB");
+	showBlock(p);
+	await addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false);
+	drawSubscriptionsOnPage(p, sop);
 }
 
-function calculateItemsOnPage(items, pageN, pageSize) {
-	let x = Math.min(pageN * pageSize, items.length);
-	return items.slice((pageN - 1) * pageSize, x);
+function drawSubscriptionsOnPage(p, sop) {
+	drawPageTitle(p, 'Subscriptions');
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, "subscriptionsPrev", "subscriptionsNext");
+	drawSubscriptions(p, 'subscriptionsList', sop);
 }
 
-function addBtnBackToAccount(el) {
-	let btn = document.createElement("INPUT");
-	btn.type = "button";
-	btn.className = "btnBackToAccount";
-	btn.value = "Back to Account";
-	btn.addEventListener("click", async (e) => {
-		await redirectToUserPage(false);
-	})
-	el.appendChild(btn);
-}
-
-async function redirectToUserPage(wait) {
-	let url = qp.SelfPage;
-	await redirectPage(wait, url);
-}
-
-function addTitle(el, text) {
-	let div = document.createElement("DIV");
-	div.className = "subpageTitle";
-	div.id = "subpageTitle";
-	div.textContent = text;
-	el.appendChild(div);
-}
-
-async function fillListOfSubscriptions(elClass, threadIds) {
-	let div = document.getElementById(elClass);
-	div.innerHTML = "";
+function drawSubscriptions(p, elClass, sop) {
 	let tbl = document.createElement("TABLE");
 	tbl.className = elClass;
 
@@ -3336,21 +3333,20 @@ async function fillListOfSubscriptions(elClass, threadIds) {
 		tr.appendChild(th);
 	}
 	tbl.appendChild(tr);
+	p.appendChild(tbl);
 
 	let columnsWithLink = [1, 2];
 	let columnsWithHtml = [3];
 
-	// Cells.
-	let threadId, threadParams;
-	for (let i = 0; i < threadIds.length; i++) {
-		threadId = threadIds[i];
+	if (sop.ThreadIds == null) {
+		return;
+	}
 
-		// Get thread parameters.
-		resp = await getThread(threadId);
-		if (resp == null) {
-			return;
-		}
-		threadParams = resp.result.thread;
+	// Cells.
+	let threadId, threadName;
+	for (let i = 0; i < sop.ThreadIds.length; i++) {
+		threadId = sop.ThreadIds[i];
+		threadName = sop.ThreadNames[i];
 
 		// Fill data.
 		tr = document.createElement("TR");
@@ -3361,7 +3357,7 @@ async function fillListOfSubscriptions(elClass, threadIds) {
 
 		tds[0] = (i + 1).toString();
 		tds[1] = threadId.toString();
-		tds[2] = threadParams.name;
+		tds[2] = threadName;
 		tds[3] = '<input type="button" class="btnUnsubscribe" value="Unsubscribe" onclick="onBtnUnsubscribeClick(this)">';
 
 		let td, url;
@@ -3387,8 +3383,6 @@ async function fillListOfSubscriptions(elClass, threadIds) {
 
 		tbl.appendChild(tr);
 	}
-
-	div.appendChild(tbl);
 }
 
 async function getThread(threadId) {
@@ -3449,3 +3443,48 @@ async function getSelfSubscriptionsNN() {
 	return allSubscriptions;
 }
 
+async function getThreadNamesByIds(threadIds) {
+	let params = new Parameters_GetThreadNamesByIds(threadIds);
+	let reqData = new ApiRequest(actionName.GetThreadNamesByIds, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function getSelfSubscriptionsOnPage(page) {
+	let params = new Parameters_GetSelfSubscriptionsOnPage(page);
+	let reqData = new ApiRequest(actionName.GetSelfSubscriptionsOnPage, params);
+	let resp = await sendApiRequest(reqData);
+	if (!resp.IsOk) {
+		console.error(composeErrorText(resp.ErrorText));
+		return null;
+	}
+	return resp.JsonObject;
+}
+
+async function getSubscriptions(pageNumber) {
+	let resp = await getSelfSubscriptionsOnPage(pageNumber);
+	if (resp == null) {
+		return null;
+	}
+	let result = new Subscriptions(
+		resp.result.sop.subscriber,
+		resp.result.sop.subscriptions,
+		[],
+		pageNumber,
+		resp.result.sop.totalPages,
+		resp.result.sop.totalSubscriptions,
+	)
+
+	if ((result.ThreadIds != null) && (result.ThreadIds.length > 0)) {
+		resp = await getThreadNamesByIds(result.ThreadIds);
+		if (resp == null) {
+			return null;
+		}
+		result.ThreadNames = resp.result.threadNames;
+	}
+	return result;
+}

@@ -13,6 +13,7 @@ import (
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 )
@@ -329,6 +330,54 @@ func (srv *Server) getUserSubscriptionsH(userId uint) (us *sm.UserSubscriptions,
 	}
 
 	return us, nil
+}
+
+// getUserSubscriptionsOnPageH is a helper function to read user's
+// subscriptions on the selected page.
+func (srv *Server) getUserSubscriptionsOnPageH(userId uint, page uint) (sop *sm.SubscriptionsOnPage, re *jrm1.RpcError) {
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Read all user's subscriptions.
+	var us *sm.UserSubscriptions
+	var err error
+	us, err = srv.dbo.GetUserSubscriptions(userId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if us == nil {
+		us = &sm.UserSubscriptions{
+			Id:     0,
+			UserId: userId,
+		}
+
+		us.Threads, err = ul.NewFromArray([]uint{})
+		if err != nil {
+			srv.logError(err)
+			return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+		}
+	}
+
+	sop = sm.NewSubscriptionsOnPage()
+	{
+		sop.Subscriber = userId
+
+		threadIds := us.Threads.OnPage(page, srv.settings.SystemSettings.PageSize)
+		if threadIds != nil {
+			sop.Subscriptions = *threadIds
+		}
+
+		sop.Page = &page
+
+		allSubscriptionsCountUint := uint(us.Threads.Size())
+		tp := c.CalculateTotalPages(allSubscriptionsCountUint, srv.settings.SystemSettings.PageSize)
+		sop.TotalPages = &tp
+
+		sop.TotalSubscriptions = &allSubscriptionsCountUint
+	}
+
+	return sop, nil
 }
 
 // isUserSubscribedH is a helper function to check whether the user has a

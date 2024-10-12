@@ -10,16 +10,17 @@ const (
 	FuncPing = cc.FuncPing
 
 	// Subscription.
-	FuncAddSubscription           = "AddSubscription"
-	FuncIsSelfSubscribed          = "IsSelfSubscribed"
-	FuncIsUserSubscribed          = "IsUserSubscribed"
-	FuncGetSelfSubscriptions      = "GetSelfSubscriptions"
-	FuncGetUserSubscriptions      = "GetUserSubscriptions"
-	FuncGetThreadSubscribersS     = "GetThreadSubscribersS"
-	FuncDeleteSelfSubscription    = "DeleteSelfSubscription"
-	FuncDeleteSubscription        = "DeleteSubscription"
-	FuncDeleteSubscriptionS       = "DeleteSubscriptionS"
-	FuncClearThreadSubscriptionsS = "ClearThreadSubscriptionsS"
+	FuncAddSubscription            = "AddSubscription"
+	FuncIsSelfSubscribed           = "IsSelfSubscribed"
+	FuncIsUserSubscribed           = "IsUserSubscribed"
+	FuncGetSelfSubscriptions       = "GetSelfSubscriptions"
+	FuncGetSelfSubscriptionsOnPage = "GetSelfSubscriptionsOnPage"
+	FuncGetUserSubscriptions       = "GetUserSubscriptions"
+	FuncGetThreadSubscribersS      = "GetThreadSubscribersS"
+	FuncDeleteSelfSubscription     = "DeleteSelfSubscription"
+	FuncDeleteSubscription         = "DeleteSubscription"
+	FuncDeleteSubscriptionS        = "DeleteSubscriptionS"
+	FuncClearThreadSubscriptionsS  = "ClearThreadSubscriptionsS"
 
 	// Other.
 	FuncGetDKey            = "GetDKey"

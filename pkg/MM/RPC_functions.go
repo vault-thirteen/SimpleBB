@@ -1410,6 +1410,42 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 	return result, nil
 }
 
+// getThreadNamesByIds reads names of threads specified by their IDs.
+func (srv *Server) getThreadNamesByIds(p *mm.GetThreadNamesByIdsParams) (result *mm.GetThreadNamesByIdsResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if len(p.ThreadIds) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
+	}
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsReader {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Read thread names.
+	var threadNames []string
+	var err error
+	threadNames, err = srv.dbo.ReadThreadNamesByIds(p.ThreadIds)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &mm.GetThreadNamesByIdsResult{
+		ThreadNames: threadNames,
+	}
+
+	return result, nil
+}
+
 // moveThreadUp moves a thread up by one position if possible.
 func (srv *Server) moveThreadUp(p *mm.MoveThreadUpParams) (result *mm.MoveThreadUpResult, re *jrm1.RpcError) {
 	// Check parameters.

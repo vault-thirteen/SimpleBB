@@ -28,14 +28,15 @@ const (
 	FuncDeleteForum        = "DeleteForum"
 
 	// Thread.
-	FuncAddThread         = "AddThread"
-	FuncChangeThreadName  = "ChangeThreadName"
-	FuncChangeThreadForum = "ChangeThreadForum"
-	FuncGetThread         = "GetThread"
-	FuncMoveThreadUp      = "MoveThreadUp"
-	FuncMoveThreadDown    = "MoveThreadDown"
-	FuncDeleteThread      = "DeleteThread"
-	FuncThreadExistsS     = "ThreadExistsS"
+	FuncAddThread           = "AddThread"
+	FuncChangeThreadName    = "ChangeThreadName"
+	FuncChangeThreadForum   = "ChangeThreadForum"
+	FuncGetThread           = "GetThread"
+	FuncGetThreadNamesByIds = "GetThreadNamesByIds"
+	FuncMoveThreadUp        = "MoveThreadUp"
+	FuncMoveThreadDown      = "MoveThreadDown"
+	FuncDeleteThread        = "DeleteThread"
+	FuncThreadExistsS       = "ThreadExistsS"
 
 	// Message.
 	FuncAddMessage               = "AddMessage"

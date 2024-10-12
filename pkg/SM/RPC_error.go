@@ -14,6 +14,7 @@ const (
 	RpcErrorCode_ThreadExists           = 4
 	RpcErrorCode_ThreadDoesNotExist     = 5
 	RpcErrorCode_TestError              = 6
+	RpcErrorCode_PageIsNotSet           = 7
 )
 
 // Messages.
@@ -24,6 +25,7 @@ const (
 	RpcErrorMsg_ThreadExists           = "thread exists"
 	RpcErrorMsg_ThreadDoesNotExist     = "thread does not exist"
 	RpcErrorMsgF_TestError             = "test error: %s"
+	RpcErrorMsg_PageIsNotSet           = "page is not set"
 )
 
 // Unique HTTP status codes used in the map:
@@ -39,5 +41,6 @@ func GetMapOfHttpStatusCodesByRpcErrorCodes() map[int]int {
 		RpcErrorCode_ThreadExists:           http.StatusConflict,
 		RpcErrorCode_ThreadDoesNotExist:     http.StatusConflict,
 		RpcErrorCode_TestError:              http.StatusInternalServerError,
+		RpcErrorCode_PageIsNotSet:           http.StatusBadRequest,
 	}
 }

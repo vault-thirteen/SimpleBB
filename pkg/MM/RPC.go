@@ -47,6 +47,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.ChangeThreadName,
 		srv.ChangeThreadForum,
 		srv.GetThread,
+		srv.GetThreadNamesByIds,
 		srv.MoveThreadUp,
 		srv.MoveThreadDown,
 		srv.DeleteThread,
@@ -370,6 +371,22 @@ func (srv *Server) GetThread(params *json.RawMessage, _ *jrm1.ResponseMetaData) 
 
 	var r *mm.GetThreadResult
 	r, re = srv.getThread(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) GetThreadNamesByIds(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *mm.GetThreadNamesByIdsParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *mm.GetThreadNamesByIdsResult
+	r, re = srv.getThreadNamesByIds(p)
 	if re != nil {
 		return nil, re
 	}

@@ -63,6 +63,18 @@ type GetSelfSubscriptionsResult struct {
 	UserSubscriptions *UserSubscriptions `json:"userSubscriptions"`
 }
 
+type GetSelfSubscriptionsOnPageParams struct {
+	cmr.CommonParams
+
+	Page uint `json:"page"`
+}
+
+type GetSelfSubscriptionsOnPageResult struct {
+	cmr.CommonResult
+
+	SubscriptionsOnPage *SubscriptionsOnPage `json:"sop"`
+}
+
 type GetUserSubscriptionsParams struct {
 	cmr.CommonParams
 
