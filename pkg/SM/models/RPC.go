@@ -53,6 +53,16 @@ type IsUserSubscribedResult struct {
 	IsSubscribed bool `json:"isSubscribed"`
 }
 
+type CountSelfSubscriptionsParams struct {
+	cmr.CommonParams
+}
+
+type CountSelfSubscriptionsResult struct {
+	cmr.CommonResult
+
+	UserSubscriptionsCount int `json:"userSubscriptionsCount"`
+}
+
 type GetSelfSubscriptionsParams struct {
 	cmr.CommonParams
 }

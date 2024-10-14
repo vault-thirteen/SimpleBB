@@ -14,6 +14,7 @@ import (
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 )
@@ -315,6 +316,26 @@ func (srv *Server) checkIfThreadExists(threadId uint) (exists bool, re *jrm1.Rpc
 	}
 
 	return result.Exists, nil
+}
+
+// countSelfSubscriptionsH is a helper function to count user's subscriptions.
+func (srv *Server) countSelfSubscriptionsH(userId uint) (usc int, re *jrm1.RpcError) {
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Get subscriptions and count them.
+	var us *sm.UserSubscriptions
+	var err error
+	us, err = srv.dbo.GetUserSubscriptions(userId)
+	if err != nil {
+		return cdbo.CountOnError, srv.databaseError(err)
+	}
+
+	if us == nil {
+		return 0, nil
+	}
+
+	return us.Threads.Size(), nil
 }
 
 // getUserSubscriptionsH is a helper function to read user's subscriptions.

@@ -13,6 +13,7 @@ const (
 	FuncAddSubscription            = "AddSubscription"
 	FuncIsSelfSubscribed           = "IsSelfSubscribed"
 	FuncIsUserSubscribed           = "IsUserSubscribed"
+	FuncCountSelfSubscriptions     = "CountSelfSubscriptions"
 	FuncGetSelfSubscriptions       = "GetSelfSubscriptions"
 	FuncGetSelfSubscriptionsOnPage = "GetSelfSubscriptionsOnPage"
 	FuncGetUserSubscriptions       = "GetUserSubscriptions"

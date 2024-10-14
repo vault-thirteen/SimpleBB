@@ -196,6 +196,29 @@ func (srv *Server) isUserSubscribed(p *sm.IsUserSubscribedParams) (result *sm.Is
 	return result, nil
 }
 
+// countSelfSubscriptions counts subscriptions of the current user.
+func (srv *Server) countSelfSubscriptions(p *sm.CountSelfSubscriptionsParams) (result *sm.CountSelfSubscriptionsResult, re *jrm1.RpcError) {
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.IsReader {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	result = &sm.CountSelfSubscriptionsResult{}
+
+	result.UserSubscriptionsCount, re = srv.countSelfSubscriptionsH(userRoles.UserId)
+	if re != nil {
+		return nil, re
+	}
+
+	return result, nil
+}
+
 // getSelfSubscriptions reads subscriptions of the current user.
 func (srv *Server) getSelfSubscriptions(p *sm.GetSelfSubscriptionsParams) (result *sm.GetSelfSubscriptionsResult, re *jrm1.RpcError) {
 	var userRoles *am.GetSelfRolesResult

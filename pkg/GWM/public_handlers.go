@@ -92,6 +92,7 @@ const (
 	ApiFunctionName_AddSubscription            = "addSubscription"
 	ApiFunctionName_IsSelfSubscribed           = "isSelfSubscribed"
 	ApiFunctionName_IsUserSubscribed           = "isUserSubscribed"
+	ApiFunctionName_CountSelfSubscriptions     = "countSelfSubscriptions"
 	ApiFunctionName_GetSelfSubscriptions       = "getSelfSubscriptions"
 	ApiFunctionName_GetSelfSubscriptionsOnPage = "getSelfSubscriptionsOnPage"
 	ApiFunctionName_GetUserSubscriptions       = "getUserSubscriptions"
@@ -217,6 +218,10 @@ func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request, cli
 
 	case srv.frontEnd.AdminJs.UrlPath:
 		srv.handleAdminFrontEnd(rw, req, clientIPA)
+		return
+
+	case srv.frontEnd.ApiJs.UrlPath:
+		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.ApiJs)
 		return
 
 	case srv.frontEnd.ArgonJs.UrlPath:

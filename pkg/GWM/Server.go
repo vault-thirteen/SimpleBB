@@ -467,6 +467,11 @@ func (srv *Server) initFrontEndData() (err error) {
 		return err
 	}
 
+	srv.frontEnd.ApiJs, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_ApiJs, ch.ContentType_JavaScript, frontendAssetsFolder)
+	if err != nil {
+		return err
+	}
+
 	srv.frontEnd.ArgonJs, err = models.NewFrontEndFileData(fep, gs.FrontEndStaticFileName_ArgonJs, ch.ContentType_JavaScript, frontendAssetsFolder)
 	if err != nil {
 		return err
@@ -695,6 +700,7 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_AddSubscription,
 		ApiFunctionName_IsSelfSubscribed,
 		ApiFunctionName_IsUserSubscribed,
+		ApiFunctionName_CountSelfSubscriptions,
 		ApiFunctionName_GetSelfSubscriptions,
 		ApiFunctionName_GetSelfSubscriptionsOnPage,
 		ApiFunctionName_GetUserSubscriptions,
@@ -776,6 +782,7 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_AddSubscription:            srv.AddSubscription,
 		ApiFunctionName_IsSelfSubscribed:           srv.IsSelfSubscribed,
 		ApiFunctionName_IsUserSubscribed:           srv.IsUserSubscribed,
+		ApiFunctionName_CountSelfSubscriptions:     srv.CountSelfSubscriptions,
 		ApiFunctionName_GetSelfSubscriptions:       srv.GetSelfSubscriptions,
 		ApiFunctionName_GetSelfSubscriptionsOnPage: srv.GetSelfSubscriptionsOnPage,
 		ApiFunctionName_GetUserSubscriptions:       srv.GetUserSubscriptions,

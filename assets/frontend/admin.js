@@ -18,102 +18,10 @@ rootPath = "/";
 adminPage = "/admin";
 redirectDelay = 3;
 
-// Names of Query Parameters.
-qp = {
-	Prefix: "?",
-}
-
-qpn = {
-	Id: "id",
-	Page: "page",
-	ListOfUsers: "listOfUsers",
-	ListOfLoggedUsers: "listOfLoggedUsers",
-	RegistrationsReadyForApproval: "registrationsReadyForApproval",
-	UserPage: "userPage",
-	ManagerOfSections: "manageSections",
-	ManagerOfForums: "manageForums",
-	ManagerOfThreads: "managerOfThreads",
-	ManagerOfMessages: "managerOfMessages",
-	ManagerOfNotifications: "managerOfNotifications",
-}
-
-// Action names.
-actionName = {
-	AddForum: "addForum",
-	AddMessage: "addMessage",
-	AddNotification: "addNotification",
-	AddSection: "addSection",
-	AddThread: "addThread",
-	ApproveAndRegisterUser: "approveAndRegisterUser",
-	BanUser: "banUser",
-	ChangeForumName: "changeForumName",
-	ChangeForumSection: "changeForumSection",
-	ChangeMessageText: "changeMessageText",
-	ChangeMessageThread: "changeMessageThread",
-	ChangeSectionName: "changeSectionName",
-	ChangeSectionParent: "changeSectionParent",
-	ChangeThreadName: "changeThreadName",
-	ChangeThreadForum: "changeThreadForum",
-	DeleteForum: "deleteForum",
-	DeleteMessage: "deleteMessage",
-	DeleteNotification: "deleteNotification",
-	DeleteSection: "deleteSection",
-	DeleteThread: "deleteThread",
-	GetListOfAllUsers: "getListOfAllUsers",
-	GetListOfLoggedUsers: "getListOfLoggedUsers",
-	GetListOfRegistrationsReadyForApproval: "getListOfRegistrationsReadyForApproval",
-	GetUserSession: "getUserSession",
-	IsUserLoggedIn: "isUserLoggedIn",
-	LogUserOutA: "logUserOutA",
-	MoveForumDown: "moveForumDown",
-	MoveForumUp: "moveForumUp",
-	MoveSectionDown: "moveSectionDown",
-	MoveSectionUp: "moveSectionUp",
-	MoveThreadDown: "moveThreadDown",
-	MoveThreadUp: "moveThreadUp",
-	RejectRegistrationRequest: "rejectRegistrationRequest",
-	SetUserRoleAuthor: "setUserRoleAuthor",
-	SetUserRoleReader: "setUserRoleReader",
-	SetUserRoleWriter: "setUserRoleWriter",
-	UnbanUser: "unbanUser",
-	ViewUserParameters: "viewUserParameters",
-}
-
-// Messages.
-msg = {
-	GenericErrorPrefix: "Error: ",
-}
-
-// Errors.
-err = {
-	IdNotSet: "ID is not set",
-	IdNotFound: "ID is not found",
-	PageNotSet: "page is not set",
-	PageNotFound: "page is not found",
-	Settings: "settings error",
-	NotOk: "something went wrong",
-	Server: "server error",
-	Client: "client error",
-	Unknown: "unknown error",
-	PreviousPageDoesNotExist: "previous page does not exist",
-	NextPageDoesNotExist: "next page does not exist",
-	UnknownVariant: "unknown variant",
-	NameIsNotSet: "name is not set",
-	ParentIsNotSet: "parent is not set",
-	TextIsNotSet: "text is not set",
-}
-
-// User role names.
-userRole = {
-	Author: "author",
-	Writer: "writer",
-	Reader: "reader",
-	Logging: "logging",
-}
-
 // Global variables.
 class GlobalVariablesContainer {
-	constructor(settings, id, page, pages) {
+	constructor(areSettingsReady, settings, id, page, pages) {
+		this.AreSettingsReady = areSettingsReady;
 		this.Settings = settings;
 		this.Id = id;
 		this.Page = page;
@@ -121,289 +29,34 @@ class GlobalVariablesContainer {
 	}
 }
 
-mca_gvc = new GlobalVariablesContainer(0, 0, 0);
+mca_gvc = new GlobalVariablesContainer(false, null, 0, 0);
 
-// Settings class.
-class Settings {
-	constructor(version, productVersion, siteName, siteDomain, captchaFolder,
-				sessionMaxDuration, messageEditTime, pageSize, apiFolder,
-				publicSettingsFileName, isFrontEndEnabled, frontEndStaticFilesFolder) {
-		this.Version = version; // Number.
-		this.ProductVersion = productVersion;
-		this.SiteName = siteName;
-		this.SiteDomain = siteDomain;
-		this.CaptchaFolder = captchaFolder;
-		this.SessionMaxDuration = sessionMaxDuration; // Number.
-		this.MessageEditTime = messageEditTime; // Number.
-		this.PageSize = pageSize; // Number.
-		this.ApiFolder = apiFolder;
-		this.PublicSettingsFileName = publicSettingsFileName;
-		this.IsFrontEndEnabled = isFrontEndEnabled; // Boolean.
-		this.FrontEndStaticFilesFolder = frontEndStaticFilesFolder;
-	}
+function isSettingsUpdateNeeded() {
+	return true;
 }
 
-class ApiRequest {
-	constructor(action, parameters) {
-		this.Action = action;
-		this.Parameters = parameters;
-	}
+function saveSettings(s) {
+	mca_gvc.Settings = s;
+	mca_gvc.AreSettingsReady = true;
 }
 
-class Parameters_GetListOfAllUsers {
-	constructor(page) {
-		this.Page = page;
+function getSettings() {
+	if (!mca_gvc.AreSettingsReady) {
+		console.error(err.Settings);
+		return null;
 	}
+
+	return mca_gvc.Settings;
 }
 
-class Parameters_GetListOfRegistrationsReadyForApproval {
-	constructor(page) {
-		this.Page = page;
-	}
-}
-
-class Parameters_ViewUserParameters {
-	constructor(userId) {
-		this.UserId = userId;
-	}
-}
-
-class Parameters_ApproveAndRegisterUser {
-	constructor(email) {
-		this.Email = email;
-	}
-}
-
-class Parameters_RejectRegistrationRequest {
-	constructor(registrationRequestId) {
-		this.RegistrationRequestId = registrationRequestId;
-	}
-}
-
-class Parameters_LogUserOutA {
-	constructor(userId) {
-		this.UserId = userId;
-	}
-}
-
-class Parameters_IsUserLoggedIn {
-	constructor(userId) {
-		this.UserId = userId;
-	}
-}
-
-class Parameters_SetUserRoleAuthor {
-	constructor(userId, isRoleEnabled) {
-		this.UserId = userId;
-		this.IsRoleEnabled = isRoleEnabled;
-	}
-}
-
-class Parameters_SetUserRoleWriter {
-	constructor(userId, isRoleEnabled) {
-		this.UserId = userId;
-		this.IsRoleEnabled = isRoleEnabled;
-	}
-}
-
-class Parameters_SetUserRoleReader {
-	constructor(userId, isRoleEnabled) {
-		this.UserId = userId;
-		this.IsRoleEnabled = isRoleEnabled;
-	}
-}
-
-class Parameters_BanUser {
-	constructor(userId) {
-		this.UserId = userId;
-	}
-}
-
-class Parameters_UnbanUser {
-	constructor(userId) {
-		this.UserId = userId;
-	}
-}
-
-class Parameters_GetUserSession {
-	constructor(userId) {
-		this.UserId = userId;
-	}
-}
-
-class Parameters_AddSection {
-	constructor(parent, name) {
-		this.Parent = parent;
-		this.Name = name;
-	}
-}
-
-class Parameters_AddForum {
-	constructor(parent, name) {
-		this.SectionId = parent;
-		this.Name = name;
-	}
-}
-
-class Parameters_AddThread {
-	constructor(parent, name) {
-		this.ForumId = parent;
-		this.Name = name;
-	}
-}
-
-class Parameters_AddMessage {
-	constructor(parent, text) {
-		this.ThreadId = parent;
-		this.Text = text;
-	}
-}
-
-class Parameters_ChangeSectionName {
-	constructor(sectionId, name) {
-		this.SectionId = sectionId;
-		this.Name = name;
-	}
-}
-
-class Parameters_ChangeForumName {
-	constructor(forumId, name) {
-		this.ForumId = forumId;
-		this.Name = name;
-	}
-}
-
-class Parameters_ChangeThreadName {
-	constructor(threadId, name) {
-		this.ThreadId = threadId;
-		this.Name = name;
-	}
-}
-
-class Parameters_ChangeMessageText {
-	constructor(messageId, text) {
-		this.MessageId = messageId;
-		this.Text = text;
-	}
-}
-
-class Parameters_ChangeSectionParent {
-	constructor(sectionId, parent) {
-		this.SectionId = sectionId;
-		this.Parent = parent;
-	}
-}
-
-class Parameters_ChangeForumSection {
-	constructor(forumId, sectionId) {
-		this.ForumId = forumId;
-		this.SectionId = sectionId; // Parent.
-	}
-}
-
-class Parameters_ChangeThreadForum {
-	constructor(threadId, forumId) {
-		this.ThreadId = threadId;
-		this.ForumId = forumId; // Parent.
-	}
-}
-
-class Parameters_ChangeMessageThread {
-	constructor(messageId, threadId) {
-		this.MessageId = messageId;
-		this.ThreadId = threadId; // Parent.
-	}
-}
-
-class Parameters_MoveSectionUp {
-	constructor(sectionId) {
-		this.SectionId = sectionId;
-	}
-}
-
-class Parameters_MoveSectionDown {
-	constructor(sectionId) {
-		this.SectionId = sectionId;
-	}
-}
-
-class Parameters_MoveForumUp {
-	constructor(forumId) {
-		this.ForumId = forumId;
-	}
-}
-
-class Parameters_MoveForumDown {
-	constructor(forumId) {
-		this.ForumId = forumId;
-	}
-}
-
-class Parameters_MoveThreadUp {
-	constructor(threadId) {
-		this.ThreadId = threadId;
-	}
-}
-
-class Parameters_MoveThreadDown {
-	constructor(threadId) {
-		this.ThreadId = threadId;
-	}
-}
-
-class Parameters_DeleteSection {
-	constructor(sectionId) {
-		this.SectionId = sectionId;
-	}
-}
-
-class Parameters_DeleteForum {
-	constructor(forumId) {
-		this.ForumId = forumId;
-	}
-}
-
-class Parameters_DeleteThread {
-	constructor(threadId) {
-		this.ThreadId = threadId;
-	}
-}
-
-class Parameters_DeleteMessage {
-	constructor(messageId) {
-		this.MessageId = messageId;
-	}
-}
-
-class Parameters_AddNotification {
-	constructor(userId, text) {
-		this.UserId = userId;
-		this.Text = text;
-	}
-}
-
-class Parameters_DeleteNotification {
-	constructor(notificationId) {
-		this.NotificationId = notificationId;
-	}
-}
-
-class ApiResponse {
-	constructor(isOk, jsonObject, statusCode, errorText) {
-		this.IsOk = isOk;
-		this.JsonObject = jsonObject;
-		this.StatusCode = statusCode;
-		this.ErrorText = errorText;
-	}
-}
-
+// Entry point.
 async function onPageLoad() {
-	let settings = await getSettings();
-	if (settings === null) {
+	// Settings initialisation.
+	let ok = await updateSettingsIfNeeded();
+	if (!ok) {
 		return;
 	}
-	mca_gvc.Settings = settings;
-	console.info('Received settings. Version: ' + settings.Version.toString() + ".");
+	//let settings = getSettings();
 
 	// Select a page.
 	let curPage = window.location.search;
@@ -469,38 +122,6 @@ async function onPageLoad() {
 	showPage_MainMenu();
 }
 
-async function getSettings() {
-	let data = await fetchSettings();
-
-	let x = new Settings(
-		data.version,
-		data.productVersion,
-		data.siteName,
-		data.siteDomain,
-		data.captchaFolder,
-		data.sessionMaxDuration,
-		data.messageEditTime,
-		data.pageSize,
-		data.apiFolder,
-		data.publicSettingsFileName,
-		data.isFrontEndEnabled,
-		data.frontEndStaticFilesFolder,
-	);
-
-	// Self-check.
-	if ((x.PublicSettingsFileName !== settingsPath)) {
-		console.error(err.Settings);
-		return null;
-	}
-
-	return x;
-}
-
-async function fetchSettings() {
-	let data = await fetch(rootPath + settingsPath);
-	return await data.json();
-}
-
 async function onGoRegApprovalClick(btn) {
 	await redirectToSubPage(false, qp.Prefix + qpn.RegistrationsReadyForApproval);
 }
@@ -531,28 +152,6 @@ async function onGoManageMessagesClick(btn) {
 
 async function onGoManageNotificationsClick(btn) {
 	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfNotifications);
-}
-
-async function redirectToSubPage(wait, qp) {
-	let url = adminPage + qp;
-	await redirectPage(wait, url);
-}
-
-async function redirectToMainMenu(wait) {
-	let url = adminPage;
-	await redirectPage(wait, url);
-}
-
-async function redirectPage(wait, url) {
-	if (wait) {
-		await sleep(redirectDelay * 1000);
-	}
-
-	document.location.href = url;
-}
-
-async function sleep(ms) {
-	await new Promise(r => setTimeout(r, ms));
 }
 
 function showPage_MainMenu() {
@@ -595,7 +194,8 @@ async function showPage_ListOfLoggedUsers() {
 	}
 	let userIds = resp.result.loggedUserIds;
 	let userCount = userIds.length;
-	let pageCount = Math.ceil(userCount / mca_gvc.Settings.PageSize);
+	let settings = getSettings();
+	let pageCount = Math.ceil(userCount / settings.PageSize);
 	pageCount = repairUndefinedPageCount(pageCount);
 	mca_gvc.Pages = pageCount;
 
@@ -605,7 +205,7 @@ async function showPage_ListOfLoggedUsers() {
 		return;
 	}
 
-	let userIdsOnPage = calculateItemsOnPage(userIds, pageNumber, mca_gvc.Settings.PageSize);
+	let userIdsOnPage = calculateItemsOnPage(userIds, pageNumber, settings.PageSize);
 
 	// Draw.
 	let p = document.getElementById("subpage");
@@ -619,7 +219,7 @@ async function showPage_ListOfLoggedUsers() {
 
 async function showPage_RegistrationsReadyForApproval() {
 	let pageNumber = mca_gvc.Page;
-	let resp = await getListOfRegistrationsReadyForApproval(mca_gvc.Page);
+	let resp = await getListOfRegistrationsReadyForApproval(pageNumber);
 	if (resp == null) {
 		return;
 	}
@@ -949,7 +549,7 @@ async function fillListOfLoggedUsers(elClass, userIdsOnPage) {
 
 		let td, url;
 		for (let j = 0; j < tds.length; j++) {
-			url = composeUserPageLink(userId.toString());
+			url = composeUrlForUserPage(userId.toString());
 			td = document.createElement("TD");
 
 			if (j === 0) {
@@ -1035,62 +635,6 @@ async function fillListOfRRFA(elClass, rrfas) {
 	div.appendChild(tbl);
 }
 
-async function sendApiRequest(data) {
-	let result;
-	let ri = {
-		method: "POST",
-		body: JSON.stringify(data)
-	};
-	let resp = await fetch(rootPath + mca_gvc.Settings.ApiFolder, ri);
-	if (resp.status === 200) {
-		result = new ApiResponse(true, await resp.json(), resp.status, null);
-		return result;
-	} else {
-		result = new ApiResponse(false, null, resp.status, await resp.text());
-		if (result.ErrorText.length === 0) {
-			result.ErrorText = createErrorTextByStatusCode(result.StatusCode);
-		}
-		console.error(result.ErrorText);
-		return result;
-	}
-}
-
-function createErrorTextByStatusCode(statusCode) {
-	if ((statusCode >= 400) && (statusCode <= 499)) {
-		return msg.GenericErrorPrefix + err.Client + " (" + statusCode.toString() + ")";
-	}
-	if ((statusCode >= 500) && (statusCode <= 599)) {
-		return msg.GenericErrorPrefix + err.Server + " (" + statusCode.toString() + ")";
-	}
-	return msg.GenericErrorPrefix + err.Unknown + " (" + statusCode.toString() + ")";
-}
-
-function composeErrorText(errMsg) {
-	return msg.GenericErrorPrefix + errMsg.trim() + ".";
-}
-
-async function getListOfAllUsers(pageN) {
-	let params = new Parameters_GetListOfAllUsers(pageN);
-	let reqData = new ApiRequest(actionName.GetListOfAllUsers, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function getListOfRegistrationsReadyForApproval(pageN) {
-	let params = new Parameters_GetListOfRegistrationsReadyForApproval(pageN);
-	let reqData = new ApiRequest(actionName.GetListOfRegistrationsReadyForApproval, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
 async function getListOfLoggedInUsers() {
 	let reqData = new ApiRequest(actionName.GetListOfLoggedUsers, {});
 	let resp = await sendApiRequest(reqData);
@@ -1099,57 +643,6 @@ async function getListOfLoggedInUsers() {
 		return null;
 	}
 	return resp.JsonObject;
-}
-
-async function viewUserParameters(userId) {
-	let params = new Parameters_ViewUserParameters(userId);
-	let reqData = new ApiRequest(actionName.ViewUserParameters, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function isUserLoggedIn(userId) {
-	let params = new Parameters_IsUserLoggedIn(userId);
-	let reqData = new ApiRequest(actionName.IsUserLoggedIn, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-function boolToText(b) {
-	if (b === true) {
-		return "Yes";
-	}
-	if (b === false) {
-		return "No";
-	}
-	console.error("boolToText:", b);
-	return null;
-}
-
-function prettyTime(timeStr) {
-	if (timeStr === null) {
-		return "";
-	}
-	if (timeStr.length === 0) {
-		return "";
-	}
-
-	let t = new Date(timeStr);
-	let monthN = t.getUTCMonth() + 1; // Months in JavaScript start with 0 !
-
-	return t.getUTCDate().toString().padStart(2, '0') + "." +
-		monthN.toString().padStart(2, '0') + "." +
-		t.getUTCFullYear().toString().padStart(4, '0') + " " +
-		t.getUTCHours().toString().padStart(2, '0') + ":" +
-		t.getUTCMinutes().toString().padStart(2, '0');
 }
 
 async function onBtnAcceptClick(btn) {
@@ -1266,151 +759,9 @@ async function onBtnDisableRoleUPClick(role, userId) {
 	await reloadPage(false);
 }
 
-async function approveAndRegisterUser(email) {
-	let params = new Parameters_ApproveAndRegisterUser(email);
-	let reqData = new ApiRequest(actionName.ApproveAndRegisterUser, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function rejectRegistrationRequest(registrationRequestId) {
-	let params = new Parameters_RejectRegistrationRequest(registrationRequestId);
-	let reqData = new ApiRequest(actionName.RejectRegistrationRequest, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
 function calculateItemsOnPage(items, pageN, pageSize) {
 	let x = Math.min(pageN * pageSize, items.length);
 	return items.slice((pageN - 1) * pageSize, x);
-}
-
-async function logUserOutA(userId) {
-	let params = new Parameters_LogUserOutA(userId);
-	let reqData = new ApiRequest(actionName.LogUserOutA, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function setUserRoleAuthor(userId, roleValue) {
-	let params = new Parameters_SetUserRoleAuthor(userId, roleValue);
-	let reqData = new ApiRequest(actionName.SetUserRoleAuthor, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function setUserRoleWriter(userId, roleValue) {
-	let params = new Parameters_SetUserRoleWriter(userId, roleValue);
-	let reqData = new ApiRequest(actionName.SetUserRoleWriter, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function setUserRoleReader(userId, roleValue) {
-	let params = new Parameters_SetUserRoleReader(userId, roleValue);
-	let reqData = new ApiRequest(actionName.SetUserRoleReader, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function banUser(userId) {
-	let params = new Parameters_BanUser(userId);
-	let reqData = new ApiRequest(actionName.BanUser, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function unbanUser(userId) {
-	let params = new Parameters_UnbanUser(userId);
-	let reqData = new ApiRequest(actionName.UnbanUser, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function getUserSession(userId) {
-	let params = new Parameters_GetUserSession(userId);
-	let reqData = new ApiRequest(actionName.GetUserSession, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-function composeUserPageLink(userId) {
-	return qp.Prefix + qpn.UserPage + "&" + qpn.Id + "=" + userId;
-}
-
-async function reloadPage(wait) {
-	if (wait) {
-		await sleep(redirectDelay * 1000);
-	}
-	location.reload();
-}
-
-function prepareIdVariable(sp) {
-	if (!sp.has(qpn.Id)) {
-		console.error(err.IdNotSet);
-		return false;
-	}
-
-	let xId = Number(sp.get(qpn.Id));
-	if (xId <= 0) {
-		console.error(err.IdNotFound);
-		return false;
-	}
-
-	mca_gvc.Id = xId;
-	return true;
-}
-
-function preparePageVariable(sp) {
-	let pageNumber;
-	if (!sp.has(qpn.Page)) {
-		pageNumber = 1;
-	} else {
-		pageNumber = Number(sp.get(qpn.Page));
-		if (pageNumber <= 0) {
-			console.error(err.PageNotFound);
-			return false;
-		}
-	}
-
-	mca_gvc.Page = pageNumber;
-	return true;
 }
 
 async function fillListOfUsers(elClass, userIds) {
@@ -1466,7 +817,7 @@ async function fillListOfUsers(elClass, userIds) {
 		tds[0] = (i + 1).toString();
 		tds[1] = userId.toString();
 		isUserLoggedIn = loggedUserIds.includes(userId);
-		tds[2] = boolToText(isUserLoggedIn);
+		tds[2] = booleanToString(isUserLoggedIn);
 		tds[3] = userParams.email;
 		tds[4] = userParams.name;
 		tds[5] = prettyTime(userParams.regTime);
@@ -1474,16 +825,16 @@ async function fillListOfUsers(elClass, userIds) {
 		tds[7] = prettyTime(userParams.lastBadLogInTime);
 		tds[8] = prettyTime(userParams.lastBadActionTime);
 		tds[9] = prettyTime(userParams.banTime);
-		tds[10] = boolToText(userParams.canLogIn);
-		tds[11] = boolToText(userParams.isReader);
-		tds[12] = boolToText(userParams.isWriter);
-		tds[13] = boolToText(userParams.isAuthor);
-		tds[14] = boolToText(userParams.isModerator);
-		tds[15] = boolToText(userParams.isAdministrator);
+		tds[10] = booleanToString(userParams.canLogIn);
+		tds[11] = booleanToString(userParams.isReader);
+		tds[12] = booleanToString(userParams.isWriter);
+		tds[13] = booleanToString(userParams.isAuthor);
+		tds[14] = booleanToString(userParams.isModerator);
+		tds[15] = booleanToString(userParams.isAdministrator);
 
 		let td, url;
 		for (let j = 0; j < tds.length; j++) {
-			url = composeUserPageLink(userId.toString());
+			url = composeUrlForUserPage(userId.toString());
 			td = document.createElement("TD");
 
 			if (j === 0) {
@@ -1538,16 +889,16 @@ function fillUserPage(elClass, userParams, userLogInState) {
 		prettyTime(userParams.preRegTime),
 		prettyTime(userParams.regTime),
 		prettyTime(userParams.approvalTime),
-		boolToText(userParams.isAdministrator),
-		boolToText(userParams.isModerator),
-		boolToText(userParams.isAuthor),
-		boolToText(userParams.isWriter),
-		boolToText(userParams.isReader),
-		boolToText(userParams.canLogIn),
+		booleanToString(userParams.isAdministrator),
+		booleanToString(userParams.isModerator),
+		booleanToString(userParams.isAuthor),
+		booleanToString(userParams.isWriter),
+		booleanToString(userParams.isReader),
+		booleanToString(userParams.canLogIn),
 		prettyTime(userParams.lastBadLogInTime),
 		prettyTime(userParams.banTime),
 		prettyTime(userParams.lastBadActionTime),
-		boolToText(userLogInState),
+		booleanToString(userLogInState),
 	];
 
 	// Rows.
@@ -2723,274 +2074,6 @@ async function onBtnDeleteNotificationClick(btn) {
 	await reloadPage(true);
 }
 
-function composeUrlForAdminPage(func, page) {
-	return qp.Prefix + func + "&" + qpn.Page + "=" + page;
-}
-
-async function addSection(parent, name) {
-	let params = new Parameters_AddSection(parent, name);
-	let reqData = new ApiRequest(actionName.AddSection, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function addForum(parent, name) {
-	let params = new Parameters_AddForum(parent, name);
-	let reqData = new ApiRequest(actionName.AddForum, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function addThread(parent, name) {
-	let params = new Parameters_AddThread(parent, name);
-	let reqData = new ApiRequest(actionName.AddThread, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function addMessage(parent, text) {
-	let params = new Parameters_AddMessage(parent, text);
-	let reqData = new ApiRequest(actionName.AddMessage, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function changeSectionName(sectionId, name) {
-	let params = new Parameters_ChangeSectionName(sectionId, name);
-	let reqData = new ApiRequest(actionName.ChangeSectionName, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function changeForumName(forumId, name) {
-	let params = new Parameters_ChangeForumName(forumId, name);
-	let reqData = new ApiRequest(actionName.ChangeForumName, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function changeThreadName(threadId, name) {
-	let params = new Parameters_ChangeThreadName(threadId, name);
-	let reqData = new ApiRequest(actionName.ChangeThreadName, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function changeMessageText(messageId, text) {
-	let params = new Parameters_ChangeMessageText(messageId, text);
-	let reqData = new ApiRequest(actionName.ChangeMessageText, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function changeSectionParent(sectionId, newParent) {
-	let params = new Parameters_ChangeSectionParent(sectionId, newParent);
-	let reqData = new ApiRequest(actionName.ChangeSectionParent, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function changeForumSection(forumId, newParent) {
-	let params = new Parameters_ChangeForumSection(forumId, newParent);
-	let reqData = new ApiRequest(actionName.ChangeForumSection, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function changeThreadForum(threadId, newParent) {
-	let params = new Parameters_ChangeThreadForum(threadId, newParent);
-	let reqData = new ApiRequest(actionName.ChangeThreadForum, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function changeMessageThread(messageId, newParent) {
-	let params = new Parameters_ChangeMessageThread(messageId, newParent);
-	let reqData = new ApiRequest(actionName.ChangeMessageThread, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function moveSectionUp(sectionId) {
-	let params = new Parameters_MoveSectionUp(sectionId);
-	let reqData = new ApiRequest(actionName.MoveSectionUp, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function moveSectionDown(sectionId) {
-	let params = new Parameters_MoveSectionDown(sectionId);
-	let reqData = new ApiRequest(actionName.MoveSectionDown, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function moveForumUp(forumId) {
-	let params = new Parameters_MoveForumUp(forumId);
-	let reqData = new ApiRequest(actionName.MoveForumUp, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function moveForumDown(forumId) {
-	let params = new Parameters_MoveForumDown(forumId);
-	let reqData = new ApiRequest(actionName.MoveForumDown, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function moveThreadUp(threadId) {
-	let params = new Parameters_MoveThreadUp(threadId);
-	let reqData = new ApiRequest(actionName.MoveThreadUp, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function moveThreadDown(threadId) {
-	let params = new Parameters_MoveThreadDown(threadId);
-	let reqData = new ApiRequest(actionName.MoveThreadDown, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function deleteSection(sectionId) {
-	let params = new Parameters_DeleteSection(sectionId);
-	let reqData = new ApiRequest(actionName.DeleteSection, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function deleteForum(forumId) {
-	let params = new Parameters_DeleteForum(forumId);
-	let reqData = new ApiRequest(actionName.DeleteForum, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function deleteThread(threadId) {
-	let params = new Parameters_DeleteThread(threadId);
-	let reqData = new ApiRequest(actionName.DeleteThread, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function deleteMessage(messageId) {
-	let params = new Parameters_DeleteMessage(messageId);
-	let reqData = new ApiRequest(actionName.DeleteMessage, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-function disableParentForm(btn, pp, ignoreButton) {
-	if (!ignoreButton) {
-		btn.disabled = true;
-	}
-
-	let el;
-	for (i = 0; i < pp.childNodes.length; i++) {
-		let ch = pp.childNodes[i];
-		for (j = 0; j < ch.childNodes.length; j++) {
-			el = ch.childNodes[j];
-
-			if (el !== btn) {
-				el.disabled = true;
-			} else {
-				if (!ignoreButton) {
-					el.disabled = true;
-				}
-			}
-		}
-	}
-}
-
 function showActionSuccess(btn, txt) {
 	let ppp = btn.parentNode.parentNode.parentNode;
 	let d = document.createElement("DIV");
@@ -3038,28 +2121,6 @@ function createRadioButtonsForActions(fs, actionNames) {
 	}
 }
 
-async function addNotification(userId, text) {
-	let params = new Parameters_AddNotification(userId, text);
-	let reqData = new ApiRequest(actionName.AddNotification, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
-async function deleteNotification(notificationId) {
-	let params = new Parameters_DeleteNotification(notificationId);
-	let reqData = new ApiRequest(actionName.DeleteNotification, params);
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
-	}
-	return resp.JsonObject;
-}
-
 function repairUndefinedPageCount(pageCount) {
 	// Unfortunately JavaScript can compare a number with 'undefined' !
 	if (pageCount === undefined) {
@@ -3069,4 +2130,22 @@ function repairUndefinedPageCount(pageCount) {
 		return 1;
 	}
 	return pageCount;
+}
+
+async function redirectToSubPage(wait, qp) {
+	let url = adminPage + qp;
+	await redirectPage(wait, url);
+}
+
+async function redirectToMainMenu(wait) {
+	let url = adminPage;
+	await redirectPage(wait, url);
+}
+
+function composeUrlForUserPage(userId) {
+	return qp.Prefix + qpn.UserPage + "&" + qpn.Id + "=" + userId;
+}
+
+function composeUrlForAdminPage(func, page) {
+	return qp.Prefix + func + "&" + qpn.Page + "=" + page;
 }

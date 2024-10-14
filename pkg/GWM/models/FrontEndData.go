@@ -4,6 +4,7 @@ package models
 type FrontEndData struct {
 	AdminHtmlPage FrontEndFileData
 	AdminJs       FrontEndFileData
+	ApiJs         FrontEndFileData
 	ArgonJs       FrontEndFileData
 	ArgonWasm     FrontEndFileData
 	BppJs         FrontEndFileData
