@@ -690,8 +690,8 @@ func (srv *Server) initApiFunctions() (err error) {
 		// NM.
 		ApiFunctionName_AddNotification,
 		ApiFunctionName_GetNotification,
+		ApiFunctionName_GetNotifications,
 		ApiFunctionName_GetNotificationsOnPage,
-		ApiFunctionName_GetAllNotifications,
 		ApiFunctionName_GetUnreadNotifications,
 		ApiFunctionName_CountUnreadNotifications,
 		ApiFunctionName_MarkNotificationAsRead,
@@ -772,8 +772,8 @@ func (srv *Server) initApiFunctions() (err error) {
 		// NM.
 		ApiFunctionName_AddNotification:          srv.AddNotification,
 		ApiFunctionName_GetNotification:          srv.GetNotification,
+		ApiFunctionName_GetNotifications:         srv.GetNotifications,
 		ApiFunctionName_GetNotificationsOnPage:   srv.GetNotificationsOnPage,
-		ApiFunctionName_GetAllNotifications:      srv.GetAllNotifications,
 		ApiFunctionName_GetUnreadNotifications:   srv.GetUnreadNotifications,
 		ApiFunctionName_CountUnreadNotifications: srv.CountUnreadNotifications,
 		ApiFunctionName_MarkNotificationAsRead:   srv.MarkNotificationAsRead,

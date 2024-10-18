@@ -33,8 +33,8 @@ func (srv *Server) initRpc() (err error) {
 		srv.AddNotification,
 		srv.AddNotificationS,
 		srv.GetNotification,
+		srv.GetNotifications,
 		srv.GetNotificationsOnPage,
-		srv.GetAllNotifications,
 		srv.GetUnreadNotifications,
 		srv.CountUnreadNotifications,
 		srv.MarkNotificationAsRead,
@@ -115,6 +115,22 @@ func (srv *Server) GetNotification(params *json.RawMessage, _ *jrm1.ResponseMeta
 	return r, nil
 }
 
+func (srv *Server) GetNotifications(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.GetNotificationsParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.GetNotificationsResult
+	r, re = srv.getNotifications(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
 func (srv *Server) GetNotificationsOnPage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
 	var p *nm.GetNotificationsOnPageParams
 	re = jrm1.ParseParameters(params, &p)
@@ -124,22 +140,6 @@ func (srv *Server) GetNotificationsOnPage(params *json.RawMessage, _ *jrm1.Respo
 
 	var r *nm.GetNotificationsOnPageResult
 	r, re = srv.getNotificationsOnPage(p)
-	if re != nil {
-		return nil, re
-	}
-
-	return r, nil
-}
-
-func (srv *Server) GetAllNotifications(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
-	var p *nm.GetAllNotificationsParams
-	re = jrm1.ParseParameters(params, &p)
-	if re != nil {
-		return nil, re
-	}
-
-	var r *nm.GetAllNotificationsResult
-	r, re = srv.getAllNotifications(p)
 	if re != nil {
 		return nil, re
 	}

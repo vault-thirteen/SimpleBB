@@ -50,11 +50,11 @@ type GetNotificationResult struct {
 	Notification *Notification `json:"notification"`
 }
 
-type GetAllNotificationsParams struct {
+type GetNotificationsParams struct {
 	cmr.CommonParams
 }
 
-type GetAllNotificationsResult struct {
+type GetNotificationsResult struct {
 	cmr.CommonResult
 	NotificationIds *ul.UidList    `json:"notificationIds"`
 	Notifications   []Notification `json:"notifications"`

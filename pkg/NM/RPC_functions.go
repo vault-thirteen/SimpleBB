@@ -139,6 +139,41 @@ func (srv *Server) getNotification(p *nm.GetNotificationParams) (result *nm.GetN
 	return result, nil
 }
 
+// getNotifications reads all notifications for a user.
+func (srv *Server) getNotifications(p *nm.GetNotificationsParams) (result *nm.GetNotificationsResult, re *jrm1.RpcError) {
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.User.Roles.CanLogIn {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Get notifications.
+	notifications, err := srv.dbo.GetAllNotificationsByUserId(userRoles.User.Id)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &nm.GetNotificationsResult{
+		Notifications: notifications,
+	}
+
+	result.NotificationIds, err = ul.NewFromArray(nm.ListNotificationIds(notifications))
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	return result, nil
+}
+
 // getNotificationsOnPage reads notifications for a user on the selected page.
 func (srv *Server) getNotificationsOnPage(p *nm.GetNotificationsOnPageParams) (result *nm.GetNotificationsOnPageResult, re *jrm1.RpcError) {
 	// Check parameters.
@@ -192,41 +227,6 @@ func (srv *Server) getNotificationsOnPage(p *nm.GetNotificationsOnPageParams) (r
 				TotalItems:  allNotificationsCount,
 			},
 		},
-	}
-
-	return result, nil
-}
-
-// getAllNotifications reads all notifications for a user.
-func (srv *Server) getAllNotifications(p *nm.GetAllNotificationsParams) (result *nm.GetAllNotificationsResult, re *jrm1.RpcError) {
-	var userRoles *am.GetSelfRolesResult
-	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
-	if re != nil {
-		return nil, re
-	}
-
-	// Check permissions.
-	if !userRoles.User.Roles.CanLogIn {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
-	// Get notifications.
-	notifications, err := srv.dbo.GetAllNotificationsByUserId(userRoles.User.Id)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	result = &nm.GetAllNotificationsResult{
-		Notifications: notifications,
-	}
-
-	result.NotificationIds, err = ul.NewFromArray(nm.ListNotificationIds(notifications))
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	return result, nil

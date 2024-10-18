@@ -68,12 +68,12 @@ ActionName = {
 	DeleteSection: "deleteSection",
 	DeleteSelfSubscription: "deleteSelfSubscription",
 	DeleteThread: "deleteThread",
-	GetAllNotifications: "getAllNotifications",
 	GetLatestMessageOfThread: "getLatestMessageOfThread",
 	GetListOfAllUsers: "getListOfAllUsers",
 	GetListOfLoggedUsers: "getListOfLoggedUsers",
 	GetListOfRegistrationsReadyForApproval: "getListOfRegistrationsReadyForApproval",
 	GetMessage: "getMessage",
+	GetNotifications: "getNotifications",
 	GetNotificationsOnPage: "getNotificationsOnPage",
 	GetSelfRoles: "getSelfRoles",
 	GetSelfSubscriptions: "getSelfSubscriptions",
@@ -108,6 +108,7 @@ ActionName = {
 
 // Errors.
 Err = {
+	ActionMismatch: "action mismatch",
 	Client: "client error",
 	DuplicateMapKey: "duplicate map key",
 	ElementTypeUnsupported: "unsupported element type",
@@ -124,6 +125,7 @@ Err = {
 	PasswordNotValid: "password is not valid",
 	PreviousPageDoesNotExist: "previous page does not exist",
 	RootSectionNotFound: "root section is not found",
+	RpcError: "RPC error",
 	SectionNotFound: "section is not found",
 	Server: "server error",
 	Settings: "settings error",
@@ -595,408 +597,422 @@ async function sendApiRequest(data) {
 	}
 }
 
-async function sendApiRequestAndReturnJson(reqData) {
+async function sendApiRequestAndGetResult(reqData) {
+	let actionName = reqData.Action;
+
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
 		return null;
 	}
-	return resp.JsonObject;
+
+	let jo = resp.JsonObject;
+	if (jo == null) {
+		console.error(composeErrorText(Err.RpcError));
+		return null;
+	}
+
+	if (jo.action !== actionName) {
+		console.error(composeErrorText(Err.ActionMismatch));
+		return null;
+	}
+
+	return jo.result;
 }
 
 async function addForum(parent, name) {
 	let params = new Parameters_AddForum(parent, name);
 	let reqData = new ApiRequest(ActionName.AddForum, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function addMessage(parent, text) {
 	let params = new Parameters_AddMessage(parent, text);
 	let reqData = new ApiRequest(ActionName.AddMessage, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function addNotification(userId, text) {
 	let params = new Parameters_AddNotification(userId, text);
 	let reqData = new ApiRequest(ActionName.AddNotification, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function addSection(parent, name) {
 	let params = new Parameters_AddSection(parent, name);
 	let reqData = new ApiRequest(ActionName.AddSection, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function addSubscription(threadId, userId) {
 	let params = new Parameters_AddSubscription(threadId, userId);
 	let reqData = new ApiRequest(ActionName.AddSubscription, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function addThread(parent, name) {
 	let params = new Parameters_AddThread(parent, name);
 	let reqData = new ApiRequest(ActionName.AddThread, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function approveAndRegisterUser(email) {
 	let params = new Parameters_ApproveAndRegisterUser(email);
 	let reqData = new ApiRequest(ActionName.ApproveAndRegisterUser, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function banUser(userId) {
 	let params = new Parameters_BanUser(userId);
 	let reqData = new ApiRequest(ActionName.BanUser, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changeEmail1(stepN, newEmail) {
 	let params = new Parameters_ChangeEmail1(stepN, newEmail);
 	let reqData = new ApiRequest(ActionName.ChangeEmail, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changeEmail2(stepN, requestId, authChallengeResponse, verificationCodeOld, verificationCodeNew, captchaAnswer) {
 	let params = new Parameters_ChangeEmail2(stepN, requestId, authChallengeResponse, verificationCodeOld, verificationCodeNew, captchaAnswer);
 	let reqData = new ApiRequest(ActionName.ChangeEmail, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changeForumName(forumId, name) {
 	let params = new Parameters_ChangeForumName(forumId, name);
 	let reqData = new ApiRequest(ActionName.ChangeForumName, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changeForumSection(forumId, newParent) {
 	let params = new Parameters_ChangeForumSection(forumId, newParent);
 	let reqData = new ApiRequest(ActionName.ChangeForumSection, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changeMessageText(messageId, text) {
 	let params = new Parameters_ChangeMessageText(messageId, text);
 	let reqData = new ApiRequest(ActionName.ChangeMessageText, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changeMessageThread(messageId, newParent) {
 	let params = new Parameters_ChangeMessageThread(messageId, newParent);
 	let reqData = new ApiRequest(ActionName.ChangeMessageThread, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changePwd1(stepN, newPassword) {
 	let params = new Parameters_ChangePwd1(stepN, newPassword);
 	let reqData = new ApiRequest(ActionName.ChangePwd, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changePwd2(stepN, requestId, authChallengeResponse, verificationCode, captchaAnswer) {
 	let params = new Parameters_ChangePwd2(stepN, requestId, authChallengeResponse, verificationCode, captchaAnswer);
 	let reqData = new ApiRequest(ActionName.ChangePwd, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changeSectionName(sectionId, name) {
 	let params = new Parameters_ChangeSectionName(sectionId, name);
 	let reqData = new ApiRequest(ActionName.ChangeSectionName, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changeSectionParent(sectionId, newParent) {
 	let params = new Parameters_ChangeSectionParent(sectionId, newParent);
 	let reqData = new ApiRequest(ActionName.ChangeSectionParent, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changeThreadForum(threadId, newParent) {
 	let params = new Parameters_ChangeThreadForum(threadId, newParent);
 	let reqData = new ApiRequest(ActionName.ChangeThreadForum, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function changeThreadName(threadId, name) {
 	let params = new Parameters_ChangeThreadName(threadId, name);
 	let reqData = new ApiRequest(ActionName.ChangeThreadName, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function countSelfSubscriptions() {
 	let reqData = new ApiRequest(ActionName.CountSelfSubscriptions, {});
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function countUnreadNotifications() {
 	let reqData = new ApiRequest(ActionName.CountUnreadNotifications, {});
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function deleteForum(forumId) {
 	let params = new Parameters_DeleteForum(forumId);
 	let reqData = new ApiRequest(ActionName.DeleteForum, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function deleteMessage(messageId) {
 	let params = new Parameters_DeleteMessage(messageId);
 	let reqData = new ApiRequest(ActionName.DeleteMessage, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function deleteNotification(notificationId) {
 	let params = new Parameters_DeleteNotification(notificationId);
 	let reqData = new ApiRequest(ActionName.DeleteNotification, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function deleteSection(sectionId) {
 	let params = new Parameters_DeleteSection(sectionId);
 	let reqData = new ApiRequest(ActionName.DeleteSection, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function deleteSelfSubscription(threadId) {
 	let params = new Parameters_DeleteSelfSubscription(threadId);
 	let reqData = new ApiRequest(ActionName.DeleteSelfSubscription, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function deleteThread(threadId) {
 	let params = new Parameters_DeleteThread(threadId);
 	let reqData = new ApiRequest(ActionName.DeleteThread, params);
-	return await sendApiRequestAndReturnJson(reqData);
-}
-
-async function getAllNotifications() {
-	let reqData = new ApiRequest(ActionName.GetAllNotifications, {});
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getLatestMessageOfThread(threadId) {
 	let params = new Parameters_GetLatestMessageOfThread(threadId);
 	let reqData = new ApiRequest(ActionName.GetLatestMessageOfThread, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getListOfAllUsers(pageN) {
 	let params = new Parameters_GetListOfAllUsers(pageN);
 	let reqData = new ApiRequest(ActionName.GetListOfAllUsers, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getListOfRegistrationsReadyForApproval(pageN) {
 	let params = new Parameters_GetListOfRegistrationsReadyForApproval(pageN);
 	let reqData = new ApiRequest(ActionName.GetListOfRegistrationsReadyForApproval, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getMessage(messageId) {
 	let params = new Parameters_GetMessage(messageId);
 	let reqData = new ApiRequest(ActionName.GetMessage, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
+}
+
+async function getNotifications() {
+	let reqData = new ApiRequest(ActionName.GetNotifications, {});
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getNotificationsOnPage(page) {
 	let params = new Parameters_GetNotificationsOnPage(page);
 	let reqData = new ApiRequest(ActionName.GetNotificationsOnPage, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getSelfRoles() {
 	let reqData = new ApiRequest(ActionName.GetSelfRoles, {});
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getSelfSubscriptions() {
 	let reqData = new ApiRequest(ActionName.GetSelfSubscriptions, {});
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getSelfSubscriptionsOnPage(page) {
 	let params = new Parameters_GetSelfSubscriptionsOnPage(page);
 	let reqData = new ApiRequest(ActionName.GetSelfSubscriptionsOnPage, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getThread(threadId) {
 	let params = new Parameters_GetThread(threadId);
 	let reqData = new ApiRequest(ActionName.GetThread, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getThreadNamesByIds(threadIds) {
 	let params = new Parameters_GetThreadNamesByIds(threadIds);
 	let reqData = new ApiRequest(ActionName.GetThreadNamesByIds, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getUserName(userId) {
 	let params = new Parameters_GetUserName(userId);
 	let reqData = new ApiRequest(ActionName.GetUserName, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function getUserSession(userId) {
 	let params = new Parameters_GetUserSession(userId);
 	let reqData = new ApiRequest(ActionName.GetUserSession, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function isSelfSubscribed(threadId) {
 	let params = new Parameters_IsSelfSubscribed(threadId);
 	let reqData = new ApiRequest(ActionName.IsSelfSubscribed, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function isUserLoggedIn(userId) {
 	let params = new Parameters_IsUserLoggedIn(userId);
 	let reqData = new ApiRequest(ActionName.IsUserLoggedIn, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function listForumAndThreadsOnPage(forumId, page) {
 	let params = new Parameters_ListForumAndThreadsOnPage(forumId, page);
 	let reqData = new ApiRequest(ActionName.ListForumAndThreadsOnPage, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function listSectionsAndForums() {
 	let reqData = new ApiRequest(ActionName.ListSectionsAndForums, {});
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function listThreadAndMessagesOnPage(threadId, page) {
 	let params = new Parameters_ListThreadAndMessagesOnPage(threadId, page);
 	let reqData = new ApiRequest(ActionName.ListThreadAndMessagesOnPage, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function logUserIn1(stepN, email) {
 	let params = new Parameters_LogIn1(stepN, email);
 	let reqData = new ApiRequest(ActionName.LogUserIn, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function logUserIn2(stepN, email, requestId, captchaAnswer, authChallengeResponse) {
 	let params = new Parameters_LogIn2(stepN, email, requestId, captchaAnswer, authChallengeResponse);
 	let reqData = new ApiRequest(ActionName.LogUserIn, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function logUserIn3(stepN, email, requestId, verificationCode) {
 	let params = new Parameters_LogIn3(stepN, email, requestId, verificationCode);
 	let reqData = new ApiRequest(ActionName.LogUserIn, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function logUserOut1() {
 	let reqData = new ApiRequest(ActionName.LogUserOut, {});
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function logUserOutA(userId) {
 	let params = new Parameters_LogUserOutA(userId);
 	let reqData = new ApiRequest(ActionName.LogUserOutA, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function markNotificationAsRead(notificationId) {
 	let params = new Parameters_MarkNotificationAsRead(notificationId);
 	let reqData = new ApiRequest(ActionName.MarkNotificationAsRead, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function moveForumUp(forumId) {
 	let params = new Parameters_MoveForumUp(forumId);
 	let reqData = new ApiRequest(ActionName.MoveForumUp, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function moveForumDown(forumId) {
 	let params = new Parameters_MoveForumDown(forumId);
 	let reqData = new ApiRequest(ActionName.MoveForumDown, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function moveSectionUp(sectionId) {
 	let params = new Parameters_MoveSectionUp(sectionId);
 	let reqData = new ApiRequest(ActionName.MoveSectionUp, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function moveSectionDown(sectionId) {
 	let params = new Parameters_MoveSectionDown(sectionId);
 	let reqData = new ApiRequest(ActionName.MoveSectionDown, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function moveThreadUp(threadId) {
 	let params = new Parameters_MoveThreadUp(threadId);
 	let reqData = new ApiRequest(ActionName.MoveThreadUp, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function moveThreadDown(threadId) {
 	let params = new Parameters_MoveThreadDown(threadId);
 	let reqData = new ApiRequest(ActionName.MoveThreadDown, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function registerUser1(stepN, email) {
 	let params = new Parameters_RegisterUser1(stepN, email);
 	let reqData = new ApiRequest(ActionName.RegisterUser, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function registerUser2(stepN, email, verificationCode) {
 	let params = new Parameters_RegisterUser2(stepN, email, verificationCode);
 	let reqData = new ApiRequest(ActionName.RegisterUser, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function registerUser3(stepN, email, verificationCode, name, pwd) {
 	let params = new Parameters_RegisterUser3(stepN, email, verificationCode, name, pwd);
 	let reqData = new ApiRequest(ActionName.RegisterUser, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function rejectRegistrationRequest(registrationRequestId) {
 	let params = new Parameters_RejectRegistrationRequest(registrationRequestId);
 	let reqData = new ApiRequest(ActionName.RejectRegistrationRequest, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function setUserRoleAuthor(userId, roleValue) {
 	let params = new Parameters_SetUserRoleAuthor(userId, roleValue);
 	let reqData = new ApiRequest(ActionName.SetUserRoleAuthor, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function setUserRoleReader(userId, roleValue) {
 	let params = new Parameters_SetUserRoleReader(userId, roleValue);
 	let reqData = new ApiRequest(ActionName.SetUserRoleReader, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function setUserRoleWriter(userId, roleValue) {
 	let params = new Parameters_SetUserRoleWriter(userId, roleValue);
 	let reqData = new ApiRequest(ActionName.SetUserRoleWriter, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function unbanUser(userId) {
 	let params = new Parameters_UnbanUser(userId);
 	let reqData = new ApiRequest(ActionName.UnbanUser, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 async function viewUserParameters(userId) {
 	let params = new Parameters_ViewUserParameters(userId);
 	let reqData = new ApiRequest(ActionName.ViewUserParameters, params);
-	return await sendApiRequestAndReturnJson(reqData);
+	return await sendApiRequestAndGetResult(reqData);
 }
 
 // Various API helpers.
