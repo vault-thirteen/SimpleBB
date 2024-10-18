@@ -11,7 +11,7 @@ const (
 )
 
 // GetToken tries to read a token. If a token is not found, null is returned.
-func GetToken(req *http.Request) (token *string, err error) {
+func GetToken(req *http.Request) (token *WebTokenString, err error) {
 	var cookie *http.Cookie
 	cookie, err = hh.GetCookieByName(req, CookieName_Token)
 	if err != nil {
@@ -22,8 +22,8 @@ func GetToken(req *http.Request) (token *string, err error) {
 		return nil, nil
 	}
 
-	token = new(string)
-	*token = cookie.Value
+	token = new(WebTokenString)
+	*token = WebTokenString(cookie.Value)
 
 	return token, nil
 }

@@ -7,37 +7,39 @@ import (
 	"time"
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 type EmailChange struct {
-	Id             uint
-	UserId         uint
+	Id             cmb.Id
+	UserId         cmb.Id
 	TimeOfCreation time.Time
-	RequestId      *string
+	RequestId      *cm.RequestId
 
 	// IP address of a user. B = Byte array.
 	UserIPAB net.IP
 
-	AuthDataBytes     []byte
-	IsCaptchaRequired bool
-	CaptchaId         sql.NullString
+	AuthDataBytes     cmr.AuthChallengeData
+	IsCaptchaRequired cmb.Flag
+	CaptchaId         *cm.CaptchaId
 	EmailChangeVerificationFlags
 
 	// Old e-mail.
-	VerificationCodeOld *string
-	IsOldEmailSent      bool
+	VerificationCodeOld *cm.VerificationCode
+	IsOldEmailSent      cmb.Flag
 
 	// New e-mail.
-	NewEmail            string
-	VerificationCodeNew *string
-	IsNewEmailSent      bool
+	NewEmail            cm.Email
+	VerificationCodeNew *cm.VerificationCode
+	IsNewEmailSent      cmb.Flag
 }
 
 type EmailChangeVerificationFlags struct {
-	IsVerifiedByCaptcha  sql.NullBool
-	IsVerifiedByPassword bool
-	IsVerifiedByOldEmail bool
-	IsVerifiedByNewEmail bool
+	IsVerifiedByCaptcha  *cmb.Flag
+	IsVerifiedByPassword cmb.Flag
+	IsVerifiedByOldEmail cmb.Flag
+	IsVerifiedByNewEmail cmb.Flag
 }
 
 func NewEmailChange() (ec *EmailChange) {

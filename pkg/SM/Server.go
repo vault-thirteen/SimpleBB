@@ -21,6 +21,7 @@ import (
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/dk"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cset "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
 
@@ -58,7 +59,7 @@ type Server struct {
 	dKeyI *dk.DKey
 
 	// External DKeys.
-	dKeyForMM *string
+	dKeyForMM *cmb.Text
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {

@@ -7,6 +7,7 @@ import (
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
 
@@ -68,7 +69,12 @@ func (srv *Server) initRpc() (err error) {
 // Ping.
 
 func (srv *Server) Ping(_ *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
-	return am.PingResult{OK: true}, nil
+	result = am.PingResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 // User registration.

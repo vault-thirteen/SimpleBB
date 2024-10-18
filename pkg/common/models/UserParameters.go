@@ -4,23 +4,27 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 type UserParameters struct {
-	Id           uint      `json:"id"`
-	PreRegTime   time.Time `json:"preRegTime"`
-	Email        string    `json:"email"`
-	Name         string    `json:"name"`
-	ApprovalTime time.Time `json:"approvalTime"`
-	RegTime      time.Time `json:"regTime"`
-	UserRoles
-	LastBadLogInTime  *time.Time `json:"lastBadLogInTime"`
-	BanTime           *time.Time `json:"banTime"`
-	LastBadActionTime *time.Time `json:"lastBadActionTime"`
+	Id                cmb.Id     `json:"id"`
+	PreRegTime        *time.Time `json:"preRegTime,omitempty"`
+	Email             Email      `json:"email,omitempty"`
+	Name              Name       `json:"name,omitempty"`
+	ApprovalTime      *time.Time `json:"approvalTime,omitempty"`
+	RegTime           *time.Time `json:"regTime,omitempty"`
+	Roles             *UserRoles `json:"roles,omitempty"`
+	LastBadLogInTime  *time.Time `json:"lastBadLogInTime,omitempty"`
+	BanTime           *time.Time `json:"banTime,omitempty"`
+	LastBadActionTime *time.Time `json:"lastBadActionTime,omitempty"`
 }
 
 func NewUserParameters() (up *UserParameters) {
-	return &UserParameters{}
+	return &UserParameters{
+		Roles: NewUserRoles(),
+	}
 }
 
 func NewUserParametersFromScannableSource(src IScannable) (up *UserParameters, err error) {
@@ -33,10 +37,10 @@ func NewUserParametersFromScannableSource(src IScannable) (up *UserParameters, e
 		&up.Name,
 		&up.ApprovalTime,
 		&up.RegTime,
-		&up.IsAuthor,
-		&up.IsWriter,
-		&up.IsReader,
-		&up.CanLogIn,
+		&up.Roles.IsAuthor,
+		&up.Roles.IsWriter,
+		&up.Roles.IsReader,
+		&up.Roles.CanLogIn,
 		&up.LastBadLogInTime,
 		&up.BanTime,
 		&up.LastBadActionTime,

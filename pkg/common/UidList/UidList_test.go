@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"testing"
 
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	"github.com/vault-thirteen/auxie/tester"
 )
 
@@ -19,34 +20,36 @@ func Test_New(t *testing.T) {
 func Test_NewFromArray(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList
+	var x UidList
 	var err error
 
 	// Test #1.
 	ul, err = NewFromArray(nil)
 	aTest.MustBeNoError(err)
-	x := UidList(nil)
+	x = nil
 	aTest.MustBeEqual(ul, &x)
 
 	// Test #2.
-	ul, err = NewFromArray([]uint{})
+	ul, err = NewFromArray([]cmb.Id{})
 	aTest.MustBeNoError(err)
-	x = UidList([]uint{})
+	x = []cmb.Id{}
 	aTest.MustBeEqual(ul, &x)
 
 	// Test #3.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
-	x = UidList([]uint{1, 2, 3})
+	x = []cmb.Id{1, 2, 3}
 	aTest.MustBeEqual(ul, &x)
 
 	// Test #4.
-	ul, err = NewFromArray([]uint{1, 2, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 2, 3})
 	aTest.MustBeAnError(err)
 }
 
 func Test_CheckIntegrity(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList
+	var x UidList
 	var err error
 
 	// Test #1. Golang is a garbage language.
@@ -55,14 +58,14 @@ func Test_CheckIntegrity(t *testing.T) {
 	aTest.MustBeAnError(err)
 
 	// Test #2. Unique.
-	tmp := UidList([]uint{1, 2, 3})
-	ul = &tmp
+	x = []cmb.Id{1, 2, 3}
+	ul = &x
 	err = ul.CheckIntegrity()
 	aTest.MustBeNoError(err)
 
 	// Test #3. Not unique.
-	tmp = UidList([]uint{1, 2, 3, 2})
-	ul = &tmp
+	x = []cmb.Id{1, 2, 3, 2}
+	ul = &x
 	err = ul.CheckIntegrity()
 	aTest.MustBeAnError(err)
 }
@@ -70,15 +73,16 @@ func Test_CheckIntegrity(t *testing.T) {
 func Test_isUnique(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList
+	var x UidList
 
 	// Test #1. Unique.
-	tmp := UidList([]uint{1, 2, 3})
-	ul = &tmp
+	x = []cmb.Id{1, 2, 3}
+	ul = &x
 	aTest.MustBeEqual(ul.isUnique(), true)
 
 	// Test #2. Not unique.
-	tmp = UidList([]uint{1, 2, 3, 2})
-	ul = &tmp
+	x = []cmb.Id{1, 2, 3, 2}
+	ul = &x
 	aTest.MustBeEqual(ul.isUnique(), false)
 }
 
@@ -89,23 +93,23 @@ func Test_Size(t *testing.T) {
 
 	// Test #1. Null object.
 	ul = nil
-	aTest.MustBeEqual(ul.Size(), 0)
+	aTest.MustBeEqual(ul.Size(), cmb.Count(0))
 
 	// Test #2. Empty array (slice).
-	ul, err = NewFromArray([]uint{})
+	ul, err = NewFromArray([]cmb.Id{})
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.Size(), 0)
+	aTest.MustBeEqual(ul.Size(), cmb.Count(0))
 
 	// Test #3. Null array (slice).
-	var x []uint = nil
+	var x []cmb.Id = nil
 	ul, err = NewFromArray(x)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.Size(), 0)
+	aTest.MustBeEqual(ul.Size(), cmb.Count(0))
 
 	// Test #4. Normal array (slice).
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.Size(), 3)
+	aTest.MustBeEqual(ul.Size(), cmb.Count(3))
 }
 
 func Test_HasItem(t *testing.T) {
@@ -118,12 +122,12 @@ func Test_HasItem(t *testing.T) {
 	aTest.MustBeEqual(ul.HasItem(1), false)
 
 	// Test #2. Item is not found.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(ul.HasItem(4), false)
 
 	// Test #3. Item is found.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(ul.HasItem(3), true)
 }
@@ -141,10 +145,10 @@ func Test_AddItem(t *testing.T) {
 	aTest.MustBeNoError(err)
 	err = ul.AddItem(3, false)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual([]uint(*ul), []uint{1, 2, 3})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{1, 2, 3})
 	err = ul.AddItem(2, false)
 	aTest.MustBeAnError(err)
-	aTest.MustBeEqual([]uint(*ul), []uint{1, 2, 3})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{1, 2, 3})
 
 	// Test #2.
 	ul = New()
@@ -154,7 +158,7 @@ func Test_AddItem(t *testing.T) {
 	aTest.MustBeNoError(err)
 	err = ul.AddItem(3, true)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual([]uint(*ul), []uint{3, 1, 2})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{3, 1, 2})
 }
 
 func Test_prependItem(t *testing.T) {
@@ -164,11 +168,11 @@ func Test_prependItem(t *testing.T) {
 	// Test.
 	ul = New()
 	ul.prependItem(1)
-	aTest.MustBeEqual([]uint(*ul), []uint{1})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{1})
 	ul.prependItem(2)
-	aTest.MustBeEqual([]uint(*ul), []uint{2, 1})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{2, 1})
 	ul.prependItem(3)
-	aTest.MustBeEqual([]uint(*ul), []uint{3, 2, 1})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{3, 2, 1})
 }
 
 func Test_appendItem(t *testing.T) {
@@ -178,17 +182,17 @@ func Test_appendItem(t *testing.T) {
 	// Test.
 	ul = New()
 	ul.appendItem(1)
-	aTest.MustBeEqual([]uint(*ul), []uint{1})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{1})
 	ul.appendItem(2)
-	aTest.MustBeEqual([]uint(*ul), []uint{1, 2})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{1, 2})
 	ul.appendItem(3)
-	aTest.MustBeEqual([]uint(*ul), []uint{1, 2, 3})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{1, 2, 3})
 }
 
 func Test_SearchForItem(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList
-	var idx int
+	var idx cmb.Index
 	var err error
 
 	// Test #1.
@@ -198,18 +202,18 @@ func Test_SearchForItem(t *testing.T) {
 	aTest.MustBeEqual(idx, IndexOnError)
 
 	// Test #2. Non-existent item.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	idx, err = ul.SearchForItem(4)
 	aTest.MustBeAnError(err)
 	aTest.MustBeEqual(idx, IndexOnError)
 
 	// Test #3. Item is found.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	idx, err = ul.SearchForItem(2)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(idx, 2-1)
+	aTest.MustBeEqual(idx, cmb.Count(2-1))
 }
 
 func Test_RemoveItem(t *testing.T) {
@@ -223,17 +227,17 @@ func Test_RemoveItem(t *testing.T) {
 	aTest.MustBeAnError(err)
 
 	// Test #2. Item is not found.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	err = ul.RemoveItem(4)
 	aTest.MustBeAnError(err)
 
 	// Test #3. Item is found.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	err = ul.RemoveItem(2)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(*ul, UidList([]uint{1, 3}))
+	aTest.MustBeEqual(*ul, UidList([]cmb.Id{1, 3}))
 }
 
 func Test_RemoveItemAtPos(t *testing.T) {
@@ -247,73 +251,73 @@ func Test_RemoveItemAtPos(t *testing.T) {
 	aTest.MustBeAnError(err)
 
 	// Test #2. Position is too far away.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	err = ul.RemoveItemAtPos(4)
 	aTest.MustBeAnError(err)
 
 	// Test #3. Existing position.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	err = ul.RemoveItemAtPos(1)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(*ul, UidList([]uint{1, 3}))
+	aTest.MustBeEqual(*ul, UidList([]cmb.Id{1, 3}))
 }
 
 func Test_removeItemAtPos(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList
 	var err error
-	var lastIndex int
+	var lastIndex cmb.Index
 
 	// Test #1. Single item.
-	ul, err = NewFromArray([]uint{1})
+	ul, err = NewFromArray([]cmb.Id{1})
 	aTest.MustBeNoError(err)
-	lastIndex = len(*ul) - 1
+	lastIndex = cmb.Index(len(*ul) - 1)
 	ul.removeItemAtPos(0, lastIndex)
-	aTest.MustBeEqual(*ul, UidList([]uint{}))
+	aTest.MustBeEqual(*ul, UidList([]cmb.Id{}))
 
 	// Test #2. First item.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
-	lastIndex = len(*ul) - 1
+	lastIndex = cmb.Index(len(*ul) - 1)
 	ul.removeItemAtPos(0, lastIndex)
-	aTest.MustBeEqual(*ul, UidList([]uint{2, 3}))
+	aTest.MustBeEqual(*ul, UidList([]cmb.Id{2, 3}))
 
 	// Test #3. Middle item.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
-	lastIndex = len(*ul) - 1
+	lastIndex = cmb.Index(len(*ul) - 1)
 	ul.removeItemAtPos(1, lastIndex)
-	aTest.MustBeEqual(*ul, UidList([]uint{1, 3}))
+	aTest.MustBeEqual(*ul, UidList([]cmb.Id{1, 3}))
 
 	// Test #4. Last item.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
-	lastIndex = len(*ul) - 1
+	lastIndex = cmb.Index(len(*ul) - 1)
 	ul.removeItemAtPos(2, lastIndex)
-	aTest.MustBeEqual(*ul, UidList([]uint{1, 2}))
+	aTest.MustBeEqual(*ul, UidList([]cmb.Id{1, 2}))
 }
 
 func Test_removeLastItem(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList
 	var err error
-	var lastIndex int
+	var lastIndex cmb.Index
 
 	// Test #1. Single item.
-	ul, err = NewFromArray([]uint{1})
+	ul, err = NewFromArray([]cmb.Id{1})
 	aTest.MustBeNoError(err)
-	lastIndex = len(*ul) - 1
+	lastIndex = cmb.Index(len(*ul) - 1)
 	ul.removeLastItem(lastIndex)
-	aTest.MustBeEqual(*ul, UidList([]uint{}))
+	aTest.MustBeEqual(*ul, UidList([]cmb.Id{}))
 
 	// Test #2. Several items.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
-	lastIndex = len(*ul) - 1
+	lastIndex = cmb.Index(len(*ul) - 1)
 	ul.removeLastItem(lastIndex)
-	aTest.MustBeEqual(*ul, UidList([]uint{1, 2}))
+	aTest.MustBeEqual(*ul, UidList([]cmb.Id{1, 2}))
 }
 
 func Test_RaiseItem(t *testing.T) {
@@ -323,7 +327,7 @@ func Test_RaiseItem(t *testing.T) {
 	var err error
 
 	// Test #1. Item is not found.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	isAlreadyRaised, err = ul.RaiseItem(4)
 	aTest.MustBeAnError(err)
@@ -333,28 +337,28 @@ func Test_RaiseItem(t *testing.T) {
 	isAlreadyRaised, err = ul.RaiseItem(1)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(isAlreadyRaised, true)
-	aTest.MustBeEqual([]uint(*ul), []uint{1, 2, 3})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{1, 2, 3})
 
 	// Test #4. Middle item is moved.
 	ul = &UidList{1, 2, 3}
 	isAlreadyRaised, err = ul.RaiseItem(2)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(isAlreadyRaised, false)
-	aTest.MustBeEqual([]uint(*ul), []uint{2, 1, 3})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{2, 1, 3})
 
 	// Test #5. Last item is moved.
 	ul = &UidList{1, 2, 3}
 	isAlreadyRaised, err = ul.RaiseItem(3)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(isAlreadyRaised, false)
-	aTest.MustBeEqual([]uint(*ul), []uint{3, 1, 2})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{3, 1, 2})
 
 	// Test #6. Single item.
 	ul = &UidList{1}
 	isAlreadyRaised, err = ul.RaiseItem(1)
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(isAlreadyRaised, true)
-	aTest.MustBeEqual([]uint(*ul), []uint{1})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{1})
 }
 
 func Test_MoveItemUp(t *testing.T) {
@@ -363,7 +367,7 @@ func Test_MoveItemUp(t *testing.T) {
 	var err error
 
 	// Test #1. Item is not found.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	err = ul.MoveItemUp(4)
 	aTest.MustBeAnError(err)
@@ -377,13 +381,13 @@ func Test_MoveItemUp(t *testing.T) {
 	ul = &UidList{1, 2, 3}
 	err = ul.MoveItemUp(2)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual([]uint(*ul), []uint{2, 1, 3})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{2, 1, 3})
 
 	// Test #4. Last item is moved.
 	ul = &UidList{1, 2, 3}
 	err = ul.MoveItemUp(3)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual([]uint(*ul), []uint{1, 3, 2})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{1, 3, 2})
 
 	// Test #5. Single item.
 	ul = &UidList{1}
@@ -397,7 +401,7 @@ func Test_MoveItemDown(t *testing.T) {
 	var err error
 
 	// Test #1. Item is not found.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	err = ul.MoveItemDown(4)
 	aTest.MustBeAnError(err)
@@ -411,13 +415,13 @@ func Test_MoveItemDown(t *testing.T) {
 	ul = &UidList{1, 2, 3}
 	err = ul.MoveItemDown(2)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual([]uint(*ul), []uint{1, 3, 2})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{1, 3, 2})
 
 	// Test #4. Top item is moved.
 	ul = &UidList{1, 2, 3}
 	err = ul.MoveItemDown(1)
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual([]uint(*ul), []uint{2, 1, 3})
+	aTest.MustBeEqual([]cmb.Id(*ul), []cmb.Id{2, 1, 3})
 
 	// Test #5. Single item.
 	ul = &UidList{1}
@@ -449,9 +453,9 @@ func Test_Scan(t *testing.T) {
 	ul = New()
 	err = ul.Scan([]byte("[1,2,3]"))
 	aTest.MustBeNoError(err)
-	tmp := UidList([]uint{1, 2, 3})
+	tmp := UidList([]cmb.Id{1, 2, 3})
 	aTest.MustBeEqual(ul, &tmp)
-	aTest.MustBeEqual(ul.Size(), 3)
+	aTest.MustBeEqual(ul.Size(), cmb.Count(3))
 
 	// Test #5.
 	ul = New()
@@ -467,7 +471,7 @@ func Test_Scan(t *testing.T) {
 	ul = New()
 	err = ul.Scan([]byte("[]"))
 	aTest.MustBeNoError(err)
-	aTest.MustBeEqual(ul.Size(), 0)
+	aTest.MustBeEqual(ul.Size(), cmb.Count(0))
 }
 
 func Test_Value(t *testing.T) {
@@ -483,7 +487,7 @@ func Test_Value(t *testing.T) {
 	aTest.MustBeEqual(dv, nil)
 
 	// Test #2.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	dv, err = ul.Value()
 	aTest.MustBeNoError(err)
@@ -504,21 +508,21 @@ func Test_ValuesString(t *testing.T) {
 	aTest.MustBeEqual(vs, "")
 
 	// Test #2.
-	ul, err = NewFromArray([]uint{})
+	ul, err = NewFromArray([]cmb.Id{})
 	aTest.MustBeNoError(err)
 	vs, err = ul.ValuesString()
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(vs, "")
 
 	// Test #3.
-	ul, err = NewFromArray([]uint{1})
+	ul, err = NewFromArray([]cmb.Id{1})
 	aTest.MustBeNoError(err)
 	vs, err = ul.ValuesString()
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(vs, "1")
 
 	// Test #4.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	vs, err = ul.ValuesString()
 	aTest.MustBeNoError(err)
@@ -550,50 +554,50 @@ func Test_OnPage(t *testing.T) {
 	aTest.MustBeEqual(ul.OnPage(1, 1), nullList)
 
 	// Test #3.
-	ul, err = NewFromArray([]uint{})
+	ul, err = NewFromArray([]cmb.Id{})
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(ul.OnPage(1, 1), nullList)
 
 	// Test #4.
-	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3, 4, 5})
 	aTest.MustBeNoError(err)
-	ulx = []uint{1, 2, 3, 4, 5}
+	ulx = []cmb.Id{1, 2, 3, 4, 5}
 	aTest.MustBeEqual(ul.OnPage(1, 5), &ulx)
 
 	// Test #5.
-	ul, err = NewFromArray([]uint{1, 2, 3})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
-	ulx = []uint{1, 2, 3}
+	ulx = []cmb.Id{1, 2, 3}
 	aTest.MustBeEqual(ul.OnPage(1, 5), &ulx)
 
 	// Test #6.
-	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5, 6, 7})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3, 4, 5, 6, 7})
 	aTest.MustBeNoError(err)
-	ulx = []uint{1, 2, 3, 4, 5}
+	ulx = []cmb.Id{1, 2, 3, 4, 5}
 	aTest.MustBeEqual(ul.OnPage(1, 5), &ulx)
 
 	// Test #7.
-	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3, 4, 5})
 	aTest.MustBeNoError(err)
 	ulxx = nil
 	aTest.MustBeEqual(ul.OnPage(2, 5), ulxx)
 
 	// Test #8.
-	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5, 6})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3, 4, 5, 6})
 	aTest.MustBeNoError(err)
-	ulx = []uint{6}
+	ulx = []cmb.Id{6}
 	aTest.MustBeEqual(ul.OnPage(2, 5), &ulx)
 
 	// Test #9.
-	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5, 6, 7})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3, 4, 5, 6, 7})
 	aTest.MustBeNoError(err)
-	ulx = []uint{6, 7}
+	ulx = []cmb.Id{6, 7}
 	aTest.MustBeEqual(ul.OnPage(2, 5), &ulx)
 
 	// Test #10.
-	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12})
 	aTest.MustBeNoError(err)
-	ulx = []uint{6, 7, 8, 9, 10}
+	ulx = []cmb.Id{6, 7, 8, 9, 10}
 	aTest.MustBeEqual(ul.OnPage(2, 5), &ulx)
 
 	// Test #11.
@@ -606,7 +610,7 @@ func Test_LastElement(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList
 	var err error
-	var nullElement *uint = nil
+	var nullElement *cmb.Id = nil
 
 	// Test #1.
 	ul, err = NewFromArray(nil)
@@ -614,19 +618,19 @@ func Test_LastElement(t *testing.T) {
 	aTest.MustBeEqual(ul.LastElement(), nullElement)
 
 	// Test #2.
-	ul, err = NewFromArray([]uint{})
+	ul, err = NewFromArray([]cmb.Id{})
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(ul.LastElement(), nullElement)
 
 	// Test #3.
-	ul, err = NewFromArray([]uint{1, 2, 3, 4, 5})
+	ul, err = NewFromArray([]cmb.Id{1, 2, 3, 4, 5})
 	aTest.MustBeNoError(err)
 	aTest.MustBeDifferent(ul.LastElement(), nullElement)
-	aTest.MustBeEqual(*ul.LastElement(), uint(5))
+	aTest.MustBeEqual(*ul.LastElement(), cmb.Id(5))
 
 	// Test #4.
-	ul, err = NewFromArray([]uint{1})
+	ul, err = NewFromArray([]cmb.Id{1})
 	aTest.MustBeNoError(err)
 	aTest.MustBeDifferent(ul.LastElement(), nullElement)
-	aTest.MustBeEqual(*ul.LastElement(), uint(1))
+	aTest.MustBeEqual(*ul.LastElement(), cmb.Id(1))
 }

@@ -15,7 +15,6 @@ type CreateCaptchaParams struct{}
 
 type CreateCaptchaResult struct {
 	cmr.CommonResult
-
 	TaskId              string `json:"taskId"`
 	ImageFormat         string `json:"imageFormat"`
 	IsImageDataReturned bool   `json:"isImageDataReturned"`
@@ -29,7 +28,6 @@ type CheckCaptchaParams struct {
 
 type CheckCaptchaResult struct {
 	cmr.CommonResult
-
 	TaskId    string `json:"taskId"`
 	IsSuccess bool   `json:"isSuccess"`
 }

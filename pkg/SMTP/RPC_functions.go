@@ -5,6 +5,8 @@ import (
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SMTP/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 // RPC functions.
@@ -24,7 +26,7 @@ func (srv *Server) sendMessage(p *sm.SendMessageParams) (result *sm.SendMessageR
 	srv.mailerGuard.Lock()
 	defer srv.mailerGuard.Unlock()
 
-	err := srv.mailer.SendMail([]string{p.Recipient}, p.Subject, p.Message)
+	err := srv.mailer.SendMail([]string{p.Recipient.ToString()}, p.Subject.ToString(), p.Message.ToString())
 	if err != nil {
 		srv.logError(err)
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MailerError, fmt.Sprintf(RpcErrorMsgF_MailerError, err.Error()), err)
@@ -36,8 +38,14 @@ func (srv *Server) sendMessage(p *sm.SendMessageParams) (result *sm.SendMessageR
 }
 
 func (srv *Server) showDiagnosticData() (result *sm.ShowDiagnosticDataResult, re *jrm1.RpcError) {
-	result = &sm.ShowDiagnosticDataResult{}
-	result.TotalRequestsCount, result.SuccessfulRequestsCount = srv.js.GetRequestsCount()
+	trc, src := srv.js.GetRequestsCount()
+
+	result = &sm.ShowDiagnosticDataResult{
+		RequestsCount: cmr.RequestsCount{
+			TotalRequestsCount:      cmb.Text(trc),
+			SuccessfulRequestsCount: cmb.Text(src),
+		},
+	}
 
 	return result, nil
 }

@@ -10,6 +10,9 @@ import (
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 // RPC functions.
@@ -30,7 +33,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -40,7 +43,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	// If parent is not set, the new section is a root section.
 	// Only a single root section may exist.
 	var err error
-	var n int
+	var n cmb.Count
 	if p.Parent == nil {
 		n, err = srv.dbo.CountRootSections()
 		if err != nil {
@@ -51,14 +54,14 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_RootSectionAlreadyExists, RpcErrorMsg_RootSectionAlreadyExists, nil)
 		}
 
-		var insertedSectionId int64
-		insertedSectionId, err = srv.dbo.InsertNewSection(p.Parent, p.Name, userRoles.UserId)
+		var insertedSectionId cmb.Id
+		insertedSectionId, err = srv.dbo.InsertNewSection(p.Parent, p.Name, userRoles.User.Id)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 
 		result = &mm.AddSectionResult{
-			SectionId: uint(insertedSectionId),
+			SectionId: insertedSectionId,
 		}
 
 		return result, nil
@@ -100,13 +103,13 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 		return nil, srv.databaseError(err)
 	}
 
-	var insertedSectionId int64
-	insertedSectionId, err = srv.dbo.InsertNewSection(p.Parent, p.Name, userRoles.UserId)
+	var insertedSectionId cmb.Id
+	insertedSectionId, err = srv.dbo.InsertNewSection(p.Parent, p.Name, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = parentChildren.AddItem(uint(insertedSectionId), false)
+	err = parentChildren.AddItem(insertedSectionId, false)
 	if err != nil {
 		srv.logError(err)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
@@ -118,7 +121,7 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	}
 
 	result = &mm.AddSectionResult{
-		SectionId: uint(insertedSectionId),
+		SectionId: insertedSectionId,
 	}
 
 	return result, nil
@@ -142,14 +145,14 @@ func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountSectionsById(p.SectionId)
 	if err != nil {
@@ -160,15 +163,16 @@ func (srv *Server) changeSectionName(p *mm.ChangeSectionNameParams) (result *mm.
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SectionIsNotFound, RpcErrorMsg_SectionIsNotFound, nil)
 	}
 
-	err = srv.dbo.SetSectionNameById(p.SectionId, p.Name, userRoles.UserId)
+	err = srv.dbo.SetSectionNameById(p.SectionId, p.Name, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ChangeSectionNameResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -190,14 +194,14 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountSectionsById(p.SectionId)
 	if err != nil {
@@ -209,7 +213,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	// Ensure that an old parent exists.
-	var oldParent *uint
+	var oldParent *cmb.Id
 	oldParent, err = srv.dbo.GetSectionParentById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -257,7 +261,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	// Update the moved section.
-	err = srv.dbo.SetSectionParentById(p.SectionId, p.Parent, userRoles.UserId)
+	err = srv.dbo.SetSectionParentById(p.SectionId, p.Parent, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -307,9 +311,10 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	result = &mm.ChangeSectionParentResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -327,7 +332,7 @@ func (srv *Server) getSection(p *mm.GetSectionParams) (result *mm.GetSectionResu
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -366,7 +371,7 @@ func (srv *Server) moveSectionUp(p *mm.MoveSectionUpParams) (result *mm.MoveSect
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -374,7 +379,7 @@ func (srv *Server) moveSectionUp(p *mm.MoveSectionUpParams) (result *mm.MoveSect
 	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved section.
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountSectionsById(p.SectionId)
 	if err != nil {
@@ -427,9 +432,10 @@ func (srv *Server) moveSectionUp(p *mm.MoveSectionUpParams) (result *mm.MoveSect
 	}
 
 	result = &mm.MoveSectionUpResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -447,7 +453,7 @@ func (srv *Server) moveSectionDown(p *mm.MoveSectionDownParams) (result *mm.Move
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -455,7 +461,7 @@ func (srv *Server) moveSectionDown(p *mm.MoveSectionDownParams) (result *mm.Move
 	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved section.
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountSectionsById(p.SectionId)
 	if err != nil {
@@ -508,9 +514,10 @@ func (srv *Server) moveSectionDown(p *mm.MoveSectionDownParams) (result *mm.Move
 	}
 
 	result = &mm.MoveSectionDownResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -528,7 +535,7 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -591,9 +598,10 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 	}
 
 	result = &mm.DeleteSectionResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -617,7 +625,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, re
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -659,13 +667,13 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, re
 		return nil, srv.databaseError(err)
 	}
 
-	var insertedForumId int64
-	insertedForumId, err = srv.dbo.InsertNewForum(p.SectionId, p.Name, userRoles.UserId)
+	var insertedForumId cmb.Id
+	insertedForumId, err = srv.dbo.InsertNewForum(p.SectionId, p.Name, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = parentChildren.AddItem(uint(insertedForumId), false)
+	err = parentChildren.AddItem(insertedForumId, false)
 	if err != nil {
 		srv.logError(err)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
@@ -677,7 +685,7 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, re
 	}
 
 	result = &mm.AddForumResult{
-		ForumId: uint(insertedForumId),
+		ForumId: insertedForumId,
 	}
 
 	return result, nil
@@ -701,14 +709,14 @@ func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.Chan
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountForumsById(p.ForumId)
 	if err != nil {
@@ -719,15 +727,16 @@ func (srv *Server) changeForumName(p *mm.ChangeForumNameParams) (result *mm.Chan
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
 	}
 
-	err = srv.dbo.SetForumNameById(p.ForumId, p.Name, userRoles.UserId)
+	err = srv.dbo.SetForumNameById(p.ForumId, p.Name, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ChangeForumNameResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -749,14 +758,14 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountForumsById(p.ForumId)
 	if err != nil {
@@ -768,7 +777,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	}
 
 	// Ensure that an old section exists.
-	var oldParent uint
+	var oldParent cmb.Id
 	oldParent, err = srv.dbo.GetForumSectionById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -812,7 +821,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	}
 
 	// Update the moved forum.
-	err = srv.dbo.SetForumSectionById(p.ForumId, p.SectionId, userRoles.UserId)
+	err = srv.dbo.SetForumSectionById(p.ForumId, p.SectionId, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -862,9 +871,10 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	}
 
 	result = &mm.ChangeForumSectionResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -882,7 +892,7 @@ func (srv *Server) getForum(p *mm.GetForumParams) (result *mm.GetForumResult, re
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -922,7 +932,7 @@ func (srv *Server) moveForumUp(p *mm.MoveForumUpParams) (result *mm.MoveForumUpR
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -930,7 +940,7 @@ func (srv *Server) moveForumUp(p *mm.MoveForumUpParams) (result *mm.MoveForumUpR
 	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved forum.
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountForumsById(p.ForumId)
 	if err != nil {
@@ -980,9 +990,10 @@ func (srv *Server) moveForumUp(p *mm.MoveForumUpParams) (result *mm.MoveForumUpR
 	}
 
 	result = &mm.MoveForumUpResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -1000,7 +1011,7 @@ func (srv *Server) moveForumDown(p *mm.MoveForumDownParams) (result *mm.MoveForu
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1008,7 +1019,7 @@ func (srv *Server) moveForumDown(p *mm.MoveForumDownParams) (result *mm.MoveForu
 	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved forum.
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountForumsById(p.ForumId)
 	if err != nil {
@@ -1058,9 +1069,10 @@ func (srv *Server) moveForumDown(p *mm.MoveForumDownParams) (result *mm.MoveForu
 	}
 
 	result = &mm.MoveForumDownResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -1078,7 +1090,7 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1135,9 +1147,10 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 	}
 
 	result = &mm.DeleteForumResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -1161,7 +1174,7 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 	}
 
 	// Check permissions.
-	if !userRoles.IsAuthor {
+	if !userRoles.User.Roles.IsAuthor {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1170,7 +1183,7 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 
 	// Ensure that a forum exists.
 	var err error
-	var n int
+	var n cmb.Count
 	n, err = srv.dbo.CountForumsById(p.ForumId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -1187,13 +1200,13 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 		return nil, srv.databaseError(err)
 	}
 
-	var insertedThreadId int64
-	insertedThreadId, err = srv.dbo.InsertNewThread(p.ForumId, p.Name, userRoles.UserId)
+	var insertedThreadId cmb.Id
+	insertedThreadId, err = srv.dbo.InsertNewThread(p.ForumId, p.Name, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = parentThreads.AddItem(uint(insertedThreadId), srv.settings.SystemSettings.NewThreadsAtTop)
+	err = parentThreads.AddItem(insertedThreadId, srv.settings.SystemSettings.NewThreadsAtTop.Bool())
 	if err != nil {
 		srv.logError(err)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
@@ -1205,7 +1218,7 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 	}
 
 	result = &mm.AddThreadResult{
-		ThreadId: uint(insertedThreadId),
+		ThreadId: insertedThreadId,
 	}
 
 	return result, nil
@@ -1229,14 +1242,14 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountThreadsById(p.ThreadId)
 	if err != nil {
@@ -1247,15 +1260,16 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
 	}
 
-	err = srv.dbo.SetThreadNameById(p.ThreadId, p.Name, userRoles.UserId)
+	err = srv.dbo.SetThreadNameById(p.ThreadId, p.Name, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ChangeThreadNameResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -1277,14 +1291,14 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountThreadsById(p.ThreadId)
 	if err != nil {
@@ -1296,7 +1310,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	}
 
 	// Ensure that an old parent exists.
-	var oldParent uint
+	var oldParent cmb.Id
 	oldParent, err = srv.dbo.GetThreadForumById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -1322,7 +1336,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	}
 
 	// Update the moved thread.
-	err = srv.dbo.SetThreadForumById(p.ThreadId, p.ForumId, userRoles.UserId)
+	err = srv.dbo.SetThreadForumById(p.ThreadId, p.ForumId, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1364,9 +1378,10 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 	}
 
 	result = &mm.ChangeThreadForumResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -1384,7 +1399,7 @@ func (srv *Server) getThread(p *mm.GetThreadParams) (result *mm.GetThreadResult,
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1424,7 +1439,7 @@ func (srv *Server) getThreadNamesByIds(p *mm.GetThreadNamesByIdsParams) (result 
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1432,7 +1447,7 @@ func (srv *Server) getThreadNamesByIds(p *mm.GetThreadNamesByIdsParams) (result 
 	defer srv.dbo.UnlockAfterReading()
 
 	// Read thread names.
-	var threadNames []string
+	var threadNames []cm.Name
 	var err error
 	threadNames, err = srv.dbo.ReadThreadNamesByIds(p.ThreadIds)
 	if err != nil {
@@ -1440,6 +1455,7 @@ func (srv *Server) getThreadNamesByIds(p *mm.GetThreadNamesByIdsParams) (result 
 	}
 
 	result = &mm.GetThreadNamesByIdsResult{
+		ThreadIds:   p.ThreadIds,
 		ThreadNames: threadNames,
 	}
 
@@ -1460,7 +1476,7 @@ func (srv *Server) moveThreadUp(p *mm.MoveThreadUpParams) (result *mm.MoveThread
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1468,7 +1484,7 @@ func (srv *Server) moveThreadUp(p *mm.MoveThreadUpParams) (result *mm.MoveThread
 	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved thread.
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountThreadsById(p.ThreadId)
 	if err != nil {
@@ -1513,9 +1529,10 @@ func (srv *Server) moveThreadUp(p *mm.MoveThreadUpParams) (result *mm.MoveThread
 	}
 
 	result = &mm.MoveThreadUpResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -1533,7 +1550,7 @@ func (srv *Server) moveThreadDown(p *mm.MoveThreadDownParams) (result *mm.MoveTh
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1541,7 +1558,7 @@ func (srv *Server) moveThreadDown(p *mm.MoveThreadDownParams) (result *mm.MoveTh
 	defer srv.dbo.UnlockAfterWriting()
 
 	// Check existence of the moved thread.
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountThreadsById(p.ThreadId)
 	if err != nil {
@@ -1586,9 +1603,10 @@ func (srv *Server) moveThreadDown(p *mm.MoveThreadDownParams) (result *mm.MoveTh
 	}
 
 	result = &mm.MoveThreadDownResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -1606,7 +1624,7 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1624,9 +1642,10 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 	}
 
 	result = &mm.DeleteThreadResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -1644,7 +1663,7 @@ func (srv *Server) threadExistsS(p *mm.ThreadExistsSParams) (result *mm.ThreadEx
 	}
 
 	// Check the DKey.
-	if !srv.dKeyI.CheckString(p.DKey) {
+	if !srv.dKeyI.CheckString(p.DKey.ToString()) {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1652,7 +1671,7 @@ func (srv *Server) threadExistsS(p *mm.ThreadExistsSParams) (result *mm.ThreadEx
 	defer srv.dbo.UnlockAfterReading()
 
 	// Count threads.
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountThreadsById(p.ThreadId)
 	if err != nil {
@@ -1686,7 +1705,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 	}
 
 	// Check permissions (Part I).
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -1708,7 +1727,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 
 	// Ensure that a parent exists.
 	var err error
-	var n int
+	var n cmb.Count
 	n, err = srv.dbo.CountThreadsById(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -1727,13 +1746,13 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 
 	messageTextChecksum := srv.getMessageTextChecksum(p.Text)
 
-	var insertedMessageId int64
-	insertedMessageId, err = srv.dbo.InsertNewMessage(p.ThreadId, p.Text, messageTextChecksum, userRoles.UserId)
+	var insertedMessageId cmb.Id
+	insertedMessageId, err = srv.dbo.InsertNewMessage(p.ThreadId, p.Text, messageTextChecksum, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = parentMessages.AddItem(uint(insertedMessageId), false)
+	err = parentMessages.AddItem(insertedMessageId, false)
 	if err != nil {
 		srv.logError(err)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
@@ -1779,7 +1798,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 	}
 
 	result = &mm.AddMessageResult{
-		MessageId: uint(insertedMessageId),
+		MessageId: insertedMessageId,
 	}
 
 	return result, nil
@@ -1824,15 +1843,16 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 	// Edit the message.
 	messageTextChecksum := srv.getMessageTextChecksum(p.Text)
 
-	err = srv.dbo.SetMessageTextById(p.MessageId, p.Text, messageTextChecksum, userRoles.UserId)
+	err = srv.dbo.SetMessageTextById(p.MessageId, p.Text, messageTextChecksum, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ChangeMessageTextResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -1854,14 +1874,14 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
-	var n int
+	var n cmb.Count
 	var err error
 	n, err = srv.dbo.CountMessagesById(p.MessageId)
 	if err != nil {
@@ -1873,7 +1893,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	}
 
 	// Ensure that an old parent exists.
-	var oldParent uint
+	var oldParent cmb.Id
 	oldParent, err = srv.dbo.GetMessageThreadById(p.MessageId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -1899,7 +1919,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	}
 
 	// Update the moved message.
-	err = srv.dbo.SetMessageThreadById(p.MessageId, p.ThreadId, userRoles.UserId)
+	err = srv.dbo.SetMessageThreadById(p.MessageId, p.ThreadId, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1941,9 +1961,10 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 	}
 
 	result = &mm.ChangeMessageThreadResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -1961,7 +1982,7 @@ func (srv *Server) getMessage(p *mm.GetMessageParams) (result *mm.GetMessageResu
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -2001,7 +2022,7 @@ func (srv *Server) getLatestMessageOfThread(p *mm.GetLatestMessageOfThreadParams
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -2032,7 +2053,7 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -2076,9 +2097,10 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 	}
 
 	result = &mm.DeleteMessageResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -2098,7 +2120,7 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -2117,19 +2139,20 @@ func (srv *Server) listThreadAndMessages(p *mm.ListThreadAndMessagesParams) (res
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
 	}
 
-	tam := mm.NewThreadAndMessages(thread)
-	tam.MessageIds = thread.Messages
+	// Read messages.
+	var allMessageIds = thread.Messages
 
-	// Read all the messages.
-	if tam.MessageIds != nil {
-		tam.Messages, err = srv.dbo.ReadMessagesById(*tam.MessageIds)
-		if err != nil {
-			return nil, srv.databaseError(err)
-		}
+	var allMessages []mm.Message
+	allMessages, err = srv.dbo.ReadMessagesById(allMessageIds)
+	if err != nil {
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ListThreadAndMessagesResult{
-		ThreadAndMessages: tam,
+		ThreadAndMessages: &mm.ThreadAndMessages{
+			Thread:   thread,
+			Messages: allMessages,
+		},
 	}
 
 	return result, nil
@@ -2153,7 +2176,7 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -2172,29 +2195,28 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
 	}
 
-	tamop := mm.NewThreadAndMessages(thread)
-	tamop.MessageIds = thread.Messages
+	// Read messages.
+	var allMessageIds = thread.Messages
+	var messageIdsOnPage = allMessageIds.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
 
-	if tamop.MessageIds != nil {
-		// Total numbers before pagination.
-		tm := uint(tamop.MessageIds.Size())
-		tamop.TotalMessages = &tm
-		tp := c.CalculateTotalPages(tm, srv.settings.SystemSettings.PageSize)
-		tamop.TotalPages = &tp
-
-		// Read messages of a specified page.
-		tamop.Page = &p.Page
-		tamop.MessageIds = tamop.MessageIds.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
-		if tamop.MessageIds.Size() > 0 {
-			tamop.Messages, err = srv.dbo.ReadMessagesById(*tamop.MessageIds)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+	var messagesOnPage []mm.Message
+	messagesOnPage, err = srv.dbo.ReadMessagesById(messageIdsOnPage)
+	if err != nil {
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ListThreadAndMessagesOnPageResult{
-		ThreadAndMessagesOnPage: tamop,
+		ThreadAndMessagesOnPage: &mm.ThreadAndMessages{
+			Thread:   thread,
+			Messages: messagesOnPage,
+			PageData: &cmr.PageData{
+				PageNumber:  p.Page,
+				TotalPages:  cmb.CalculateTotalPages(allMessageIds.Size(), srv.settings.SystemSettings.PageSize),
+				PageSize:    srv.settings.SystemSettings.PageSize,
+				ItemsOnPage: messageIdsOnPage.Size(),
+				TotalItems:  allMessageIds.Size(),
+			},
+		},
 	}
 
 	return result, nil
@@ -2214,7 +2236,7 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -2233,19 +2255,20 @@ func (srv *Server) listForumAndThreads(p *mm.ListForumAndThreadsParams) (result 
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
 	}
 
-	fat := mm.NewForumAndThreads(forum)
-	fat.ThreadIds = forum.Threads
+	// Read threads.
+	var allThreadIds = forum.Threads
 
-	// Read all the threads.
-	if fat.ThreadIds != nil {
-		fat.Threads, err = srv.dbo.ReadThreadsById(*forum.Threads)
-		if err != nil {
-			return nil, srv.databaseError(err)
-		}
+	var allThreads []mm.Thread
+	allThreads, err = srv.dbo.ReadThreadsById(allThreadIds)
+	if err != nil {
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ListForumAndThreadsResult{
-		ForumAndThreads: fat,
+		ForumAndThreads: &mm.ForumAndThreads{
+			Forum:   forum,
+			Threads: allThreads,
+		},
 	}
 
 	return result, nil
@@ -2269,7 +2292,7 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -2288,29 +2311,28 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
 	}
 
-	fatop := mm.NewForumAndThreads(forum)
-	fatop.ThreadIds = forum.Threads
+	// Read threads.
+	var allThreadIds = forum.Threads
+	var threadIdsOnPage = allThreadIds.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
 
-	if fatop.ThreadIds != nil {
-		// Total numbers before pagination.
-		tt := uint(fatop.ThreadIds.Size())
-		fatop.TotalThreads = &tt
-		tp := c.CalculateTotalPages(tt, srv.settings.SystemSettings.PageSize)
-		fatop.TotalPages = &tp
-
-		// Read threads of a specified page.
-		fatop.Page = &p.Page
-		fatop.ThreadIds = fatop.ThreadIds.OnPage(p.Page, srv.settings.SystemSettings.PageSize)
-		if fatop.ThreadIds.Size() > 0 {
-			fatop.Threads, err = srv.dbo.ReadThreadsById(*fatop.ThreadIds)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
+	var threadsOnPage []mm.Thread
+	threadsOnPage, err = srv.dbo.ReadThreadsById(threadIdsOnPage)
+	if err != nil {
+		return nil, srv.databaseError(err)
 	}
 
 	result = &mm.ListForumAndThreadsOnPageResult{
-		ForumAndThreadsOnPage: fatop,
+		ForumAndThreadsOnPage: &mm.ForumAndThreads{
+			Forum:   forum,
+			Threads: threadsOnPage,
+			PageData: &cmr.PageData{
+				PageNumber:  p.Page,
+				TotalPages:  cmb.CalculateTotalPages(allThreadIds.Size(), srv.settings.SystemSettings.PageSize),
+				PageSize:    srv.settings.SystemSettings.PageSize,
+				ItemsOnPage: threadIdsOnPage.Size(),
+				TotalItems:  allThreadIds.Size(),
+			},
+		},
 	}
 
 	return result, nil
@@ -2325,7 +2347,7 @@ func (srv *Server) listSectionsAndForums(p *mm.ListSectionsAndForumsParams) (res
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -2366,15 +2388,21 @@ func (srv *Server) getDKey(p *mm.GetDKeyParams) (result *mm.GetDKeyResult, re *j
 	}
 
 	result = &mm.GetDKeyResult{
-		DKey: srv.dKeyI.GetString(),
+		DKey: cmb.Text(srv.dKeyI.GetString()),
 	}
 
 	return result, nil
 }
 
 func (srv *Server) showDiagnosticData() (result *mm.ShowDiagnosticDataResult, re *jrm1.RpcError) {
-	result = &mm.ShowDiagnosticDataResult{}
-	result.TotalRequestsCount, result.SuccessfulRequestsCount = srv.js.GetRequestsCount()
+	trc, src := srv.js.GetRequestsCount()
+
+	result = &mm.ShowDiagnosticDataResult{
+		RequestsCount: cmr.RequestsCount{
+			TotalRequestsCount:      cmb.Text(trc),
+			SuccessfulRequestsCount: cmb.Text(src),
+		},
+	}
 
 	return result, nil
 }

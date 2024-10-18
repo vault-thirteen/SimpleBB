@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 const (
@@ -33,7 +35,7 @@ type KeyMaker struct {
 	signingMethodName string
 }
 
-func New(signingMethodName string, privateKeyFilePath string, publicKeyFilePath string) (km *KeyMaker, err error) {
+func New(signingMethodName string, privateKeyFilePath cm.Path, publicKeyFilePath cm.Path) (km *KeyMaker, err error) {
 	var signingMethod jwt.SigningMethod
 	switch signingMethodName {
 	case TokenAlg_PS512:
@@ -62,7 +64,7 @@ func New(signingMethodName string, privateKeyFilePath string, publicKeyFilePath 
 	return km, nil
 }
 
-func (km *KeyMaker) MakeJWToken(userId uint, sessionId uint) (tokenString string, err error) {
+func (km *KeyMaker) MakeJWToken(userId cmb.Id, sessionId cmb.Id) (tokenString cm.WebTokenString, err error) {
 	claims := jwt.MapClaims{
 		WebTokenField_UserId:    userId,
 		WebTokenField_SessionId: sessionId,
@@ -70,17 +72,18 @@ func (km *KeyMaker) MakeJWToken(userId uint, sessionId uint) (tokenString string
 
 	token := jwt.NewWithClaims(km.signingMethod, claims, nil)
 
-	tokenString, err = token.SignedString(km.privateKey)
+	var s string
+	s, err = token.SignedString(km.privateKey)
 	if err != nil {
 		return "", err
 	}
 
-	return tokenString, nil
+	return cm.WebTokenString(s), nil
 }
 
-func (km *KeyMaker) ValidateToken(tokenString string) (userId uint, sessionId uint, err error) {
+func (km *KeyMaker) ValidateToken(tokenString cm.WebTokenString) (userId cmb.Id, sessionId cmb.Id, err error) {
 	var token *jwt.Token
-	token, err = jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err = jwt.Parse(tokenString.ToString(), func(token *jwt.Token) (interface{}, error) {
 		if strings.ToUpper(token.Method.Alg()) != km.signingMethodName {
 			return nil, fmt.Errorf(ErrFUnsupportedSigningMethod, token.Method.Alg())
 		}
@@ -141,5 +144,5 @@ func (km *KeyMaker) ValidateToken(tokenString string) (userId uint, sessionId ui
 		return 0, 0, errors.New(ErrTokenIsBroken)
 	}
 
-	return uint(userIdFloat64), uint(sessionIdFloat64), nil
+	return cmb.Id(userIdFloat64), cmb.Id(sessionIdFloat64), nil
 }

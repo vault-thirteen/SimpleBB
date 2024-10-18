@@ -1,5 +1,9 @@
 package rpc
 
+import (
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+)
+
 type DKeyParams struct {
-	DKey string `json:"dKey"`
+	DKey cmb.Text `json:"dKey"`
 }

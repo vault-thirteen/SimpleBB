@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS UserSubscriptions
 (
-    Id      bigint UNSIGNED AUTO_INCREMENT NOT NULL,
-    UserId  bigint UNSIGNED                NOT NULL,
+    Id      bigint AUTO_INCREMENT NOT NULL,
+    UserId  bigint                NOT NULL,
     Threads json,
 
     PRIMARY KEY (Id),

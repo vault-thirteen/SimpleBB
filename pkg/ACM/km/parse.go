@@ -6,6 +6,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"os"
+
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 
 //TODO:RSA-PSS.
@@ -24,9 +26,9 @@ const (
 )
 
 // This function is bad, but Golang is ever worse.
-func getPrivateKey(privateKeyFilePath string, signingMethodName string) (pk *rsa.PrivateKey, err error) {
+func getPrivateKey(privateKeyFilePath cm.Path, signingMethodName string) (pk *rsa.PrivateKey, err error) {
 	var keyFileData []byte
-	keyFileData, err = os.ReadFile(privateKeyFilePath)
+	keyFileData, err = os.ReadFile(privateKeyFilePath.ToString())
 	if err != nil {
 		return nil, err
 	}
@@ -58,9 +60,9 @@ func getPrivateKey(privateKeyFilePath string, signingMethodName string) (pk *rsa
 }
 
 // This function is bad, but Golang is ever worse.
-func getPublicKey(publicKeyFilePath string, signingMethodName string) (pk *rsa.PublicKey, err error) {
+func getPublicKey(publicKeyFilePath cm.Path, signingMethodName string) (pk *rsa.PublicKey, err error) {
 	var keyFileData []byte
-	keyFileData, err = os.ReadFile(publicKeyFilePath)
+	keyFileData, err = os.ReadFile(publicKeyFilePath.ToString())
 	if err != nil {
 		return nil, err
 	}

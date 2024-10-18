@@ -1,14 +1,14 @@
 CREATE TABLE IF NOT EXISTS Threads
 (
-    Id            bigint UNSIGNED AUTO_INCREMENT NOT NULL,
-    ForumId       bigint UNSIGNED                NOT NULL,
-    Name          varchar(255)                   NOT NULL,
+    Id            bigint AUTO_INCREMENT NOT NULL,
+    ForumId       bigint                NOT NULL,
+    Name          varchar(255)          NOT NULL,
     Messages      json,
 
     -- Meta data --
-    CreatorUserId bigint UNSIGNED                NOT NULL,
-    CreatorTime   datetime                       NOT NULL,
-    EditorUserId  bigint UNSIGNED,
+    CreatorUserId bigint                NOT NULL,
+    CreatorTime   datetime              NOT NULL,
+    EditorUserId  bigint,
     EditorTime    datetime,
 
     PRIMARY KEY (Id)

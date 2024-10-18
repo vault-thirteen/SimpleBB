@@ -4,19 +4,19 @@ package dbo
 
 import (
 	"database/sql"
-	"fmt"
 	"net"
 
 	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	ae "github.com/vault-thirteen/auxie/errors"
 )
 
-func (dbo *DatabaseObject) CountAllNotificationsByUserId(userId uint) (n int, err error) {
+func (dbo *DatabaseObject) CountAllNotificationsByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountAllNotificationsByUserId).QueryRow(userId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -24,10 +24,10 @@ func (dbo *DatabaseObject) CountAllNotificationsByUserId(userId uint) (n int, er
 	return n, nil
 }
 
-func (dbo *DatabaseObject) CountUnreadNotificationsByUserId(userId uint) (n int, err error) {
+func (dbo *DatabaseObject) CountUnreadNotificationsByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountUnreadNotificationsByUserId).QueryRow(userId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -35,27 +35,17 @@ func (dbo *DatabaseObject) CountUnreadNotificationsByUserId(userId uint) (n int,
 	return n, nil
 }
 
-func (dbo *DatabaseObject) DeleteNotificationById(notificationId uint) (err error) {
+func (dbo *DatabaseObject) DeleteNotificationById(notificationId cmb.Id) (err error) {
 	var result sql.Result
 	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_DeleteNotificationById).Exec(notificationId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) GetAllNotificationsByUserId(userId uint) (notifications []nm.Notification, err error) {
+func (dbo *DatabaseObject) GetAllNotificationsByUserId(userId cmb.Id) (notifications []nm.Notification, err error) {
 	notifications = make([]nm.Notification, 0, 8)
 
 	var rows *sql.Rows
@@ -79,7 +69,7 @@ func (dbo *DatabaseObject) GetAllNotificationsByUserId(userId uint) (notificatio
 	return notifications, nil
 }
 
-func (dbo *DatabaseObject) GetNotificationById(notificationId uint) (notification *nm.Notification, err error) {
+func (dbo *DatabaseObject) GetNotificationById(notificationId cmb.Id) (notification *nm.Notification, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetNotificationById).QueryRow(notificationId)
 
 	notification, err = nm.NewNotificationFromScannableSource(row)
@@ -90,7 +80,7 @@ func (dbo *DatabaseObject) GetNotificationById(notificationId uint) (notificatio
 	return notification, nil
 }
 
-func (dbo *DatabaseObject) GetNotificationsByUserIdOnPage(userId uint, pageNumber uint, pageSize uint) (notifications []nm.Notification, err error) {
+func (dbo *DatabaseObject) GetNotificationsByUserIdOnPage(userId cmb.Id, pageNumber cmb.Count, pageSize cmb.Count) (notifications []nm.Notification, err error) {
 	var rows *sql.Rows
 	rows, err = dbo.PreparedStatement(DbPsid_GetNotificationsByUserIdOnPage).Query(userId, pageSize, (pageNumber-1)*pageSize)
 	if err != nil {
@@ -107,7 +97,7 @@ func (dbo *DatabaseObject) GetNotificationsByUserIdOnPage(userId uint, pageNumbe
 	return nm.NewNotificationArrayFromRows(rows)
 }
 
-func (dbo *DatabaseObject) GetUnreadNotifications(userId uint) (notifications []nm.Notification, err error) {
+func (dbo *DatabaseObject) GetUnreadNotifications(userId cmb.Id) (notifications []nm.Notification, err error) {
 	notifications = make([]nm.Notification, 0, 8)
 
 	var rows *sql.Rows
@@ -131,77 +121,42 @@ func (dbo *DatabaseObject) GetUnreadNotifications(userId uint) (notifications []
 	return notifications, nil
 }
 
-func (dbo *DatabaseObject) InsertNewNotification(userId uint, text string) (lastInsertedId int64, err error) {
+func (dbo *DatabaseObject) InsertNewNotification(userId cmb.Id, text cmb.Text) (lastInsertedId cmb.Id, err error) {
 	var result sql.Result
 	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_InsertNewNotification).Exec(userId, text)
 	if err != nil {
 		return cdbo.LastInsertedIdOnError, err
 	}
 
-	lastInsertedId, err = result.LastInsertId()
-	if err != nil {
-		return cdbo.LastInsertedIdOnError, err
-	}
-
-	return lastInsertedId, nil
+	return cdbo.CheckRowsAffectedAndGetLastInsertedId(result, 1)
 }
 
-func (dbo *DatabaseObject) MarkNotificationAsRead(notificationId uint, userId uint) (err error) {
+func (dbo *DatabaseObject) MarkNotificationAsRead(notificationId cmb.Id, userId cmb.Id) (err error) {
 	var result sql.Result
 	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_MarkNotificationAsRead).Exec(notificationId, userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SaveIncident(module cm.Module, incidentType cm.IncidentType, email string, userIPAB net.IP) (err error) {
+func (dbo *DatabaseObject) SaveIncident(module cm.Module, incidentType cm.IncidentType, email cm.Email, userIPAB net.IP) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SaveIncident).Exec(module, incidentType, email, userIPAB)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module cm.Module, incidentType cm.IncidentType, email string) (err error) {
+func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module cm.Module, incidentType cm.IncidentType, email cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SaveIncidentWithoutUserIPA).Exec(module, incidentType, email)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }

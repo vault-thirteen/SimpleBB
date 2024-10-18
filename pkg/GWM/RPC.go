@@ -7,6 +7,7 @@ import (
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
 
@@ -47,7 +48,12 @@ func (srv *Server) initRpc() (err error) {
 // Ping.
 
 func (srv *Server) Ping(_ *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
-	return gm.PingResult{OK: true}, nil
+	result = gm.PingResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 // IP address list.

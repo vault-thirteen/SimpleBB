@@ -3,17 +3,19 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 // RegistrationReadyForApproval is a short variant of an object representing a
 // request for registration which is ready to be approved.
 type RegistrationReadyForApproval struct {
-	Id         uint   `json:"id"`
-	PreRegTime string `json:"preRegTime"`
-	Email      string `json:"email"`
-	Name       string `json:"name"`
+	Id         cmb.Id    `json:"id"`
+	PreRegTime time.Time `json:"preRegTime"`
+	Email      cm.Email  `json:"email"`
+	Name       cm.Name   `json:"name"`
 }
 
 func NewRegistrationReadyForApproval() (r *RegistrationReadyForApproval) {

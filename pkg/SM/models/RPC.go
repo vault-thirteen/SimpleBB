@@ -1,6 +1,7 @@
 package models
 
 import (
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
@@ -13,44 +14,34 @@ type PingResult = cmr.PingResult
 
 type AddSubscriptionParams struct {
 	cmr.CommonParams
-
-	ThreadId uint `json:"threadId"`
-	UserId   uint `json:"userId"`
+	ThreadId cmb.Id `json:"threadId"`
+	UserId   cmb.Id `json:"userId"`
 }
-
-type AddSubscriptionResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type AddSubscriptionResult = cmr.CommonResultWithSuccess
 
 type IsSelfSubscribedParams struct {
 	cmr.CommonParams
-
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
 
 type IsSelfSubscribedResult struct {
 	cmr.CommonResult
-
-	UserId       uint `json:"userId"`
-	ThreadId     uint `json:"threadId"`
-	IsSubscribed bool `json:"isSubscribed"`
+	UserId       cmb.Id   `json:"userId"`
+	ThreadId     cmb.Id   `json:"threadId"`
+	IsSubscribed cmb.Flag `json:"isSubscribed"`
 }
 
 type IsUserSubscribedParams struct {
 	cmr.CommonParams
-
-	UserId   uint `json:"userId"`
-	ThreadId uint `json:"threadId"`
+	UserId   cmb.Id `json:"userId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
 
 type IsUserSubscribedResult struct {
 	cmr.CommonResult
-
-	UserId       uint `json:"userId"`
-	ThreadId     uint `json:"threadId"`
-	IsSubscribed bool `json:"isSubscribed"`
+	UserId       cmb.Id   `json:"userId"`
+	ThreadId     cmb.Id   `json:"threadId"`
+	IsSubscribed cmb.Flag `json:"isSubscribed"`
 }
 
 type CountSelfSubscriptionsParams struct {
@@ -59,8 +50,7 @@ type CountSelfSubscriptionsParams struct {
 
 type CountSelfSubscriptionsResult struct {
 	cmr.CommonResult
-
-	UserSubscriptionsCount int `json:"userSubscriptionsCount"`
+	UserSubscriptionsCount cmb.Count `json:"userSubscriptionsCount"`
 }
 
 type GetSelfSubscriptionsParams struct {
@@ -69,98 +59,67 @@ type GetSelfSubscriptionsParams struct {
 
 type GetSelfSubscriptionsResult struct {
 	cmr.CommonResult
-
 	UserSubscriptions *UserSubscriptions `json:"userSubscriptions"`
 }
 
 type GetSelfSubscriptionsOnPageParams struct {
 	cmr.CommonParams
-
-	Page uint `json:"page"`
+	Page cmb.Count `json:"page"`
 }
 
 type GetSelfSubscriptionsOnPageResult struct {
 	cmr.CommonResult
-
 	SubscriptionsOnPage *SubscriptionsOnPage `json:"sop"`
 }
 
 type GetUserSubscriptionsParams struct {
 	cmr.CommonParams
-
-	UserId uint `json:"userId"`
+	UserId cmb.Id `json:"userId"`
 }
 
 type GetUserSubscriptionsResult struct {
 	cmr.CommonResult
-
 	UserSubscriptions *UserSubscriptions `json:"userSubscriptions"`
 }
 
 type GetThreadSubscribersSParams struct {
 	cmr.CommonParams
 	cmr.DKeyParams
-
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
 
 type GetThreadSubscribersSResult struct {
 	cmr.CommonResult
-
 	ThreadSubscriptions *ThreadSubscriptions `json:"threadSubscriptions"`
 }
 
 type DeleteSelfSubscriptionParams struct {
 	cmr.CommonParams
-
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
-
-type DeleteSelfSubscriptionResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type DeleteSelfSubscriptionResult = cmr.CommonResultWithSuccess
 
 type DeleteSubscriptionParams struct {
 	cmr.CommonParams
-
-	ThreadId uint `json:"threadId"`
-	UserId   uint `json:"userId"`
+	ThreadId cmb.Id `json:"threadId"`
+	UserId   cmb.Id `json:"userId"`
 }
-
-type DeleteSubscriptionResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type DeleteSubscriptionResult = cmr.CommonResultWithSuccess
 
 type DeleteSubscriptionSParams struct {
 	cmr.CommonParams
 	cmr.DKeyParams
-
-	ThreadId uint `json:"threadId"`
-	UserId   uint `json:"userId"`
+	ThreadId cmb.Id `json:"threadId"`
+	UserId   cmb.Id `json:"userId"`
 }
-
-type DeleteSubscriptionSResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type DeleteSubscriptionSResult = cmr.CommonResultWithSuccess
 
 type ClearThreadSubscriptionsSParams struct {
 	cmr.CommonParams
 	cmr.DKeyParams
-
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
-
-type ClearThreadSubscriptionsSResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type ClearThreadSubscriptionsSResult = cmr.CommonResultWithSuccess
 
 // Other.
 
@@ -170,8 +129,7 @@ type GetDKeyParams struct {
 
 type GetDKeyResult struct {
 	cmr.CommonResult
-
-	DKey string `json:"dKey"`
+	DKey cmb.Text `json:"dKey"`
 }
 
 type ShowDiagnosticDataParams struct{}

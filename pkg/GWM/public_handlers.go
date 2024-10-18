@@ -129,7 +129,7 @@ func (srv *Server) handlePublicSettings(rw http.ResponseWriter, req *http.Reques
 	}
 }
 
-func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, clientIPA string) {
+func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, clientIPA cm.IPAS) {
 	if req.Method != http.MethodPost {
 		srv.respondMethodNotAllowed(rw)
 		return
@@ -175,7 +175,7 @@ func (srv *Server) handlePublicApi(rw http.ResponseWriter, req *http.Request, cl
 		return
 	}
 
-	var token *string
+	var token *cm.WebTokenString
 	token, err = cm.GetToken(req)
 	if err != nil {
 		srv.respondBadRequest(rw)
@@ -208,10 +208,10 @@ func (srv *Server) handleCaptcha(rw http.ResponseWriter, req *http.Request) {
 }
 
 // handleFrontEnd serves static files for the front end part.
-func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request, clientIPA string) {
+func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request, clientIPA cm.IPAS) {
 	// While the number of cases is less than 10..20, the "switch" branching
 	// works faster than other methods.
-	switch req.URL.Path {
+	switch cm.Path(req.URL.Path) {
 	case srv.frontEnd.AdminHtmlPage.UrlPath:
 		srv.handleAdminFrontEnd(rw, req, clientIPA)
 		return
@@ -256,9 +256,9 @@ func (srv *Server) handleFrontEnd(rw http.ResponseWriter, req *http.Request, cli
 
 // handleAdminFrontEnd serves static files for the front end part for
 // administrator users.
-func (srv *Server) handleAdminFrontEnd(rw http.ResponseWriter, req *http.Request, clientIPA string) {
+func (srv *Server) handleAdminFrontEnd(rw http.ResponseWriter, req *http.Request, clientIPA cm.IPAS) {
 	// Step 1. Filter for fake URL.
-	switch req.URL.Path {
+	switch cm.Path(req.URL.Path) {
 	case s.FrontEndAdminPath: // <- /admin
 	case srv.frontEnd.AdminHtmlPage.UrlPath: // <- /fe/admin.html
 	case srv.frontEnd.AdminJs.UrlPath: // <- /fe/admin.js
@@ -279,7 +279,7 @@ func (srv *Server) handleAdminFrontEnd(rw http.ResponseWriter, req *http.Request
 	}
 
 	// Step 3. Page selection.
-	switch req.URL.Path {
+	switch cm.Path(req.URL.Path) {
 	case s.FrontEndAdminPath: // <- /admin
 		srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.AdminHtmlPage)
 		return
@@ -316,8 +316,8 @@ func (srv *Server) handleFrontEndStaticFile(rw http.ResponseWriter, req *http.Re
 	}
 }
 
-func (srv *Server) checkForAdministrator(rw http.ResponseWriter, req *http.Request, clientIPA string) (ok bool, err error) {
-	var token *string
+func (srv *Server) checkForAdministrator(rw http.ResponseWriter, req *http.Request, clientIPA cm.IPAS) (ok bool, err error) {
+	var token *cm.WebTokenString
 	token, err = cm.GetToken(req)
 	if err != nil {
 		srv.respondBadRequest(rw)
@@ -356,7 +356,7 @@ func (srv *Server) checkForAdministrator(rw http.ResponseWriter, req *http.Reque
 		return false, err
 	}
 
-	if !result.IsAdministrator {
+	if !result.User.Roles.IsAdministrator {
 		srv.respondForbidden(rw)
 		return false, nil
 	}

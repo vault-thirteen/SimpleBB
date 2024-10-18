@@ -15,6 +15,7 @@ import (
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 )
@@ -162,7 +163,7 @@ func (srv *Server) doTestA(wg *sync.WaitGroup, errChan chan error) {
 }
 
 // getDKeyForMM receives a DKey from Message module.
-func (srv *Server) getDKeyForMM() (dKey *string, re *jrm1.RpcError) {
+func (srv *Server) getDKeyForMM() (dKey *cmb.Text, re *jrm1.RpcError) {
 	params := mm.GetDKeyParams{}
 	result := new(mm.GetDKeyResult)
 	var err error
@@ -237,7 +238,7 @@ func (srv *Server) deleteSubscriptionH(s *sm.Subscription) (re *jrm1.RpcError) {
 
 // clearThreadSubscriptionsH is a helper function for clearing subscriptions of
 // a deleted thread.
-func (srv *Server) clearThreadSubscriptionsH(threadId uint) (re *jrm1.RpcError) {
+func (srv *Server) clearThreadSubscriptionsH(threadId cmb.Id) (re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
@@ -296,7 +297,7 @@ func (srv *Server) clearThreadSubscriptionsH(threadId uint) (re *jrm1.RpcError) 
 }
 
 // checkIfThreadExists checks if the thread exists or not.
-func (srv *Server) checkIfThreadExists(threadId uint) (exists bool, re *jrm1.RpcError) {
+func (srv *Server) checkIfThreadExists(threadId cmb.Id) (exists cmb.Flag, re *jrm1.RpcError) {
 	params := mm.ThreadExistsSParams{
 		DKeyParams: cmr.DKeyParams{
 			// DKey is set during module start-up, so it is non-null.
@@ -319,7 +320,7 @@ func (srv *Server) checkIfThreadExists(threadId uint) (exists bool, re *jrm1.Rpc
 }
 
 // countSelfSubscriptionsH is a helper function to count user's subscriptions.
-func (srv *Server) countSelfSubscriptionsH(userId uint) (usc int, re *jrm1.RpcError) {
+func (srv *Server) countSelfSubscriptionsH(userId cmb.Id) (usc cmb.Count, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
@@ -339,7 +340,7 @@ func (srv *Server) countSelfSubscriptionsH(userId uint) (usc int, re *jrm1.RpcEr
 }
 
 // getUserSubscriptionsH is a helper function to read user's subscriptions.
-func (srv *Server) getUserSubscriptionsH(userId uint) (us *sm.UserSubscriptions, re *jrm1.RpcError) {
+func (srv *Server) getUserSubscriptionsH(userId cmb.Id) (us *sm.UserSubscriptions, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
@@ -355,7 +356,7 @@ func (srv *Server) getUserSubscriptionsH(userId uint) (us *sm.UserSubscriptions,
 
 // getUserSubscriptionsOnPageH is a helper function to read user's
 // subscriptions on the selected page.
-func (srv *Server) getUserSubscriptionsOnPageH(userId uint, page uint) (sop *sm.SubscriptionsOnPage, re *jrm1.RpcError) {
+func (srv *Server) getUserSubscriptionsOnPageH(userId cmb.Id, page cmb.Count) (sop *sm.SubscriptionsOnPage, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
@@ -373,29 +374,26 @@ func (srv *Server) getUserSubscriptionsOnPageH(userId uint, page uint) (sop *sm.
 			UserId: userId,
 		}
 
-		us.Threads, err = ul.NewFromArray([]uint{})
+		us.Threads, err = ul.NewFromArray([]cmb.Id{})
 		if err != nil {
 			srv.logError(err)
 			return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 		}
 	}
 
-	sop = sm.NewSubscriptionsOnPage()
-	{
-		sop.Subscriber = userId
+	var allThreadIds = us.Threads
+	var threadIdsOnPage = allThreadIds.OnPage(page, srv.settings.SystemSettings.PageSize)
 
-		threadIds := us.Threads.OnPage(page, srv.settings.SystemSettings.PageSize)
-		if threadIds != nil {
-			sop.Subscriptions = *threadIds
-		}
-
-		sop.Page = &page
-
-		allSubscriptionsCountUint := uint(us.Threads.Size())
-		tp := c.CalculateTotalPages(allSubscriptionsCountUint, srv.settings.SystemSettings.PageSize)
-		sop.TotalPages = &tp
-
-		sop.TotalSubscriptions = &allSubscriptionsCountUint
+	sop = &sm.SubscriptionsOnPage{
+		Subscriber:    userId,
+		Subscriptions: threadIdsOnPage,
+		PageData: &cmr.PageData{
+			PageNumber:  page,
+			TotalPages:  cmb.CalculateTotalPages(allThreadIds.Size(), srv.settings.SystemSettings.PageSize),
+			PageSize:    srv.settings.SystemSettings.PageSize,
+			ItemsOnPage: threadIdsOnPage.Size(),
+			TotalItems:  allThreadIds.Size(),
+		},
 	}
 
 	return sop, nil
@@ -403,7 +401,7 @@ func (srv *Server) getUserSubscriptionsOnPageH(userId uint, page uint) (sop *sm.
 
 // isUserSubscribedH is a helper function to check whether the user has a
 // subscription to the thread.
-func (srv *Server) isUserSubscribedH(userId uint, threadId uint) (isSubscribed bool, re *jrm1.RpcError) {
+func (srv *Server) isUserSubscribedH(userId cmb.Id, threadId cmb.Id) (isSubscribed cmb.Flag, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
@@ -420,7 +418,7 @@ func (srv *Server) isUserSubscribedH(userId uint, threadId uint) (isSubscribed b
 	}
 
 	// Search for an item.
-	isSubscribed = us.Threads.HasItem(threadId)
+	isSubscribed = cmb.Flag(us.Threads.HasItem(threadId))
 
 	return isSubscribed, nil
 }

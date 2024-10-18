@@ -20,7 +20,7 @@ settingsExpirationDuration = 60;
 redirectDelay = 2;
 
 // Names of JavaScript storage variables.
-varname = {
+Varname = {
 	SettingsLoadTime: "settingsLoadTime",
 	LogInTime: "logInTime",
 	SettingsVersion: "settingsVersion",
@@ -54,7 +54,7 @@ varname = {
 }
 
 // Form Input Elements.
-fi = {
+Fi = {
 	id1: "f1i",
 	id2: "f2i",
 	id3: "f3i",
@@ -84,14 +84,14 @@ fi = {
 }
 
 // Section settings.
-sectionChildType = {
+SectionChildType = {
 	None: 0,
 	Section: 1,
 	Forum: 2,
 }
-sectionMarginDelta = 10;
+SectionMarginDelta = 10;
 
-buttonName = {
+ButtonName = {
 	BackToRoot: "🏠",
 	BackToSection: "Go back",
 	BackToForum: "Go back",
@@ -100,6 +100,23 @@ buttonName = {
 	SubscribeToThread: "Subscribe",
 	AddMessage: "Add a Message",
 	EditMessage: "Edit Message",
+}
+
+ObjectType = {
+	Forum: "Forum",
+	Thread: "Thread",
+	Message: "Message",
+}
+
+EventHandlerVariant = {
+	ForumPagePrev: "ForumPagePrev",
+	ForumPageNext: "ForumPageNext",
+	ThreadPagePrev: "ThreadPagePrev",
+	ThreadPageNext: "ThreadPageNext",
+	SubscriptionsPrev: "SubscriptionsPrev",
+	SubscriptionsNext: "SubscriptionsNext",
+	NotificationsPagePrev: "NotificationsPagePrev",
+	NotificationsPageNext: "NotificationsPageNext",
 }
 
 // Global variables.
@@ -126,17 +143,22 @@ class UserNameCache {
 		if (resp == null) {
 			return null;
 		}
-
-		let userName = resp.result.userName;
-		this.m.set(userId, userName);
-		return userName;
+		let user = new User(resp.result.user);
+		this.m.set(userId, user.Name);
+		return user.Name;
 	}
+}
+
+async function getUserNameById(userId) {
+	return await mca_gvc.UNC.GetName(userId);
 }
 
 mca_gvc = new GlobalVariablesContainer(0, 0, 0, new UserNameCache());
 
+// Settings.
+
 function isSettingsUpdateNeeded() {
-	let settingsLoadTimeStr = sessionStorage.getItem(varname.SettingsLoadTime);
+	let settingsLoadTimeStr = sessionStorage.getItem(Varname.SettingsLoadTime);
 	if (settingsLoadTimeStr == null) {
 		return true;
 	}
@@ -151,44 +173,87 @@ function isSettingsUpdateNeeded() {
 }
 
 function saveSettings(s) {
-	sessionStorage.setItem(varname.SettingsVersion, s.Version.toString());
-	sessionStorage.setItem(varname.SettingsProductVersion, s.ProductVersion);
-	sessionStorage.setItem(varname.SettingsSiteName, s.SiteName);
-	sessionStorage.setItem(varname.SettingsSiteDomain, s.SiteDomain);
-	sessionStorage.setItem(varname.SettingsCaptchaFolder, s.CaptchaFolder);
-	sessionStorage.setItem(varname.SettingsSessionMaxDuration, s.SessionMaxDuration.toString());
-	sessionStorage.setItem(varname.SettingsMessageEditTime, s.MessageEditTime.toString());
-	sessionStorage.setItem(varname.SettingsPageSize, s.PageSize.toString());
-	sessionStorage.setItem(varname.SettingsApiFolder, s.ApiFolder);
-	sessionStorage.setItem(varname.SettingsPublicSettingsFileName, s.PublicSettingsFileName);
-	sessionStorage.setItem(varname.SettingsIsFrontEndEnabled, s.IsFrontEndEnabled.toString());
-	sessionStorage.setItem(varname.SettingsFrontEndStaticFilesFolder, s.FrontEndStaticFilesFolder);
+	sessionStorage.setItem(Varname.SettingsVersion, s.Version.toString());
+	sessionStorage.setItem(Varname.SettingsProductVersion, s.ProductVersion);
+	sessionStorage.setItem(Varname.SettingsSiteName, s.SiteName);
+	sessionStorage.setItem(Varname.SettingsSiteDomain, s.SiteDomain);
+	sessionStorage.setItem(Varname.SettingsCaptchaFolder, s.CaptchaFolder);
+	sessionStorage.setItem(Varname.SettingsSessionMaxDuration, s.SessionMaxDuration.toString());
+	sessionStorage.setItem(Varname.SettingsMessageEditTime, s.MessageEditTime.toString());
+	sessionStorage.setItem(Varname.SettingsPageSize, s.PageSize.toString());
+	sessionStorage.setItem(Varname.SettingsApiFolder, s.ApiFolder);
+	sessionStorage.setItem(Varname.SettingsPublicSettingsFileName, s.PublicSettingsFileName);
+	sessionStorage.setItem(Varname.SettingsIsFrontEndEnabled, s.IsFrontEndEnabled.toString());
+	sessionStorage.setItem(Varname.SettingsFrontEndStaticFilesFolder, s.FrontEndStaticFilesFolder);
 
 	let timeNow = getCurrentTimestamp();
-	sessionStorage.setItem(varname.SettingsLoadTime, timeNow.toString());
+	sessionStorage.setItem(Varname.SettingsLoadTime, timeNow.toString());
 }
 
 function getSettings() {
-	let settingsLoadTime = sessionStorage.getItem(varname.SettingsLoadTime);
+	let settingsLoadTime = sessionStorage.getItem(Varname.SettingsLoadTime);
 	if (settingsLoadTime == null) {
-		console.error(err.Settings);
+		console.error(Err.Settings);
 		return null;
 	}
 
 	return new Settings(
-		Number(sessionStorage.getItem(varname.SettingsVersion)),
-		sessionStorage.getItem(varname.SettingsProductVersion),
-		sessionStorage.getItem(varname.SettingsSiteName),
-		sessionStorage.getItem(varname.SettingsSiteDomain),
-		sessionStorage.getItem(varname.SettingsCaptchaFolder),
-		Number(sessionStorage.getItem(varname.SettingsSessionMaxDuration)),
-		Number(sessionStorage.getItem(varname.SettingsMessageEditTime)),
-		Number(sessionStorage.getItem(varname.SettingsPageSize)),
-		sessionStorage.getItem(varname.SettingsApiFolder),
-		sessionStorage.getItem(varname.SettingsPublicSettingsFileName),
-		stringToBoolean(sessionStorage.getItem(varname.SettingsIsFrontEndEnabled)),
-		sessionStorage.getItem(varname.SettingsFrontEndStaticFilesFolder),
+		sessionStorage.getItem(Varname.SettingsVersion),
+		sessionStorage.getItem(Varname.SettingsProductVersion),
+		sessionStorage.getItem(Varname.SettingsSiteName),
+		sessionStorage.getItem(Varname.SettingsSiteDomain),
+		sessionStorage.getItem(Varname.SettingsCaptchaFolder),
+		sessionStorage.getItem(Varname.SettingsSessionMaxDuration),
+		sessionStorage.getItem(Varname.SettingsMessageEditTime),
+		sessionStorage.getItem(Varname.SettingsPageSize),
+		sessionStorage.getItem(Varname.SettingsApiFolder),
+		sessionStorage.getItem(Varname.SettingsPublicSettingsFileName),
+		sessionStorage.getItem(Varname.SettingsIsFrontEndEnabled),
+		sessionStorage.getItem(Varname.SettingsFrontEndStaticFilesFolder),
 	);
+}
+
+// Logged status.
+
+function isLoggedIn(settings) {
+	let isLoggedInStr = localStorage.getItem(Varname.IsLoggedIn);
+	let isLoggedIn;
+
+	if (isLoggedInStr === null) {
+		isLoggedIn = false;
+		localStorage.setItem(Varname.IsLoggedIn, isLoggedIn.toString());
+		return false;
+	}
+
+	isLoggedIn = stringToBoolean(isLoggedInStr);
+	if (!isLoggedIn) {
+		return false;
+	}
+
+	// Check if the session is not closed by timeout.
+	let logInTime = Number(localStorage.getItem(Varname.LogInTime));
+	let timeNow = getCurrentTimestamp();
+	let sessionAge = timeNow - logInTime;
+	if (sessionAge > settings.SessionMaxDuration) {
+		isLoggedIn = false;
+		localStorage.setItem(Varname.IsLoggedIn, isLoggedIn.toString());
+		return false;
+	}
+
+	return true;
+}
+
+function saveLogInStatus() {
+	let isLoggedIn = true;
+	localStorage.setItem(Varname.IsLoggedIn, isLoggedIn.toString());
+	let timeNow = getCurrentTimestamp();
+	localStorage.setItem(Varname.LogInTime, timeNow.toString());
+}
+
+function saveLogOutStatus() {
+	let isLoggedIn = false;
+	localStorage.setItem(Varname.IsLoggedIn, isLoggedIn.toString());
+	localStorage.removeItem(Varname.LogInTime);
 }
 
 // Entry point.
@@ -204,38 +269,38 @@ async function onPageLoad() {
 
 	// Redirect to registration.
 	switch (curPage) {
-		case qp.RegistrationStep1:
+		case Qp.RegistrationStep1:
 			await showReg1Form();
 			return;
 
-		case qp.RegistrationStep2:
+		case Qp.RegistrationStep2:
 			await showReg2Form();
 			return;
 
-		case qp.RegistrationStep3:
+		case Qp.RegistrationStep3:
 			await showReg3Form();
 			return;
 
-		case qp.RegistrationStep4:
+		case Qp.RegistrationStep4:
 			await showReg4Form();
 			return;
 	}
 
 	// Redirect to logging in.
 	switch (curPage) {
-		case qp.LogInStep1:
+		case Qp.LogInStep1:
 			await showLogIn1Form();
 			return;
 
-		case qp.LogInStep2:
+		case Qp.LogInStep2:
 			await showLogIn2Form();
 			return;
 
-		case qp.LogInStep3:
+		case Qp.LogInStep3:
 			await showLogIn3Form();
 			return;
 
-		case qp.LogInStep4:
+		case Qp.LogInStep4:
 			await showLogIn4Form();
 			await redirectToMainPage(true);
 			return;
@@ -249,39 +314,39 @@ async function onPageLoad() {
 
 	// Pages for logged users.
 	switch (curPage) {
-		case qp.LogOutStep1:
+		case Qp.LogOutStep1:
 			await showLogOut1Form();
 			return;
 
-		case qp.LogOutStep2:
+		case Qp.LogOutStep2:
 			await showLogOut2Form();
 			return;
 
-		case qp.ChangeEmailStep1:
+		case Qp.ChangeEmailStep1:
 			await showChangeEmail1Form();
 			return;
 
-		case qp.ChangeEmailStep2:
+		case Qp.ChangeEmailStep2:
 			await showChangeEmail2Form();
 			return;
 
-		case qp.ChangeEmailStep3:
+		case Qp.ChangeEmailStep3:
 			await showChangeEmail3Form();
 			return;
 
-		case qp.ChangePwdStep1:
+		case Qp.ChangePwdStep1:
 			await showChangePwd1Form();
 			return;
 
-		case qp.ChangePwdStep2:
+		case Qp.ChangePwdStep2:
 			await showChangePwd2Form();
 			return;
 
-		case qp.ChangePwdStep3:
+		case Qp.ChangePwdStep3:
 			await showChangePwd3Form();
 			return;
 
-		case qp.SelfPage:
+		case Qp.SelfPage:
 			await showUserPage();
 			return;
 	}
@@ -289,7 +354,7 @@ async function onPageLoad() {
 	let sp = new URLSearchParams(curPage);
 
 	// Notifications.
-	if (sp.has(qpn.Notifications)) {
+	if (sp.has(Qpn.Notifications)) {
 		if (!preparePageVariable(sp)) {
 			return;
 		}
@@ -298,7 +363,7 @@ async function onPageLoad() {
 	}
 
 	// Subscriptions.
-	if (sp.has(qpn.SubscriptionsPage)) {
+	if (sp.has(Qpn.SubscriptionsPage)) {
 		if (!preparePageVariable(sp)) {
 			return;
 		}
@@ -307,7 +372,7 @@ async function onPageLoad() {
 	}
 
 	// Show the bulletin board.
-	if (sp.has(qpn.Section)) {
+	if (sp.has(Qpn.Section)) {
 		if (!prepareIdVariable(sp)) {
 			return;
 		}
@@ -315,7 +380,7 @@ async function onPageLoad() {
 		return;
 	}
 
-	if (sp.has(qpn.Forum)) {
+	if (sp.has(Qpn.Forum)) {
 		if ((!prepareIdVariable(sp)) || (!preparePageVariable(sp))) {
 			return;
 		}
@@ -323,7 +388,7 @@ async function onPageLoad() {
 		return;
 	}
 
-	if (sp.has(qpn.Thread)) {
+	if (sp.has(Qpn.Thread)) {
 		if ((!prepareIdVariable(sp)) || (!preparePageVariable(sp))) {
 			return;
 		}
@@ -331,7 +396,7 @@ async function onPageLoad() {
 		return;
 	}
 
-	if (sp.has(qpn.Message)) {
+	if (sp.has(Qpn.Message)) {
 		if ((!prepareIdVariable(sp))) {
 			return;
 		}
@@ -340,51 +405,6 @@ async function onPageLoad() {
 	}
 
 	await showBB();
-}
-
-function isLoggedIn(settings) {
-	let isLoggedInStr = localStorage.getItem(varname.IsLoggedIn);
-	let isLoggedIn;
-
-	if (isLoggedInStr === null) {
-		isLoggedIn = false;
-		localStorage.setItem(varname.IsLoggedIn, isLoggedIn.toString());
-		return false;
-	}
-
-	isLoggedIn = stringToBoolean(isLoggedInStr);
-	if (!isLoggedIn) {
-		return false;
-	}
-
-	// Check if the session is not closed by timeout.
-	let logInTime = Number(localStorage.getItem(varname.LogInTime));
-	let timeNow = getCurrentTimestamp();
-	let sessionAge = timeNow - logInTime;
-	if (sessionAge > settings.SessionMaxDuration) {
-		isLoggedIn = false;
-		localStorage.setItem(varname.IsLoggedIn, isLoggedIn.toString());
-		return false;
-	}
-
-	return true;
-}
-
-function saveLogInStatus() {
-	isLoggedIn = true;
-	localStorage.setItem(varname.IsLoggedIn, isLoggedIn.toString());
-	let timeNow = getCurrentTimestamp();
-	localStorage.setItem(varname.LogInTime, timeNow.toString());
-}
-
-function saveLogOutStatus() {
-	isLoggedIn = false;
-	localStorage.setItem(varname.IsLoggedIn, isLoggedIn.toString());
-	localStorage.removeItem(varname.LogInTime);
-}
-
-function showBlock(block) {
-	block.style.display = "block";
 }
 
 async function showReg1Form() {
@@ -439,12 +459,12 @@ async function showLogIn1Form() {
 
 async function showLogIn2Form() {
 	// Captcha (optional).
-	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varname.LogInIsCaptchaNeeded));
-	let captchaId = sessionStorage.getItem(varname.LogInCaptchaId);
+	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(Varname.LogInIsCaptchaNeeded));
+	let captchaId = sessionStorage.getItem(Varname.LogInCaptchaId);
 	let cptImageTr = document.getElementById("formHolderLogIn2CaptchaImage");
-	let cptImage = document.getElementById(fi.id7_image);
+	let cptImage = document.getElementById(Fi.id7_image);
 	let cptAnswerTr = document.getElementById("formHolderLogIn2CaptchaAnswer");
-	let cptAnswer = document.getElementById(fi.id7);
+	let cptAnswer = document.getElementById(Fi.id7);
 	let settings = getSettings();
 
 	// Draw.
@@ -507,12 +527,12 @@ async function showChangeEmail1Form() {
 
 async function showChangeEmail2Form() {
 	// Captcha (optional).
-	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varname.ChangeEmailIsCaptchaNeeded));
-	let captchaId = sessionStorage.getItem(varname.ChangeEmailCaptchaId);
+	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(Varname.ChangeEmailIsCaptchaNeeded));
+	let captchaId = sessionStorage.getItem(Varname.ChangeEmailCaptchaId);
 	let cptImageTr = document.getElementById("formHolderChangeEmail2CaptchaImage");
-	let cptImage = document.getElementById(fi.id11_image);
+	let cptImage = document.getElementById(Fi.id11_image);
 	let cptAnswerTr = document.getElementById("formHolderChangeEmail2CaptchaAnswer");
-	let cptAnswer = document.getElementById(fi.id11);
+	let cptAnswer = document.getElementById(Fi.id11);
 	let settings = getSettings();
 
 	// Draw.
@@ -545,12 +565,12 @@ async function showChangePwd1Form() {
 
 async function showChangePwd2Form() {
 	// Captcha (optional).
-	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(varname.ChangePwdIsCaptchaNeeded));
-	let captchaId = sessionStorage.getItem(varname.ChangePwdCaptchaId);
+	let isCaptchaNeeded = stringToBoolean(sessionStorage.getItem(Varname.ChangePwdIsCaptchaNeeded));
+	let captchaId = sessionStorage.getItem(Varname.ChangePwdCaptchaId);
 	let cptImageTr = document.getElementById("formHolderChangePwd2CaptchaImage");
-	let cptImage = document.getElementById(fi.id16_image);
+	let cptImage = document.getElementById(Fi.id16_image);
 	let cptAnswerTr = document.getElementById("formHolderChangePwd2CaptchaAnswer");
-	let cptAnswer = document.getElementById(fi.id16);
+	let cptAnswer = document.getElementById(Fi.id16);
 	let settings = getSettings();
 
 	// Draw.
@@ -576,7 +596,7 @@ async function showUserPage() {
 	if (resp == null) {
 		return;
 	}
-	let userParams = resp.result;
+	let user = jsonToUser(resp.result.user);
 	let settings = getSettings();
 
 	// Draw.
@@ -584,20 +604,205 @@ async function showUserPage() {
 	showBlock(p);
 	addActionPanel(p, true);
 	await addPageHead(p, settings.SiteName, true);
-	await fillUserPage(userParams);
+	await drawUserPage(user);
 }
 
-async function showBB() {
-	// Prepare data.
+async function showPage_Notifications() {
+	let pageNumber = mca_gvc.Page;
+	let resp = await getNotificationsOnPage(pageNumber);
+	if (resp == null) {
+		return;
+	}
+	let pageCount = resp.result.nop.totalPages;
+	pageCount = repairUndefinedPageCount(pageCount);
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	if (pageNumber > pageCount) {
+		console.error(Err.PageNotFound);
+		return;
+	}
+
+	let notifications = jsonToNotifications(resp.result.nop.notifications);
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divBB");
+	showBlock(p);
+	await addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false);
+	drawNotificationsOnPage(p, notifications);
+}
+
+async function showPage_Subscriptions() {
+	let pageNumber = mca_gvc.Page;
+	let sop = await getSelfSubscriptionsPaginated(pageNumber);
+	let pageCount = sop.TotalPages;
+	pageCount = repairUndefinedPageCount(pageCount);
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	if (pageNumber > pageCount) {
+		console.error(Err.PageNotFound);
+		return;
+	}
+
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divBB");
+	showBlock(p);
+	await addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false);
+	drawSubscriptionsOnPage(p, sop);
+}
+
+async function showSection() {
+	let sectionId = mca_gvc.Id;
 	let resp = await listSectionsAndForums();
 	if (resp == null) {
 		return;
 	}
-	let sections = resp.result.saf.sections;
-	let forums = resp.result.saf.forums;
+	let sections = jsonToSections(resp.result.saf.sections);
+	let forums = jsonToForums(resp.result.saf.forums);
 	let rootSectionIdx = getRootSectionIdx(sections);
 	if (rootSectionIdx == null) {
-		console.error(err.RootSectionNotFound);
+		console.error(Err.RootSectionNotFound);
+	}
+	let rootSection = sections[rootSectionIdx];
+	let sectionsMap = putArrayItemsIntoMap(sections);
+	if (sectionsMap == null) {
+		return;
+	}
+	let forumsMap = putArrayItemsIntoMap(forums);
+	if (forumsMap == null) {
+		return;
+	}
+	let allNodes = [];
+	createTreeOfSections(rootSection, sectionsMap, 1, allNodes);
+	let nodes = [];
+	if (!sectionsMap.has(sectionId)) {
+		console.error(Err.SectionNotFound);
+		return;
+	}
+	let curSection = sectionsMap.get(sectionId);
+	let curLevel = findCurrentNodeLevel(allNodes, sectionId);
+	createTreeOfSections(curSection, sectionsMap, curLevel, nodes);
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divBB");
+	showBlock(p);
+	await addPageHead(p, settings.SiteName, false);
+	if (curSection.Parent != null) {
+		addActionPanel(p, false, ObjectType.Section, curSection.Parent);
+	} else {
+		addActionPanel(p, false);
+	}
+	drawSectionsAndForums(p, nodes, forumsMap);
+}
+
+async function showForum() {
+	let forumId = mca_gvc.Id;
+	let pageNumber = mca_gvc.Page;
+	let resp = await listForumAndThreadsOnPage(forumId, pageNumber);
+	if (resp == null) {
+		return;
+	}
+	let pageCount = repairUndefinedPageCount(resp.result.fatop.totalPages);
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	if (pageNumber > pageCount) {
+		console.error(Err.PageNotFound);
+		return;
+	}
+
+	let forum = jsonToForum(resp.result.fatop.forum);
+	if (forum.Id !== forumId) {
+		return;
+	}
+	let threads = jsonToThreads(resp.result.fatop.threads);
+	let threadsMap = putArrayItemsIntoMap(threads);
+	if (threadsMap == null) {
+		return;
+	}
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divBB");
+	showBlock(p);
+	await addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false, ObjectType.Section, forum.SectionId);
+	drawForumAndThreads(p, forum, threadsMap);
+	await addBottomActionPanel(p, ObjectType.Forum, forum);
+}
+
+async function showThread() {
+	let threadId = mca_gvc.Id;
+	let pageNumber = mca_gvc.Page;
+	let resp = await listThreadAndMessagesOnPage(threadId, pageNumber);
+	if (resp == null) {
+		return;
+	}
+	let pageCount = resp.result.tamop.totalPages;
+	pageCount = repairUndefinedPageCount(pageCount);
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	if (pageNumber > pageCount) {
+		console.error(Err.PageNotFound);
+		return;
+	}
+
+	let thread = jsonToThread(resp.result.tamop.thread);
+	if (thread.Id !== threadId) {
+		return;
+	}
+	let messages = jsonToMessages(resp.result.tamop.messages);
+	let messagesMap = putArrayItemsIntoMap(messages);
+	if (messagesMap == null) {
+		return;
+	}
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divBB");
+	showBlock(p);
+	await addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false, ObjectType.Forum, thread.ForumId);
+	await drawThreadAndMessages(p, thread, messagesMap);
+	await addBottomActionPanel(p, ObjectType.Thread, thread);
+}
+
+async function showMessage() {
+	let messageId = mca_gvc.Id;
+	let resp = await getMessage(messageId);
+	if (resp == null) {
+		return;
+	}
+	let message = jsonToMessage(resp.result.message);
+	let settings = getSettings();
+
+	// Draw.
+	let p = document.getElementById("divBB");
+	showBlock(p);
+	await addPageHead(p, settings.SiteName, false);
+	addActionPanel(p, false, ObjectType.Thread, message.ThreadId);
+	await drawMessage(p, message);
+	await addBottomActionPanel(p, ObjectType.Message, message);
+}
+
+async function showBB() {
+	let resp = await listSectionsAndForums();
+	if (resp == null) {
+		return;
+	}
+	let sections = jsonToSections(resp.result.saf.sections);
+	let forums = jsonToForums(resp.result.saf.forums);
+	let rootSectionIdx = getRootSectionIdx(sections);
+	if (rootSectionIdx == null) {
+		console.error(Err.RootSectionNotFound);
 	}
 	let rootSection = sections[rootSectionIdx];
 	let sectionsMap = putArrayItemsIntoMap(sections);
@@ -620,216 +825,65 @@ async function showBB() {
 	drawSectionsAndForums(p, nodes, forumsMap);
 }
 
-async function showSection() {
-	// Prepare data.
-	let sectionId = mca_gvc.Id;
-	let resp = await listSectionsAndForums();
-	if (resp == null) {
-		return;
-	}
-	let sections = resp.result.saf.sections;
-	let forums = resp.result.saf.forums;
-	let rootSectionIdx = getRootSectionIdx(sections);
-	if (rootSectionIdx == null) {
-		console.error(err.RootSectionNotFound);
-	}
-	let rootSection = sections[rootSectionIdx];
-	let sectionsMap = putArrayItemsIntoMap(sections);
-	if (sectionsMap == null) {
-		return;
-	}
-	let forumsMap = putArrayItemsIntoMap(forums);
-	if (forumsMap == null) {
-		return;
-	}
-	let allNodes = [];
-	createTreeOfSections(rootSection, sectionsMap, 1, allNodes);
-	let nodes = [];
-	if (!sectionsMap.has(sectionId)) {
-		console.error(err.SectionNotFound);
-		return;
-	}
-	let curSection = sectionsMap.get(sectionId);
-	let curLevel = findCurrentNodeLevel(allNodes, sectionId);
-	createTreeOfSections(curSection, sectionsMap, curLevel, nodes);
-	let settings = getSettings();
-	let parentId = curSection.parent;
-
-	// Draw.
-	let p = document.getElementById("divBB");
-	showBlock(p);
-	await addPageHead(p, settings.SiteName, false);
-	if (parentId != null) {
-		addActionPanel(p, false, "section", parentId);
-	} else {
-		addActionPanel(p, false);
-	}
-	drawSectionsAndForums(p, nodes, forumsMap);
-}
-
-async function showForum() {
-	// Prepare data.
-	let forumId = mca_gvc.Id;
-	let pageNumber = mca_gvc.Page;
-	let resp = await listForumAndThreadsOnPage(forumId, pageNumber);
-	if (resp == null) {
-		return;
-	}
-	let pageCount = resp.result.fatop.totalPages;
-	pageCount = repairUndefinedPageCount(pageCount);
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	if (pageNumber > pageCount) {
-		console.error(err.PageNotFound);
-		return;
-	}
-
-	let forum = resp.result.fatop;
-	let threads = resp.result.fatop.threads;
-	let threadsMap = putArrayItemsIntoMap(threads);
-	if (threadsMap == null) {
-		return;
-	}
-	let settings = getSettings();
-	let parentId = forum.forumSectionId;
-
-	// Draw.
-	let p = document.getElementById("divBB");
-	showBlock(p);
-	await addPageHead(p, settings.SiteName, false);
-	addActionPanel(p, false, "section", parentId);
-	drawForumAndThreads(p, forum, threadsMap);
-	await addBottomActionPanel(p, "forum", forumId, forum);
-}
-
-async function showThread() {
-	// Prepare data.
-	let threadId = mca_gvc.Id;
-	let pageNumber = mca_gvc.Page;
-	let resp = await listThreadAndMessagesOnPage(threadId, pageNumber);
-	if (resp == null) {
-		return;
-	}
-	let pageCount = resp.result.tamop.totalPages;
-	pageCount = repairUndefinedPageCount(pageCount);
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	if (pageNumber > pageCount) {
-		console.error(err.PageNotFound);
-		return;
-	}
-
-	let thread = resp.result.tamop;
-	let messages = resp.result.tamop.messages;
-	let messagesMap = putArrayItemsIntoMap(messages);
-	if (messagesMap == null) {
-		return;
-	}
-	let settings = getSettings();
-	let parentId = thread.threadForumId;
-
-	// Draw.
-	let p = document.getElementById("divBB");
-	showBlock(p);
-	await addPageHead(p, settings.SiteName, false);
-	addActionPanel(p, false, "forum", parentId);
-	await drawThreadAndMessages(p, thread, messagesMap);
-	await addBottomActionPanel(p, "thread", threadId, thread);
-}
-
-async function showMessage() {
-	let messageId = mca_gvc.Id;
-	let resp = await getMessage(messageId);
-	if (resp == null) {
-		return;
-	}
-	let message = resp.result.message;
-	let settings = getSettings();
-	let parentId = message.threadId;
-
-	// Draw.
-	let p = document.getElementById("divBB");
-	showBlock(p);
-	await addPageHead(p, settings.SiteName, false);
-	addActionPanel(p, false, "thread", parentId);
-	await processMessage(p, message);
-	await addBottomActionPanel(p, "message", messageId, message);
-}
-
-function setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer) {
-	if (isCaptchaNeeded) {
-		cptImageTr.style.display = "table-row";
-		cptAnswerTr.style.display = "table-row";
-		if (captchaId.length > 0) {
-			cptImage.src = composeCaptchaImageUrl(captchaId);
-		}
-		cptAnswer.enabled = true;
-	} else {
-		cptImageTr.style.display = "none";
-		cptAnswerTr.style.display = "none";
-		cptAnswer.enabled = false;
-	}
-}
+// Event handlers.
 
 async function onReg1Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextReg1");
 	let errField = document.getElementById("header4TextReg1");
-	let email = document.getElementById(fi.id1).value;
+	let email = document.getElementById(Fi.id1).value;
 	let resp = await registerUser1(1, email);
 	if (resp == null) {
 		return;
 	}
 	let nextStep = resp.result.nextStep;
 	if (nextStep !== 2) {
-		errField.innerHTML = composeErrorText(err.NextStepUnknown);
+		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
-	sessionStorage.setItem(varname.RegistrationEmail, email);
+	sessionStorage.setItem(Varname.RegistrationEmail, email);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msg.Redirecting;
-	await redirectToRelativePath(true, qp.RegistrationStep2);
+	h3Field.innerHTML = Msg.Redirecting;
+	await redirectToRelativePath(true, Qp.RegistrationStep2);
 }
 
 async function onReg2Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextReg2");
 	let errField = document.getElementById("header4TextReg2");
-	let email = sessionStorage.getItem(varname.RegistrationEmail);
-	let vcode = document.getElementById(fi.id2).value;
+	let email = sessionStorage.getItem(Varname.RegistrationEmail);
+	let vcode = document.getElementById(Fi.id2).value;
 	let resp = await registerUser2(2, email, vcode);
 	if (resp == null) {
 		return;
 	}
 	let nextStep = resp.result.nextStep;
 	if (nextStep !== 3) {
-		errField.innerHTML = composeErrorText(err.NextStepUnknown);
+		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
-	sessionStorage.setItem(varname.RegistrationVcode, vcode);
+	sessionStorage.setItem(Varname.RegistrationVcode, vcode);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msg.Redirecting;
-	await redirectToRelativePath(true, qp.RegistrationStep3);
+	h3Field.innerHTML = Msg.Redirecting;
+	await redirectToRelativePath(true, Qp.RegistrationStep3);
 }
 
 async function onReg3Submit(btn) {
 	// Check the input.
-	let pwd = document.getElementById(fi.id4).value;
-	let pwdErrFlag = document.getElementById(fi.id4_errflag);
-	let ok = checkPwd(pwd);
-	if (ok) {
+	let pwdStr = document.getElementById(Fi.id4).value;
+	let pwd = new Password(pwdStr);
+	let pwdErrFlag = document.getElementById(Fi.id4_errflag);
+	if (pwd.check()) {
 		pwdErrFlag.className = "flag_none";
 	} else {
 		pwdErrFlag.className = "flag_error";
@@ -839,61 +893,61 @@ async function onReg3Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextReg3");
 	let errField = document.getElementById("header4TextReg3");
-	let email = sessionStorage.getItem(varname.RegistrationEmail);
-	let vcode = sessionStorage.getItem(varname.RegistrationVcode);
-	let name = document.getElementById(fi.id3).value;
-	let resp = await registerUser3(3, email, vcode, name, pwd);
+	let email = sessionStorage.getItem(Varname.RegistrationEmail);
+	let vcode = sessionStorage.getItem(Varname.RegistrationVcode);
+	let name = document.getElementById(Fi.id3).value;
+	let resp = await registerUser3(3, email, vcode, name, pwd.Pwd);
 	if (resp == null) {
 		return;
 	}
 	let nextStep = resp.result.nextStep;
 	if ((nextStep !== 4) && (nextStep !== 0)) {
-		errField.innerHTML = composeErrorText(err.NextStepUnknown);
+		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Clear saved input data from browser.
-	sessionStorage.removeItem(varname.RegistrationEmail);
-	sessionStorage.removeItem(varname.RegistrationVcode);
+	sessionStorage.removeItem(Varname.RegistrationEmail);
+	sessionStorage.removeItem(Varname.RegistrationVcode);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msg.Redirecting;
-	await redirectToRelativePath(true, qp.RegistrationStep4);
+	h3Field.innerHTML = Msg.Redirecting;
+	await redirectToRelativePath(true, Qp.RegistrationStep4);
 }
 
 async function onLogIn1Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextLogIn1");
 	let errField = document.getElementById("header4TextLogIn1");
-	let email = document.getElementById(fi.id5).value;
+	let email = document.getElementById(Fi.id5).value;
 	let resp = await logUserIn1(1, email);
 	if (resp == null) {
 		return;
 	}
 	let nextStep = resp.result.nextStep;
 	if (nextStep !== 2) {
-		errField.innerHTML = composeErrorText(err.NextStepUnknown);
+		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
-	sessionStorage.setItem(varname.LogInEmail, email);
+	sessionStorage.setItem(Varname.LogInEmail, email);
 	let requestId = resp.result.requestId;
-	sessionStorage.setItem(varname.LogInRequestId, requestId);
+	sessionStorage.setItem(Varname.LogInRequestId, requestId);
 	let authDataBytes = resp.result.authDataBytes;
-	sessionStorage.setItem(varname.LogInAuthDataBytes, authDataBytes);
+	sessionStorage.setItem(Varname.LogInAuthDataBytes, authDataBytes);
 	let isCaptchaNeeded = resp.result.isCaptchaNeeded;
-	sessionStorage.setItem(varname.LogInIsCaptchaNeeded, isCaptchaNeeded.toString());
+	sessionStorage.setItem(Varname.LogInIsCaptchaNeeded, isCaptchaNeeded.toString());
 	let captchaId = resp.result.captchaId;
-	sessionStorage.setItem(varname.LogInCaptchaId, captchaId);
+	sessionStorage.setItem(Varname.LogInCaptchaId, captchaId);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msg.Redirecting;
-	await redirectToRelativePath(true, qp.LogInStep2);
+	h3Field.innerHTML = Msg.Redirecting;
+	await redirectToRelativePath(true, Qp.LogInStep2);
 }
 
 async function onLogIn2Submit(btn) {
@@ -901,46 +955,46 @@ async function onLogIn2Submit(btn) {
 	let h3Field = document.getElementById("header3TextLogIn2");
 
 	// Captcha (optional).
-	let captchaAnswer = document.getElementById(fi.id7).value;
+	let captchaAnswer = document.getElementById(Fi.id7).value;
 
 	// Secret.
-	let authDataBytes = sessionStorage.getItem(varname.LogInAuthDataBytes);
+	let authDataBytes = sessionStorage.getItem(Varname.LogInAuthDataBytes);
 	let saltBA = base64ToByteArray(authDataBytes);
-	let pwd = document.getElementById(fi.id6).value;
+	let pwd = document.getElementById(Fi.id6).value;
 	if (!isPasswordAllowed(pwd)) {
-		errField.innerHTML = composeErrorText(err.PasswordNotValid);
+		errField.innerHTML = composeErrorText(Err.PasswordNotValid);
 		return;
 	}
 	let keyBA = makeHashKey(pwd, saltBA);
 	let authChallengeResponse = byteArrayToBase64(keyBA);
 
 	// Send the request.
-	let email = sessionStorage.getItem(varname.LogInEmail);
-	let requestId = sessionStorage.getItem(varname.LogInRequestId);
+	let email = sessionStorage.getItem(Varname.LogInEmail);
+	let requestId = sessionStorage.getItem(Varname.LogInRequestId);
 	let resp = await logUserIn2(2, email, requestId, captchaAnswer, authChallengeResponse);
 	if (resp == null) {
 		return;
 	}
 	let nextStep = resp.result.nextStep;
 	if (nextStep !== 3) {
-		errField.innerHTML = composeErrorText(err.NextStepUnknown);
+		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Clear saved input data from browser.
-	sessionStorage.removeItem(varname.LogInAuthDataBytes);
-	sessionStorage.removeItem(varname.LogInIsCaptchaNeeded);
-	sessionStorage.removeItem(varname.LogInCaptchaId);
+	sessionStorage.removeItem(Varname.LogInAuthDataBytes);
+	sessionStorage.removeItem(Varname.LogInIsCaptchaNeeded);
+	sessionStorage.removeItem(Varname.LogInCaptchaId);
 
 	// Save some non-sensitive input data into browser for the next page.
 	let newRequestId = resp.result.requestId;
-	sessionStorage.setItem(varname.LogInRequestId, newRequestId);
+	sessionStorage.setItem(Varname.LogInRequestId, newRequestId);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msg.Redirecting;
-	await redirectToRelativePath(true, qp.LogInStep3);
+	h3Field.innerHTML = Msg.Redirecting;
+	await redirectToRelativePath(true, Qp.LogInStep3);
 }
 
 async function onLogIn3Submit(btn) {
@@ -948,9 +1002,9 @@ async function onLogIn3Submit(btn) {
 	let h3Field = document.getElementById("header3TextLogIn3");
 
 	// Send the request.
-	let vcode = document.getElementById(fi.id8).value;
-	let email = sessionStorage.getItem(varname.LogInEmail);
-	let requestId = sessionStorage.getItem(varname.LogInRequestId);
+	let vcode = document.getElementById(Fi.id8).value;
+	let email = sessionStorage.getItem(Varname.LogInEmail);
+	let requestId = sessionStorage.getItem(Varname.LogInRequestId);
 	let resp = await logUserIn3(3, email, requestId, vcode);
 	if (resp == null) {
 		return;
@@ -958,25 +1012,25 @@ async function onLogIn3Submit(btn) {
 	let nextStep = resp.result.nextStep;
 	let isWebTokenSet = resp.result.isWebTokenSet;
 	if (nextStep !== 0) {
-		errField.innerHTML = composeErrorText(err.NextStepUnknown);
+		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
 	if (!isWebTokenSet) {
-		errField.innerHTML = composeErrorText(err.WebTokenIsNotSet);
+		errField.innerHTML = composeErrorText(Err.WebTokenIsNotSet);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Clear saved input data from browser.
-	sessionStorage.removeItem(varname.LogInEmail);
-	sessionStorage.removeItem(varname.LogInRequestId);
+	sessionStorage.removeItem(Varname.LogInEmail);
+	sessionStorage.removeItem(Varname.LogInRequestId);
 
 	// Save the 'log' flag.
 	saveLogInStatus();
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msg.Redirecting;
+	h3Field.innerHTML = Msg.Redirecting;
 	await redirectToMainPage(true);
 }
 
@@ -989,7 +1043,7 @@ async function onLogOut1Submit(btn) {
 	}
 	let ok = resp.result.ok;
 	if (!ok) {
-		errField.innerHTML = composeErrorText(err.NotOk);
+		errField.innerHTML = composeErrorText(Err.NotOk);
 		return;
 	}
 	errField.innerHTML = "";
@@ -999,40 +1053,40 @@ async function onLogOut1Submit(btn) {
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msg.Redirecting;
-	await redirectToRelativePath(true, qp.LogOutStep2);
+	h3Field.innerHTML = Msg.Redirecting;
+	await redirectToRelativePath(true, Qp.LogOutStep2);
 }
 
 async function onChangeEmail1Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextChangeEmail1");
 	let errField = document.getElementById("header4TextChangeEmail1");
-	let newEmail = document.getElementById(fi.id9).value;
+	let newEmail = document.getElementById(Fi.id9).value;
 	let resp = changeEmail1(1, newEmail);
 	if (resp == null) {
 		return;
 	}
 	let nextStep = resp.result.nextStep;
 	if (nextStep !== 2) {
-		errField.innerHTML = composeErrorText(err.NextStepUnknown);
+		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
 	let requestId = resp.result.requestId;
-	sessionStorage.setItem(varname.ChangeEmailRequestId, requestId);
+	sessionStorage.setItem(Varname.ChangeEmailRequestId, requestId);
 	let authDataBytes = resp.result.authDataBytes;
-	sessionStorage.setItem(varname.ChangeEmailAuthDataBytes, authDataBytes);
+	sessionStorage.setItem(Varname.ChangeEmailAuthDataBytes, authDataBytes);
 	let isCaptchaNeeded = resp.result.isCaptchaNeeded;
-	sessionStorage.setItem(varname.ChangeEmailIsCaptchaNeeded, isCaptchaNeeded.toString());
+	sessionStorage.setItem(Varname.ChangeEmailIsCaptchaNeeded, isCaptchaNeeded.toString());
 	let captchaId = resp.result.captchaId;
-	sessionStorage.setItem(varname.ChangeEmailCaptchaId, captchaId);
+	sessionStorage.setItem(Varname.ChangeEmailCaptchaId, captchaId);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msg.Redirecting;
-	await redirectToRelativePath(true, qp.ChangeEmailStep2);
+	h3Field.innerHTML = Msg.Redirecting;
+	await redirectToRelativePath(true, Qp.ChangeEmailStep2);
 }
 
 async function onChangeEmail2Submit(btn) {
@@ -1040,84 +1094,84 @@ async function onChangeEmail2Submit(btn) {
 	let errField = document.getElementById("header4TextChangeEmail2");
 
 	// Captcha (optional).
-	let captchaAnswer = document.getElementById(fi.id11).value;
+	let captchaAnswer = document.getElementById(Fi.id11).value;
 
 	// Secret.
-	let authDataBytes = sessionStorage.getItem(varname.ChangeEmailAuthDataBytes);
+	let authDataBytes = sessionStorage.getItem(Varname.ChangeEmailAuthDataBytes);
 	let saltBA = base64ToByteArray(authDataBytes);
-	let pwd = document.getElementById(fi.id10).value;
+	let pwd = document.getElementById(Fi.id10).value;
 	if (!isPasswordAllowed(pwd)) {
-		errField.innerHTML = composeErrorText(err.PasswordNotValid);
+		errField.innerHTML = composeErrorText(Err.PasswordNotValid);
 		return;
 	}
 	let keyBA = makeHashKey(pwd, saltBA);
 	let authChallengeResponse = byteArrayToBase64(keyBA);
 
 	// Send the request.
-	let requestId = sessionStorage.getItem(varname.ChangeEmailRequestId);
-	let vCodeOld = document.getElementById(fi.id12).value;
-	let vCodeNew = document.getElementById(fi.id13).value;
+	let requestId = sessionStorage.getItem(Varname.ChangeEmailRequestId);
+	let vCodeOld = document.getElementById(Fi.id12).value;
+	let vCodeNew = document.getElementById(Fi.id13).value;
 	let resp = changeEmail2(2, requestId, authChallengeResponse, vCodeOld, vCodeNew, captchaAnswer);
 	if (resp == null) {
 		return;
 	}
 	let nextStep = resp.result.nextStep;
 	if (nextStep !== 0) {
-		errField.innerHTML = composeErrorText(err.NextStepUnknown);
+		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
 	let ok = resp.result.ok;
 	if (!ok) {
-		errField.innerHTML = composeErrorText(err.NotOk);
+		errField.innerHTML = composeErrorText(Err.NotOk);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Clear saved input data from browser.
-	sessionStorage.removeItem(varname.ChangeEmailRequestId);
-	sessionStorage.removeItem(varname.ChangeEmailAuthDataBytes);
-	sessionStorage.removeItem(varname.ChangeEmailIsCaptchaNeeded);
-	sessionStorage.removeItem(varname.ChangeEmailCaptchaId);
+	sessionStorage.removeItem(Varname.ChangeEmailRequestId);
+	sessionStorage.removeItem(Varname.ChangeEmailAuthDataBytes);
+	sessionStorage.removeItem(Varname.ChangeEmailIsCaptchaNeeded);
+	sessionStorage.removeItem(Varname.ChangeEmailCaptchaId);
 
 	// Save the 'log' flag.
 	saveLogOutStatus();
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msg.Redirecting;
-	await redirectToRelativePath(true, qp.ChangeEmailStep3);
+	h3Field.innerHTML = Msg.Redirecting;
+	await redirectToRelativePath(true, Qp.ChangeEmailStep3);
 }
 
 async function onChangePwd1Submit(btn) {
 	// Send the request.
 	let h3Field = document.getElementById("header3TextChangePwd1");
 	let errField = document.getElementById("header4TextChangePwd1");
-	let newPwd = document.getElementById(fi.id14).value;
+	let newPwd = document.getElementById(Fi.id14).value;
 	let resp = await changePwd1(1, newPwd);
 	if (resp == null) {
 		return;
 	}
 	let nextStep = resp.result.nextStep;
 	if (nextStep !== 2) {
-		errField.innerHTML = composeErrorText(err.NextStepUnknown);
+		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
 	let requestId = resp.result.requestId;
-	sessionStorage.setItem(varname.ChangePwdRequestId, requestId);
+	sessionStorage.setItem(Varname.ChangePwdRequestId, requestId);
 	let authDataBytes = resp.result.authDataBytes;
-	sessionStorage.setItem(varname.ChangePwdAuthDataBytes, authDataBytes);
+	sessionStorage.setItem(Varname.ChangePwdAuthDataBytes, authDataBytes);
 	let isCaptchaNeeded = resp.result.isCaptchaNeeded;
-	sessionStorage.setItem(varname.ChangePwdIsCaptchaNeeded, isCaptchaNeeded.toString());
+	sessionStorage.setItem(Varname.ChangePwdIsCaptchaNeeded, isCaptchaNeeded.toString());
 	let captchaId = resp.result.captchaId;
-	sessionStorage.setItem(varname.ChangePwdCaptchaId, captchaId);
+	sessionStorage.setItem(Varname.ChangePwdCaptchaId, captchaId);
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msg.Redirecting;
-	await redirectToRelativePath(true, qp.ChangePwdStep2);
+	h3Field.innerHTML = Msg.Redirecting;
+	await redirectToRelativePath(true, Qp.ChangePwdStep2);
 }
 
 async function onChangePwd2Submit(btn) {
@@ -1125,465 +1179,56 @@ async function onChangePwd2Submit(btn) {
 	let errField = document.getElementById("header4TextChangePwd2");
 
 	// Captcha (optional).
-	let captchaAnswer = document.getElementById(fi.id16).value;
+	let captchaAnswer = document.getElementById(Fi.id16).value;
 
 	// Secret.
-	let authDataBytes = sessionStorage.getItem(varname.ChangePwdAuthDataBytes);
+	let authDataBytes = sessionStorage.getItem(Varname.ChangePwdAuthDataBytes);
 	let saltBA = base64ToByteArray(authDataBytes);
-	let pwd = document.getElementById(fi.id15).value;
+	let pwd = document.getElementById(Fi.id15).value;
 	if (!isPasswordAllowed(pwd)) {
-		errField.innerHTML = composeErrorText(err.PasswordNotValid);
+		errField.innerHTML = composeErrorText(Err.PasswordNotValid);
 		return;
 	}
 	let keyBA = makeHashKey(pwd, saltBA);
 	let authChallengeResponse = byteArrayToBase64(keyBA);
 
 	// Send the request.
-	let requestId = sessionStorage.getItem(varname.ChangePwdRequestId);
-	let vcode = document.getElementById(fi.id17).value;
+	let requestId = sessionStorage.getItem(Varname.ChangePwdRequestId);
+	let vcode = document.getElementById(Fi.id17).value;
 	let resp = await changePwd2(2, requestId, authChallengeResponse, vcode, captchaAnswer);
 	if (resp == null) {
 		return;
 	}
 	let nextStep = resp.result.nextStep;
 	if (nextStep !== 0) {
-		errField.innerHTML = composeErrorText(err.NextStepUnknown);
+		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
 	let ok = resp.result.ok;
 	if (!ok) {
-		errField.innerHTML = composeErrorText(err.NotOk);
+		errField.innerHTML = composeErrorText(Err.NotOk);
 		return;
 	}
 	errField.innerHTML = "";
 
 	// Clear saved input data from browser.
-	sessionStorage.removeItem(varname.ChangePwdRequestId);
-	sessionStorage.removeItem(varname.ChangePwdAuthDataBytes);
-	sessionStorage.removeItem(varname.ChangePwdIsCaptchaNeeded);
-	sessionStorage.removeItem(varname.ChangePwdCaptchaId);
+	sessionStorage.removeItem(Varname.ChangePwdRequestId);
+	sessionStorage.removeItem(Varname.ChangePwdAuthDataBytes);
+	sessionStorage.removeItem(Varname.ChangePwdIsCaptchaNeeded);
+	sessionStorage.removeItem(Varname.ChangePwdCaptchaId);
 
 	// Save the 'log' flag.
 	saveLogOutStatus();
 
 	// Redirect to next step.
 	disableButton(btn);
-	h3Field.innerHTML = msg.Redirecting;
-	await redirectToRelativePath(true, qp.ChangePwdStep3);
-}
-
-function disableButton(btn) {
-	switch (btn.tagName) {
-		case "INPUT":
-			btn.value = "";
-			btn.disabled = true;
-			btn.style.display = "none";
-			return;
-
-		default:
-			console.error(err.ElementTypeUnsupported);
-	}
-}
-
-async function addPageHead(el, text, atTop) {
-	let settings = getSettings();
-	let isLoggedInB = isLoggedIn(settings);
-	let unreadNotificationsCount = -1;
-	if (isLoggedInB) {
-		let resp = await countUnreadNotifications();
-		if (resp == null) {
-			return;
-		}
-		unreadNotificationsCount = resp.result.unc;
-	}
-
-	// Draw.
-	let cn = "pageHead";
-	let div = document.createElement("DIV");
-	div.className = cn;
-	div.id = cn;
-
-	let tbl = document.createElement("TABLE");
-	let tr = document.createElement("TR");
-	let tdL = document.createElement("TD");
-	tdL.className = cn + "L";
-	tdL.id = cn + "L";
-	tdL.textContent = text;
-	tr.appendChild(tdL);
-	let tdR = document.createElement("TD");
-	tdR.className = cn + "R";
-	tdR.id = cn + "R";
-	if (isLoggedInB) {
-		let html;
-		html = '<table><tr>';
-		if (unreadNotificationsCount > 0) {
-			html += '<td><input type="button" value=" ☼ " class="btnNotificationsOn" onclick="onBtnNotificationsClick(this)" /></td>';
-		} else {
-			html += '<td><input type="button" value=" ☼ " class="btnNotificationsOff" onclick="onBtnNotificationsClick(this)" /></td>';
-		}
-		html += '<td><input type="button" value="Account" class="btnAccount" onclick="onBtnAccountClick(this)" /></td>' + '</tr></table>';
-		tdR.innerHTML = html;
-	} else {
-		tdR.cssText = '';
-	}
-	tr.appendChild(tdR);
-	tbl.appendChild(tr);
-	div.appendChild(tbl);
-
-	if (atTop) {
-		el.insertBefore(div, el.firstChild);
-	} else {
-		el.appendChild(div);
-	}
-}
-
-function addActionPanel(el, atTop, type, parentId) {
-	let cn = "actionPanel";
-	let div = document.createElement("DIV");
-	div.className = cn;
-	div.id = cn;
-	let tbl = document.createElement("TABLE");
-	let tr = document.createElement("TR");
-	let td = document.createElement("TD");
-	td.innerHTML = '<form><input type="button" value="' + buttonName.BackToRoot + '" class="btnGoToIndex" onclick="onBtnGoToIndexClick(this)" /></form>';
-	tr.appendChild(td);
-
-	switch (type) {
-		case "thread":
-			td = document.createElement("TD");
-			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
-				'<input type="button" value="' + buttonName.BackToThread + '" class="btnGoToThread" onclick="onBtnGoToThreadClick(' + parentId + ')" />';
-			tr.appendChild(td);
-			break;
-
-		case "forum":
-			td = document.createElement("TD");
-			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
-				'<input type="button" value="' + buttonName.BackToForum + '" class="btnGoToForum" onclick="onBtnGoToForumClick(' + parentId + ')" />';
-			tr.appendChild(td);
-			break;
-
-		case "section":
-			td = document.createElement("TD");
-			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
-				'<input type="button" value="' + buttonName.BackToSection + '" class="btnGoToSection" onclick="onBtnGoToSectionClick(' + parentId + ')" />';
-			tr.appendChild(td);
-			break;
-	}
-
-	tbl.appendChild(tr);
-	div.appendChild(tbl);
-
-	if (atTop) {
-		el.insertBefore(div, el.firstChild);
-	} else {
-		el.appendChild(div);
-	}
-}
-
-function getRootSectionIdx(sections) {
-	for (let i = 0; i < sections.length; i++) {
-		if (sections[i].parent == null) {
-			return i;
-		}
-		return null;
-	}
-}
-
-function putArrayItemsIntoMap(a) {
-	let m = new Map();
-	if (a == null) {
-		return m;
-	}
-
-	let key;
-	for (let i = 0; i < a.length; i++) {
-		key = a[i].id;
-		if (m.has(key)) {
-			console.error(err.DuplicateMapKey);
-			return null;
-		}
-		m.set(key, a[i]);
-	}
-	return m;
-}
-
-// createTreeOfSections creates a tree of sections.
-// 'nodes' is an output parameter.
-function createTreeOfSections(section, sectionsMap, level, nodes) {
-	if (section == null) {
-		return;
-	}
-
-	nodes.push(new SectionNode(section, level));
-
-	if (section.childType !== sectionChildType.Section) {
-		return;
-	}
-
-	let subSectionIds = section.children;
-	let subSection;
-	level++;
-	for (let i = 0; i < subSectionIds.length; i++) {
-		subSection = sectionsMap.get(subSectionIds[i]);
-		createTreeOfSections(subSection, sectionsMap, level, nodes);
-	}
-}
-
-function drawSectionsAndForums(p, nodes, forumsMap) {
-	let node, divSection, divForum, ml, url, forumId, forum, sectionForums;
-	for (let i = 0; i < nodes.length; i++) {
-		node = nodes[i];
-
-		divSection = document.createElement("DIV");
-		divSection.className = "section";
-		divSection.id = "section_" + node.Section.id;
-		ml = sectionMarginDelta * node.Level;
-		divSection.style.cssText = "margin-left: " + ml + "px";
-		url = composeUrlForSection(node.Section.id);
-		divSection.innerHTML = "<a href='" + url + "'>" + node.Section.name + "</a>";
-		p.appendChild(divSection);
-
-		if (node.Section.childType === sectionChildType.Forum) {
-			sectionForums = node.Section.children;
-		} else {
-			sectionForums = [];
-		}
-		for (let j = 0; j < sectionForums.length; j++) {
-			forumId = sectionForums[j];
-			forum = forumsMap.get(forumId);
-
-			divForum = document.createElement("DIV");
-			divForum.className = "forum";
-			divForum.id = "forum_" + forumId;
-			ml = sectionMarginDelta * (node.Level + 1);
-			divForum.style.cssText = "margin-left: " + ml + "px";
-			url = composeUrlForForum(forumId);
-			divForum.innerHTML = "<a href='" + url + "'>" + forum.name + "</a>";
-			p.appendChild(divForum);
-		}
-
-	}
-}
-
-function drawForumAndThreads(p, forum, threadsMap) {
-	drawPageTitle(p, forum.forumName);
-	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, "forumPagePrev", "forumPageNext");
-	drawForumThreads(p, forum, threadsMap);
-}
-
-function drawForumName(p, forum) {
-	let divForum = document.createElement("DIV");
-	divForum.className = "forum";
-	divForum.id = "forum_" + forum.forumId;
-	let ml = sectionMarginDelta;
-	divForum.style.cssText = "margin-left: " + ml + "px";
-	let url = composeUrlForForum(forum.forumId);
-	divForum.innerHTML = "<a href='" + url + "'>" + forum.forumName + "</a>";
-	p.appendChild(divForum);
-}
-
-function drawForumThreads(p, forum, threadsMap) {
-	let divThread, ml, url, threadId, thread;
-	let threadIds = forum.threadIds;
-	if (threadIds != null) {
-		for (let i = 0; i < threadIds.length; i++) {
-			threadId = threadIds[i];
-			if (!threadsMap.has(threadId)) {
-				console.error(err.ThreadNotFound);
-				return;
-			}
-			thread = threadsMap.get(threadId);
-
-			divThread = document.createElement("DIV");
-			divThread.className = "thread";
-			divThread.id = "thread_" + thread.id;
-			ml = sectionMarginDelta * 2;
-			divThread.style.cssText = "margin-left: " + ml + "px";
-			url = composeUrlForThread(threadId);
-			divThread.innerHTML = "<a href='" + url + "'>" + thread.name + "</a>";
-			p.appendChild(divThread);
-		}
-	}
-}
-
-async function drawThreadAndMessages(p, thread, messagesMap) {
-	drawPageTitle(p, thread.threadName);
-	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, "threadPagePrev", "threadPageNext");
-	await drawThreadMessages(p, thread, messagesMap);
-}
-
-function drawThreadName(p, thread) {
-	let divThread = document.createElement("DIV");
-	divThread.className = "thread";
-	divThread.id = "thread_" + thread.threadId;
-	let ml = sectionMarginDelta;
-	divThread.style.cssText = "margin-left: " + ml + "px";
-	let url = composeUrlForThread(thread.threadId);
-	divThread.innerHTML = "<a href='" + url + "'>" + thread.threadName + "</a>";
-	p.appendChild(divThread);
-}
-
-async function drawThreadMessages(p, thread, messagesMap) {
-	let messageIds = thread.messageIds;
-	if (messageIds == null) {
-		return
-	}
-
-	let divMsgHdr, divMsgBody, ml, messageId, message, txt;
-	for (let i = 0; i < messageIds.length; i++) {
-		messageId = messageIds[i];
-		if (!messagesMap.has(messageId)) {
-			console.error(err.MessageNotFound);
-			return;
-		}
-		message = messagesMap.get(messageId);
-
-		// Header.
-		divMsgHdr = document.createElement("DIV");
-		divMsgHdr.className = "messageHeader";
-		divMsgHdr.id = "messageHeader_" + message.id;
-		ml = sectionMarginDelta * 2;
-		divMsgHdr.style.cssText = "margin-left: " + ml + "px";
-		txt = await composeMessageHeaderText(message);
-		divMsgHdr.innerHTML = txt;
-		p.appendChild(divMsgHdr);
-
-		// Body.
-		divMsgBody = document.createElement("DIV");
-		divMsgBody.className = "messageBody";
-		divMsgBody.id = "messageBody_" + message.id;
-		ml = sectionMarginDelta * 2;
-		divMsgBody.style.cssText = "margin-left: " + ml + "px";
-		divMsgBody.innerHTML = processMessageText(message.text);
-		p.appendChild(divMsgBody);
-	}
-}
-
-async function processMessage(p, message) {
-	let divMsgHdr, divMsgBody, ml, url, txt, creatorName;
-
-	// Header.
-	divMsgHdr = document.createElement("DIV");
-	divMsgHdr.className = "messageHeader";
-	divMsgHdr.id = "messageHeader_" + message.id;
-	ml = sectionMarginDelta * 2;
-	divMsgHdr.style.cssText = "margin-left: " + ml + "px";
-	txt = await composeMessageHeaderText(message);
-	divMsgHdr.innerHTML = txt;
-	p.appendChild(divMsgHdr);
-
-	// Body.
-	divMsgBody = document.createElement("DIV");
-	divMsgBody.className = "messageBody";
-	divMsgBody.id = "messageBody_" + message.id;
-	ml = sectionMarginDelta * 2;
-	divMsgBody.style.cssText = "margin-left: " + ml + "px";
-	divMsgBody.innerHTML = processMessageText(message.text);
-	p.appendChild(divMsgBody);
-}
-
-function findCurrentNodeLevel(allNodes, sectionId) {
-	let node;
-	for (let i = 0; i < allNodes.length; i++) {
-		node = allNodes[i];
-		if (node.Section.id === sectionId) {
-			return node.Level;
-		}
-	}
-}
-
-function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
-	let div = document.createElement("DIV");
-	div.className = "paginator";
-	div.id = "paginator";
-
-	let s = document.createElement("span");
-	s.textContent = "Page " + pageNumber + " of " + pageCount + " ";
-	div.appendChild(s);
-
-	let btnPrev = document.createElement("input");
-	btnPrev.type = "button";
-	btnPrev.className = "btnPrev";
-	btnPrev.id = "btnPrev";
-	btnPrev.value = "<";
-	addClickEventHandler(btnPrev, variantPrev);
-	div.appendChild(btnPrev);
-
-	s = document.createElement("span");
-	s.className = "spacerA";
-	s.innerHTML = "&nbsp;";
-	div.appendChild(s);
-
-	let btnNext = document.createElement("input");
-	btnNext.type = "button";
-	btnNext.className = "btnNext";
-	btnNext.id = "btnNext";
-	btnNext.value = ">";
-	addClickEventHandler(btnNext, variantNext);
-	div.appendChild(btnNext);
-
-	el.appendChild(div);
-}
-
-function addClickEventHandler(btn, variant) {
-	switch (variant) {
-		case "forumPagePrev":
-			btn.addEventListener("click", async (e) => {
-				await onBtnPrevClick_forumPage(btn);
-			});
-			return;
-
-		case "forumPageNext":
-			btn.addEventListener("click", async (e) => {
-				await onBtnNextClick_forumPage(btn);
-			});
-			return;
-
-		case "threadPagePrev":
-			btn.addEventListener("click", async (e) => {
-				await onBtnPrevClick_threadPage(btn);
-			});
-			return;
-
-		case "threadPageNext":
-			btn.addEventListener("click", async (e) => {
-				await onBtnNextClick_threadPage(btn);
-			});
-			return;
-
-		case "subscriptionsPrev":
-			btn.addEventListener("click", async (e) => {
-				await onBtnPrevClick_subscriptionsPage(btn);
-			});
-			return;
-
-		case "subscriptionsNext":
-			btn.addEventListener("click", async (e) => {
-				await onBtnNextClick_subscriptionsPage(btn);
-			});
-			return;
-
-		case "notificationsPagePrev":
-			btn.addEventListener("click", async (e) => {
-				await onBtnPrevClick_notificationsPage(btn);
-			});
-			return;
-
-		case "notificationsPageNext":
-			btn.addEventListener("click", async (e) => {
-				await onBtnNextClick_notificationsPage(btn);
-			});
-			return;
-
-		default:
-			console.error(err.UnknownVariant);
-	}
+	h3Field.innerHTML = Msg.Redirecting;
+	await redirectToRelativePath(true, Qp.ChangePwdStep3);
 }
 
 async function onBtnPrevClick_forumPage(btn) {
 	if (mca_gvc.Page <= 1) {
-		console.error(err.PreviousPageDoesNotExist);
+		console.error(Err.PreviousPageDoesNotExist);
 		return;
 	}
 
@@ -1594,7 +1239,7 @@ async function onBtnPrevClick_forumPage(btn) {
 
 async function onBtnNextClick_forumPage(btn) {
 	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(err.NextPageDoesNotExist);
+		console.error(Err.NextPageDoesNotExist);
 		return;
 	}
 
@@ -1605,7 +1250,7 @@ async function onBtnNextClick_forumPage(btn) {
 
 async function onBtnPrevClick_threadPage(btn) {
 	if (mca_gvc.Page <= 1) {
-		console.error(err.PreviousPageDoesNotExist);
+		console.error(Err.PreviousPageDoesNotExist);
 		return;
 	}
 
@@ -1616,7 +1261,7 @@ async function onBtnPrevClick_threadPage(btn) {
 
 async function onBtnNextClick_threadPage(btn) {
 	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(err.NextPageDoesNotExist);
+		console.error(Err.NextPageDoesNotExist);
 		return;
 	}
 
@@ -1627,7 +1272,7 @@ async function onBtnNextClick_threadPage(btn) {
 
 async function onBtnPrevClick_subscriptionsPage(btn) {
 	if (mca_gvc.Page <= 1) {
-		console.error(err.PreviousPageDoesNotExist);
+		console.error(Err.PreviousPageDoesNotExist);
 		return;
 	}
 
@@ -1638,7 +1283,7 @@ async function onBtnPrevClick_subscriptionsPage(btn) {
 
 async function onBtnNextClick_subscriptionsPage(btn) {
 	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(err.NextPageDoesNotExist);
+		console.error(Err.NextPageDoesNotExist);
 		return;
 	}
 
@@ -1649,7 +1294,7 @@ async function onBtnNextClick_subscriptionsPage(btn) {
 
 async function onBtnPrevClick_notificationsPage(btn) {
 	if (mca_gvc.Page <= 1) {
-		console.error(err.PreviousPageDoesNotExist);
+		console.error(Err.PreviousPageDoesNotExist);
 		return;
 	}
 
@@ -1660,7 +1305,7 @@ async function onBtnPrevClick_notificationsPage(btn) {
 
 async function onBtnNextClick_notificationsPage(btn) {
 	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(err.NextPageDoesNotExist);
+		console.error(Err.NextPageDoesNotExist);
 		return;
 	}
 
@@ -1669,73 +1314,33 @@ async function onBtnNextClick_notificationsPage(btn) {
 	await redirectPage(false, url);
 }
 
-async function fillUserPage(userParams) {
-	document.getElementById(fi.id18).value = userParams.name;
-	document.getElementById(fi.id19).value = userParams.email;
-	document.getElementById(fi.id20).value = prettyTime(userParams.regTime);
-
-	let roles = [];
-	if (userParams.isAdministrator) {
-		roles.push("Administrator");
-	}
-	if (userParams.isModerator) {
-		roles.push("Moderator");
-	}
-	if (userParams.isAuthor) {
-		roles.push("Author");
-	}
-	if (userParams.isWriter) {
-		roles.push("Writer");
-	}
-	if (userParams.isReader) {
-		roles.push("Reader");
-	}
-	let rolesHtml = "";
-	for (let i = 0; i < roles.length; i++) {
-		if (roles[i] !== "Administrator") {
-			rolesHtml += '<span class="userPageRole">' + roles[i] + '</span>';
-		} else {
-			rolesHtml += '<span class="userPageRole"><a href="' + adminPage + '" target="_blank" rel="noopener noreferrer">' + roles[i] + '</a></span>';
-		}
-	}
-	let tr = document.getElementById(fi.id21_tr);
-	tr.children[1].innerHTML = rolesHtml;
-
-	let resp = await countSelfSubscriptions();
-	if (resp == null) {
-		return;
-	}
-	let subscriptionsCount = resp.result.userSubscriptionsCount;
-	document.getElementById(fi.id22).value = subscriptionsCount.toString();
-}
-
 async function onBtnChangeEmailClick(btn) {
-	let url = qp.ChangeEmailStep1;
+	let url = Qp.ChangeEmailStep1;
 	await redirectPage(false, url);
 }
 
 async function onBtnChangePwdClick(btn) {
-	let url = qp.ChangePwdStep1;
+	let url = Qp.ChangePwdStep1;
 	await redirectPage(false, url);
 }
 
 async function onBtnLogOutSelfClick(btn) {
-	let url = qp.LogOutStep1;
+	let url = Qp.LogOutStep1;
 	await redirectPage(false, url);
 }
 
 async function onBtnManageSubscriptionsClick(btn) {
-	let url = qp.Prefix + qpn.SubscriptionsPage;
+	let url = Qp.Prefix + Qpn.SubscriptionsPage;
 	await redirectPage(false, url);
 }
 
 async function onBtnAccountClick(btn) {
-	let url = qp.SelfPage;
+	let url = Qp.SelfPage;
 	await redirectPage(false, url);
 }
 
 async function onBtnNotificationsClick(btn) {
-	let url = qp.Prefix + qpn.Notifications;
+	let url = Qp.Prefix + Qpn.Notifications;
 	await redirectPage(false, url);
 }
 
@@ -1756,121 +1361,6 @@ async function onBtnGoToForumClick(parentId) {
 async function onBtnGoToSectionClick(parentId) {
 	let url = composeUrlForSection(parentId);
 	await redirectPage(false, url);
-}
-
-async function getMessageCreatorName(userId) {
-	return await mca_gvc.UNC.GetName(userId);
-}
-
-async function composeMessageHeaderText(message) {
-	let messageId = message.id;
-	let url = composeUrlForMessage(messageId);
-	let creatorName = await getMessageCreatorName(message.creator.userId);
-	let txt = "<a href='" + url + "'>" + prettyTime(message.creator.time) + "</a>" +
-		' by <span class="messageCreatorName">' + creatorName + '</span>';
-
-	let editorId = message.editor.userId;
-	if (editorId != null) {
-		let editorName = await getMessageCreatorName(editorId);
-		txt += ', edited by <span class="messageEditorName">' + editorName + '</span>' +
-			' on <span class="messageEditorTime">' + prettyTime(message.editor.time) + '</span>';
-	}
-
-	return txt;
-}
-
-async function addBottomActionPanel(el, type, objectId, object) {
-	let resp = await getSelfRoles();
-	if (resp == null) {
-		return;
-	}
-	let userParams = resp.result;
-
-	let cn = "bottomActionPanel";
-	let div = document.createElement("DIV");
-	div.className = cn;
-	div.id = cn;
-
-	let tbl = document.createElement("TABLE");
-	let tr = document.createElement("TR");
-	tbl.appendChild(tr);
-	let tdL = document.createElement("TD");
-	tdL.id = "bottomActionPanelLeft";
-	tdL.className = "bottomActionPanelLeft";
-	tr.appendChild(tdL);
-	let tdR = document.createElement("TD");
-	tdR.id = "bottomActionPanelRight";
-	tdR.className = "bottomActionPanelRight";
-	tr.appendChild(tdR);
-	div.appendChild(tbl);
-	el.appendChild(div);
-
-	switch (type) {
-		case "forum":
-			await drawBottomActionPanelButtonsForForum(objectId, object, tdL, tdR, userParams, cn);
-			break;
-
-		case "thread":
-			await drawBottomActionPanelButtonsForThread(objectId, object, tdL, tdR, userParams, cn);
-			break;
-
-		case "message":
-			await drawBottomActionPanelButtonsForMessage(objectId, object, tdL, tdR, userParams, cn);
-			break;
-	}
-}
-
-async function drawBottomActionPanelButtonsForForum(forumId, forum, tdL, tdR, userParams, panelClass) {
-	if (userParams.isAuthor) {
-		tdR.innerHTML = '<form><input type="button" value="' + buttonName.StartNewThread + '" class="btnStartNewThread" ' +
-			'onclick="onBtnStartNewThreadClick(this, \'' + panelClass + '\', ' + forumId + ')" /></form>';
-	}
-}
-
-async function drawBottomActionPanelButtonsForThread(threadId, thread, tdL, tdR, userParams, panelClass) {
-	let resp = await getLatestMessageOfThread(threadId);
-	if (resp == null) {
-		return;
-	}
-	let latestMessageInThread = resp.result.message;
-
-	resp = await isSelfSubscribed(threadId);
-	if (resp == null) {
-		return;
-	}
-	let userId = resp.result.userId;
-	let isUserSubscribed = resp.result.isSubscribed;
-
-	let tbl = document.createElement("TABLE");
-	let tr = document.createElement("TR");
-
-	if (!isUserSubscribed) {
-		let td = document.createElement("TD");
-		td.innerHTML += '<form><input type="button" value="' + buttonName.SubscribeToThread + '" class="btnSubscribe" ' +
-			'onclick="onBtnSubscribeClick(this, ' + threadId + ', ' + userId + ')" /></form>';
-		tr.appendChild(td);
-	}
-
-	let canAddMsg = canUserAddMessage(userParams, latestMessageInThread);
-	if (canAddMsg) {
-		let td = document.createElement("TD");
-		td.innerHTML += '<form><input type="button" value="' + buttonName.AddMessage + '" class="btnAddMessage" ' +
-			'onclick="onBtnAddMessageClick(this, \'' + panelClass + '\', ' + threadId + ')" /></form>';
-		tr.appendChild(td);
-	}
-
-	tbl.appendChild(tr);
-	tdR.appendChild(tbl);
-}
-
-async function drawBottomActionPanelButtonsForMessage(messageId, message, tdL, tdR, userParams, panelClass) {
-	if (userParams.isAuthor) {
-		let canEditMsg = canUserEditMessage(userParams, message);
-		if (canEditMsg) {
-			tdR.innerHTML = '<form><input type="button" value="' + buttonName.EditMessage + '" class="btnEditMessage" ' +
-				'onclick="onBtnEditMessageClick(this, \'' + panelClass + '\', ' + messageId + ')" /></form>';
-		}
-	}
 }
 
 async function onBtnStartNewThreadClick(btn, panelCN, forumId) {
@@ -1899,6 +1389,32 @@ async function onBtnStartNewThreadClick(btn, panelCN, forumId) {
 	div.appendChild(d);
 }
 
+async function onBtnConfirmThreadStartClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let name = pp.childNodes[1].childNodes[1].value;
+	if (name.length < 1) {
+		console.error(Err.NameIsNotSet);
+		return;
+	}
+	let parent = Number(pp.childNodes[2].childNodes[1].value);
+	if (parent < 1) {
+		console.error(Err.ParentIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await addThread(parent, name);
+	if (resp == null) {
+		return;
+	}
+	let threadId = resp.result.threadId;
+	disableParentForm(btn, pp, false);
+	let txt = "A thread was created. ID=" + threadId.toString() + ".";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
 async function onBtnAddMessageClick(btn, panelCN, threadId) {
 	disableButton(btn);
 	let p = document.getElementById(panelCN);
@@ -1925,6 +1441,32 @@ async function onBtnAddMessageClick(btn, panelCN, threadId) {
 	div.appendChild(d);
 }
 
+async function onBtnConfirmMessageCreationClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let text = pp.childNodes[1].childNodes[1].value;
+	if (text.length < 1) {
+		console.error(Err.TextIsNotSet);
+		return;
+	}
+	let parent = Number(pp.childNodes[2].childNodes[1].value);
+	if (parent < 1) {
+		console.error(Err.ParentIsNotSet);
+		return;
+	}
+
+	// Work.
+	let resp = await addMessage(parent, text);
+	if (resp == null) {
+		return;
+	}
+	let messageId = resp.result.messageId;
+	disableParentForm(btn, pp, false);
+	let txt = "A message was created. ID=" + messageId.toString() + ".";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
 async function onBtnSubscribeClick(btn, threadId, userId) {
 	let resp = await addSubscription(threadId, userId);
 	if (resp == null) {
@@ -1942,8 +1484,7 @@ async function onBtnEditMessageClick(btn, panelCN, messageId) {
 	if (resp == null) {
 		return;
 	}
-	let message = resp.result.message;
-	let msgText = message.text;
+	let message = jsonToMessages(resp.result.message);
 
 	disableButton(btn);
 	let p = document.getElementById(panelCN);
@@ -1959,7 +1500,7 @@ async function onBtnEditMessageClick(btn, panelCN, messageId) {
 	div.appendChild(d);
 	d = document.createElement("DIV");
 	d.innerHTML = '<label class="parameter" for="txt">Text</label>' +
-		'<textarea name="txt" id="txt" class="newMessageText">' + escapeHtml(msgText) + '</textarea>';
+		'<textarea name="txt" id="txt" class="newMessageText">' + escapeHtml(message.Text) + '</textarea>';
 	div.appendChild(d);
 	d = document.createElement("DIV");
 	d.innerHTML = '<label class="parameter" for="id" title="ID of edited message" hidden="hidden">ID</label>' +
@@ -1970,69 +1511,17 @@ async function onBtnEditMessageClick(btn, panelCN, messageId) {
 	div.appendChild(d);
 }
 
-async function onBtnConfirmThreadStartClick(btn) {
-	// Input.
-	let pp = btn.parentNode.parentNode;
-	let name = pp.childNodes[1].childNodes[1].value;
-	if (name.length < 1) {
-		console.error(err.NameIsNotSet);
-		return;
-	}
-	let parent = Number(pp.childNodes[2].childNodes[1].value);
-	if (parent < 1) {
-		console.error(err.ParentIsNotSet);
-		return;
-	}
-
-	// Work.
-	let resp = await addThread(parent, name);
-	if (resp == null) {
-		return;
-	}
-	let threadId = resp.result.threadId;
-	disableParentForm(btn, pp, false);
-	let txt = "A thread was created. ID=" + threadId.toString() + ".";
-	showActionSuccess(btn, txt);
-	await reloadPage(true);
-}
-
-async function onBtnConfirmMessageCreationClick(btn) {
-	// Input.
-	let pp = btn.parentNode.parentNode;
-	let text = pp.childNodes[1].childNodes[1].value;
-	if (text.length < 1) {
-		console.error(err.TextIsNotSet);
-		return;
-	}
-	let parent = Number(pp.childNodes[2].childNodes[1].value);
-	if (parent < 1) {
-		console.error(err.ParentIsNotSet);
-		return;
-	}
-
-	// Work.
-	let resp = await addMessage(parent, text);
-	if (resp == null) {
-		return;
-	}
-	let messageId = resp.result.messageId;
-	disableParentForm(btn, pp, false);
-	let txt = "A message was created. ID=" + messageId.toString() + ".";
-	showActionSuccess(btn, txt);
-	await reloadPage(true);
-}
-
 async function onBtnConfirmMessageEditClick(btn) {
 	// Input.
 	let pp = btn.parentNode.parentNode;
 	let newText = pp.childNodes[1].childNodes[1].value;
 	if (newText.length < 1) {
-		console.error(err.TextIsNotSet);
+		console.error(Err.TextIsNotSet);
 		return;
 	}
 	let messageId = Number(pp.childNodes[2].childNodes[1].value);
 	if (messageId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -2048,139 +1537,6 @@ async function onBtnConfirmMessageEditClick(btn) {
 	let txt = "Message text was changed.";
 	showActionSuccess(btn, txt);
 	await reloadPage(true);
-}
-
-function showActionSuccess(btn, txt) {
-	let ppp = btn.parentNode.parentNode.parentNode;
-	let d = document.createElement("DIV");
-	d.className = "actionSuccess";
-	d.textContent = txt;
-	ppp.appendChild(d);
-}
-
-function processMessageText(msgText) {
-	let txt = escapeHtml(msgText);
-	txt = txt.replaceAll("\r\n", '<br>');
-	txt = txt.replaceAll("\n", '<br>');
-	txt = txt.replaceAll("\r", '<br>');
-	return txt;
-}
-
-async function showPage_Notifications() {
-	// Prepare data.
-	let pageNumber = mca_gvc.Page;
-	let resp = await getNotificationsOnPage(pageNumber);
-	if (resp == null) {
-		return;
-	}
-	let pageCount = resp.result.nop.totalPages;
-	pageCount = repairUndefinedPageCount(pageCount);
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	if (pageNumber > pageCount) {
-		console.error(err.PageNotFound);
-		return;
-	}
-
-	let nop = resp.result.nop;
-	let settings = getSettings();
-
-	// Draw.
-	let p = document.getElementById("divBB");
-	showBlock(p);
-	await addPageHead(p, settings.SiteName, false);
-	addActionPanel(p, false);
-	drawNotificationsOnPage(p, nop);
-}
-
-function drawNotificationsOnPage(p, nop) {
-	drawPageTitle(p, 'Notifications');
-	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, "notificationsPagePrev", "notificationsPageNext");
-	drawNotifications(p, 'notificationList', nop);
-}
-
-function drawNotifications(p, elClass, nop) {
-	let tbl = document.createElement("TABLE");
-	tbl.className = elClass;
-
-	// Header.
-	let tr = document.createElement("TR");
-	let ths = ["#", "Time", "Text", "Actions"];
-	let th;
-	for (let i = 0; i < ths.length; i++) {
-		th = document.createElement("TH");
-		if (i === 0) {
-			th.className = "numCol";
-		}
-		th.textContent = ths[i];
-		tr.appendChild(th);
-	}
-	tbl.appendChild(tr);
-	p.appendChild(tbl);
-
-	let columnsWithHtml = [2, 3];
-
-	// Cells.
-	let notification, actions;
-	for (let i = 0; i < nop.notifications.length; i++) {
-		notification = nop.notifications[i];
-
-		tr = document.createElement("TR");
-		let tds = [];
-		for (let j = 0; j < ths.length; j++) {
-			tds.push("");
-		}
-
-		tds[0] = (i + 1).toString();
-		tds[1] = prettyTime(notification.toc);
-		tds[2] = splitNotificationTextCell(notification.text);
-
-		actions = '<input type="button" class="btnShowFullNotificationU" value="Show" onclick="onBtnShowFullNotificationClick(this)">';
-		if (!notification.isRead) {
-			actions += '<input type="button" class="btnMarkNotificationAsReadU" value="Read" onclick="onBtnMarkNotificationAsReadClick(this, ' + notification.id + ')">';
-		} else {
-			actions += '<input type="button" class="btnDeleteNotificationU" value="DEL" onclick="onBtnDeleteNotificationClick(this, ' + notification.id + ')">';
-		}
-		tds[3] = actions;
-
-		let td;
-		let jLast = tds.length - 1;
-		for (let j = 0; j < tds.length; j++) {
-			td = document.createElement("TD");
-
-			if (j === 0) {
-				td.className = "numCol";
-			} else if (j === jLast) {
-				td.className = "lastCol";
-			} else {
-				if (!notification.isRead) {
-					td.className = "unread";
-				}
-				if (j === 1) {
-					td.className += " col2";
-				}
-			}
-
-			if (columnsWithHtml.includes(j)) {
-				td.innerHTML = tds[j];
-			} else {
-				td.textContent = tds[j];
-			}
-			tr.appendChild(td);
-		}
-
-		tbl.appendChild(tr);
-	}
-}
-
-function drawPageTitle(p, title) {
-	let d = document.createElement("DIV");
-	d.className = "pageTitle";
-	let ml = sectionMarginDelta;
-	d.style.cssText = "margin-left: " + ml + "px";
-	d.textContent = title;
-	p.appendChild(d);
 }
 
 async function onBtnMarkNotificationAsReadClick(btn, notificationId) {
@@ -2247,54 +1603,349 @@ async function onBtnShowFullNotificationClick(btn) {
 	}
 }
 
-function composeNotificationShortText(fullText) {
-	let wordsCountMax = 8;
-	let segmenter = new Intl.Segmenter([], {granularity: 'word'});
-	let segmentedText = segmenter.segment(fullText);
-	let words = [...segmentedText].filter(s => s.isWordLike).map(s => s.segment);
-	if (words.length <= wordsCountMax) {
-		return fullText;
-	}
-	let shortTextWOP = words.slice(1, wordsCountMax + 1).join(" ");
-	return shortTextWOP + " ...";
-}
-
-function splitNotificationTextCell(fullText) {
-	let shortText = composeNotificationShortText(fullText);
-	let html = '<table>' +
-		'<tr><td class="visible">' + shortText + '</td></tr>' +
-		'<tr><td class="hidden">' + fullText + '</td></tr>' +
-		'</table>';
-	return html;
-}
-
-async function showPage_Subscriptions() {
-	// Prepare data.
-	let pageNumber = mca_gvc.Page;
-	let sop = await getSelfSubscriptionsPaginated(pageNumber);
-	let pageCount = sop.TotalPages;
-	pageCount = repairUndefinedPageCount(pageCount);
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	if (pageNumber > pageCount) {
-		console.error(err.PageNotFound);
+async function onBtnUnsubscribeClick(btn) {
+	let tr = btn.parentElement.parentElement;
+	let threadId = Number(tr.children[1].textContent);
+	let resp = await deleteSelfSubscription(threadId);
+	if (resp == null) {
 		return;
 	}
+	if (!resp.result.ok) {
+		return;
+	}
+	tr.style.display = "none";
+}
 
+// Other functions.
+
+async function addPageHead(el, text, atTop) {
 	let settings = getSettings();
+	let isLoggedInB = isLoggedIn(settings);
+	let unreadNotificationsCount = -1;
+	if (isLoggedInB) {
+		let resp = await countUnreadNotifications();
+		if (resp == null) {
+			return;
+		}
+		unreadNotificationsCount = resp.result.unc;
+	}
 
 	// Draw.
-	let p = document.getElementById("divBB");
-	showBlock(p);
-	await addPageHead(p, settings.SiteName, false);
-	addActionPanel(p, false);
-	drawSubscriptionsOnPage(p, sop);
+	let cn = "pageHead";
+	let div = document.createElement("DIV");
+	div.className = cn;
+	div.id = cn;
+
+	let tbl = document.createElement("TABLE");
+	let tr = document.createElement("TR");
+	let tdL = document.createElement("TD");
+	tdL.className = cn + "L";
+	tdL.id = cn + "L";
+	tdL.textContent = text;
+	tr.appendChild(tdL);
+	let tdR = document.createElement("TD");
+	tdR.className = cn + "R";
+	tdR.id = cn + "R";
+	if (!isLoggedInB) {
+		tdR.cssText = '';
+	} else {
+		let bcn;
+		if (unreadNotificationsCount > 0) {
+			bcn = "btnNotificationsOn";
+		} else {
+			bcn = "btnNotificationsOff";
+		}
+
+		tdR.innerHTML = '<table><tr>' +
+			'<td><input type="button" value=" ☼ " class="' + bcn + '" onclick="onBtnNotificationsClick(this)" /></td>'
+			+ '<td><input type="button" value="Account" class="btnAccount" onclick="onBtnAccountClick(this)" /></td>' +
+			'</tr></table>';
+	}
+	tr.appendChild(tdR);
+	tbl.appendChild(tr);
+	div.appendChild(tbl);
+
+	if (atTop) {
+		el.insertBefore(div, el.firstChild);
+	} else {
+		el.appendChild(div);
+	}
+}
+
+function addActionPanel(el, atTop, parentType, parentId) {
+	let cn = "actionPanel";
+	let div = document.createElement("DIV");
+	div.className = cn;
+	div.id = cn;
+	let tbl = document.createElement("TABLE");
+	let tr = document.createElement("TR");
+	let td = document.createElement("TD");
+	td.innerHTML = '<form><input type="button" value="' + ButtonName.BackToRoot + '" class="btnGoToIndex" onclick="onBtnGoToIndexClick(this)" /></form>';
+	tr.appendChild(td);
+
+	switch (parentType) {
+		case ObjectType.Thread:
+			td = document.createElement("TD");
+			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
+				'<input type="button" value="' + ButtonName.BackToThread + '" class="btnGoToThread" onclick="onBtnGoToThreadClick(' + parentId + ')" />';
+			tr.appendChild(td);
+			break;
+
+		case ObjectType.Forum:
+			td = document.createElement("TD");
+			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
+				'<input type="button" value="' + ButtonName.BackToForum + '" class="btnGoToForum" onclick="onBtnGoToForumClick(' + parentId + ')" />';
+			tr.appendChild(td);
+			break;
+
+		case ObjectType.Section:
+			td = document.createElement("TD");
+			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
+				'<input type="button" value="' + ButtonName.BackToSection + '" class="btnGoToSection" onclick="onBtnGoToSectionClick(' + parentId + ')" />';
+			tr.appendChild(td);
+			break;
+	}
+
+	tbl.appendChild(tr);
+	div.appendChild(tbl);
+
+	if (atTop) {
+		el.insertBefore(div, el.firstChild);
+	} else {
+		el.appendChild(div);
+	}
+}
+
+async function addBottomActionPanel(el, objectType, object) {
+	let resp = await getSelfRoles();
+	if (resp == null) {
+		return;
+	}
+	let user = jsonToUser(resp.result.user);
+	let cn = "bottomActionPanel";
+
+	let div = document.createElement("DIV");
+	div.className = cn;
+	div.id = cn;
+
+	let tbl = document.createElement("TABLE");
+	let tr = document.createElement("TR");
+	tbl.appendChild(tr);
+	let tdL = document.createElement("TD");
+	tdL.id = "bottomActionPanelLeft";
+	tdL.className = "bottomActionPanelLeft";
+	tr.appendChild(tdL);
+	let tdR = document.createElement("TD");
+	tdR.id = "bottomActionPanelRight";
+	tdR.className = "bottomActionPanelRight";
+	tr.appendChild(tdR);
+	div.appendChild(tbl);
+	el.appendChild(div);
+
+	switch (objectType) {
+		case ObjectType.Forum:
+			await drawBottomActionPanelButtonsForForum(object, tdL, tdR, user, cn);
+			break;
+
+		case ObjectType.Thread:
+			await drawBottomActionPanelButtonsForThread(object, tdL, tdR, user, cn);
+			break;
+
+		case ObjectType.Message:
+			await drawBottomActionPanelButtonsForMessage(object, tdL, tdR, user, cn);
+			break;
+	}
+}
+
+function drawPageTitle(p, title) {
+	let d = document.createElement("DIV");
+	d.className = "pageTitle";
+	let ml = SectionMarginDelta;
+	d.style.cssText = "margin-left: " + ml + "px";
+	d.textContent = title;
+	p.appendChild(d);
+}
+
+async function drawBottomActionPanelButtonsForForum(forum, tdL, tdR, user, panelClass) {
+	if (user.IsAuthor) {
+		tdR.innerHTML = '<form><input type="button" value="' + ButtonName.StartNewThread + '" class="btnStartNewThread" ' +
+			'onclick="onBtnStartNewThreadClick(this, \'' + panelClass + '\', ' + forum.Id + ')" /></form>';
+	}
+}
+
+async function drawBottomActionPanelButtonsForThread(thread, tdL, tdR, user, panelClass) {
+	let resp = await getLatestMessageOfThread(thread.Id);
+	if (resp == null) {
+		return;
+	}
+	let latestMessageInThread = jsonToMessage(resp.result.message);
+
+	resp = await isSelfSubscribed(thread.Id);
+	if (resp == null) {
+		return;
+	}
+	let isUserSubscribed = resp.result.isSubscribed;
+
+	let tbl = document.createElement("TABLE");
+	let tr = document.createElement("TR");
+
+	if (!isUserSubscribed) {
+		let td = document.createElement("TD");
+		td.innerHTML += '<form><input type="button" value="' + ButtonName.SubscribeToThread + '" class="btnSubscribe" ' +
+			'onclick="onBtnSubscribeClick(this, ' + thread.Id + ', ' + user.Id + ')" /></form>';
+		tr.appendChild(td);
+	}
+
+	if (user.canAddMessage(latestMessageInThread)) {
+		let td = document.createElement("TD");
+		td.innerHTML += '<form><input type="button" value="' + ButtonName.AddMessage + '" class="btnAddMessage" ' +
+			'onclick="onBtnAddMessageClick(this, \'' + panelClass + '\', ' + thread.Id + ')" /></form>';
+		tr.appendChild(td);
+	}
+
+	tbl.appendChild(tr);
+	tdR.appendChild(tbl);
+}
+
+async function drawBottomActionPanelButtonsForMessage(message, tdL, tdR, user, panelClass) {
+	if (user.IsAuthor) {
+		if (user.canEditMessage(message)) {
+			tdR.innerHTML = '<form><input type="button" value="' + ButtonName.EditMessage + '" class="btnEditMessage" ' +
+				'onclick="onBtnEditMessageClick(this, \'' + panelClass + '\', ' + message.Id + ')" /></form>';
+		}
+	}
+}
+
+async function drawMessage(p, message) {
+	// Header.
+	let divMsgHdr = document.createElement("DIV");
+	divMsgHdr.className = "messageHeader";
+	divMsgHdr.id = "messageHeader_" + message.Id;
+	let ml = SectionMarginDelta * 2;
+	divMsgHdr.style.cssText = "margin-left: " + ml + "px";
+	divMsgHdr.innerHTML = await composeMessageHeaderText(message);
+	p.appendChild(divMsgHdr);
+
+	// Body.
+	let divMsgBody = document.createElement("DIV");
+	divMsgBody.className = "messageBody";
+	divMsgBody.id = "messageBody_" + message.Id;
+	ml = SectionMarginDelta * 2;
+	divMsgBody.style.cssText = "margin-left: " + ml + "px";
+	divMsgBody.innerHTML = processMessageText(message.Text);
+	p.appendChild(divMsgBody);
+}
+
+async function drawThreadMessages(p, thread, messagesMap) {
+	let messageIds = thread.Messages;
+	if (messageIds == null) {
+		return
+	}
+
+	let divMsgHdr, divMsgBody, ml, messageId, message, txt;
+	for (let i = 0; i < messageIds.length; i++) {
+		messageId = messageIds[i];
+		if (!messagesMap.has(messageId)) {
+			console.error(Err.MessageNotFound);
+			return;
+		}
+		message = messagesMap.get(messageId);
+
+		// Header.
+		divMsgHdr = document.createElement("DIV");
+		divMsgHdr.className = "messageHeader";
+		divMsgHdr.id = "messageHeader_" + message.Id;
+		ml = SectionMarginDelta * 2;
+		divMsgHdr.style.cssText = "margin-left: " + ml + "px";
+		txt = await composeMessageHeaderText(message);
+		divMsgHdr.innerHTML = txt;
+		p.appendChild(divMsgHdr);
+
+		// Body.
+		divMsgBody = document.createElement("DIV");
+		divMsgBody.className = "messageBody";
+		divMsgBody.id = "messageBody_" + message.Id;
+		ml = SectionMarginDelta * 2;
+		divMsgBody.style.cssText = "margin-left: " + ml + "px";
+		divMsgBody.innerHTML = processMessageText(message.Text);
+		p.appendChild(divMsgBody);
+	}
+}
+
+async function drawThreadAndMessages(p, thread, messagesMap) {
+	drawPageTitle(p, thread.Name);
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.ThreadPagePrev, EventHandlerVariant.ThreadPageNext);
+	await drawThreadMessages(p, thread, messagesMap);
+}
+
+function drawForumAndThreads(p, forum, threadsMap) {
+	drawPageTitle(p, forum.Name);
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.ForumPagePrev, EventHandlerVariant.ForumPageNext);
+	drawForumThreads(p, forum, threadsMap);
+}
+
+function drawForumThreads(p, forum, threadsMap) {
+	let divThread, ml, url, threadId, thread;
+	let threadIds = forum.Threads;
+	if (threadIds != null) {
+		for (let i = 0; i < threadIds.length; i++) {
+			threadId = threadIds[i];
+			if (!threadsMap.has(threadId)) {
+				console.error(Err.ThreadNotFound);
+				return;
+			}
+			thread = threadsMap.get(threadId);
+
+			divThread = document.createElement("DIV");
+			divThread.className = "thread";
+			divThread.id = "thread_" + thread.Id;
+			ml = SectionMarginDelta * 2;
+			divThread.style.cssText = "margin-left: " + ml + "px";
+			url = composeUrlForThread(threadId);
+			divThread.innerHTML = "<a href='" + url + "'>" + thread.Name + "</a>";
+			p.appendChild(divThread);
+		}
+	}
+}
+
+function drawSectionsAndForums(p, nodes, forumsMap) {
+	let node, divSection, divForum, ml, url, forumId, forum, sectionForums;
+	for (let i = 0; i < nodes.length; i++) {
+		node = nodes[i];
+
+		divSection = document.createElement("DIV");
+		divSection.className = "section";
+		divSection.id = "section_" + node.Section.Id;
+		ml = SectionMarginDelta * node.Level;
+		divSection.style.cssText = "margin-left: " + ml + "px";
+		url = composeUrlForSection(node.Section.Id);
+		divSection.innerHTML = "<a href='" + url + "'>" + node.Section.Name + "</a>";
+		p.appendChild(divSection);
+
+		if (node.Section.ChildType === SectionChildType.Forum) {
+			sectionForums = node.Section.Children;
+		} else {
+			sectionForums = [];
+		}
+		for (let j = 0; j < sectionForums.length; j++) {
+			forumId = sectionForums[j];
+			forum = forumsMap.get(forumId);
+
+			divForum = document.createElement("DIV");
+			divForum.className = "forum";
+			divForum.id = "forum_" + forumId;
+			ml = SectionMarginDelta * (node.Level + 1);
+			divForum.style.cssText = "margin-left: " + ml + "px";
+			url = composeUrlForForum(forumId);
+			divForum.innerHTML = "<a href='" + url + "'>" + forum.Name + "</a>";
+			p.appendChild(divForum);
+		}
+	}
 }
 
 function drawSubscriptionsOnPage(p, sop) {
 	drawPageTitle(p, 'Subscriptions');
-	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, "subscriptionsPrev", "subscriptionsNext");
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.SubscriptionsPrev, EventHandlerVariant.SubscriptionsNext);
 	drawSubscriptions(p, 'subscriptionsList', sop);
 }
 
@@ -2367,178 +2018,145 @@ function drawSubscriptions(p, elClass, sop) {
 	}
 }
 
-async function onBtnUnsubscribeClick(btn) {
-	let tr = btn.parentElement.parentElement;
-	let threadId = Number(tr.children[1].textContent);
-	let resp = await deleteSelfSubscription(threadId);
+function drawNotificationsOnPage(p, notifications) {
+	drawPageTitle(p, 'Notifications');
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.NotificationsPagePrev, EventHandlerVariant.NotificationsPageNext);
+	drawNotifications(p, 'notificationList', notifications);
+}
+
+function drawNotifications(p, elClass, notifications) {
+	let tbl = document.createElement("TABLE");
+	tbl.className = elClass;
+
+	// Header.
+	let tr = document.createElement("TR");
+	let ths = ["#", "Time", "Text", "Actions"];
+	let th;
+	for (let i = 0; i < ths.length; i++) {
+		th = document.createElement("TH");
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+	p.appendChild(tbl);
+
+	let columnsWithHtml = [2, 3];
+
+	// Cells.
+	let notification, actions;
+	for (let i = 0; i < notifications.length; i++) {
+		notification = notifications[i];
+
+		tr = document.createElement("TR");
+		let tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = prettyTime(notification.ToC);
+		tds[2] = splitNotificationTextCell(notification.Text);
+
+		actions = '<input type="button" class="btnShowFullNotificationU" value="Show" onclick="onBtnShowFullNotificationClick(this)">';
+		if (!notification.IsRead) {
+			actions += '<input type="button" class="btnMarkNotificationAsReadU" value="Read" onclick="onBtnMarkNotificationAsReadClick(this, ' + notification.Id + ')">';
+		} else {
+			actions += '<input type="button" class="btnDeleteNotificationU" value="DEL" onclick="onBtnDeleteNotificationClick(this, ' + notification.Id + ')">';
+		}
+		tds[3] = actions;
+
+		let td;
+		let jLast = tds.length - 1;
+		for (let j = 0; j < tds.length; j++) {
+			td = document.createElement("TD");
+
+			if (j === 0) {
+				td.className = "numCol";
+			} else if (j === jLast) {
+				td.className = "lastCol";
+			} else {
+				if (!notification.IsRead) {
+					td.className = "unread";
+				}
+				if (j === 1) {
+					td.className += " col2";
+				}
+			}
+
+			if (columnsWithHtml.includes(j)) {
+				td.innerHTML = tds[j];
+			} else {
+				td.textContent = tds[j];
+			}
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+}
+
+async function drawUserPage(user) {
+	document.getElementById(Fi.id18).value = user.Name;
+	document.getElementById(Fi.id19).value = user.Email;
+	document.getElementById(Fi.id20).value = prettyTime(user.RegTime);
+
+	let roles = [];
+	if (user.Roles.IsAdministrator) {
+		roles.push("Administrator");
+	}
+	if (user.Roles.IsModerator) {
+		roles.push("Moderator");
+	}
+	if (user.Roles.IsAuthor) {
+		roles.push("Author");
+	}
+	if (user.Roles.IsWriter) {
+		roles.push("Writer");
+	}
+	if (user.Roles.IsReader) {
+		roles.push("Reader");
+	}
+	let rolesHtml = "";
+	for (let i = 0; i < roles.length; i++) {
+		if (roles[i] !== "Administrator") {
+			rolesHtml += '<span class="userPageRole">' + roles[i] + '</span>';
+		} else {
+			rolesHtml += '<span class="userPageRole"><a href="' + adminPage + '" target="_blank" rel="noopener noreferrer">' + roles[i] + '</a></span>';
+		}
+	}
+	let tr = document.getElementById(Fi.id21_tr);
+	tr.children[1].innerHTML = rolesHtml;
+
+	let resp = await countSelfSubscriptions();
 	if (resp == null) {
 		return;
 	}
-	if (!resp.result.ok) {
-		return;
-	}
-	tr.style.display = "none";
+	let subscriptionsCount = resp.result.userSubscriptionsCount;
+	document.getElementById(Fi.id22).value = subscriptionsCount.toString();
 }
 
-function repairUndefinedPageCount(pageCount) {
-	// Unfortunately JavaScript can compare a number with 'undefined' !
-	if (pageCount === undefined) {
-		return 1;
-	}
-	if (pageCount === 0) {
-		return 1;
-	}
-	return pageCount;
+function splitNotificationTextCell(fullText) {
+	let shortText = composeNotificationShortText(fullText);
+	return '<table>' +
+		'<tr><td class="visible">' + shortText + '</td></tr>' +
+		'<tr><td class="hidden">' + fullText + '</td></tr>' +
+		'</table>';
 }
 
-//TODO: Message model.
-
-function getMessageLastTouchTime(message) {
-	if (message.editor.time == null) {
-		return new Date(message.creator.time);
-	}
-	return new Date(message.editor.time);
-}
-
-function getMessageMaxEditTime(message, settings) {
-	let lastTouchTime = getMessageLastTouchTime(message);
-	return addTimeSec(lastTouchTime, settings.MessageEditTime);
-}
-
-function canUserEditMessage(userParams, message) {
-	if (userParams.isModerator) {
-		return true;
-	}
-
-	if (!userParams.isWriter) {
-		return false;
-	}
-
-	if (userParams.userId !== message.creator.userId) {
-		return false;
-	}
-
-	let messageMaxEditTime = getMessageMaxEditTime(message, getSettings());
-	if (Date.now() < messageMaxEditTime) {
-		return true
-	}
-
-	return false;
-}
-
-function canUserAddMessage(userParams, latestMessageInThread) {
-	if (!userParams.isWriter) {
-		return false;
-	}
-
-	if (latestMessageInThread == null) {
-		return true;
-	}
-
-	if (latestMessageInThread.creator.userId !== userParams.userId) {
-		return true;
-	}
-
-	let messageMaxEditTime = getMessageMaxEditTime(latestMessageInThread, getSettings());
-	if (Date.now() < messageMaxEditTime) {
-		return false;
-	}
-
-	return true;
-}
-
-function checkPwd(pwd) {
-	if (pwd.length < 16) {
-		return false;
-	}
-
-	if ((pwd.length % 4) !== 0) {
-		return false;
-	}
-
-	let symbol;
-	for (let i = 0; i < pwd.length; i++) {
-		symbol = pwd.charAt(i);
-		if (!checkPwdSymbol(symbol)) {
-			return false;
+function setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptImage, cptAnswerTr, cptAnswer) {
+	if (isCaptchaNeeded) {
+		cptImageTr.style.display = "table-row";
+		cptAnswerTr.style.display = "table-row";
+		if (captchaId.length > 0) {
+			cptImage.src = composeCaptchaImageUrl(captchaId);
 		}
+		cptAnswer.enabled = true;
+	} else {
+		cptImageTr.style.display = "none";
+		cptAnswerTr.style.display = "none";
+		cptAnswer.enabled = false;
 	}
-
-	return true
-}
-
-function checkPwdSymbol(symbol) {
-	switch (symbol) {
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			return true;
-
-		case 'A':
-		case 'B':
-		case 'C':
-		case 'D':
-		case 'E':
-		case 'F':
-		case 'G':
-		case 'H':
-		case 'I':
-		case 'J':
-		case 'K':
-		case 'L':
-		case 'M':
-		case 'N':
-		case 'O':
-		case 'P':
-		case 'Q':
-		case 'R':
-		case 'S':
-		case 'T':
-		case 'U':
-		case 'V':
-		case 'W':
-		case 'X':
-		case 'Y':
-		case 'Z':
-			return true;
-
-		case ' ':
-		case '!':
-		case '"':
-		case '#':
-		case '$':
-		case '%':
-		case '&':
-		case "'":
-		case '(':
-		case ')':
-		case '*':
-		case '+':
-		case ',':
-		case '-':
-		case '.':
-		case '/':
-		case ':':
-		case ';':
-		case '<':
-		case '=':
-		case '>':
-		case '?':
-		case '@':
-		case '[':
-		case "\\":
-		case ']':
-		case '^':
-		case '_':
-			return true;
-	}
-
-	return false;
 }

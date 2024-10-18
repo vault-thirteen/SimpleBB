@@ -302,7 +302,7 @@ func (srv *Server) httpRouter(rw http.ResponseWriter, req *http.Request) {
 func (srv *Server) initVerificationCodeGenerator() (err error) {
 	symbols := c.MakeSymbolsNumbersAndCapitalLatinLetters()
 
-	srv.vcg, err = rp.NewGenerator(srv.settings.SystemSettings.VerificationCodeLength, symbols)
+	srv.vcg, err = rp.NewGenerator(srv.settings.SystemSettings.VerificationCodeLength.AsInt(), symbols)
 	if err != nil {
 		return err
 	}
@@ -401,7 +401,7 @@ func (srv *Server) pingClientsForExternalServices() (err error) {
 func (srv *Server) initRequestIdGenerator() (err error) {
 	symbols := c.MakeSymbolsNumbersAndCapitalLatinLetters()
 
-	srv.ridg, err = rp.NewGenerator(srv.settings.SystemSettings.LogInRequestIdLength, symbols)
+	srv.ridg, err = rp.NewGenerator(srv.settings.SystemSettings.LogInRequestIdLength.AsInt(), symbols)
 	if err != nil {
 		return err
 	}

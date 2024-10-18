@@ -9,6 +9,7 @@ import (
 	s "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 	hh "github.com/vault-thirteen/auxie/http-helper"
 )
@@ -20,7 +21,7 @@ const (
 	ErrTypeCast             = "type cast error"
 )
 
-func (srv *Server) isIPAddressAllowed(req *http.Request) (ok bool, clientIPA string, err error) {
+func (srv *Server) isIPAddressAllowed(req *http.Request) (ok bool, clientIPA cm.IPAS, err error) {
 	clientIPA, err = srv.getClientIPAddress(req)
 	if err != nil {
 		return false, "", err
@@ -32,7 +33,7 @@ func (srv *Server) isIPAddressAllowed(req *http.Request) (ok bool, clientIPA str
 		return false, "", err
 	}
 
-	var n int
+	var n cmb.Count
 	n, err = srv.dbo.CountBlocksByIPAddress(ipa)
 	if err != nil {
 		re := srv.databaseError(err)
@@ -46,7 +47,7 @@ func (srv *Server) isIPAddressAllowed(req *http.Request) (ok bool, clientIPA str
 	return true, clientIPA, nil
 }
 
-func (srv *Server) getClientIPAddress(req *http.Request) (cipa string, err error) {
+func (srv *Server) getClientIPAddress(req *http.Request) (cipa cm.IPAS, err error) {
 	var host string
 
 	switch srv.settings.SystemSettings.ClientIPAddressSource {
@@ -56,7 +57,7 @@ func (srv *Server) getClientIPAddress(req *http.Request) (cipa string, err error
 			return "", err
 		}
 
-		return host, nil
+		return cm.IPAS(host), nil
 
 	case s.ClientIPAddressSource_CustomHeader:
 		host, err = hh.GetSingleHttpHeader(req, srv.settings.SystemSettings.ClientIPAddressHeader)
@@ -64,7 +65,7 @@ func (srv *Server) getClientIPAddress(req *http.Request) (cipa string, err error
 			return "", err
 		}
 
-		return host, nil
+		return cm.IPAS(host), nil
 
 	default:
 		return "", errors.New(s.ErrUnknownClientIPAddressSource)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 const (
@@ -14,19 +15,19 @@ const (
 
 type Notification struct {
 	// Identifier of this notification.
-	Id uint `json:"id"`
+	Id cmb.Id `json:"id"`
 
 	// Identifier of a recipient user.
-	UserId uint `json:"userId"`
+	UserId cmb.Id `json:"userId"`
 
 	// Textual information of this notification.
-	Text string `json:"text"`
+	Text cmb.Text `json:"text"`
 
 	// Time of creation.
 	TimeOfCreation time.Time `json:"toc"`
 
 	// Is the notification read by the recipient ?
-	IsRead bool `json:"isRead"`
+	IsRead cmb.Flag `json:"isRead"`
 
 	// Time of reading.
 	TimeOfReading *time.Time `json:"tor"`
@@ -77,8 +78,8 @@ func NewNotificationArrayFromRows(rows *sql.Rows) (ns []Notification, err error)
 	return ns, nil
 }
 
-func ListNotificationIds(notifications []Notification) (ids []uint) {
-	ids = make([]uint, 0, len(notifications))
+func ListNotificationIds(notifications []Notification) (ids []cmb.Id) {
+	ids = make([]cmb.Id, 0, len(notifications))
 
 	for _, n := range notifications {
 		ids = append(ids, n.Id)

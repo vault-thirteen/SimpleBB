@@ -1,23 +1,22 @@
 package models
 
+import (
+	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
+)
+
 type SubscriptionsOnPage struct {
 	// Subscription parameters. If pagination is used, these lists contain
 	// information after the application of pagination.
 
 	// Subscriber is a UserId.
-	Subscriber uint `json:"subscriber"`
+	Subscriber cmb.Id `json:"subscriber"`
 
 	// Subscriptions is an array of ThreadId's.
-	Subscriptions []uint `json:"subscriptions"`
+	Subscriptions *ul.UidList `json:"subscriptions"`
 
-	// Number of the current page of subscriptions.
-	Page *uint `json:"page,omitempty"`
-
-	// Total number of available pages of subscriptions.
-	TotalPages *uint `json:"totalPages,omitempty"`
-
-	// Total number of available subscriptions.
-	TotalSubscriptions *uint `json:"totalSubscriptions,omitempty"`
+	PageData *cmr.PageData `json:"pageData,omitempty"`
 }
 
 func NewSubscriptionsOnPage() (sop *SubscriptionsOnPage) {

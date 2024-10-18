@@ -12,7 +12,7 @@ import (
 // Settings is Server's settings.
 type Settings struct {
 	// Path to the file with these settings.
-	FilePath string `json:"-"`
+	FilePath cm.Path `json:"-"`
 
 	// Program versioning information.
 	VersionInfo *ver.Versioneer `json:"-"`
@@ -35,7 +35,7 @@ func NewSettingsFromFile(filePath string, versionInfo *ver.Versioneer) (stn *Set
 		return stn, err
 	}
 
-	stn.FilePath = filePath
+	stn.FilePath = cm.Path(filePath)
 
 	err = stn.Check()
 	if err != nil {

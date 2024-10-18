@@ -109,7 +109,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 5.
-	q = fmt.Sprintf(`UPDATE %s SET IsEmailApproved = TRUE WHERE Email = ? AND IsEmailSent = TRUE;`, dbo.tableNames.PreRegisteredUsers)
+	q = fmt.Sprintf(`UPDATE %s SET IsEmailApproved = TRUE WHERE Email = ? AND IsEmailSent IS TRUE;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 6.
@@ -117,15 +117,15 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 7.
-	q = fmt.Sprintf(`UPDATE %s SET IsApproved = TRUE, ApprovalTime = Now() WHERE Email = ? AND IsEmailSent = TRUE AND IsEmailApproved = TRUE AND IsReadyForApproval = TRUE;`, dbo.tableNames.PreRegisteredUsers)
+	q = fmt.Sprintf(`UPDATE %s SET IsApproved = TRUE, ApprovalTime = Now() WHERE Email = ? AND IsEmailSent IS TRUE AND IsEmailApproved IS TRUE AND IsReadyForApproval IS TRUE;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 8.
-	q = fmt.Sprintf(`INSERT INTO %s (PreRegTime, Email, NAME, PASSWORD, ApprovalTime, RegTime, IsReader, CanLogIn) SELECT PreRegTime, Email, NAME, PASSWORD, ApprovalTime, Now(), TRUE, TRUE FROM %s AS pru WHERE pru.Email = ? AND pru.IsApproved = TRUE;`, dbo.tableNames.Users, dbo.tableNames.PreRegisteredUsers)
+	q = fmt.Sprintf(`INSERT INTO %s (PreRegTime, Email, NAME, PASSWORD, ApprovalTime, RegTime, IsReader, CanLogIn) SELECT PreRegTime, Email, NAME, PASSWORD, ApprovalTime, Now(), TRUE, TRUE FROM %s AS pru WHERE pru.Email = ? AND pru.IsApproved IS TRUE;`, dbo.tableNames.Users, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 9.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE Email = ? AND IsApproved = TRUE;`, dbo.tableNames.PreRegisteredUsers)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE Email = ? AND IsApproved IS TRUE;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 10.
@@ -137,7 +137,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 12.
-	q = fmt.Sprintf(`SELECT COUNT(Email) AS n FROM %s WHERE Email = ? AND CanLogIn = TRUE;`, dbo.tableNames.Users)
+	q = fmt.Sprintf(`SELECT COUNT(Email) FROM %s WHERE Email = ? AND CanLogIn IS TRUE;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	// 13.
@@ -197,11 +197,11 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 27.
-	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE RequestId = ? AND VerificationCode = ? AND IsEmailSent = TRUE;`, dbo.tableNames.PreSessions)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE RequestId = ? AND VerificationCode = ? AND IsEmailSent IS TRUE;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 28.
-	q = fmt.Sprintf(`UPDATE %s SET IsVerifiedByEmail = ? WHERE RequestId = ? AND UserId = ? AND IsEmailSent = TRUE;`, dbo.tableNames.PreSessions)
+	q = fmt.Sprintf(`UPDATE %s SET IsVerifiedByEmail = ? WHERE RequestId = ? AND UserId = ? AND IsEmailSent IS TRUE;`, dbo.tableNames.PreSessions)
 	qs = append(qs, q)
 
 	// 29.
@@ -309,7 +309,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 55.
-	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE RequestId = ? AND VerificationCode = ? AND IsEmailSent = TRUE;`, dbo.tableNames.PasswordChanges)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE RequestId = ? AND VerificationCode = ? AND IsEmailSent IS TRUE;`, dbo.tableNames.PasswordChanges)
 	qs = append(qs, q)
 
 	// 56.
@@ -337,7 +337,7 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 62.
-	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE RequestId = ? AND VerificationCodeOld = ? AND IsOldEmailSent = TRUE AND VerificationCodeNew = ? AND IsNewEmailSent = TRUE;`, dbo.tableNames.EmailChanges)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE RequestId = ? AND VerificationCodeOld = ? AND IsOldEmailSent IS TRUE AND VerificationCodeNew = ? AND IsNewEmailSent IS TRUE;`, dbo.tableNames.EmailChanges)
 	qs = append(qs, q)
 
 	// 63.
@@ -365,11 +365,11 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 69.
-	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE IsReadyForApproval = TRUE;`, dbo.tableNames.PreRegisteredUsers)
+	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE IsReadyForApproval IS TRUE;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 70.
-	q = fmt.Sprintf(`SELECT Id, PreRegTime, Email, Name FROM %s WHERE IsReadyForApproval = TRUE ORDER BY PreRegTime LIMIT ? OFFSET ?;`, dbo.tableNames.PreRegisteredUsers)
+	q = fmt.Sprintf(`SELECT Id, PreRegTime, Email, Name FROM %s WHERE IsReadyForApproval IS TRUE ORDER BY PreRegTime LIMIT ? OFFSET ?;`, dbo.tableNames.PreRegisteredUsers)
 	qs = append(qs, q)
 
 	// 71.

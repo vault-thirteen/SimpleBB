@@ -3,25 +3,26 @@ package models
 import (
 	"path/filepath"
 
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	af "github.com/vault-thirteen/auxie/file"
 )
 
 // FrontEndFileData is auxiliary data for a front end static file.
 type FrontEndFileData struct {
-	UrlPath     string
-	FilePath    string
+	UrlPath     cm.Path
+	FilePath    cm.Path
 	ContentType string
 	CachedFile  []byte
 }
 
-func NewFrontEndFileData(frontEndPath string, fileName string, contentType string, frontendAssetsFolder string) (fefd FrontEndFileData, err error) {
+func NewFrontEndFileData(frontEndPath cm.Path, fileName cm.Path, contentType string, frontendAssetsFolder cm.Path) (fefd FrontEndFileData, err error) {
 	fefd = FrontEndFileData{
 		UrlPath:     frontEndPath + fileName,
-		FilePath:    filepath.Join(frontendAssetsFolder, fileName),
+		FilePath:    cm.Path(filepath.Join(frontendAssetsFolder.ToString(), fileName.ToString())),
 		ContentType: contentType,
 	}
 
-	fefd.CachedFile, err = af.GetFileContents(fefd.FilePath)
+	fefd.CachedFile, err = af.GetFileContents(fefd.FilePath.ToString())
 	if err != nil {
 		return fefd, err
 	}

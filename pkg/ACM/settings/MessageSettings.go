@@ -4,17 +4,18 @@ import (
 	"errors"
 
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 // MessageSettings are settings of e-mail messages.
 type MessageSettings struct {
-	SubjectTemplateForRegVCode string `json:"subjectTemplateForRegVCode"`
-	SubjectTemplateForReg      string `json:"subjectTemplateForReg"`
-	BodyTemplateForRegVCode    string `json:"bodyTemplateForRegVCode"`
-	BodyTemplateForReg         string `json:"bodyTemplateForReg"`
-	BodyTemplateForLogIn       string `json:"bodyTemplateForLogIn"`
-	BodyTemplateForPwdChange   string `json:"bodyTemplateForPwdChange"`
-	BodyTemplateForEmailChange string `json:"bodyTemplateForEmailChange"`
+	SubjectTemplateForRegVCode cmb.Text `json:"subjectTemplateForRegVCode"`
+	SubjectTemplateForReg      cmb.Text `json:"subjectTemplateForReg"`
+	BodyTemplateForRegVCode    cmb.Text `json:"bodyTemplateForRegVCode"`
+	BodyTemplateForReg         cmb.Text `json:"bodyTemplateForReg"`
+	BodyTemplateForLogIn       cmb.Text `json:"bodyTemplateForLogIn"`
+	BodyTemplateForPwdChange   cmb.Text `json:"bodyTemplateForPwdChange"`
+	BodyTemplateForEmailChange cmb.Text `json:"bodyTemplateForEmailChange"`
 }
 
 func (s MessageSettings) Check() (err error) {

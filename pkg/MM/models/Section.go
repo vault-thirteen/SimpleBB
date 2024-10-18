@@ -6,6 +6,7 @@ import (
 
 	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 const (
@@ -16,12 +17,12 @@ const (
 
 type Section struct {
 	// Identifier of a section.
-	Id uint `json:"id"`
+	Id cmb.Id `json:"id"`
 
 	// Identifier of a parent section containing this section.
 	// Null means that this section is a root section.
 	// Only a single root section can exist.
-	Parent *uint `json:"parent"`
+	Parent *cmb.Id `json:"parent"`
 
 	// Type of child elements: either sub-sections or forums.
 	ChildType byte `json:"childType"`
@@ -31,7 +32,7 @@ type Section struct {
 	Children *ul.UidList `json:"children"`
 
 	// Name of this section.
-	Name string `json:"name"`
+	Name cm.Name `json:"name"`
 
 	// Section meta-data.
 	EventData

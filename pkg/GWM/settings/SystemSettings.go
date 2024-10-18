@@ -4,17 +4,19 @@ import (
 	"errors"
 
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 // SystemSettings are system settings.
 // Many of these settings must be synchronised with other modules.
 type SystemSettings struct {
-	SettingsVersion uint   `json:"settingsVersion"`
-	SiteName        string `json:"siteName"`
-	SiteDomain      string `json:"siteDomain"`
+	SettingsVersion cmb.Count `json:"settingsVersion"`
+	SiteName        cmb.Text  `json:"siteName"`
+	SiteDomain      cmb.Text  `json:"siteDomain"`
 
 	// Firewall.
-	IsFirewallUsed bool `json:"isFirewallUsed"`
+	IsFirewallUsed cmb.Flag `json:"isFirewallUsed"`
 
 	// ClientIPAddressSource setting selects where to search for client's IP
 	// address. '1' means that IP address is taken directly from the client's
@@ -29,28 +31,28 @@ type SystemSettings struct {
 	ClientIPAddressHeader string `json:"clientIPAddressHeader"`
 
 	// Captcha.
-	CaptchaImgServerHost string `json:"captchaImgServerHost"`
-	CaptchaImgServerPort uint16 `json:"captchaImgServerPort"`
-	CaptchaFolder        string `json:"captchaFolder"`
+	CaptchaImgServerHost string  `json:"captchaImgServerHost"`
+	CaptchaImgServerPort uint16  `json:"captchaImgServerPort"`
+	CaptchaFolder        cm.Path `json:"captchaFolder"`
 
 	// Sessions and messages.
-	SessionMaxDuration uint `json:"sessionMaxDuration"`
-	MessageEditTime    uint `json:"messageEditTime"`
-	PageSize           uint `json:"pageSize"`
+	SessionMaxDuration cmb.Count `json:"sessionMaxDuration"`
+	MessageEditTime    cmb.Count `json:"messageEditTime"`
+	PageSize           cmb.Count `json:"pageSize"`
 
 	// URL paths.
-	ApiFolder              string `json:"apiFolder"`
-	PublicSettingsFileName string `json:"publicSettingsFileName"`
+	ApiFolder              cm.Path `json:"apiFolder"`
+	PublicSettingsFileName cm.Path `json:"publicSettingsFileName"`
 
 	// Front end.
-	IsFrontEndEnabled         bool   `json:"isFrontEndEnabled"`
-	FrontEndStaticFilesFolder string `json:"frontEndStaticFilesFolder"`
-	FrontEndAssetsFolder      string `json:"frontEndAssetsFolder"`
+	IsFrontEndEnabled         cmb.Flag `json:"isFrontEndEnabled"`
+	FrontEndStaticFilesFolder cm.Path  `json:"frontEndStaticFilesFolder"`
+	FrontEndAssetsFolder      cm.Path  `json:"frontEndAssetsFolder"`
 
 	// Development settings.
-	IsDebugMode                               bool   `json:"isDebugMode"`
-	IsDeveloperMode                           bool   `json:"isDeveloperMode"`
-	DevModeHttpHeaderAccessControlAllowOrigin string `json:"devModeHttpHeaderAccessControlAllowOrigin"`
+	IsDebugMode                               cmb.Flag `json:"isDebugMode"`
+	IsDeveloperMode                           cmb.Flag `json:"isDeveloperMode"`
+	DevModeHttpHeaderAccessControlAllowOrigin string   `json:"devModeHttpHeaderAccessControlAllowOrigin"`
 }
 
 func (s SystemSettings) Check() (err error) {

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net"
 	"time"
+
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 const (
@@ -12,11 +14,11 @@ const (
 )
 
 type Incident struct {
-	Id      uint
-	Module  byte
+	Id      cmb.Id
+	Module  Module
 	Type    IncidentType
 	Time    time.Time
-	Email   string
+	Email   Email
 	UserIPA net.IP
 }
 

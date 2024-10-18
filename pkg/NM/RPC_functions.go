@@ -10,6 +10,8 @@ import (
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 // RPC functions.
@@ -35,7 +37,7 @@ func (srv *Server) addNotification(p *nm.AddNotificationParams) (result *nm.AddN
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -48,7 +50,7 @@ func (srv *Server) addNotification(p *nm.AddNotificationParams) (result *nm.AddN
 	}
 
 	result = &nm.AddNotificationResult{
-		NotificationId: uint(insertedNotificationId),
+		NotificationId: insertedNotificationId,
 	}
 
 	return result, nil
@@ -72,7 +74,7 @@ func (srv *Server) addNotificationS(p *nm.AddNotificationSParams) (result *nm.Ad
 	}
 
 	// Check the DKey.
-	if !srv.dKeyI.CheckString(p.DKey) {
+	if !srv.dKeyI.CheckString(p.DKey.ToString()) {
 		srv.incidentManager.ReportIncident(cm.IncidentType_WrongDKey, "", nil)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -86,7 +88,7 @@ func (srv *Server) addNotificationS(p *nm.AddNotificationSParams) (result *nm.Ad
 	}
 
 	result = &nm.AddNotificationSResult{
-		NotificationId: uint(insertedNotificationId),
+		NotificationId: insertedNotificationId,
 	}
 
 	return result, nil
@@ -106,7 +108,7 @@ func (srv *Server) getNotification(p *nm.GetNotificationParams) (result *nm.GetN
 	}
 
 	// Check permissions.
-	if !userRoles.CanLogIn {
+	if !userRoles.User.Roles.CanLogIn {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -123,8 +125,8 @@ func (srv *Server) getNotification(p *nm.GetNotificationParams) (result *nm.GetN
 	}
 
 	// Check the recipient.
-	if notification.UserId != userRoles.UserId {
-		srv.incidentManager.ReportIncident(cm.IncidentType_ReadingNotificationOfOtherUsers, userRoles.Email, p.Auth.UserIPAB)
+	if notification.UserId != userRoles.User.Id {
+		srv.incidentManager.ReportIncident(cm.IncidentType_ReadingNotificationOfOtherUsers, userRoles.User.Email, p.Auth.UserIPAB)
 
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -151,7 +153,7 @@ func (srv *Server) getNotificationsOnPage(p *nm.GetNotificationsOnPageParams) (r
 	}
 
 	// Check permissions.
-	if !userRoles.CanLogIn {
+	if !userRoles.User.Roles.CanLogIn {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -159,39 +161,37 @@ func (srv *Server) getNotificationsOnPage(p *nm.GetNotificationsOnPageParams) (r
 	defer srv.dbo.UnlockAfterReading()
 
 	// Get notifications on page.
-	notifications, err := srv.dbo.GetNotificationsByUserIdOnPage(userRoles.UserId, p.Page, srv.settings.SystemSettings.PageSize)
+	notifications, err := srv.dbo.GetNotificationsByUserIdOnPage(userRoles.User.Id, p.Page, srv.settings.SystemSettings.PageSize)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	// Count all notifications.
-	var allNotificationsCount int
-	allNotificationsCount, err = srv.dbo.CountAllNotificationsByUserId(userRoles.UserId)
+	var allNotificationsCount cmb.Count
+	allNotificationsCount, err = srv.dbo.CountAllNotificationsByUserId(userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	nop := nm.NewNotificationsOnPage()
-	{
-		nop.NotificationIds, err = ul.NewFromArray(nm.ListNotificationIds(notifications))
-		if err != nil {
-			srv.logError(err)
-			return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
-		}
-
-		nop.Notifications = notifications
-
-		nop.Page = &p.Page
-
-		allNotificationsCountUint := uint(allNotificationsCount)
-		tp := c.CalculateTotalPages(allNotificationsCountUint, srv.settings.SystemSettings.PageSize)
-		nop.TotalPages = &tp
-
-		nop.TotalNotifications = &allNotificationsCountUint
+	var notificationIds *ul.UidList
+	notificationIds, err = ul.NewFromArray(nm.ListNotificationIds(notifications))
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	result = &nm.GetNotificationsOnPageResult{
-		NotificationsOnPage: nop,
+		NotificationsOnPage: &nm.NotificationsOnPage{
+			NotificationIds: notificationIds,
+			Notifications:   notifications,
+			PageData: &cmr.PageData{
+				PageNumber:  p.Page,
+				TotalPages:  cmb.CalculateTotalPages(allNotificationsCount, srv.settings.SystemSettings.PageSize),
+				PageSize:    srv.settings.SystemSettings.PageSize,
+				ItemsOnPage: cmb.Count(len(notifications)),
+				TotalItems:  allNotificationsCount,
+			},
+		},
 	}
 
 	return result, nil
@@ -206,7 +206,7 @@ func (srv *Server) getAllNotifications(p *nm.GetAllNotificationsParams) (result 
 	}
 
 	// Check permissions.
-	if !userRoles.CanLogIn {
+	if !userRoles.User.Roles.CanLogIn {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -214,13 +214,19 @@ func (srv *Server) getAllNotifications(p *nm.GetAllNotificationsParams) (result 
 	defer srv.dbo.UnlockAfterReading()
 
 	// Get notifications.
-	notifications, err := srv.dbo.GetAllNotificationsByUserId(userRoles.UserId)
+	notifications, err := srv.dbo.GetAllNotificationsByUserId(userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	result = &nm.GetAllNotificationsResult{
 		Notifications: notifications,
+	}
+
+	result.NotificationIds, err = ul.NewFromArray(nm.ListNotificationIds(notifications))
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	return result, nil
@@ -235,7 +241,7 @@ func (srv *Server) getUnreadNotifications(p *nm.GetUnreadNotificationsParams) (r
 	}
 
 	// Check permissions.
-	if !userRoles.CanLogIn {
+	if !userRoles.User.Roles.CanLogIn {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -243,13 +249,19 @@ func (srv *Server) getUnreadNotifications(p *nm.GetUnreadNotificationsParams) (r
 	defer srv.dbo.UnlockAfterReading()
 
 	// Get notifications.
-	notifications, err := srv.dbo.GetUnreadNotifications(userRoles.UserId)
+	notifications, err := srv.dbo.GetUnreadNotifications(userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	result = &nm.GetUnreadNotificationsResult{
 		Notifications: notifications,
+	}
+
+	result.NotificationIds, err = ul.NewFromArray(nm.ListNotificationIds(notifications))
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	return result, nil
@@ -264,7 +276,7 @@ func (srv *Server) countUnreadNotifications(p *nm.CountUnreadNotificationsParams
 	}
 
 	// Check permissions.
-	if !userRoles.CanLogIn {
+	if !userRoles.User.Roles.CanLogIn {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -272,7 +284,7 @@ func (srv *Server) countUnreadNotifications(p *nm.CountUnreadNotificationsParams
 	defer srv.dbo.UnlockAfterReading()
 
 	// Count unread notifications.
-	n, err := srv.dbo.CountUnreadNotificationsByUserId(userRoles.UserId)
+	n, err := srv.dbo.CountUnreadNotificationsByUserId(userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -298,7 +310,7 @@ func (srv *Server) markNotificationAsRead(p *nm.MarkNotificationAsReadParams) (r
 	}
 
 	// Check permissions.
-	if !userRoles.CanLogIn {
+	if !userRoles.User.Roles.CanLogIn {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -315,8 +327,8 @@ func (srv *Server) markNotificationAsRead(p *nm.MarkNotificationAsReadParams) (r
 	}
 
 	// Check the recipient and status.
-	if notification.UserId != userRoles.UserId {
-		srv.incidentManager.ReportIncident(cm.IncidentType_ReadingNotificationOfOtherUsers, userRoles.Email, p.Auth.UserIPAB)
+	if notification.UserId != userRoles.User.Id {
+		srv.incidentManager.ReportIncident(cm.IncidentType_ReadingNotificationOfOtherUsers, userRoles.User.Email, p.Auth.UserIPAB)
 
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -326,15 +338,16 @@ func (srv *Server) markNotificationAsRead(p *nm.MarkNotificationAsReadParams) (r
 	}
 
 	// Make the mark.
-	err = srv.dbo.MarkNotificationAsRead(p.NotificationId, userRoles.UserId)
+	err = srv.dbo.MarkNotificationAsRead(p.NotificationId, userRoles.User.Id)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	result = &nm.MarkNotificationAsReadResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -352,7 +365,7 @@ func (srv *Server) deleteNotification(p *nm.DeleteNotificationParams) (result *n
 	}
 
 	// Check permissions.
-	if !userRoles.IsAdministrator {
+	if !userRoles.User.Roles.IsAdministrator {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -366,9 +379,10 @@ func (srv *Server) deleteNotification(p *nm.DeleteNotificationParams) (result *n
 	}
 
 	result = &nm.DeleteNotificationResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -381,15 +395,21 @@ func (srv *Server) getDKey(p *nm.GetDKeyParams) (result *nm.GetDKeyResult, re *j
 	}
 
 	result = &nm.GetDKeyResult{
-		DKey: srv.dKeyI.GetString(),
+		DKey: cmb.Text(srv.dKeyI.GetString()),
 	}
 
 	return result, nil
 }
 
 func (srv *Server) showDiagnosticData() (result *nm.ShowDiagnosticDataResult, re *jrm1.RpcError) {
-	result = &nm.ShowDiagnosticDataResult{}
-	result.TotalRequestsCount, result.SuccessfulRequestsCount = srv.js.GetRequestsCount()
+	trc, src := srv.js.GetRequestsCount()
+
+	result = &nm.ShowDiagnosticDataResult{
+		RequestsCount: cmr.RequestsCount{
+			TotalRequestsCount:      cmb.Text(trc),
+			SuccessfulRequestsCount: cmb.Text(src),
+		},
+	}
 
 	return result, nil
 }

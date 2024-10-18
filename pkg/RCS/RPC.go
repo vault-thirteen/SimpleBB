@@ -7,6 +7,7 @@ import (
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	rm "github.com/vault-thirteen/SimpleBB/pkg/RCS/models"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
 
@@ -47,7 +48,12 @@ func (srv *Server) initRpc() (err error) {
 // Ping.
 
 func (srv *Server) Ping(_ *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
-	return rm.PingResult{OK: true}, nil
+	result = rm.PingResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 // Captcha.

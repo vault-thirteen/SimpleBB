@@ -1,9 +1,9 @@
 package mm
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"hash/crc32"
 	"log"
 	"sync"
 	"time"
@@ -18,8 +18,10 @@ import (
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
+	ah "github.com/vault-thirteen/auxie/hash"
 )
 
 // Auxiliary functions used in RPC functions.
@@ -149,7 +151,7 @@ func (srv *Server) doTestA(wg *sync.WaitGroup, errChan chan error) {
 }
 
 // getDKeyForNM receives a DKey from Notification module.
-func (srv *Server) getDKeyForNM() (dKey *string, re *jrm1.RpcError) {
+func (srv *Server) getDKeyForNM() (dKey *cmb.Text, re *jrm1.RpcError) {
 	params := nm.GetDKeyParams{}
 	result := new(nm.GetDKeyResult)
 	var err error
@@ -171,7 +173,7 @@ func (srv *Server) getDKeyForNM() (dKey *string, re *jrm1.RpcError) {
 }
 
 // getDKeyForSM receives a DKey from Subscription module.
-func (srv *Server) getDKeyForSM() (dKey *string, re *jrm1.RpcError) {
+func (srv *Server) getDKeyForSM() (dKey *cmb.Text, re *jrm1.RpcError) {
 	params := sm.GetDKeyParams{}
 	result := new(sm.GetDKeyResult)
 	var err error
@@ -193,7 +195,7 @@ func (srv *Server) getDKeyForSM() (dKey *string, re *jrm1.RpcError) {
 }
 
 // sendNotificationToUser sends a system notification to a user.
-func (srv *Server) sendNotificationToUser(userId uint, text string) (re *jrm1.RpcError) {
+func (srv *Server) sendNotificationToUser(userId cmb.Id, text cmb.Text) (re *jrm1.RpcError) {
 	params := nm.AddNotificationSParams{
 		DKeyParams: cmr.DKeyParams{
 			// DKey is set during module start-up, so it is non-null.
@@ -218,7 +220,7 @@ func (srv *Server) sendNotificationToUser(userId uint, text string) (re *jrm1.Rp
 
 // clearSubscriptionsOfDeletedThread clears remains of subscriptions of a
 // deleted thread.
-func (srv *Server) clearSubscriptionsOfDeletedThread(threadId uint) (re *jrm1.RpcError) {
+func (srv *Server) clearSubscriptionsOfDeletedThread(threadId cmb.Id) (re *jrm1.RpcError) {
 	params := sm.ClearThreadSubscriptionsSParams{
 		DKeyParams: cmr.DKeyParams{
 			// DKey is set during module start-up, so it is non-null.
@@ -240,12 +242,13 @@ func (srv *Server) clearSubscriptionsOfDeletedThread(threadId uint) (re *jrm1.Rp
 	return nil
 }
 
-func (srv *Server) getMessageTextChecksum(msgText string) (checksum uint32) {
-	return crc32.Checksum([]byte(msgText), srv.crcTable)
+func (srv *Server) getMessageTextChecksum(msgText cmb.Text) (checksum []byte) {
+	x, _ := ah.CalculateCrc32(msgText.ToBytes())
+	return x[:]
 }
 
-func (srv *Server) checkMessageTextChecksum(msgText string, checksum uint32) (ok bool) {
-	return srv.getMessageTextChecksum(msgText) == checksum
+func (srv *Server) checkMessageTextChecksum(msgText cmb.Text, checksum []byte) (ok bool) {
+	return bytes.Compare(srv.getMessageTextChecksum(msgText), checksum) == 0
 }
 
 // canUserEditMessage checks whether a user (specified by the 'userRoles'
@@ -257,17 +260,17 @@ func (srv *Server) canUserEditMessage(userRoles *am.GetSelfRolesResult, message 
 	}
 
 	// Moderators have extended rights to edit messages of any users.
-	if userRoles.IsModerator {
+	if userRoles.User.Roles.IsModerator {
 		return true
 	}
 
 	// Writers can edit their own messages.
-	if !userRoles.IsWriter {
+	if !userRoles.User.Roles.IsWriter {
 		return false
 	}
 
 	// User can not edit messages created by other users.
-	if userRoles.UserId != message.Creator.UserId {
+	if userRoles.User.Id != message.Creator.UserId {
 		return false
 	}
 
@@ -291,7 +294,7 @@ func (srv *Server) canUserAddMessage(userRoles *am.GetSelfRolesResult, latestMes
 	}
 
 	// Only writers can add new messages.
-	if !userRoles.IsWriter {
+	if !userRoles.User.Roles.IsWriter {
 		return false
 	}
 
@@ -302,7 +305,7 @@ func (srv *Server) canUserAddMessage(userRoles *am.GetSelfRolesResult, latestMes
 
 	// If the latest message in the thread was written by another [that] user,
 	// this user can add a new message.
-	if latestMessageInThread.Creator.UserId != userRoles.UserId {
+	if latestMessageInThread.Creator.UserId != userRoles.User.Id {
 		return true
 	}
 
@@ -318,7 +321,7 @@ func (srv *Server) canUserAddMessage(userRoles *am.GetSelfRolesResult, latestMes
 
 // getLatestMessageOfThreadH is a helper function used by other functions to
 // get the latest message of a thread.
-func (srv *Server) getLatestMessageOfThreadH(threadId uint) (message *mm.Message, re *jrm1.RpcError) {
+func (srv *Server) getLatestMessageOfThreadH(threadId cmb.Id) (message *mm.Message, re *jrm1.RpcError) {
 	// Get the thread.
 	var thread *mm.Thread
 	var err error
@@ -361,7 +364,7 @@ func (srv *Server) getMessageMaxEditTime(message *mm.Message) time.Time {
 
 // deleteThreadH is a helper function used by other functions to delete a
 // thread.
-func (srv *Server) deleteThreadH(threadId uint) (re *jrm1.RpcError) {
+func (srv *Server) deleteThreadH(threadId cmb.Id) (re *jrm1.RpcError) {
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 

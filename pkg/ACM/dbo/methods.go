@@ -4,97 +4,57 @@ package dbo
 
 import (
 	"database/sql"
-	"fmt"
 	"net"
 	"time"
 
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	ae "github.com/vault-thirteen/auxie/errors"
 )
 
-func (dbo *DatabaseObject) ApprovePreRegUser(email string) (err error) {
+func (dbo *DatabaseObject) ApprovePreRegUser(email cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_ApprovePreRegUser).Exec(email)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) ApproveUserByEmail(email string) (err error) {
+func (dbo *DatabaseObject) ApproveUserByEmail(email cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_ApprovePreRegUserEmail).Exec(email)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) AttachVerificationCodeToPreRegUser(email string, code string) (err error) {
+func (dbo *DatabaseObject) AttachVerificationCodeToPreRegUser(email cm.Email, code cm.VerificationCode) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_AttachVerificationCodeToPreRegUser).Exec(code, email)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) AttachVerificationCodeToPreSession(userId uint, requestId string, code string) (err error) {
+func (dbo *DatabaseObject) AttachVerificationCodeToPreSession(userId cmb.Id, requestId cm.RequestId, code cm.VerificationCode) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_AttachVerificationCodeToPreSession).Exec(code, requestId, userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) CheckVerificationCodeForLogIn(requestId string, code string) (ok bool, err error) {
+func (dbo *DatabaseObject) CheckVerificationCodeForLogIn(requestId cm.RequestId, code cm.VerificationCode) (ok bool, err error) {
 	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodeForLogIn).QueryRow(requestId, code)
 
 	var n int
@@ -110,7 +70,7 @@ func (dbo *DatabaseObject) CheckVerificationCodeForLogIn(requestId string, code 
 	return true, nil
 }
 
-func (dbo *DatabaseObject) CheckVerificationCodeForPwdChange(requestId string, code string) (ok bool, err error) {
+func (dbo *DatabaseObject) CheckVerificationCodeForPwdChange(requestId cm.RequestId, code cm.VerificationCode) (ok bool, err error) {
 	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodeForPwdChange).QueryRow(requestId, code)
 
 	var n int
@@ -126,7 +86,7 @@ func (dbo *DatabaseObject) CheckVerificationCodeForPwdChange(requestId string, c
 	return true, nil
 }
 
-func (dbo *DatabaseObject) CheckVerificationCodeForPreReg(email, code string) (ok bool, err error) {
+func (dbo *DatabaseObject) CheckVerificationCodeForPreReg(email cm.Email, code cm.VerificationCode) (ok bool, err error) {
 	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodeForPreReg).QueryRow(email, code)
 
 	var n int
@@ -142,7 +102,7 @@ func (dbo *DatabaseObject) CheckVerificationCodeForPreReg(email, code string) (o
 	return true, nil
 }
 
-func (dbo *DatabaseObject) CheckVerificationCodesForEmailChange(requestId string, codeOld string, codeNew string) (ok bool, err error) {
+func (dbo *DatabaseObject) CheckVerificationCodesForEmailChange(requestId cm.RequestId, codeOld cm.VerificationCode, codeNew cm.VerificationCode) (ok bool, err error) {
 	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodesForEmailChange).QueryRow(requestId, codeOld, codeNew)
 
 	var n int
@@ -158,10 +118,10 @@ func (dbo *DatabaseObject) CheckVerificationCodesForEmailChange(requestId string
 	return true, nil
 }
 
-func (dbo *DatabaseObject) CountAllUsers() (n int, err error) {
+func (dbo *DatabaseObject) CountAllUsers() (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountAllUsers).QueryRow()
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -169,10 +129,10 @@ func (dbo *DatabaseObject) CountAllUsers() (n int, err error) {
 	return n, nil
 }
 
-func (dbo *DatabaseObject) CountRegistrationsReadyForApproval() (n int, err error) {
+func (dbo *DatabaseObject) CountRegistrationsReadyForApproval() (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountRegistrationsReadyForApproval).QueryRow()
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -180,10 +140,10 @@ func (dbo *DatabaseObject) CountRegistrationsReadyForApproval() (n int, err erro
 	return n, nil
 }
 
-func (dbo *DatabaseObject) CountEmailChangesByUserId(userId uint) (n int, err error) {
+func (dbo *DatabaseObject) CountEmailChangesByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountEmailChangesByUserId).QueryRow(userId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -191,10 +151,10 @@ func (dbo *DatabaseObject) CountEmailChangesByUserId(userId uint) (n int, err er
 	return n, nil
 }
 
-func (dbo *DatabaseObject) CountPasswordChangesByUserId(userId uint) (n int, err error) {
+func (dbo *DatabaseObject) CountPasswordChangesByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountPasswordChangesByUserId).QueryRow(userId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -202,10 +162,10 @@ func (dbo *DatabaseObject) CountPasswordChangesByUserId(userId uint) (n int, err
 	return n, nil
 }
 
-func (dbo *DatabaseObject) CountPreSessionsByUserEmail(email string) (n int, err error) {
+func (dbo *DatabaseObject) CountPreSessionsByUserEmail(email cm.Email) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountPreSessionsByUserEmail).QueryRow(email)
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -213,10 +173,10 @@ func (dbo *DatabaseObject) CountPreSessionsByUserEmail(email string) (n int, err
 	return n, nil
 }
 
-func (dbo *DatabaseObject) CountSessionsByUserEmail(email string) (n int, err error) {
+func (dbo *DatabaseObject) CountSessionsByUserEmail(email cm.Email) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountSessionsByUserEmail).QueryRow(email)
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -224,10 +184,10 @@ func (dbo *DatabaseObject) CountSessionsByUserEmail(email string) (n int, err er
 	return n, nil
 }
 
-func (dbo *DatabaseObject) CountSessionsByUserId(userId uint) (n int, err error) {
+func (dbo *DatabaseObject) CountSessionsByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountSessionsByUserId).QueryRow(userId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -235,10 +195,10 @@ func (dbo *DatabaseObject) CountSessionsByUserId(userId uint) (n int, err error)
 	return n, nil
 }
 
-func (dbo *DatabaseObject) CountUsersWithEmailAbleToLogIn(email string) (n int, err error) {
+func (dbo *DatabaseObject) CountUsersWithEmailAbleToLogIn(email cm.Email) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountUsersWithEmailAbleToLogIn).QueryRow(email)
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -246,10 +206,10 @@ func (dbo *DatabaseObject) CountUsersWithEmailAbleToLogIn(email string) (n int, 
 	return n, nil
 }
 
-func (dbo *DatabaseObject) CountUsersWithEmail(email string) (n int, err error) {
+func (dbo *DatabaseObject) CountUsersWithEmail(email cm.Email) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountUsersWithEmail).QueryRow(email, email)
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -257,10 +217,10 @@ func (dbo *DatabaseObject) CountUsersWithEmail(email string) (n int, err error) 
 	return n, nil
 }
 
-func (dbo *DatabaseObject) CountUsersWithName(name string) (n int, err error) {
+func (dbo *DatabaseObject) CountUsersWithName(name cm.Name) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountUsersWithName).QueryRow(name, name)
 
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -287,17 +247,7 @@ func (dbo *DatabaseObject) CreateEmailChangeRequest(ecr *am.EmailChange) (err er
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
 func (dbo *DatabaseObject) CreatePasswordChangeRequest(pcr *am.PasswordChange) (err error) {
@@ -311,68 +261,33 @@ func (dbo *DatabaseObject) CreatePasswordChangeRequest(pcr *am.PasswordChange) (
 		pcr.CaptchaId,
 		pcr.VerificationCode,
 		true,
-		pcr.NewPassword,
+		pcr.NewPasswordBytes,
 	)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) CreatePreSession(userId uint, requestId string, userIPAB net.IP, pwdSalt []byte, isCaptchaRequired bool, captchaId sql.NullString) (err error) {
+func (dbo *DatabaseObject) CreatePreSession(userId cmb.Id, requestId cm.RequestId, userIPAB net.IP, pwdSalt []byte, isCaptchaRequired cmb.Flag, captchaId *cm.CaptchaId) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_CreatePreSession).Exec(userId, requestId, userIPAB, pwdSalt, isCaptchaRequired, captchaId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) CreateSession(userId uint, userIPAB net.IP) (lastInsertedId int64, err error) {
+func (dbo *DatabaseObject) CreateSession(userId cmb.Id, userIPAB net.IP) (lastInsertedId cmb.Id, err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_CreateSession).Exec(userId, userIPAB)
 	if err != nil {
 		return cdbo.LastInsertedIdOnError, err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return cdbo.LastInsertedIdOnError, err
-	}
-
-	if ra != 1 {
-		return cdbo.LastInsertedIdOnError, fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	lastInsertedId, err = result.LastInsertId()
-	if err != nil {
-		return cdbo.LastInsertedIdOnError, err
-	}
-
-	return lastInsertedId, nil
+	return cdbo.CheckRowsAffectedAndGetLastInsertedId(result, 1)
 }
 
 func (dbo *DatabaseObject) DeleteAbandonedPreSessions() (err error) {
@@ -388,133 +303,73 @@ func (dbo *DatabaseObject) DeleteAbandonedPreSessions() (err error) {
 	return nil
 }
 
-func (dbo *DatabaseObject) DeleteEmailChangeByRequestId(requestId string) (err error) {
+func (dbo *DatabaseObject) DeleteEmailChangeByRequestId(requestId cm.RequestId) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_DeleteEmailChangeByRequestId).Exec(requestId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) DeletePasswordChangeByRequestId(requestId string) (err error) {
+func (dbo *DatabaseObject) DeletePasswordChangeByRequestId(requestId cm.RequestId) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_DeletePasswordChangeByRequestId).Exec(requestId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) DeletePreRegUserIfNotApprovedByEmail(email string) (err error) {
+func (dbo *DatabaseObject) DeletePreRegUserIfNotApprovedByEmail(email cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_DeletePreRegUserIfNotApprovedByEmail).Exec(email)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) DeletePreSessionByRequestId(requestId string) (err error) {
+func (dbo *DatabaseObject) DeletePreSessionByRequestId(requestId cm.RequestId) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_DeletePreSessionByRequestId).Exec(requestId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) DeleteSession(sessionId uint, userId uint, userIPAB net.IP) (err error) {
+func (dbo *DatabaseObject) DeleteSession(sessionId cmb.Id, userId cmb.Id, userIPAB net.IP) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_DeleteSession).Exec(sessionId, userId, userIPAB)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) DeleteSessionByUserId(userId uint) (err error) {
+func (dbo *DatabaseObject) DeleteSessionByUserId(userId cmb.Id) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_DeleteSessionByUserId).Exec(userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) GetEmailChangeByRequestId(requestId string) (ecr *am.EmailChange, err error) {
+func (dbo *DatabaseObject) GetEmailChangeByRequestId(requestId cm.RequestId) (ecr *am.EmailChange, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetEmailChangeByRequestId).QueryRow(requestId)
 	return am.NewEmailChangeFromScannableSource(row)
 }
 
-func (dbo *DatabaseObject) GetListOfAllUsers(pageNumber uint, pageSize uint) (userIds []uint, err error) {
-	userIds = make([]uint, 0)
+func (dbo *DatabaseObject) GetListOfAllUsers(pageNumber cmb.Count, pageSize cmb.Count) (userIds []cmb.Id, err error) {
+	userIds = make([]cmb.Id, 0)
 
 	var rows *sql.Rows
 	rows, err = dbo.PreparedStatement(DbPsid_GetListOfAllUsers).Query(pageSize, (pageNumber-1)*pageSize)
@@ -529,11 +384,11 @@ func (dbo *DatabaseObject) GetListOfAllUsers(pageNumber uint, pageSize uint) (us
 		}
 	}()
 
-	return cm.NewArrayFromScannableSource[uint](rows)
+	return cm.NewArrayFromScannableSource[cmb.Id](rows)
 }
 
-func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []uint, err error) {
-	userIds = make([]uint, 0)
+func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []cmb.Id, err error) {
+	userIds = make([]cmb.Id, 0)
 
 	var rows *sql.Rows
 	rows, err = dbo.PreparedStatement(DbPsid_GetListOfLoggedUsers).Query()
@@ -548,10 +403,10 @@ func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []uint, err error) {
 		}
 	}()
 
-	return cm.NewArrayFromScannableSource[uint](rows)
+	return cm.NewArrayFromScannableSource[cmb.Id](rows)
 }
 
-func (dbo *DatabaseObject) GetListOfRegistrationsReadyForApproval(pageNumber uint, pageSize uint) (rrfas []am.RegistrationReadyForApproval, err error) {
+func (dbo *DatabaseObject) GetListOfRegistrationsReadyForApproval(pageNumber cmb.Count, pageSize cmb.Count) (rrfas []am.RegistrationReadyForApproval, err error) {
 	rrfas = make([]am.RegistrationReadyForApproval, 0)
 
 	var rows *sql.Rows
@@ -580,43 +435,43 @@ func (dbo *DatabaseObject) GetListOfRegistrationsReadyForApproval(pageNumber uin
 	return rrfas, nil
 }
 
-func (dbo *DatabaseObject) GetPasswordChangeByRequestId(requestId string) (pcr *am.PasswordChange, err error) {
+func (dbo *DatabaseObject) GetPasswordChangeByRequestId(requestId cm.RequestId) (pcr *am.PasswordChange, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetPasswordChangeByRequestId).QueryRow(requestId)
 	return am.NewPasswordChangeFromScannableSource(row)
 }
 
-func (dbo *DatabaseObject) GetPreSessionByRequestId(requestId string) (preSession *am.PreSession, err error) {
+func (dbo *DatabaseObject) GetPreSessionByRequestId(requestId cm.RequestId) (preSession *am.PreSession, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetPreSessionByRequestId).QueryRow(requestId)
 	return am.NewPreSessionFromScannableSource(row)
 }
 
-func (dbo *DatabaseObject) GetSessionByUserId(userId uint) (session *am.Session, err error) {
+func (dbo *DatabaseObject) GetSessionByUserId(userId cmb.Id) (session *am.Session, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetSessionByUserId).QueryRow(userId)
 	return am.NewSessionFromScannableSource(row)
 }
 
-func (dbo *DatabaseObject) GetUserNameById(userId uint) (userName *string, err error) {
+func (dbo *DatabaseObject) GetUserNameById(userId cmb.Id) (userName *cm.Name, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserNameById).QueryRow(userId)
-	return cm.NewStringFromScannableSource(row)
+	return cm.NewValueFromScannableSource[cm.Name](row)
 }
 
-func (dbo *DatabaseObject) GetUserById(userId uint) (user *am.User, err error) {
+func (dbo *DatabaseObject) GetUserById(userId cmb.Id) (user *am.User, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserById).QueryRow(userId)
 	return am.NewUserFromScannableSource(row)
 }
 
-func (dbo *DatabaseObject) GetUserIdByEmail(email string) (id uint, err error) {
+func (dbo *DatabaseObject) GetUserIdByEmail(email cm.Email) (userId cmb.Id, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserIdByEmail).QueryRow(email)
 
-	id, err = cm.NewNonNullValueFromScannableSource[uint](row)
+	userId, err = cm.NewNonNullValueFromScannableSource[cmb.Id](row)
 	if err != nil {
 		return cdbo.IdOnError, err
 	}
 
-	return id, nil
+	return userId, nil
 }
 
-func (dbo *DatabaseObject) GetUserLastBadActionTimeById(userId uint) (lastBadActionTime *time.Time, err error) {
+func (dbo *DatabaseObject) GetUserLastBadActionTimeById(userId cmb.Id) (lastBadActionTime *time.Time, err error) {
 	var u = &am.User{}
 	err = dbo.PreparedStatement(DbPsid_GetUserLastBadActionTimeById).QueryRow(userId).Scan(&u.LastBadActionTime)
 	if err != nil {
@@ -626,7 +481,7 @@ func (dbo *DatabaseObject) GetUserLastBadActionTimeById(userId uint) (lastBadAct
 	return u.LastBadActionTime, nil
 }
 
-func (dbo *DatabaseObject) GetUserLastBadLogInTimeByEmail(email string) (lastBadLogInTime *time.Time, err error) {
+func (dbo *DatabaseObject) GetUserLastBadLogInTimeByEmail(email cm.Email) (lastBadLogInTime *time.Time, err error) {
 	var u = &am.User{}
 	err = dbo.PreparedStatement(DbPsid_GetUserLastBadLogInTimeByEmail).QueryRow(email).Scan(&u.LastBadLogInTime)
 	if err != nil {
@@ -636,37 +491,27 @@ func (dbo *DatabaseObject) GetUserLastBadLogInTimeByEmail(email string) (lastBad
 	return u.LastBadLogInTime, nil
 }
 
-func (dbo *DatabaseObject) GetUserPasswordById(userId uint) (password *[]byte, err error) {
+func (dbo *DatabaseObject) GetUserPasswordById(userId cmb.Id) (password *[]byte, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserPasswordById).QueryRow(userId)
 	return cm.NewValueFromScannableSource[[]byte](row)
 }
 
-func (dbo *DatabaseObject) GetUserRolesById(userId uint) (roles *cm.UserRoles, err error) {
+func (dbo *DatabaseObject) GetUserRolesById(userId cmb.Id) (roles *cm.UserRoles, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserRolesById).QueryRow(userId)
 	return cm.NewUserRolesFromScannableSource(row)
 }
 
-func (dbo *DatabaseObject) InsertPreRegisteredUser(email string) (err error) {
+func (dbo *DatabaseObject) InsertPreRegisteredUser(email cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_InsertPreRegisteredUser).Exec(email)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) RegisterPreRegUser(email string) (err error) {
+func (dbo *DatabaseObject) RegisterPreRegUser(email cm.Email) (err error) {
 	// Part 1.
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_RegisterPreRegUserP1).Exec(email)
@@ -674,14 +519,9 @@ func (dbo *DatabaseObject) RegisterPreRegUser(email string) (err error) {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
+	err = cdbo.CheckRowsAffected(result, 1)
 	if err != nil {
 		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
 	}
 
 	// Part 2.
@@ -690,76 +530,37 @@ func (dbo *DatabaseObject) RegisterPreRegUser(email string) (err error) {
 		return err
 	}
 
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) RejectRegistrationRequest(id uint) (err error) {
+func (dbo *DatabaseObject) RejectRegistrationRequest(id cmb.Id) (err error) {
 	var result sql.Result
 	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_RejectRegistrationRequest).Exec(id)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SaveIncident(module cm.Module, incidentType cm.IncidentType, email string, userIPAB net.IP) (err error) {
+func (dbo *DatabaseObject) SaveIncident(module cm.Module, incidentType cm.IncidentType, email cm.Email, userIPAB net.IP) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SaveIncident).Exec(module, incidentType, email, userIPAB)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module cm.Module, incidentType cm.IncidentType, email string) (err error) {
+func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module cm.Module, incidentType cm.IncidentType, email cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SaveIncidentWithoutUserIPA).Exec(module, incidentType, email)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
 func (dbo *DatabaseObject) SaveLogEvent(logEvent *am.LogEvent) (err error) {
@@ -775,20 +576,10 @@ func (dbo *DatabaseObject) SaveLogEvent(logEvent *am.LogEvent) (err error) {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetEmailChangeVFlags(userId uint, requestId string, ecvf *am.EmailChangeVerificationFlags) (err error) {
+func (dbo *DatabaseObject) SetEmailChangeVFlags(userId cmb.Id, requestId cm.RequestId, ecvf *am.EmailChangeVerificationFlags) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetEmailChangeVFlags).Exec(
 		ecvf.IsVerifiedByCaptcha,
@@ -802,20 +593,10 @@ func (dbo *DatabaseObject) SetEmailChangeVFlags(userId uint, requestId string, e
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetPasswordChangeVFlags(userId uint, requestId string, pcvf *am.PasswordChangeVerificationFlags) (err error) {
+func (dbo *DatabaseObject) SetPasswordChangeVFlags(userId cmb.Id, requestId cm.RequestId, pcvf *am.PasswordChangeVerificationFlags) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetPasswordChangeVFlags).Exec(
 		pcvf.IsVerifiedByCaptcha,
@@ -828,340 +609,170 @@ func (dbo *DatabaseObject) SetPasswordChangeVFlags(userId uint, requestId string
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetPreRegUserData(email string, code string, name string, password []byte) (err error) {
+func (dbo *DatabaseObject) SetPreRegUserData(email cm.Email, code cm.VerificationCode, name cm.Name, password []byte) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetPreRegUserData).Exec(name, password, email, code)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetPreRegUserEmailSendStatus(emailSendStatus bool, email string) (err error) {
+func (dbo *DatabaseObject) SetPreRegUserEmailSendStatus(emailSendStatus cmb.Flag, email cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetPreRegUserEmailSendStatus).Exec(emailSendStatus, email)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetPreSessionCaptchaFlags(userId uint, requestId string, isVerifiedByCaptcha bool) (err error) {
+func (dbo *DatabaseObject) SetPreSessionCaptchaFlags(userId cmb.Id, requestId cm.RequestId, isVerifiedByCaptcha cmb.Flag) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetPreSessionCaptchaFlag).Exec(isVerifiedByCaptcha, requestId, userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetPreSessionEmailSendStatus(userId uint, requestId string, emailSendStatus bool) (err error) {
+func (dbo *DatabaseObject) SetPreSessionEmailSendStatus(userId cmb.Id, requestId cm.RequestId, emailSendStatus cmb.Flag) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetPreSessionEmailSendStatus).Exec(emailSendStatus, requestId, userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetPreSessionPasswordFlag(userId uint, requestId string, isVerifiedByPassword bool) (err error) {
+func (dbo *DatabaseObject) SetPreSessionPasswordFlag(userId cmb.Id, requestId cm.RequestId, isVerifiedByPassword cmb.Flag) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetPreSessionPasswordFlag).Exec(isVerifiedByPassword, requestId, userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetPreSessionVerificationFlag(userId uint, requestId string, isVerifiedByEmail bool) (err error) {
+func (dbo *DatabaseObject) SetPreSessionVerificationFlag(userId cmb.Id, requestId cm.RequestId, isVerifiedByEmail cmb.Flag) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetPreSessionVerificationFlag).Exec(isVerifiedByEmail, requestId, userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetUserEmail(userId uint, email string, newEmail string) (err error) {
+func (dbo *DatabaseObject) SetUserEmail(userId cmb.Id, email cm.Email, newEmail cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetUserEmail).Exec(newEmail, userId, email)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetUserPassword(userId uint, email string, newPassword []byte) (err error) {
+func (dbo *DatabaseObject) SetUserPassword(userId cmb.Id, email cm.Email, newPassword []byte) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetUserPassword).Exec(newPassword, userId, email)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetUserRoleAuthor(userId uint, isRoleEnabled bool) (err error) {
+func (dbo *DatabaseObject) SetUserRoleAuthor(userId cmb.Id, isRoleEnabled cmb.Flag) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetUserRoleAuthor).Exec(isRoleEnabled, userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetUserRoleCanLogIn(userId uint, isRoleEnabled bool) (err error) {
+func (dbo *DatabaseObject) SetUserRoleCanLogIn(userId cmb.Id, isRoleEnabled cmb.Flag) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetUserRoleCanLogIn).Exec(isRoleEnabled, userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetUserRoleReader(userId uint, isRoleEnabled bool) (err error) {
+func (dbo *DatabaseObject) SetUserRoleReader(userId cmb.Id, isRoleEnabled cmb.Flag) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetUserRoleReader).Exec(isRoleEnabled, userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetUserRoleWriter(userId uint, isRoleEnabled bool) (err error) {
+func (dbo *DatabaseObject) SetUserRoleWriter(userId cmb.Id, isRoleEnabled cmb.Flag) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SetUserRoleWriter).Exec(isRoleEnabled, userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) UpdatePreSessionRequestId(userId uint, requestIdOld string, requestIdNew string) (err error) {
+func (dbo *DatabaseObject) UpdatePreSessionRequestId(userId cmb.Id, requestIdOld cm.RequestId, requestIdNew cm.RequestId) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_UpdatePreSessionRequestId).Exec(requestIdNew, requestIdOld, userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) UpdateUserBanTime(userId uint) (err error) {
+func (dbo *DatabaseObject) UpdateUserBanTime(userId cmb.Id) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_UpdateUserBanTime).Exec(userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) UpdateUserLastBadActionTimeById(userId uint) (err error) {
+func (dbo *DatabaseObject) UpdateUserLastBadActionTimeById(userId cmb.Id) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_UpdateUserLastBadActionTimeById).Exec(userId)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) UpdateUserLastBadLogInTimeByEmail(email string) (err error) {
+func (dbo *DatabaseObject) UpdateUserLastBadLogInTimeByEmail(email cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_UpdateUserLastBadLogInTimeByEmail).Exec(email)
 	if err != nil {
 		return err
 	}
 
-	var ra int64
-	ra, err = result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ra != 1 {
-		return fmt.Errorf(cdbo.ErrFRowsAffectedCount, 1, ra)
-	}
-
-	return nil
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) ViewUserParametersById(userId uint) (userParameters *cm.UserParameters, err error) {
+func (dbo *DatabaseObject) ViewUserParametersById(userId cmb.Id) (userParameters *cm.UserParameters, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserParametersById).QueryRow(userId)
 	return cm.NewUserParametersFromScannableSource(row)
 }

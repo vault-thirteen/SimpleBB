@@ -342,7 +342,7 @@ func (srv *Server) pingClientsForExternalServices() (err error) {
 // This method uses the GWM service client as an argument, thus it should be
 // called after initialisation of all external service clients.
 func (srv *Server) initIncidentManager() (err error) {
-	srv.incidentManager = im.NewIncidentManager(srv.settings.SystemSettings.IsTableOfIncidentsUsed, srv.dbo, srv.gwmServiceClient, &srv.settings.SystemSettings.BlockTimePerIncident)
+	srv.incidentManager = im.NewIncidentManager(srv.settings.SystemSettings.IsTableOfIncidentsUsed.Bool(), srv.dbo, srv.gwmServiceClient, &srv.settings.SystemSettings.BlockTimePerIncident)
 
 	return nil
 }

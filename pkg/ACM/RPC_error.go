@@ -50,6 +50,7 @@ const (
 	RpcErrorCode_SessionIsNotFound                  = 38
 	RpcErrorCode_UserNameIsNotFound                 = 39
 	RpcErrorCode_EmailAddressIsNotSet               = 40
+	RpcErrorCode_CaptchaIdIsNotSet                  = 41
 )
 
 // Messages.
@@ -94,6 +95,7 @@ const (
 	RpcErrorMsg_SessionIsNotFound                  = "session is not found"
 	RpcErrorMsg_UserNameIsNotFound                 = "user name is not found"
 	RpcErrorMsg_EmailAddressIsNotSet               = "email address is not set"
+	RpcErrorMsg_CaptchaIdIsNotSet                  = "captcha ID is not set"
 )
 
 // Unique HTTP status codes used in the map:
@@ -144,5 +146,6 @@ func GetMapOfHttpStatusCodesByRpcErrorCodes() map[int]int {
 		RpcErrorCode_SessionIsNotFound:                  http.StatusNotFound,
 		RpcErrorCode_UserNameIsNotFound:                 http.StatusNotFound,
 		RpcErrorCode_EmailAddressIsNotSet:               http.StatusBadRequest,
+		RpcErrorCode_CaptchaIdIsNotSet:                  http.StatusInternalServerError,
 	}
 }

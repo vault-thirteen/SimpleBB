@@ -1,7 +1,6 @@
 package acm
 
 import (
-	"database/sql"
 	"fmt"
 	"time"
 
@@ -11,6 +10,8 @@ import (
 	rm "github.com/vault-thirteen/SimpleBB/pkg/RCS/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 // RPC functions.
@@ -71,7 +72,7 @@ func (srv *Server) registerUserStep1(p *am.RegisterUserParams) (result *am.Regis
 	}
 
 	// Create a verification code.
-	var verificationCode *string
+	var verificationCode *cm.VerificationCode
 	verificationCode, re = srv.createVerificationCode()
 	if re != nil {
 		return nil, re
@@ -262,7 +263,7 @@ func (srv *Server) getListOfRegistrationsReadyForApproval(p *am.GetListOfRegistr
 	}
 
 	// Check permissions.
-	if !thisUserData.User.IsAdministrator {
+	if !thisUserData.User.Roles.IsAdministrator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -272,15 +273,21 @@ func (srv *Server) getListOfRegistrationsReadyForApproval(p *am.GetListOfRegistr
 		return nil, srv.databaseError(err)
 	}
 
-	result = &am.GetListOfRegistrationsReadyForApprovalResult{
-		Page:         p.Page,
-		TotalPages:   c.CalculateTotalPages(uint(rrfaCount), srv.settings.SystemSettings.PageSize),
-		TotalRecords: uint(rrfaCount),
-	}
-
-	result.RRFA, err = srv.dbo.GetListOfRegistrationsReadyForApproval(p.Page, srv.settings.SystemSettings.PageSize)
+	var rrfas []am.RegistrationReadyForApproval
+	rrfas, err = srv.dbo.GetListOfRegistrationsReadyForApproval(p.Page, srv.settings.SystemSettings.PageSize)
 	if err != nil {
 		return nil, srv.databaseError(err)
+	}
+
+	result = &am.GetListOfRegistrationsReadyForApprovalResult{
+		PageData: &cmr.PageData{
+			PageNumber:  p.Page,
+			TotalPages:  cmb.CalculateTotalPages(rrfaCount, srv.settings.SystemSettings.PageSize),
+			PageSize:    srv.settings.SystemSettings.PageSize,
+			ItemsOnPage: cmb.Count(len(rrfas)),
+			TotalItems:  rrfaCount,
+		},
+		RRFA: rrfas,
 	}
 
 	return result, nil
@@ -302,7 +309,7 @@ func (srv *Server) rejectRegistrationRequest(p *am.RejectRegistrationRequestPara
 	}
 
 	// Check permissions.
-	if !thisUserData.User.IsAdministrator {
+	if !thisUserData.User.Roles.IsAdministrator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -312,7 +319,12 @@ func (srv *Server) rejectRegistrationRequest(p *am.RejectRegistrationRequestPara
 		return nil, srv.databaseError(err)
 	}
 
-	return &am.RejectRegistrationRequestResult{OK: true}, nil
+	result = &am.RejectRegistrationRequestResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (result *am.ApproveAndRegisterUserResult, re *jrm1.RpcError) {
@@ -331,7 +343,7 @@ func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (r
 	}
 
 	// Check permissions.
-	if !thisUserData.User.IsAdministrator {
+	if !thisUserData.User.Roles.IsAdministrator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, p.Email, p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -357,7 +369,12 @@ func (srv *Server) approveAndRegisterUser(p *am.ApproveAndRegisterUserParams) (r
 		return nil, re
 	}
 
-	return &am.ApproveAndRegisterUserResult{OK: true}, nil
+	result = &am.ApproveAndRegisterUserResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 // Logging in and out.
@@ -411,7 +428,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, srv.databaseError(err)
 	}
 
-	var sessionsCount int
+	var sessionsCount cmb.Count
 	sessionsCount, err = srv.dbo.CountSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -429,7 +446,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIsAlreadyLoggedIn, RpcErrorMsg_UserIsAlreadyLoggedIn, nil)
 	}
 
-	var preSessionsCount int
+	var preSessionsCount cmb.Count
 	preSessionsCount, err = srv.dbo.CountPreSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -447,13 +464,13 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserHasAlreadyStartedToLogIn, RpcErrorMsg_UserHasAlreadyStartedToLogIn, nil)
 	}
 
-	var userId uint
+	var userId cmb.Id
 	userId, err = srv.dbo.GetUserIdByEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	var requestId *string
+	var requestId *cm.RequestId
 	requestId, re = srv.createRequestIdForLogIn()
 	if re != nil {
 		return nil, re
@@ -467,24 +484,21 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	// Create a captcha if needed.
-	var isCaptchaNeeded bool
+	var isCaptchaNeeded cmb.Flag
 	isCaptchaNeeded, err = srv.isCaptchaNeededForLogIn(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	var captchaData *rm.CreateCaptchaResult
-	var captchaId sql.NullString
+	var captchaId *cm.CaptchaId
 	if isCaptchaNeeded {
 		captchaData, re = srv.createCaptcha()
 		if re != nil {
 			return nil, re
 		}
 
-		captchaId.Valid = true // => SQL non-NULL value.
-		captchaId.String = captchaData.TaskId
-	} else {
-		captchaId.Valid = false // => SQL NULL value.
+		captchaId = (*cm.CaptchaId)(&captchaData.TaskId)
 	}
 
 	err = srv.dbo.CreatePreSession(userId, *requestId, p.Auth.UserIPAB, pwdSalt, isCaptchaNeeded, captchaId)
@@ -495,8 +509,7 @@ func (srv *Server) logUserInStep1(p *am.LogUserInParams) (result *am.LogUserInRe
 	result = &am.LogUserInResult{NextStep: 2, RequestId: *requestId, AuthDataBytes: pwdSalt}
 
 	if isCaptchaNeeded {
-		result.IsCaptchaNeeded = true
-		result.CaptchaId = captchaId.String
+		result.CaptchaId = captchaId
 	} else {
 		result.IsCaptchaNeeded = false
 	}
@@ -539,7 +552,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, srv.databaseError(err)
 	}
 
-	var sessionsCount int
+	var sessionsCount cmb.Count
 	sessionsCount, err = srv.dbo.CountSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -557,7 +570,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIsAlreadyLoggedIn, RpcErrorMsg_UserIsAlreadyLoggedIn, nil)
 	}
 
-	var preSessionsCount int
+	var preSessionsCount cmb.Count
 	preSessionsCount, err = srv.dbo.CountPreSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -574,7 +587,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserHasNotStartedToLogIn, RpcErrorMsg_UserHasNotStartedToLogIn, nil)
 	}
 
-	var userId uint
+	var userId cmb.Id
 	userId, err = srv.dbo.GetUserIdByEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -628,9 +641,12 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 		if len(p.CaptchaAnswer) == 0 {
 			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_CaptchaAnswerIsNotSet, RpcErrorMsg_CaptchaAnswerIsNotSet, nil)
 		}
+		if preSession.CaptchaId == nil {
+			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_CaptchaIdIsNotSet, RpcErrorMsg_CaptchaIdIsNotSet, nil)
+		}
 
 		// Check captcha answer.
-		ccr, re = srv.checkCaptcha(preSession.CaptchaId.String, p.CaptchaAnswer)
+		ccr, re = srv.checkCaptcha(*preSession.CaptchaId, p.CaptchaAnswer)
 		if re != nil {
 			return nil, re
 		}
@@ -694,7 +710,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	// Create a new Request ID for the next step.
-	var step3requestId *string
+	var step3requestId *cm.RequestId
 	step3requestId, re = srv.createRequestIdForLogIn()
 	if re != nil {
 		return nil, re
@@ -706,7 +722,7 @@ func (srv *Server) logUserInStep2(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	// Verification by E-mail.
-	var verificationCode *string
+	var verificationCode *cm.VerificationCode
 	verificationCode, re = srv.createVerificationCode()
 	if re != nil {
 		return nil, re
@@ -767,7 +783,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, srv.databaseError(err)
 	}
 
-	var sessionsCount int
+	var sessionsCount cmb.Count
 	sessionsCount, err = srv.dbo.CountSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -785,7 +801,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIsAlreadyLoggedIn, RpcErrorMsg_UserIsAlreadyLoggedIn, nil)
 	}
 
-	var preSessionsCount int
+	var preSessionsCount cmb.Count
 	preSessionsCount, err = srv.dbo.CountPreSessionsByUserEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -802,7 +818,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserHasNotStartedToLogIn, RpcErrorMsg_UserHasNotStartedToLogIn, nil)
 	}
 
-	var userId uint
+	var userId cmb.Id
 	userId, err = srv.dbo.GetUserIdByEmail(p.Email)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -882,7 +898,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 	}
 
 	// Create a normal session and delete the preliminary one.
-	var sessionId int64
+	var sessionId cmb.Id
 	sessionId, err = srv.dbo.CreateSession(userId, p.Auth.UserIPAB)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -893,8 +909,8 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, srv.databaseError(err)
 	}
 
-	var tokenString string
-	tokenString, err = srv.jwtkm.MakeJWToken(userId, uint(sessionId))
+	var tokenString cm.WebTokenString
+	tokenString, err = srv.jwtkm.MakeJWToken(userId, sessionId)
 	if err != nil {
 		srv.logError(err)
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_JWTCreation, fmt.Sprintf(RpcErrorMsgF_JWTCreation, err.Error()), nil)
@@ -913,7 +929,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 		return nil, srv.databaseError(err)
 	}
 
-	result = &am.LogUserInResult{NextStep: 0, IsWebTokenSet: true, WTS: tokenString}
+	result = &am.LogUserInResult{NextStep: 0, IsWebTokenSet: true, WebTokenString: tokenString}
 
 	return result, nil
 }
@@ -946,7 +962,12 @@ func (srv *Server) logUserOut(p *am.LogUserOutParams) (result *am.LogUserOutResu
 		return nil, srv.databaseError(err)
 	}
 
-	return &am.LogUserOutResult{OK: true}, nil
+	result = &am.LogUserOutResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 func (srv *Server) logUserOutA(p *am.LogUserOutAParams) (result *am.LogUserOutAResult, re *jrm1.RpcError) {
@@ -965,7 +986,7 @@ func (srv *Server) logUserOutA(p *am.LogUserOutAParams) (result *am.LogUserOutAR
 	}
 
 	// Check permissions.
-	if !callerData.User.IsAdministrator {
+	if !callerData.User.Roles.IsAdministrator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -1018,7 +1039,12 @@ func (srv *Server) logUserOutA(p *am.LogUserOutAParams) (result *am.LogUserOutAR
 		return nil, srv.databaseError(err)
 	}
 
-	return &am.LogUserOutAResult{OK: true}, nil
+	result = &am.LogUserOutAResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 func (srv *Server) getListOfLoggedUsers(p *am.GetListOfLoggedUsersParams) (result *am.GetListOfLoggedUsersResult, re *jrm1.RpcError) {
@@ -1057,7 +1083,7 @@ func (srv *Server) getListOfAllUsers(p *am.GetListOfAllUsersParams) (result *am.
 	}
 
 	// Check permissions.
-	if !thisUserData.User.IsAdministrator {
+	if !thisUserData.User.Roles.IsAdministrator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -1067,15 +1093,21 @@ func (srv *Server) getListOfAllUsers(p *am.GetListOfAllUsersParams) (result *am.
 		return nil, srv.databaseError(err)
 	}
 
-	result = &am.GetListOfAllUsersResult{
-		Page:       p.Page,
-		TotalPages: c.CalculateTotalPages(uint(usersCount), srv.settings.SystemSettings.PageSize),
-		TotalUsers: uint(usersCount),
-	}
-
-	result.UserIds, err = srv.dbo.GetListOfAllUsers(p.Page, srv.settings.SystemSettings.PageSize)
+	var userIds []cmb.Id
+	userIds, err = srv.dbo.GetListOfAllUsers(p.Page, srv.settings.SystemSettings.PageSize)
 	if err != nil {
 		return nil, srv.databaseError(err)
+	}
+
+	result = &am.GetListOfAllUsersResult{
+		PageData: &cmr.PageData{
+			PageNumber:  p.Page,
+			TotalPages:  cmb.CalculateTotalPages(usersCount, srv.settings.SystemSettings.PageSize),
+			PageSize:    srv.settings.SystemSettings.PageSize,
+			ItemsOnPage: cmb.Count(len(userIds)),
+			TotalItems:  usersCount,
+		},
+		UserIds: userIds,
 	}
 
 	return result, nil
@@ -1169,7 +1201,7 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 		return nil, re
 	}
 
-	pc.NewPassword, err = bpp.PackSymbols([]rune(p.NewPassword))
+	pc.NewPasswordBytes, err = bpp.PackSymbols([]rune(p.NewPassword))
 	if err != nil {
 		// This error is very unlikely to happen.
 		// So if it occurs, then it is an anomaly.
@@ -1177,7 +1209,7 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_BPP_PackSymbols, fmt.Sprintf(RpcErrorMsgF_BPP_PackSymbols, err.Error()), nil)
 	}
 
-	if len(pc.NewPassword) > int(srv.settings.SystemSettings.UserPasswordMaxLenInBytes) {
+	if len(pc.NewPasswordBytes) > int(srv.settings.SystemSettings.UserPasswordMaxLenInBytes) {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PasswordIsTooLong, RpcErrorMsg_PasswordIsTooLong, nil)
 	}
 
@@ -1218,10 +1250,7 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 			return nil, re
 		}
 
-		pc.CaptchaId.Valid = true // => SQL non-NULL value.
-		pc.CaptchaId.String = captchaData.TaskId
-	} else {
-		pc.CaptchaId.Valid = false // => SQL NULL value.
+		pc.CaptchaId = (*cm.CaptchaId)(&captchaData.TaskId)
 	}
 
 	// Save the request.
@@ -1239,7 +1268,7 @@ func (srv *Server) changePasswordStep1(p *am.ChangePasswordParams, ud *am.UserDa
 
 	if pc.IsCaptchaRequired {
 		result.IsCaptchaNeeded = true
-		result.CaptchaId = pc.CaptchaId.String
+		result.CaptchaId = *pc.CaptchaId
 	} else {
 		result.IsCaptchaNeeded = false
 	}
@@ -1324,9 +1353,12 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 		if len(p.CaptchaAnswer) == 0 {
 			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_CaptchaAnswerIsNotSet, RpcErrorMsg_CaptchaAnswerIsNotSet, nil)
 		}
+		if pcr.CaptchaId == nil {
+			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_CaptchaIdIsNotSet, RpcErrorMsg_CaptchaIdIsNotSet, nil)
+		}
 
 		// Check captcha answer.
-		ccr, re = srv.checkCaptcha(pcr.CaptchaId.String, p.CaptchaAnswer)
+		ccr, re = srv.checkCaptcha(*pcr.CaptchaId, p.CaptchaAnswer)
 		if re != nil {
 			return nil, re
 		}
@@ -1406,10 +1438,8 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 		IsVerifiedByEmail:    true,
 	}
 	if pcr.IsCaptchaRequired {
-		pcvf.IsVerifiedByCaptcha.Valid = true // => SQL non-NULL value.
-		pcvf.IsVerifiedByCaptcha.Bool = true
-	} else {
-		pcvf.IsVerifiedByCaptcha.Valid = false // => SQL NULL value.
+		x := true
+		pcvf.IsVerifiedByCaptcha = (*cmb.Flag)(&x)
 	}
 
 	err = srv.dbo.SetPasswordChangeVFlags(ud.User.Id, *pcr.RequestId, pcvf)
@@ -1418,7 +1448,7 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 	}
 
 	// Change the password.
-	err = srv.dbo.SetUserPassword(ud.User.Id, ud.User.Email, pcr.NewPassword)
+	err = srv.dbo.SetUserPassword(ud.User.Id, ud.User.Email, pcr.NewPasswordBytes)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -1435,10 +1465,11 @@ func (srv *Server) changePasswordStep2(p *am.ChangePasswordParams, ud *am.UserDa
 
 	// Response.
 	result = &am.ChangePasswordResult{
+		Success: cmr.Success{
+			OK: true,
+		},
 		NextStep: 0,
-		OK:       true,
 	}
-
 	return result, nil
 }
 
@@ -1500,7 +1531,7 @@ func (srv *Server) changeEmailStep1(p *am.ChangeEmailParams, ud *am.UserData) (r
 	}
 
 	// Check that the new e-mail address is not used.
-	var usersCount int
+	var usersCount cmb.Count
 	usersCount, err = srv.dbo.CountUsersWithEmail(ec.NewEmail)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -1559,10 +1590,7 @@ func (srv *Server) changeEmailStep1(p *am.ChangeEmailParams, ud *am.UserData) (r
 			return nil, re
 		}
 
-		ec.CaptchaId.Valid = true // => SQL non-NULL value.
-		ec.CaptchaId.String = captchaData.TaskId
-	} else {
-		ec.CaptchaId.Valid = false // => SQL NULL value.
+		ec.CaptchaId = (*cm.CaptchaId)(&captchaData.TaskId)
 	}
 
 	// Save the request.
@@ -1580,7 +1608,7 @@ func (srv *Server) changeEmailStep1(p *am.ChangeEmailParams, ud *am.UserData) (r
 
 	if ec.IsCaptchaRequired {
 		result.IsCaptchaNeeded = true
-		result.CaptchaId = ec.CaptchaId.String
+		result.CaptchaId = *ec.CaptchaId
 	} else {
 		result.IsCaptchaNeeded = false
 	}
@@ -1668,9 +1696,12 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 		if len(p.CaptchaAnswer) == 0 {
 			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_CaptchaAnswerIsNotSet, RpcErrorMsg_CaptchaAnswerIsNotSet, nil)
 		}
+		if ecr.CaptchaId == nil {
+			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_CaptchaIdIsNotSet, RpcErrorMsg_CaptchaIdIsNotSet, nil)
+		}
 
 		// Check captcha answer.
-		ccr, re = srv.checkCaptcha(ecr.CaptchaId.String, p.CaptchaAnswer)
+		ccr, re = srv.checkCaptcha(*ecr.CaptchaId, p.CaptchaAnswer)
 		if re != nil {
 			return nil, re
 		}
@@ -1751,10 +1782,8 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 		IsVerifiedByNewEmail: true,
 	}
 	if ecr.IsCaptchaRequired {
-		ecvf.IsVerifiedByCaptcha.Valid = true // => SQL non-NULL value.
-		ecvf.IsVerifiedByCaptcha.Bool = true
-	} else {
-		ecvf.IsVerifiedByCaptcha.Valid = false // => SQL NULL value.
+		x := true
+		ecvf.IsVerifiedByCaptcha = (*cmb.Flag)(&x)
 	}
 
 	err = srv.dbo.SetEmailChangeVFlags(ud.User.Id, *ecr.RequestId, ecvf)
@@ -1780,10 +1809,11 @@ func (srv *Server) changeEmailStep2(p *am.ChangeEmailParams, ud *am.UserData) (r
 
 	// Response.
 	result = &am.ChangeEmailResult{
+		Success: cmr.Success{
+			OK: true,
+		},
 		NextStep: 0,
-		OK:       true,
 	}
-
 	return result, nil
 }
 
@@ -1803,12 +1833,10 @@ func (srv *Server) getUserSession(p *am.GetUserSessionParams) (result *am.GetUse
 	}
 
 	// Check permissions.
-	if !callerData.User.IsAdministrator {
+	if !callerData.User.Roles.IsAdministrator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
-
-	result = &am.GetUserSessionResult{}
 
 	var err error
 	var session *am.Session
@@ -1821,7 +1849,14 @@ func (srv *Server) getUserSession(p *am.GetUserSessionParams) (result *am.GetUse
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SessionIsNotFound, RpcErrorMsg_SessionIsNotFound, nil)
 	}
 
-	result.Session = session
+	result = &am.GetUserSessionResult{
+		User: &am.User{
+			UserParameters: cm.UserParameters{
+				Id: p.UserId,
+			},
+		},
+		Session: session,
+	}
 
 	return result, nil
 }
@@ -1841,12 +1876,8 @@ func (srv *Server) getUserName(p *am.GetUserNameParams) (result *am.GetUserNameR
 		return nil, re
 	}
 
-	result = &am.GetUserNameResult{
-		UserId: p.UserId,
-	}
-
 	var err error
-	var userName *string
+	var userName *cm.Name
 	userName, err = srv.dbo.GetUserNameById(p.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -1855,7 +1886,14 @@ func (srv *Server) getUserName(p *am.GetUserNameParams) (result *am.GetUserNameR
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserNameIsNotFound, RpcErrorMsg_UserNameIsNotFound, p.UserId)
 	}
 
-	result.UserName = *userName
+	result = &am.GetUserNameResult{
+		User: &am.User{
+			UserParameters: cm.UserParameters{
+				Id:   p.UserId,
+				Name: *userName,
+			},
+		},
+	}
 
 	return result, nil
 }
@@ -1873,10 +1911,6 @@ func (srv *Server) getUserRoles(p *am.GetUserRolesParams) (result *am.GetUserRol
 		return nil, re
 	}
 
-	result = &am.GetUserRolesResult{
-		UserId: p.UserId,
-	}
-
 	var err error
 	var roles *cm.UserRoles
 	roles, err = srv.dbo.GetUserRolesById(p.UserId)
@@ -1887,10 +1921,17 @@ func (srv *Server) getUserRoles(p *am.GetUserRolesParams) (result *am.GetUserRol
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIsNotFound, RpcErrorMsg_UserIsNotFound, nil)
 	}
 
-	roles.IsModerator = srv.isUserModerator(p.UserId)
 	roles.IsAdministrator = srv.isUserAdministrator(p.UserId)
+	roles.IsModerator = srv.isUserModerator(p.UserId)
 
-	result.UserRoles = *roles
+	result = &am.GetUserRolesResult{
+		User: &am.User{
+			UserParameters: cm.UserParameters{
+				Id:    p.UserId,
+				Roles: roles,
+			},
+		},
+	}
 
 	return result, nil
 }
@@ -1911,12 +1952,10 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 	}
 
 	// Check permissions.
-	if !thisUserData.User.IsAdministrator {
+	if !thisUserData.User.Roles.IsAdministrator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
-
-	result = &am.ViewUserParametersResult{}
 
 	var err error
 	var userParameters *cm.UserParameters
@@ -1928,10 +1967,14 @@ func (srv *Server) viewUserParameters(p *am.ViewUserParametersParams) (result *a
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIsNotFound, RpcErrorMsg_UserIsNotFound, nil)
 	}
 
-	userParameters.IsModerator = srv.isUserModerator(p.UserId)
-	userParameters.IsAdministrator = srv.isUserAdministrator(p.UserId)
+	userParameters.Roles.IsModerator = srv.isUserModerator(p.UserId)
+	userParameters.Roles.IsAdministrator = srv.isUserAdministrator(p.UserId)
 
-	result.UserParameters = *userParameters
+	result = &am.ViewUserParametersResult{
+		User: &am.User{
+			UserParameters: *userParameters,
+		},
+	}
 
 	return result, nil
 }
@@ -1952,7 +1995,7 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 	}
 
 	// Check permissions.
-	if !thisUserData.User.IsAdministrator {
+	if !thisUserData.User.Roles.IsAdministrator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -1962,7 +2005,12 @@ func (srv *Server) setUserRoleAuthor(p *am.SetUserRoleAuthorParams) (result *am.
 		return nil, srv.databaseError(err)
 	}
 
-	return &am.SetUserRoleAuthorResult{OK: true}, nil
+	result = &am.SetUserRoleAuthorResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.SetUserRoleWriterResult, re *jrm1.RpcError) {
@@ -1981,7 +2029,7 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 	}
 
 	// Check permissions.
-	if !thisUserData.User.IsAdministrator {
+	if !thisUserData.User.Roles.IsAdministrator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -1991,7 +2039,12 @@ func (srv *Server) setUserRoleWriter(p *am.SetUserRoleWriterParams) (result *am.
 		return nil, srv.databaseError(err)
 	}
 
-	return &am.SetUserRoleWriterResult{OK: true}, nil
+	result = &am.SetUserRoleWriterResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.SetUserRoleReaderResult, re *jrm1.RpcError) {
@@ -2010,7 +2063,7 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 	}
 
 	// Check permissions.
-	if !thisUserData.User.IsAdministrator {
+	if !thisUserData.User.Roles.IsAdministrator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -2020,7 +2073,12 @@ func (srv *Server) setUserRoleReader(p *am.SetUserRoleReaderParams) (result *am.
 		return nil, srv.databaseError(err)
 	}
 
-	return &am.SetUserRoleReaderResult{OK: true}, nil
+	result = &am.SetUserRoleReaderResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 func (srv *Server) getSelfRoles(p *am.GetSelfRolesParams) (result *am.GetSelfRolesResult, re *jrm1.RpcError) {
@@ -2034,19 +2092,9 @@ func (srv *Server) getSelfRoles(p *am.GetSelfRolesParams) (result *am.GetSelfRol
 	}
 
 	result = &am.GetSelfRolesResult{
-		UserId:  thisUserData.User.Id,
-		Name:    thisUserData.User.Name,
-		Email:   thisUserData.User.Email,
-		RegTime: thisUserData.User.RegTime,
-	}
-
-	result.UserRoles = cm.UserRoles{
-		IsAdministrator: thisUserData.User.IsAdministrator,
-		IsModerator:     thisUserData.User.IsModerator,
-		IsAuthor:        thisUserData.User.IsAuthor,
-		IsWriter:        thisUserData.User.IsWriter,
-		IsReader:        thisUserData.User.IsReader,
-		CanLogIn:        thisUserData.User.CanLogIn,
+		User: &am.User{
+			UserParameters: thisUserData.User.UserParameters,
+		},
 	}
 
 	return result, nil
@@ -2070,7 +2118,7 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, re *j
 	}
 
 	// Check permissions.
-	if !thisUserData.User.IsModerator {
+	if !thisUserData.User.Roles.IsModerator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -2085,7 +2133,7 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, re *j
 		return nil, srv.databaseError(err)
 	}
 
-	var sessionsCount int
+	var sessionsCount cmb.Count
 	sessionsCount, err = srv.dbo.CountSessionsByUserId(p.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -2098,7 +2146,12 @@ func (srv *Server) banUser(p *am.BanUserParams) (result *am.BanUserResult, re *j
 		}
 	}
 
-	return &am.BanUserResult{OK: true}, nil
+	result = &am.BanUserResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult, re *jrm1.RpcError) {
@@ -2117,7 +2170,7 @@ func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult,
 	}
 
 	// Check permissions.
-	if !thisUserData.User.IsModerator {
+	if !thisUserData.User.Roles.IsModerator {
 		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
@@ -2127,14 +2180,25 @@ func (srv *Server) unbanUser(p *am.UnbanUserParams) (result *am.UnbanUserResult,
 		return nil, srv.databaseError(err)
 	}
 
-	return &am.UnbanUserResult{OK: true}, nil
+	result = &am.UnbanUserResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 // Other.
 
 func (srv *Server) showDiagnosticData() (result *am.ShowDiagnosticDataResult, re *jrm1.RpcError) {
-	result = &am.ShowDiagnosticDataResult{}
-	result.TotalRequestsCount, result.SuccessfulRequestsCount = srv.js.GetRequestsCount()
+	trc, src := srv.js.GetRequestsCount()
+
+	result = &am.ShowDiagnosticDataResult{
+		RequestsCount: cmr.RequestsCount{
+			TotalRequestsCount:      cmb.Text(trc),
+			SuccessfulRequestsCount: cmb.Text(src),
+		},
+	}
 
 	return result, nil
 }

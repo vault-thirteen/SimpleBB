@@ -6,8 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
+
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 const (
@@ -22,7 +23,7 @@ const (
 )
 
 const (
-	IndexOnError      = -1
+	IndexOnError      = cmb.Index(-1)
 	ListItemSeparator = ","
 	StringOnError     = ""
 )
@@ -30,19 +31,18 @@ const (
 // UidList is a list unique identifiers.
 //
 // The main purpose of this list is to store a chronological order of all added
-// identifiers. An identifier is an unsigned integer number. The order of items
-// in the list is important and, thus, the list may not be sorted. New items are
-// added to the end of the list, deleted items shift existing items. All
-// operations on the list assume that the list is unique before the operation,
-// thus, every operation must ensure that its results do not break the
-// uniqueness of items.
-type UidList []uint
+// identifiers. The order of items in the list is important and, thus, the list
+// may not be sorted. New items are added to the end of the list, deleted items
+// shift existing items. All operations on the list assume that the list is
+// unique before the operation, thus, every operation must ensure that its
+// results do not break the uniqueness of items in the list.
+type UidList []cmb.Id
 
 func New() (ul *UidList) {
 	return new(UidList)
 }
 
-func NewFromArray(uids []uint) (ul *UidList, err error) {
+func NewFromArray(uids []cmb.Id) (ul *UidList, err error) {
 	tmp := UidList(uids)
 	ul = &tmp
 
@@ -68,7 +68,7 @@ func (ul *UidList) CheckIntegrity() (err error) {
 
 // isUnique checks uniqueness of all items.
 func (ul *UidList) isUnique() bool {
-	m := make(map[uint]bool)
+	m := make(map[cmb.Id]bool)
 	var isDuplicate bool
 
 	for _, uid := range *ul {
@@ -84,16 +84,16 @@ func (ul *UidList) isUnique() bool {
 }
 
 // Size returns list's size, i.e. it counts the items.
-func (ul *UidList) Size() (n int) {
+func (ul *UidList) Size() (n cmb.Count) {
 	if ul == nil {
 		return 0
 	}
 
-	return len(*ul)
+	return cmb.Count(len(*ul))
 }
 
 // HasItem checks whether an item is contained in the list or not.
-func (ul *UidList) HasItem(uid uint) bool {
+func (ul *UidList) HasItem(uid cmb.Id) bool {
 	for _, x := range *ul {
 		if x == uid {
 			return true
@@ -106,7 +106,7 @@ func (ul *UidList) HasItem(uid uint) bool {
 // AddItem add a new identifier to the end of the list.
 // If 'addToTop' is set to 'True', then the item is added to the beginning
 // (top) of the list; otherwise – to the end (bottom) of the list.
-func (ul *UidList) AddItem(uid uint, addToTop bool) (err error) {
+func (ul *UidList) AddItem(uid cmb.Id, addToTop bool) (err error) {
 	if ul.HasItem(uid) {
 		return fmt.Errorf(ErrF_DuplicateUid, uid)
 	}
@@ -121,7 +121,7 @@ func (ul *UidList) AddItem(uid uint, addToTop bool) (err error) {
 }
 
 // prependItem adds an item to the beginning of the list.
-func (ul *UidList) prependItem(uid uint) {
+func (ul *UidList) prependItem(uid cmb.Id) {
 	// Add an empty item.
 	*ul = append(*ul, 0)
 
@@ -135,17 +135,17 @@ func (ul *UidList) prependItem(uid uint) {
 }
 
 // appendItem adds an item to the end of the list.
-func (ul *UidList) appendItem(uid uint) {
+func (ul *UidList) appendItem(uid cmb.Id) {
 	*ul = append(*ul, uid)
 }
 
 // SearchForItem searches for an item in the list.
 // If an item is found, its index is returned without error.
 // If an item is not found, an error is returned.
-func (ul *UidList) SearchForItem(uid uint) (idx int, err error) {
+func (ul *UidList) SearchForItem(uid cmb.Id) (idx cmb.Index, err error) {
 	for pos, x := range *ul {
 		if x == uid {
-			return pos, nil
+			return cmb.Index(pos), nil
 		}
 	}
 
@@ -153,8 +153,8 @@ func (ul *UidList) SearchForItem(uid uint) (idx int, err error) {
 }
 
 // RemoveItem deletes an identifier from the list shifting its items.
-func (ul *UidList) RemoveItem(uid uint) (err error) {
-	var pos int
+func (ul *UidList) RemoveItem(uid cmb.Id) (err error) {
+	var pos cmb.Index
 	pos, err = ul.SearchForItem(uid)
 	if err != nil {
 		return err
@@ -164,12 +164,12 @@ func (ul *UidList) RemoveItem(uid uint) (err error) {
 }
 
 // RemoveItemAtPos removes the item at position.
-func (ul *UidList) RemoveItemAtPos(pos int) (err error) {
+func (ul *UidList) RemoveItemAtPos(pos cmb.Index) (err error) {
 	if pos < 0 {
 		return errors.New(Err_Position)
 	}
 
-	lastIndex := len(*ul) - 1
+	lastIndex := cmb.Index(len(*ul) - 1)
 	if pos > lastIndex {
 		return errors.New(Err_Position)
 	}
@@ -179,7 +179,7 @@ func (ul *UidList) RemoveItemAtPos(pos int) (err error) {
 }
 
 // removeItemAtPos removes the existing item at position.
-func (ul *UidList) removeItemAtPos(pos int, lastIndex int) {
+func (ul *UidList) removeItemAtPos(pos cmb.Index, lastIndex cmb.Index) {
 	if pos != lastIndex {
 		copy((*ul)[pos:], (*ul)[pos+1:])
 	}
@@ -187,14 +187,14 @@ func (ul *UidList) removeItemAtPos(pos int, lastIndex int) {
 }
 
 // removeLastItem removes the last existing item.
-func (ul *UidList) removeLastItem(lastIndex int) {
-	[]uint(*ul)[lastIndex] = 0
+func (ul *UidList) removeLastItem(lastIndex cmb.Index) {
+	[]cmb.Id(*ul)[lastIndex] = 0
 	*ul = (*ul)[:lastIndex]
 }
 
 // RaiseItem moves an existing identifier to the top of the list.
-func (ul *UidList) RaiseItem(uid uint) (isAlreadyRaised bool, err error) {
-	var pos int
+func (ul *UidList) RaiseItem(uid cmb.Id) (isAlreadyRaised bool, err error) {
+	var pos cmb.Index
 	pos, err = ul.SearchForItem(uid)
 	if err != nil {
 		return false, err
@@ -214,8 +214,8 @@ func (ul *UidList) RaiseItem(uid uint) (isAlreadyRaised bool, err error) {
 }
 
 // MoveItemUp moves an existing identifier one position upwards if possible.
-func (ul *UidList) MoveItemUp(uid uint) (err error) {
-	var pos int
+func (ul *UidList) MoveItemUp(uid cmb.Id) (err error) {
+	var pos cmb.Index
 	pos, err = ul.SearchForItem(uid)
 	if err != nil {
 		return err
@@ -232,15 +232,15 @@ func (ul *UidList) MoveItemUp(uid uint) (err error) {
 }
 
 // MoveItemDown moves an existing identifier one position downwards if possible.
-func (ul *UidList) MoveItemDown(uid uint) (err error) {
-	var pos int
+func (ul *UidList) MoveItemDown(uid cmb.Id) (err error) {
+	var pos cmb.Index
 	pos, err = ul.SearchForItem(uid)
 	if err != nil {
 		return err
 	}
 
 	// Check for bottom edge position.
-	if pos == len(*ul)-1 {
+	if pos.AsInt() == len(*ul)-1 {
 		return errors.New(Err_EdgePosition)
 	}
 
@@ -309,9 +309,9 @@ func (ul *UidList) ValuesString() (values string, err error) {
 	iLast := len(*ul) - 1
 	for i, uid := range *ul {
 		if i < iLast {
-			_, err = sb.WriteString(strconv.FormatUint(uint64(uid), 10) + ListItemSeparator)
+			_, err = sb.WriteString(uid.ToString() + ListItemSeparator)
 		} else {
-			_, err = sb.WriteString(strconv.FormatUint(uint64(uid), 10))
+			_, err = sb.WriteString(uid.ToString())
 		}
 		if err != nil {
 			return StringOnError, err
@@ -322,7 +322,7 @@ func (ul *UidList) ValuesString() (values string, err error) {
 }
 
 // OnPage returns paginated items.
-func (ul *UidList) OnPage(pageNumber uint, pageSize uint) (ulop *UidList) {
+func (ul *UidList) OnPage(pageNumber cmb.Count, pageSize cmb.Count) (ulop *UidList) {
 	if pageNumber < 1 {
 		return nil
 	}
@@ -340,18 +340,18 @@ func (ul *UidList) OnPage(pageNumber uint, pageSize uint) (ulop *UidList) {
 	}
 
 	// Last index in array.
-	iLast := uint(len(*ul) - 1)
+	iLast := len(*ul) - 1
 
 	// Left index of a virtual page.
 	ipL := pageSize * (pageNumber - 1)
-	if iLast < ipL {
+	if iLast < ipL.AsInt() {
 		return nil
 	}
 
 	// Right index of a virtual page.
 	ipR := ipL + pageSize - 1
 	var x UidList
-	if iLast < ipR {
+	if iLast < ipR.AsInt() {
 		x = (*ul)[ipL : iLast+1]
 	} else {
 		x = (*ul)[ipL : ipR+1]
@@ -361,7 +361,7 @@ func (ul *UidList) OnPage(pageNumber uint, pageSize uint) (ulop *UidList) {
 }
 
 // LastElement returns the last item of the list.
-func (ul *UidList) LastElement() (lastElement *uint) {
+func (ul *UidList) LastElement() (lastElement *cmb.Id) {
 	if ul == nil {
 		return nil
 	}
@@ -374,9 +374,7 @@ func (ul *UidList) LastElement() (lastElement *uint) {
 		return nil
 	}
 
-	// Last index in array.
-	iLast := uint(len(*ul) - 1)
-
+	iLast := len(*ul) - 1
 	x := (*ul)[iLast]
 	return &x
 }

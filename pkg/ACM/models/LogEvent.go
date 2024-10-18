@@ -4,6 +4,9 @@ import (
 	"errors"
 	"net"
 	"time"
+
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 const (
@@ -12,16 +15,16 @@ const (
 )
 
 type LogEvent struct {
-	Id       uint
+	Id       cmb.Id
 	Time     time.Time
 	Type     LogEventType
-	UserId   uint
-	Email    string
+	UserId   cmb.Id
+	Email    cm.Email
 	UserIPAB net.IP
 
 	// ID of administrator for those events which were started by an
 	// administrator.
-	AdminId *uint
+	AdminId *cmb.Id
 }
 
 func CheckLogEvent(le *LogEvent) (err error) {

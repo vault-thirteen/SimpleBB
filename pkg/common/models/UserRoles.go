@@ -3,15 +3,17 @@ package models
 import (
 	"database/sql"
 	"errors"
+
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 type UserRoles struct {
-	IsAdministrator bool `json:"isAdministrator"`
-	IsModerator     bool `json:"isModerator"`
-	IsAuthor        bool `json:"isAuthor"`
-	IsWriter        bool `json:"isWriter"`
-	IsReader        bool `json:"isReader"`
-	CanLogIn        bool `json:"canLogIn"`
+	IsAdministrator cmb.Flag `json:"isAdministrator"`
+	IsModerator     cmb.Flag `json:"isModerator"`
+	IsAuthor        cmb.Flag `json:"isAuthor"`
+	IsWriter        cmb.Flag `json:"isWriter"`
+	IsReader        cmb.Flag `json:"isReader"`
+	CanLogIn        cmb.Flag `json:"canLogIn"`
 }
 
 func NewUserRoles() (ur *UserRoles) {

@@ -4,13 +4,14 @@ import (
 	"errors"
 
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 
 // JWTSettings are settings for JSON web tokens.
 type JWTSettings struct {
-	PrivateKeyFilePath string `json:"privateKeyFilePath"`
-	PublicKeyFilePath  string `json:"publicKeyFilePath"`
-	SigningMethod      string `json:"signingMethod"`
+	PrivateKeyFilePath cm.Path `json:"privateKeyFilePath"`
+	PublicKeyFilePath  cm.Path `json:"publicKeyFilePath"`
+	SigningMethod      string  `json:"signingMethod"`
 }
 
 func (s JWTSettings) Check() (err error) {

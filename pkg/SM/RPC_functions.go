@@ -8,6 +8,8 @@ import (
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 // RPC functions.
@@ -31,15 +33,15 @@ func (srv *Server) addSubscription(p *sm.AddSubscriptionParams) (result *sm.AddS
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
-	if userRoles.UserId != p.UserId {
+	if userRoles.User.Id != p.UserId {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check existence of the thread.
-	var threadExists bool
+	var threadExists cmb.Flag
 	threadExists, re = srv.checkIfThreadExists(p.ThreadId)
 	if re != nil {
 		return nil, re
@@ -118,9 +120,10 @@ func (srv *Server) addSubscription(p *sm.AddSubscriptionParams) (result *sm.AddS
 	}
 
 	result = &sm.AddSubscriptionResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -138,18 +141,18 @@ func (srv *Server) isSelfSubscribed(p *sm.IsSelfSubscribedParams) (result *sm.Is
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	var isSubscribed bool
-	isSubscribed, re = srv.isUserSubscribedH(userRoles.UserId, p.ThreadId)
+	var isSubscribed cmb.Flag
+	isSubscribed, re = srv.isUserSubscribedH(userRoles.User.Id, p.ThreadId)
 	if re != nil {
 		return nil, re
 	}
 
 	result = &sm.IsSelfSubscribedResult{
-		UserId:       userRoles.UserId,
+		UserId:       userRoles.User.Id,
 		ThreadId:     p.ThreadId,
 		IsSubscribed: isSubscribed,
 	}
@@ -174,14 +177,14 @@ func (srv *Server) isUserSubscribed(p *sm.IsUserSubscribedParams) (result *sm.Is
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
-	if userRoles.UserId != p.UserId {
+	if userRoles.User.Id != p.UserId {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	var isSubscribed bool
+	var isSubscribed cmb.Flag
 	isSubscribed, re = srv.isUserSubscribedH(p.UserId, p.ThreadId)
 	if re != nil {
 		return nil, re
@@ -205,13 +208,13 @@ func (srv *Server) countSelfSubscriptions(p *sm.CountSelfSubscriptionsParams) (r
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	result = &sm.CountSelfSubscriptionsResult{}
 
-	result.UserSubscriptionsCount, re = srv.countSelfSubscriptionsH(userRoles.UserId)
+	result.UserSubscriptionsCount, re = srv.countSelfSubscriptionsH(userRoles.User.Id)
 	if re != nil {
 		return nil, re
 	}
@@ -228,13 +231,13 @@ func (srv *Server) getSelfSubscriptions(p *sm.GetSelfSubscriptionsParams) (resul
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	result = &sm.GetSelfSubscriptionsResult{}
 
-	result.UserSubscriptions, re = srv.getUserSubscriptionsH(userRoles.UserId)
+	result.UserSubscriptions, re = srv.getUserSubscriptionsH(userRoles.User.Id)
 	if re != nil {
 		return nil, re
 	}
@@ -256,13 +259,13 @@ func (srv *Server) getSelfSubscriptionsOnPage(p *sm.GetSelfSubscriptionsOnPagePa
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	result = &sm.GetSelfSubscriptionsOnPageResult{}
 
-	result.SubscriptionsOnPage, re = srv.getUserSubscriptionsOnPageH(userRoles.UserId, p.Page)
+	result.SubscriptionsOnPage, re = srv.getUserSubscriptionsOnPageH(userRoles.User.Id, p.Page)
 	if re != nil {
 		return nil, re
 	}
@@ -284,10 +287,10 @@ func (srv *Server) getUserSubscriptions(p *sm.GetUserSubscriptionsParams) (resul
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
-	if userRoles.UserId != p.UserId {
+	if userRoles.User.Id != p.UserId {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -315,12 +318,12 @@ func (srv *Server) getThreadSubscribersS(p *sm.GetThreadSubscribersSParams) (res
 	}
 
 	// Check the DKey.
-	if !srv.dKeyI.CheckString(p.DKey) {
+	if !srv.dKeyI.CheckString(p.DKey.ToString()) {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check existence of the thread.
-	var threadExists bool
+	var threadExists cmb.Flag
 	threadExists, re = srv.checkIfThreadExists(p.ThreadId)
 	if re != nil {
 		return nil, re
@@ -366,14 +369,14 @@ func (srv *Server) deleteSelfSubscription(p *sm.DeleteSelfSubscriptionParams) (r
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Delete subscription.
 	var s = &sm.Subscription{
 		ThreadId: p.ThreadId,
-		UserId:   userRoles.UserId,
+		UserId:   userRoles.User.Id,
 	}
 	re = srv.deleteSubscriptionH(s)
 	if re != nil {
@@ -381,9 +384,10 @@ func (srv *Server) deleteSelfSubscription(p *sm.DeleteSelfSubscriptionParams) (r
 	}
 
 	result = &sm.DeleteSelfSubscriptionResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -404,10 +408,10 @@ func (srv *Server) deleteSubscription(p *sm.DeleteSubscriptionParams) (result *s
 	}
 
 	// Check permissions.
-	if !userRoles.IsReader {
+	if !userRoles.User.Roles.IsReader {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
-	if userRoles.UserId != p.UserId {
+	if userRoles.User.Id != p.UserId {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -422,9 +426,10 @@ func (srv *Server) deleteSubscription(p *sm.DeleteSubscriptionParams) (result *s
 	}
 
 	result = &sm.DeleteSubscriptionResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -445,7 +450,7 @@ func (srv *Server) deleteSubscriptionS(p *sm.DeleteSubscriptionSParams) (result 
 	}
 
 	// Check the DKey.
-	if !srv.dKeyI.CheckString(p.DKey) {
+	if !srv.dKeyI.CheckString(p.DKey.ToString()) {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
@@ -460,9 +465,10 @@ func (srv *Server) deleteSubscriptionS(p *sm.DeleteSubscriptionSParams) (result 
 	}
 
 	result = &sm.DeleteSubscriptionSResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -480,12 +486,12 @@ func (srv *Server) clearThreadSubscriptionsS(p *sm.ClearThreadSubscriptionsSPara
 	}
 
 	// Check the DKey.
-	if !srv.dKeyI.CheckString(p.DKey) {
+	if !srv.dKeyI.CheckString(p.DKey.ToString()) {
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
 	// Check existence of the thread.
-	var threadExists bool
+	var threadExists cmb.Flag
 	threadExists, re = srv.checkIfThreadExists(p.ThreadId)
 	if re != nil {
 		return nil, re
@@ -503,9 +509,10 @@ func (srv *Server) clearThreadSubscriptionsS(p *sm.ClearThreadSubscriptionsSPara
 	}
 
 	result = &sm.ClearThreadSubscriptionsSResult{
-		OK: true,
+		Success: cmr.Success{
+			OK: true,
+		},
 	}
-
 	return result, nil
 }
 
@@ -518,15 +525,21 @@ func (srv *Server) getDKey(p *sm.GetDKeyParams) (result *sm.GetDKeyResult, re *j
 	}
 
 	result = &sm.GetDKeyResult{
-		DKey: srv.dKeyI.GetString(),
+		DKey: cmb.Text(srv.dKeyI.GetString()),
 	}
 
 	return result, nil
 }
 
 func (srv *Server) showDiagnosticData() (result *sm.ShowDiagnosticDataResult, re *jrm1.RpcError) {
-	result = &sm.ShowDiagnosticDataResult{}
-	result.TotalRequestsCount, result.SuccessfulRequestsCount = srv.js.GetRequestsCount()
+	trc, src := srv.js.GetRequestsCount()
+
+	result = &sm.ShowDiagnosticDataResult{
+		RequestsCount: cmr.RequestsCount{
+			TotalRequestsCount:      cmb.Text(trc),
+			SuccessfulRequestsCount: cmb.Text(src),
+		},
+	}
 
 	return result, nil
 }

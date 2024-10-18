@@ -4,6 +4,8 @@ import (
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	gm "github.com/vault-thirteen/SimpleBB/pkg/GWM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 )
 
@@ -33,7 +35,7 @@ func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockI
 	defer srv.dbo.UnlockAfterWriting()
 
 	// Search for an existing record.
-	var n int
+	var n cmb.Count
 	n, err = srv.dbo.CountBlocksByIPAddress(userIPAB)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -52,7 +54,12 @@ func (srv *Server) blockIPAddress(p *gm.BlockIPAddressParams) (result *gm.BlockI
 		}
 	}
 
-	return &gm.BlockIPAddressResult{OK: true}, nil
+	result = &gm.BlockIPAddressResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
 }
 
 func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *gm.IsIPAddressBlockedResult, re *jrm1.RpcError) {
@@ -75,7 +82,7 @@ func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *g
 	defer srv.dbo.UnlockAfterReading()
 
 	// Search for an existing record.
-	var n int
+	var n cmb.Count
 	n, err = srv.dbo.CountBlocksByIPAddress(userIPAB)
 	if err != nil {
 		return nil, srv.databaseError(err)
@@ -85,8 +92,14 @@ func (srv *Server) isIPAddressBlocked(p *gm.IsIPAddressBlockedParams) (result *g
 }
 
 func (srv *Server) showDiagnosticData() (result *gm.ShowDiagnosticDataResult, re *jrm1.RpcError) {
-	result = &gm.ShowDiagnosticDataResult{}
-	result.TotalRequestsCount, result.SuccessfulRequestsCount = srv.js.GetRequestsCount()
+	trc, src := srv.js.GetRequestsCount()
+
+	result = &gm.ShowDiagnosticDataResult{
+		RequestsCount: cmr.RequestsCount{
+			TotalRequestsCount:      cmb.Text(trc),
+			SuccessfulRequestsCount: cmb.Text(src),
+		},
+	}
 
 	return result, nil
 }

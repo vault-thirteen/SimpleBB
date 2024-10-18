@@ -214,8 +214,8 @@ func (srv *Server) LogUserIn(ar *api.Request, _ *http.Request, hrw http.Response
 
 	// Save the token in HTTP cookies. [1.2]
 	if result.IsWebTokenSet {
-		srv.setTokenCookie(hrw, result.WTS)
-		result.WTS = ""
+		srv.setTokenCookie(hrw, result.WebTokenString)
+		result.WebTokenString = ""
 	}
 
 	srv.respondWithJsonObject(hrw, response)

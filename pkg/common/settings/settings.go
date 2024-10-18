@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	"golang.org/x/term"
 )
 
@@ -29,7 +30,7 @@ func GetPasswordFromStdin(hint string) (pwd string, err error) {
 	return string(buf), nil
 }
 
-func CheckSettingsFilePath(sfp string) (err error) {
+func CheckSettingsFilePath(sfp cm.Path) (err error) {
 	if len(sfp) == 0 {
 		return errors.New(ErrSettingsFileIsNotSet)
 	}

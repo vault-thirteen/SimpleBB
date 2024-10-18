@@ -105,10 +105,10 @@ func (srv *Server) respondNotAcceptable(rw http.ResponseWriter) {
 	rw.WriteHeader(http.StatusNotAcceptable)
 }
 
-func (srv *Server) setTokenCookie(rw http.ResponseWriter, token string) {
+func (srv *Server) setTokenCookie(rw http.ResponseWriter, token cm.WebTokenString) {
 	var c = &http.Cookie{
 		Name:   cm.CookieName_Token,
-		Value:  token,
+		Value:  token.ToString(),
 		MaxAge: int(srv.settings.SystemSettings.SessionMaxDuration),
 
 		SameSite: http.SameSiteStrictMode,

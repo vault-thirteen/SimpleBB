@@ -4,29 +4,30 @@ import (
 	"errors"
 
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 // SystemSettings are system settings.
 type SystemSettings struct {
-	NotificationTtl        uint `json:"notificationTtl"`
-	NotificationCountLimit uint `json:"notificationCountLimit"`
-	PageSize               uint `json:"pageSize"`
-	DKeySize               uint `json:"dKeySize"`
+	NotificationTtl        cmb.Count `json:"notificationTtl"`
+	NotificationCountLimit cmb.Count `json:"notificationCountLimit"`
+	PageSize               cmb.Count `json:"pageSize"`
+	DKeySize               cmb.Count `json:"dKeySize"`
 
 	// This setting must be synchronised with settings of the Gateway module.
-	IsTableOfIncidentsUsed bool `json:"isTableOfIncidentsUsed"`
+	IsTableOfIncidentsUsed cmb.Flag `json:"isTableOfIncidentsUsed"`
 
 	// This setting is used only when a table of incidents is enabled.
 	BlockTimePerIncident BlockTimePerIncident `json:"blockTimePerIncident"`
 
-	IsDebugMode bool `json:"isDebugMode"`
+	IsDebugMode cmb.Flag `json:"isDebugMode"`
 }
 
 // BlockTimePerIncident is block time in seconds for each type of incident.
 type BlockTimePerIncident struct {
-	IllegalAccessAttempt            uint `json:"illegalAccessAttempt"`            // 1.
-	ReadingNotificationOfOtherUsers uint `json:"readingNotificationOfOtherUsers"` // 2.
-	WrongDKey                       uint `json:"wrongDKey"`                       // 3.
+	IllegalAccessAttempt            cmb.Count `json:"illegalAccessAttempt"`            // 1.
+	ReadingNotificationOfOtherUsers cmb.Count `json:"readingNotificationOfOtherUsers"` // 2.
+	WrongDKey                       cmb.Count `json:"wrongDKey"`                       // 3.
 }
 
 func (s SystemSettings) Check() (err error) {

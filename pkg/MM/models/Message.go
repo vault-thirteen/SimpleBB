@@ -6,20 +6,21 @@ import (
 	"time"
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 type Message struct {
 	// Identifier of this message.
-	Id uint `json:"id"`
+	Id cmb.Id `json:"id"`
 
 	// Identifier of a thread containing this message.
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 
 	// Textual information of this message.
-	Text string `json:"text"`
+	Text cmb.Text `json:"text"`
 
 	// Check sum of the Text field.
-	TextChecksum uint32 `json:"textChecksum"`
+	TextChecksum []byte `json:"textChecksum"`
 
 	// Message meta-data.
 	EventData

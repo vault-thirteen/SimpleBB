@@ -6,11 +6,12 @@ import (
 
 	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 type ThreadSubscriptions struct {
-	Id       uint        `json:"id"`
-	ThreadId uint        `json:"threadId"`
+	Id       cmb.Id      `json:"id"`
+	ThreadId cmb.Id      `json:"threadId"`
 	Users    *ul.UidList `json:"userIds"`
 }
 

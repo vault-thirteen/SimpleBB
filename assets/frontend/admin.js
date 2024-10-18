@@ -42,7 +42,7 @@ function saveSettings(s) {
 
 function getSettings() {
 	if (!mca_gvc.AreSettingsReady) {
-		console.error(err.Settings);
+		console.error(Err.Settings);
 		return null;
 	}
 
@@ -62,7 +62,7 @@ async function onPageLoad() {
 	let curPage = window.location.search;
 	let sp = new URLSearchParams(curPage);
 
-	if (sp.has(qpn.ListOfUsers)) {
+	if (sp.has(Qpn.ListOfUsers)) {
 		if (!preparePageVariable(sp)) {
 			return;
 		}
@@ -70,7 +70,7 @@ async function onPageLoad() {
 		return;
 	}
 
-	if (sp.has(qpn.ListOfLoggedUsers)) {
+	if (sp.has(Qpn.ListOfLoggedUsers)) {
 		if (!preparePageVariable(sp)) {
 			return;
 		}
@@ -78,7 +78,7 @@ async function onPageLoad() {
 		return;
 	}
 
-	if (sp.has(qpn.RegistrationsReadyForApproval)) {
+	if (sp.has(Qpn.RegistrationsReadyForApproval)) {
 		if (!preparePageVariable(sp)) {
 			return;
 		}
@@ -86,7 +86,7 @@ async function onPageLoad() {
 		return;
 	}
 
-	if (sp.has(qpn.UserPage)) {
+	if (sp.has(Qpn.UserPage)) {
 		if (!prepareIdVariable(sp)) {
 			return;
 		}
@@ -94,27 +94,27 @@ async function onPageLoad() {
 		return;
 	}
 
-	if (sp.has(qpn.ManagerOfSections)) {
+	if (sp.has(Qpn.ManagerOfSections)) {
 		await showPage_ManagerOfSections();
 		return;
 	}
 
-	if (sp.has(qpn.ManagerOfForums)) {
+	if (sp.has(Qpn.ManagerOfForums)) {
 		await showPage_ManagerOfForums();
 		return;
 	}
 
-	if (sp.has(qpn.ManagerOfThreads)) {
+	if (sp.has(Qpn.ManagerOfThreads)) {
 		await showPage_ManagerOfThreads();
 		return;
 	}
 
-	if (sp.has(qpn.ManagerOfMessages)) {
+	if (sp.has(Qpn.ManagerOfMessages)) {
 		await showPage_ManagerOfMessages();
 		return;
 	}
 
-	if (sp.has(qpn.ManagerOfNotifications)) {
+	if (sp.has(Qpn.ManagerOfNotifications)) {
 		await showPage_ManagerOfNotifications();
 		return;
 	}
@@ -123,35 +123,35 @@ async function onPageLoad() {
 }
 
 async function onGoRegApprovalClick(btn) {
-	await redirectToSubPage(false, qp.Prefix + qpn.RegistrationsReadyForApproval);
+	await redirectToSubPage(false, Qp.Prefix + Qpn.RegistrationsReadyForApproval);
 }
 
 async function onGoLoggedUsersClick(btn) {
-	await redirectToSubPage(false, qp.Prefix + qpn.ListOfLoggedUsers);
+	await redirectToSubPage(false, Qp.Prefix + Qpn.ListOfLoggedUsers);
 }
 
 async function onGoListAllUsersClick(btn) {
-	await redirectToSubPage(false, qp.Prefix + qpn.ListOfUsers);
+	await redirectToSubPage(false, Qp.Prefix + Qpn.ListOfUsers);
 }
 
 async function onGoManageSectionsClick(btn) {
-	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfSections);
+	await redirectToSubPage(false, Qp.Prefix + Qpn.ManagerOfSections);
 }
 
 async function onGoManageForumsClick(btn) {
-	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfForums);
+	await redirectToSubPage(false, Qp.Prefix + Qpn.ManagerOfForums);
 }
 
 async function onGoManageThreadsClick(btn) {
-	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfThreads);
+	await redirectToSubPage(false, Qp.Prefix + Qpn.ManagerOfThreads);
 }
 
 async function onGoManageMessagesClick(btn) {
-	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfMessages);
+	await redirectToSubPage(false, Qp.Prefix + Qpn.ManagerOfMessages);
 }
 
 async function onGoManageNotificationsClick(btn) {
-	await redirectToSubPage(false, qp.Prefix + qpn.ManagerOfNotifications);
+	await redirectToSubPage(false, Qp.Prefix + Qpn.ManagerOfNotifications);
 }
 
 function showPage_MainMenu() {
@@ -170,7 +170,7 @@ async function showPage_ListOfUsers() {
 
 	// Check page number for overflow.
 	if (pageNumber > pageCount) {
-		console.error(err.PageNotFound);
+		console.error(Err.PageNotFound);
 		return;
 	}
 
@@ -201,7 +201,7 @@ async function showPage_ListOfLoggedUsers() {
 
 	// Check page number for overflow.
 	if (pageNumber > pageCount) {
-		console.error(err.PageNotFound);
+		console.error(Err.PageNotFound);
 		return;
 	}
 
@@ -229,7 +229,7 @@ async function showPage_RegistrationsReadyForApproval() {
 
 	// Check page number for overflow.
 	if (pageNumber > pageCount) {
-		console.error(err.PageNotFound);
+		console.error(Err.PageNotFound);
 		return;
 	}
 
@@ -341,39 +341,6 @@ function addTitle(el, text) {
 	el.appendChild(div);
 }
 
-function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
-	let div = document.createElement("DIV");
-	div.className = "subpagePaginator";
-	div.id = "subpagePaginator";
-
-	let s = document.createElement("span");
-	s.textContent = "Page " + pageNumber + " of " + pageCount + " ";
-	div.appendChild(s);
-
-	let btnPrev = document.createElement("input");
-	btnPrev.type = "button";
-	btnPrev.className = "btnPrev";
-	btnPrev.id = "btnPrev";
-	btnPrev.value = "Previous Page";
-	addClickEventHandler(btnPrev, variantPrev);
-	div.appendChild(btnPrev);
-
-	s = document.createElement("span");
-	s.className = "subpageSpacerA";
-	s.innerHTML = "&nbsp;";
-	div.appendChild(s);
-
-	let btnNext = document.createElement("input");
-	btnNext.type = "button";
-	btnNext.className = "btnNext";
-	btnNext.id = "btnNext";
-	btnNext.value = "Next Page";
-	addClickEventHandler(btnNext, variantNext);
-	div.appendChild(btnNext);
-
-	el.appendChild(div);
-}
-
 function addClickEventHandler(btn, variant) {
 	switch (variant) {
 		case "userListPrev":
@@ -413,73 +380,73 @@ function addClickEventHandler(btn, variant) {
 			return;
 
 		default:
-			console.error(err.UnknownVariant);
+			console.error(Err.UnknownVariant);
 	}
 }
 
 async function onBtnPrevClick_userList(btn) {
 	if (mca_gvc.Page <= 1) {
-		console.error(err.PreviousPageDoesNotExist);
+		console.error(Err.PreviousPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page--;
-	let url = composeUrlForAdminPage(qpn.ListOfUsers, mca_gvc.Page);
+	let url = composeUrlForAdminPage(Qpn.ListOfUsers, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
 async function onBtnNextClick_userList(btn) {
 	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(err.NextPageDoesNotExist);
+		console.error(Err.NextPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page++;
-	let url = composeUrlForAdminPage(qpn.ListOfUsers, mca_gvc.Page);
+	let url = composeUrlForAdminPage(Qpn.ListOfUsers, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
 async function onBtnPrevClick_logged(btn) {
 	if (mca_gvc.Page <= 1) {
-		console.error(err.PreviousPageDoesNotExist);
+		console.error(Err.PreviousPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page--;
-	let url = composeUrlForAdminPage(qpn.ListOfLoggedUsers, mca_gvc.Page);
+	let url = composeUrlForAdminPage(Qpn.ListOfLoggedUsers, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
 async function onBtnNextClick_logged(btn) {
 	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(err.NextPageDoesNotExist);
+		console.error(Err.NextPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page++;
-	let url = composeUrlForAdminPage(qpn.ListOfLoggedUsers, mca_gvc.Page);
+	let url = composeUrlForAdminPage(Qpn.ListOfLoggedUsers, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
 async function onBtnPrevClick_rrfa(btn) {
 	if (mca_gvc.Page <= 1) {
-		console.error(err.PreviousPageDoesNotExist);
+		console.error(Err.PreviousPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page--;
-	let url = composeUrlForAdminPage(qpn.RegistrationsReadyForApproval, mca_gvc.Page);
+	let url = composeUrlForAdminPage(Qpn.RegistrationsReadyForApproval, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
 async function onBtnNextClick_rrfa(btn) {
 	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(err.NextPageDoesNotExist);
+		console.error(Err.NextPageDoesNotExist);
 		return;
 	}
 
 	mca_gvc.Page++;
-	let url = composeUrlForAdminPage(qpn.RegistrationsReadyForApproval, mca_gvc.Page);
+	let url = composeUrlForAdminPage(Qpn.RegistrationsReadyForApproval, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
@@ -636,7 +603,7 @@ async function fillListOfRRFA(elClass, rrfas) {
 }
 
 async function getListOfLoggedInUsers() {
-	let reqData = new ApiRequest(actionName.GetListOfLoggedUsers, {});
+	let reqData = new ApiRequest(ActionName.GetListOfLoggedUsers, {});
 	let resp = await sendApiRequest(reqData);
 	if (!resp.IsOk) {
 		console.error(composeErrorText(resp.ErrorText));
@@ -698,19 +665,19 @@ async function onBtnLogOutUPClick(userId) {
 async function onBtnEnableRoleUPClick(role, userId) {
 	let resp;
 	switch (role) {
-		case userRole.Author:
+		case UserRole.Author:
 			resp = await setUserRoleAuthor(userId, true);
 			break;
 
-		case userRole.Writer:
+		case UserRole.Writer:
 			resp = await setUserRoleWriter(userId, true);
 			break;
 
-		case userRole.Reader:
+		case UserRole.Reader:
 			resp = await setUserRoleReader(userId, true);
 			break;
 
-		case userRole.Logging:
+		case UserRole.Logging:
 			resp = await unbanUser(userId);
 			break;
 
@@ -730,19 +697,19 @@ async function onBtnEnableRoleUPClick(role, userId) {
 async function onBtnDisableRoleUPClick(role, userId) {
 	let resp;
 	switch (role) {
-		case userRole.Author:
+		case UserRole.Author:
 			resp = await setUserRoleAuthor(userId, false);
 			break;
 
-		case userRole.Writer:
+		case UserRole.Writer:
 			resp = await setUserRoleWriter(userId, false);
 			break;
 
-		case userRole.Reader:
+		case UserRole.Reader:
 			resp = await setUserRoleReader(userId, false);
 			break;
 
-		case userRole.Logging:
+		case UserRole.Logging:
 			resp = await banUser(userId);
 			break;
 
@@ -919,40 +886,40 @@ function fillUserPage(elClass, userParams, userLogInState) {
 			case "IsAuthor":
 				if (userParams.isAuthor) {
 					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRole.Author + '\',' + userId + ')">';
+						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Author + '\',' + userId + ')">';
 				} else {
 					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRole.Author + '\',' + userId + ')">';
+						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Author + '\',' + userId + ')">';
 				}
 				break;
 
 			case "IsWriter":
 				if (userParams.isWriter) {
 					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRole.Writer + '\',' + userId + ')">';
+						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Writer + '\',' + userId + ')">';
 				} else {
 					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRole.Writer + '\',' + userId + ')">';
+						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Writer + '\',' + userId + ')">';
 				}
 				break;
 
 			case "IsReader":
 				if (userParams.isReader) {
 					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRole.Reader + '\',' + userId + ')">';
+						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Reader + '\',' + userId + ')">';
 				} else {
 					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRole.Reader + '\',' + userId + ')">';
+						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Reader + '\',' + userId + ')">';
 				}
 				break;
 
 			case "CanLogIn":
 				if (userParams.canLogIn) {
 					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + userRole.Logging + '\',' + userId + ')">';
+						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Logging + '\',' + userId + ')">';
 				} else {
 					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + userRole.Logging + '\',' + userId + ')">';
+						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Logging + '\',' + userId + ')">';
 				}
 				break;
 
@@ -1159,7 +1126,7 @@ async function onBtnCreateRootSectionClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let name = pp.childNodes[1].childNodes[1].value;
 	if (name.length < 1) {
-		console.error(err.NameIsNotSet);
+		console.error(Err.NameIsNotSet);
 		return;
 	}
 
@@ -1180,12 +1147,12 @@ async function onBtnCreateNormalSectionClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let name = pp.childNodes[1].childNodes[1].value;
 	if (name.length < 1) {
-		console.error(err.NameIsNotSet);
+		console.error(Err.NameIsNotSet);
 		return;
 	}
 	let parent = Number(pp.childNodes[2].childNodes[1].value);
 	if (parent < 1) {
-		console.error(err.ParentIsNotSet);
+		console.error(Err.ParentIsNotSet);
 		return;
 	}
 
@@ -1206,12 +1173,12 @@ async function onBtnChangeSectionNameClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let sectionId = Number(pp.childNodes[1].childNodes[1].value);
 	if (sectionId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 	let newName = pp.childNodes[2].childNodes[1].value;
 	if (newName.length < 1) {
-		console.error(err.NameIsNotSet);
+		console.error(Err.NameIsNotSet);
 		return;
 	}
 
@@ -1234,12 +1201,12 @@ async function onBtnChangeSectionParentClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let sectionId = Number(pp.childNodes[1].childNodes[1].value);
 	if (sectionId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 	let newParent = Number(pp.childNodes[2].childNodes[1].value);
 	if (newParent < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1262,7 +1229,7 @@ async function onBtnMoveSectionUpClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let sectionId = Number(pp.childNodes[1].childNodes[1].value);
 	if (sectionId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1285,7 +1252,7 @@ async function onBtnMoveSectionDownClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let sectionId = Number(pp.childNodes[1].childNodes[1].value);
 	if (sectionId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1308,7 +1275,7 @@ async function onBtnDeleteSectionClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let sectionId = Number(pp.childNodes[1].childNodes[1].value);
 	if (sectionId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1417,12 +1384,12 @@ async function onBtnCreateForumClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let name = pp.childNodes[1].childNodes[1].value;
 	if (name.length < 1) {
-		console.error(err.NameIsNotSet);
+		console.error(Err.NameIsNotSet);
 		return;
 	}
 	let parent = Number(pp.childNodes[2].childNodes[1].value);
 	if (parent < 1) {
-		console.error(err.ParentIsNotSet);
+		console.error(Err.ParentIsNotSet);
 		return;
 	}
 
@@ -1443,12 +1410,12 @@ async function onBtnChangeForumNameClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let forumId = Number(pp.childNodes[1].childNodes[1].value);
 	if (forumId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 	let newName = pp.childNodes[2].childNodes[1].value;
 	if (newName.length < 1) {
-		console.error(err.NameIsNotSet);
+		console.error(Err.NameIsNotSet);
 		return;
 	}
 
@@ -1471,12 +1438,12 @@ async function onBtnChangeForumParentClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let forumId = Number(pp.childNodes[1].childNodes[1].value);
 	if (forumId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 	let newParent = Number(pp.childNodes[2].childNodes[1].value);
 	if (newParent < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1499,7 +1466,7 @@ async function onBtnMoveForumUpClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let forumId = Number(pp.childNodes[1].childNodes[1].value);
 	if (forumId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1522,7 +1489,7 @@ async function onBtnMoveForumDownClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let forumId = Number(pp.childNodes[1].childNodes[1].value);
 	if (forumId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1545,7 +1512,7 @@ async function onBtnDeleteForumClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let forumId = Number(pp.childNodes[1].childNodes[1].value);
 	if (forumId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1654,12 +1621,12 @@ async function onBtnCreateThreadClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let name = pp.childNodes[1].childNodes[1].value;
 	if (name.length < 1) {
-		console.error(err.NameIsNotSet);
+		console.error(Err.NameIsNotSet);
 		return;
 	}
 	let parent = Number(pp.childNodes[2].childNodes[1].value);
 	if (parent < 1) {
-		console.error(err.ParentIsNotSet);
+		console.error(Err.ParentIsNotSet);
 		return;
 	}
 
@@ -1680,12 +1647,12 @@ async function onBtnChangeThreadNameClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let threadId = Number(pp.childNodes[1].childNodes[1].value);
 	if (threadId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 	let newName = pp.childNodes[2].childNodes[1].value;
 	if (newName.length < 1) {
-		console.error(err.NameIsNotSet);
+		console.error(Err.NameIsNotSet);
 		return;
 	}
 
@@ -1708,12 +1675,12 @@ async function onBtnChangeThreadParentClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let threadId = Number(pp.childNodes[1].childNodes[1].value);
 	if (threadId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 	let newParent = Number(pp.childNodes[2].childNodes[1].value);
 	if (newParent < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1736,7 +1703,7 @@ async function onBtnMoveThreadUpClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let threadId = Number(pp.childNodes[1].childNodes[1].value);
 	if (threadId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1759,7 +1726,7 @@ async function onBtnMoveThreadDownClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let threadId = Number(pp.childNodes[1].childNodes[1].value);
 	if (threadId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1782,7 +1749,7 @@ async function onBtnDeleteThreadClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let threadId = Number(pp.childNodes[1].childNodes[1].value);
 	if (threadId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1925,12 +1892,12 @@ async function onBtnCreateMessageClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let text = pp.childNodes[1].childNodes[1].value;
 	if (text.length < 1) {
-		console.error(err.TextIsNotSet);
+		console.error(Err.TextIsNotSet);
 		return;
 	}
 	let parent = Number(pp.childNodes[2].childNodes[1].value);
 	if (parent < 1) {
-		console.error(err.ParentIsNotSet);
+		console.error(Err.ParentIsNotSet);
 		return;
 	}
 
@@ -1951,12 +1918,12 @@ async function onBtnCreateNotificationClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let text = pp.childNodes[1].childNodes[1].value;
 	if (text.length < 1) {
-		console.error(err.TextIsNotSet);
+		console.error(Err.TextIsNotSet);
 		return;
 	}
 	let userId = Number(pp.childNodes[2].childNodes[1].value);
 	if (userId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -1977,12 +1944,12 @@ async function onBtnChangeMessageTextClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let messageId = Number(pp.childNodes[1].childNodes[1].value);
 	if (messageId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 	let newText = pp.childNodes[2].childNodes[1].value;
 	if (newText.length < 1) {
-		console.error(err.TextIsNotSet);
+		console.error(Err.TextIsNotSet);
 		return;
 	}
 
@@ -2005,12 +1972,12 @@ async function onBtnChangeMessageParentClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let messageId = Number(pp.childNodes[1].childNodes[1].value);
 	if (messageId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 	let newParent = Number(pp.childNodes[2].childNodes[1].value);
 	if (newParent < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -2033,7 +2000,7 @@ async function onBtnDeleteMessageClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let messageId = Number(pp.childNodes[1].childNodes[1].value);
 	if (messageId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -2056,7 +2023,7 @@ async function onBtnDeleteNotificationClick(btn) {
 	let pp = btn.parentNode.parentNode;
 	let notificationId = Number(pp.childNodes[1].childNodes[1].value);
 	if (notificationId < 1) {
-		console.error(err.IdNotSet);
+		console.error(Err.IdNotSet);
 		return;
 	}
 
@@ -2121,17 +2088,6 @@ function createRadioButtonsForActions(fs, actionNames) {
 	}
 }
 
-function repairUndefinedPageCount(pageCount) {
-	// Unfortunately JavaScript can compare a number with 'undefined' !
-	if (pageCount === undefined) {
-		return 1;
-	}
-	if (pageCount === 0) {
-		return 1;
-	}
-	return pageCount;
-}
-
 async function redirectToSubPage(wait, qp) {
 	let url = adminPage + qp;
 	await redirectPage(wait, url);
@@ -2143,9 +2099,9 @@ async function redirectToMainMenu(wait) {
 }
 
 function composeUrlForUserPage(userId) {
-	return qp.Prefix + qpn.UserPage + "&" + qpn.Id + "=" + userId;
+	return Qp.Prefix + Qpn.UserPage + "&" + Qpn.Id + "=" + userId;
 }
 
 function composeUrlForAdminPage(func, page) {
-	return qp.Prefix + func + "&" + qpn.Page + "=" + page;
+	return Qp.Prefix + func + "&" + Qpn.Page + "=" + page;
 }

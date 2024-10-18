@@ -26,7 +26,7 @@ func NewArrayFromScannableSource[T any](src IScannableSequence) (values []T, err
 }
 
 func NewValueFromScannableSource[T any](src IScannable) (*T, error) {
-	var value T
+	var value = new(T)
 
 	err := src.Scan(&value)
 	if err != nil {
@@ -37,7 +37,7 @@ func NewValueFromScannableSource[T any](src IScannable) (*T, error) {
 		}
 	}
 
-	return &value, nil
+	return value, nil
 }
 
 func NewNonNullValueFromScannableSource[T any](src IScannable) (T, error) {

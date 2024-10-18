@@ -30,6 +30,7 @@ import (
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
 	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 	cset "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
@@ -346,7 +347,7 @@ func (srv *Server) httpRouterInt(rw http.ResponseWriter, req *http.Request) {
 // HTTP router for external requests.
 func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 	// Firewall (optional).
-	var clientIPA string
+	var clientIPA cm.IPAS
 	if srv.settings.SystemSettings.IsFirewallUsed {
 		var ok bool
 		var err error
@@ -365,7 +366,7 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 	isFrontEndEnabled := srv.settings.SystemSettings.IsFrontEndEnabled
 
 	if isFrontEndEnabled {
-		switch req.URL.Path {
+		switch cm.Path(req.URL.Path) {
 		case gs.FrontEndRoot: // <- /
 			srv.handleFrontEndStaticFile(rw, req, srv.frontEnd.IndexHtmlPage)
 			return
@@ -389,7 +390,7 @@ func (srv *Server) httpRouterExt(rw http.ResponseWriter, req *http.Request) {
 	}
 	category := urlParts[0]
 
-	switch category {
+	switch cm.Path(category) {
 	case srv.settings.SystemSettings.ApiFolder: // <- /api
 		srv.handlePublicApi(rw, req, clientIPA)
 		return
@@ -430,7 +431,7 @@ func (srv *Server) initPublicSettings() (err error) {
 	// root folder. It contains useful settings for client applications.
 	var publicSettings = &models.Settings{
 		Version:                   srv.settings.SystemSettings.SettingsVersion,
-		ProductVersion:            srv.settings.VersionInfo.ProgramVersionString(),
+		ProductVersion:            cmb.Text(srv.settings.VersionInfo.ProgramVersionString()),
 		SiteName:                  srv.settings.SystemSettings.SiteName,
 		SiteDomain:                srv.settings.SystemSettings.SiteDomain,
 		CaptchaFolder:             srv.settings.SystemSettings.CaptchaFolder,

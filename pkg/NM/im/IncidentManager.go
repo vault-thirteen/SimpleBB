@@ -19,6 +19,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 const (
@@ -34,7 +35,7 @@ type IncidentManager struct {
 	gwmClient              *cc.Client
 
 	// Block time in seconds for each incident type.
-	blockTimePerIncidentType [cm.IncidentTypesCount + 1]uint
+	blockTimePerIncidentType [cm.IncidentTypesCount + 1]cmb.Count
 }
 
 func NewIncidentManager(
@@ -56,7 +57,7 @@ func NewIncidentManager(
 	return im
 }
 
-func initBlockTimePerIncidentType(blockTimePerIncident *s.BlockTimePerIncident) (blockTimePerIncidentType [cm.IncidentTypesCount + 1]uint) {
+func initBlockTimePerIncidentType(blockTimePerIncident *s.BlockTimePerIncident) (blockTimePerIncidentType [cm.IncidentTypesCount + 1]cmb.Count) {
 	// The "zero"-indexed element is empty because it is not used.
 	blockTimePerIncidentType[cm.IncidentType_IllegalAccessAttempt] = blockTimePerIncident.IllegalAccessAttempt
 	blockTimePerIncidentType[cm.IncidentType_ReadingNotificationOfOtherUsers] = blockTimePerIncident.ReadingNotificationOfOtherUsers
@@ -133,7 +134,7 @@ func (im *IncidentManager) Stop() (err error) {
 	return nil
 }
 
-func (im *IncidentManager) ReportIncident(itype cm.IncidentType, email string, userIPA net.IP) {
+func (im *IncidentManager) ReportIncident(itype cm.IncidentType, email cm.Email, userIPA net.IP) {
 	incident := &cm.Incident{
 		Time:    time.Now(),
 		Type:    itype,
@@ -184,7 +185,7 @@ func (im *IncidentManager) informGateway(inc *cm.Incident) (re *jrm1.RpcError) {
 
 	// Other incidents must be directed to the Gateway module.
 	var params = gm.BlockIPAddressParams{
-		UserIPA:      inc.UserIPA.String(),
+		UserIPA:      cm.IPAS(inc.UserIPA.String()),
 		BlockTimeSec: blockTime,
 	}
 

@@ -1,6 +1,8 @@
 package models
 
 import (
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
@@ -17,55 +19,45 @@ type AddSectionParams struct {
 	// Identifier of a parent section containing this section.
 	// Null means that this section is a root section.
 	// Only a single root section can exist.
-	Parent *uint `json:"parent"`
+	Parent *cmb.Id `json:"parent"`
 
 	// Name of this section.
-	Name string `json:"name"`
+	Name cm.Name `json:"name"`
 }
 
 type AddSectionResult struct {
 	cmr.CommonResult
 
 	// ID of the created section.
-	SectionId uint `json:"sectionId"`
+	SectionId cmb.Id `json:"sectionId"`
 }
 
 type ChangeSectionNameParams struct {
 	cmr.CommonParams
 
 	// Identifier of a section.
-	SectionId uint `json:"sectionId"`
+	SectionId cmb.Id `json:"sectionId"`
 
 	// Name of this section.
-	Name string `json:"name"`
+	Name cm.Name `json:"name"`
 }
-
-type ChangeSectionNameResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type ChangeSectionNameResult = cmr.CommonResultWithSuccess
 
 type ChangeSectionParentParams struct {
 	cmr.CommonParams
 
 	// Identifier of a section.
-	SectionId uint `json:"sectionId"`
+	SectionId cmb.Id `json:"sectionId"`
 
 	// Identifier of a parent section containing this section.
-	Parent uint `json:"parent"`
+	Parent cmb.Id `json:"parent"`
 }
-
-type ChangeSectionParentResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type ChangeSectionParentResult = cmr.CommonResultWithSuccess
 
 type GetSectionParams struct {
 	cmr.CommonParams
 
-	SectionId uint `json:"sectionId"`
+	SectionId cmb.Id `json:"sectionId"`
 }
 
 type GetSectionResult struct {
@@ -78,39 +70,24 @@ type MoveSectionUpParams struct {
 	cmr.CommonParams
 
 	// Identifier of a section.
-	SectionId uint `json:"sectionId"`
+	SectionId cmb.Id `json:"sectionId"`
 }
-
-type MoveSectionUpResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type MoveSectionUpResult = cmr.CommonResultWithSuccess
 
 type MoveSectionDownParams struct {
 	cmr.CommonParams
 
 	// Identifier of a section.
-	SectionId uint `json:"sectionId"`
+	SectionId cmb.Id `json:"sectionId"`
 }
-
-type MoveSectionDownResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type MoveSectionDownResult = cmr.CommonResultWithSuccess
 
 type DeleteSectionParams struct {
 	cmr.CommonParams
 
-	SectionId uint `json:"sectionId"`
+	SectionId cmb.Id `json:"sectionId"`
 }
-
-type DeleteSectionResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type DeleteSectionResult = cmr.CommonResultWithSuccess
 
 // Forum.
 
@@ -118,54 +95,44 @@ type AddForumParams struct {
 	cmr.CommonParams
 
 	// Identifier of a section containing this forum.
-	SectionId uint `json:"sectionId"`
+	SectionId cmb.Id `json:"sectionId"`
 
 	// Name of this forum.
-	Name string `json:"name"`
+	Name cm.Name `json:"name"`
 }
 
 type AddForumResult struct {
 	cmr.CommonResult
 
 	// ID of the created forum.
-	ForumId uint `json:"forumId"`
+	ForumId cmb.Id `json:"forumId"`
 }
 
 type ChangeForumNameParams struct {
 	cmr.CommonParams
 
-	ForumId uint `json:"forumId"`
+	ForumId cmb.Id `json:"forumId"`
 
 	// New name.
-	Name string `json:"name"`
+	Name cm.Name `json:"name"`
 }
-
-type ChangeForumNameResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type ChangeForumNameResult = cmr.CommonResultWithSuccess
 
 type ChangeForumSectionParams struct {
 	cmr.CommonParams
 
 	// Identifier of this forum.
-	ForumId uint `json:"forumId"`
+	ForumId cmb.Id `json:"forumId"`
 
 	// Identifier of a section containing this forum.
-	SectionId uint `json:"sectionId"`
+	SectionId cmb.Id `json:"sectionId"`
 }
-
-type ChangeForumSectionResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type ChangeForumSectionResult = cmr.CommonResultWithSuccess
 
 type GetForumParams struct {
 	cmr.CommonParams
 
-	ForumId uint `json:"forumId"`
+	ForumId cmb.Id `json:"forumId"`
 }
 
 type GetForumResult struct {
@@ -178,39 +145,24 @@ type MoveForumUpParams struct {
 	cmr.CommonParams
 
 	// Identifier of a forum.
-	ForumId uint `json:"forumId"`
+	ForumId cmb.Id `json:"forumId"`
 }
-
-type MoveForumUpResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type MoveForumUpResult = cmr.CommonResultWithSuccess
 
 type MoveForumDownParams struct {
 	cmr.CommonParams
 
 	// Identifier of a forum.
-	ForumId uint `json:"forumId"`
+	ForumId cmb.Id `json:"forumId"`
 }
-
-type MoveForumDownResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type MoveForumDownResult = cmr.CommonResultWithSuccess
 
 type DeleteForumParams struct {
 	cmr.CommonParams
 
-	ForumId uint `json:"forumId"`
+	ForumId cmb.Id `json:"forumId"`
 }
-
-type DeleteForumResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type DeleteForumResult = cmr.CommonResultWithSuccess
 
 // Thread.
 
@@ -218,53 +170,43 @@ type AddThreadParams struct {
 	cmr.CommonParams
 
 	// ID of a forum containing this thread.
-	ForumId uint `json:"forumId"`
+	ForumId cmb.Id `json:"forumId"`
 
 	// Thread name.
-	Name string `json:"name"`
+	Name cm.Name `json:"name"`
 }
 
 type AddThreadResult struct {
 	cmr.CommonResult
 
 	// ID of the created forum.
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
 
 type ChangeThreadNameParams struct {
 	cmr.CommonParams
 
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 
 	// New name.
-	Name string `json:"name"`
+	Name cm.Name `json:"name"`
 }
-
-type ChangeThreadNameResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type ChangeThreadNameResult = cmr.CommonResultWithSuccess
 
 type ChangeThreadForumParams struct {
 	cmr.CommonParams
 
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 
 	// ID of a new parent forum.
-	ForumId uint `json:"forumId"`
+	ForumId cmb.Id `json:"forumId"`
 }
-
-type ChangeThreadForumResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type ChangeThreadForumResult = cmr.CommonResultWithSuccess
 
 type GetThreadParams struct {
 	cmr.CommonParams
 
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
 
 type GetThreadResult struct {
@@ -276,64 +218,50 @@ type GetThreadResult struct {
 type GetThreadNamesByIdsParams struct {
 	cmr.CommonParams
 
-	ThreadIds []uint `json:"threadIds"`
+	ThreadIds []cmb.Id `json:"threadIds"`
 }
 
 type GetThreadNamesByIdsResult struct {
 	cmr.CommonResult
 
-	ThreadNames []string `json:"threadNames"`
+	ThreadIds   []cmb.Id  `json:"threadIds"`
+	ThreadNames []cm.Name `json:"threadNames"`
 }
 
 type MoveThreadUpParams struct {
 	cmr.CommonParams
 
 	// Identifier of a thread.
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
-
-type MoveThreadUpResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type MoveThreadUpResult = cmr.CommonResultWithSuccess
 
 type MoveThreadDownParams struct {
 	cmr.CommonParams
 
 	// Identifier of a thread.
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
-
-type MoveThreadDownResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type MoveThreadDownResult = cmr.CommonResultWithSuccess
 
 type DeleteThreadParams struct {
 	cmr.CommonParams
 
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
-
-type DeleteThreadResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type DeleteThreadResult = cmr.CommonResultWithSuccess
 
 type ThreadExistsSParams struct {
 	cmr.CommonParams
 	cmr.DKeyParams
 
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
 
 type ThreadExistsSResult struct {
 	cmr.CommonResult
 
-	Exists bool `json:"exists"`
+	Exists cmb.Flag `json:"exists"`
 }
 
 // Message.
@@ -342,53 +270,43 @@ type AddMessageParams struct {
 	cmr.CommonParams
 
 	// ID of a thread containing this message.
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 
 	// Message text.
-	Text string `json:"text"`
+	Text cmb.Text `json:"text"`
 }
 
 type AddMessageResult struct {
 	cmr.CommonResult
 
 	// ID of the created message.
-	MessageId uint `json:"messageId"`
+	MessageId cmb.Id `json:"messageId"`
 }
 
 type ChangeMessageTextParams struct {
 	cmr.CommonParams
 
-	MessageId uint `json:"messageId"`
+	MessageId cmb.Id `json:"messageId"`
 
 	// New text.
-	Text string `json:"text"`
+	Text cmb.Text `json:"text"`
 }
-
-type ChangeMessageTextResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type ChangeMessageTextResult = cmr.CommonResultWithSuccess
 
 type ChangeMessageThreadParams struct {
 	cmr.CommonParams
 
-	MessageId uint `json:"messageId"`
+	MessageId cmb.Id `json:"messageId"`
 
 	// ID of a new parent thread.
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
-
-type ChangeMessageThreadResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type ChangeMessageThreadResult = cmr.CommonResultWithSuccess
 
 type GetMessageParams struct {
 	cmr.CommonParams
 
-	MessageId uint `json:"messageId"`
+	MessageId cmb.Id `json:"messageId"`
 }
 
 type GetMessageResult struct {
@@ -400,7 +318,7 @@ type GetMessageResult struct {
 type GetLatestMessageOfThreadParams struct {
 	cmr.CommonParams
 
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
 
 type GetLatestMessageOfThreadResult struct {
@@ -412,21 +330,16 @@ type GetLatestMessageOfThreadResult struct {
 type DeleteMessageParams struct {
 	cmr.CommonParams
 
-	MessageId uint `json:"messageId"`
+	MessageId cmb.Id `json:"messageId"`
 }
-
-type DeleteMessageResult struct {
-	cmr.CommonResult
-
-	OK bool `json:"ok"`
-}
+type DeleteMessageResult = cmr.CommonResultWithSuccess
 
 // Composite objects.
 
 type ListThreadAndMessagesParams struct {
 	cmr.CommonParams
 
-	ThreadId uint `json:"threadId"`
+	ThreadId cmb.Id `json:"threadId"`
 }
 
 type ListThreadAndMessagesResult struct {
@@ -438,8 +351,8 @@ type ListThreadAndMessagesResult struct {
 type ListThreadAndMessagesOnPageParams struct {
 	cmr.CommonParams
 
-	ThreadId uint `json:"threadId"`
-	Page     uint `json:"page"`
+	ThreadId cmb.Id    `json:"threadId"`
+	Page     cmb.Count `json:"page"`
 }
 
 type ListThreadAndMessagesOnPageResult struct {
@@ -451,7 +364,7 @@ type ListThreadAndMessagesOnPageResult struct {
 type ListForumAndThreadsParams struct {
 	cmr.CommonParams
 
-	ForumId uint `json:"forumId"`
+	ForumId cmb.Id `json:"forumId"`
 }
 
 type ListForumAndThreadsResult struct {
@@ -463,8 +376,8 @@ type ListForumAndThreadsResult struct {
 type ListForumAndThreadsOnPageParams struct {
 	cmr.CommonParams
 
-	ForumId uint `json:"forumId"`
-	Page    uint `json:"page"`
+	ForumId cmb.Id    `json:"forumId"`
+	Page    cmb.Count `json:"page"`
 }
 
 type ListForumAndThreadsOnPageResult struct {
@@ -492,7 +405,7 @@ type GetDKeyParams struct {
 type GetDKeyResult struct {
 	cmr.CommonResult
 
-	DKey string `json:"dKey"`
+	DKey cmb.Text `json:"dKey"`
 }
 
 type ShowDiagnosticDataParams struct{}

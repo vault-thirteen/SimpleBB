@@ -7,32 +7,34 @@ import (
 	"time"
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 type PasswordChange struct {
-	Id             uint
-	UserId         uint
+	Id             cmb.Id
+	UserId         cmb.Id
 	TimeOfCreation time.Time
-	RequestId      *string
+	RequestId      *cm.RequestId
 
 	// IP address of a user. B = Byte array.
 	UserIPAB net.IP
 
-	AuthDataBytes        []byte
-	IsCaptchaRequired    bool
-	CaptchaId            sql.NullString
-	IsVerifiedByCaptcha  sql.NullBool
-	IsVerifiedByPassword bool
-	VerificationCode     *string
-	IsEmailSent          bool
-	IsVerifiedByEmail    bool
-	NewPassword          []byte
+	AuthDataBytes        cmr.AuthChallengeData
+	IsCaptchaRequired    cmb.Flag
+	CaptchaId            *cm.CaptchaId
+	IsVerifiedByCaptcha  *cmb.Flag
+	IsVerifiedByPassword cmb.Flag
+	VerificationCode     *cm.VerificationCode
+	IsEmailSent          cmb.Flag
+	IsVerifiedByEmail    cmb.Flag
+	NewPasswordBytes     []byte
 }
 
 type PasswordChangeVerificationFlags struct {
-	IsVerifiedByCaptcha  sql.NullBool
-	IsVerifiedByPassword bool
-	IsVerifiedByEmail    bool
+	IsVerifiedByCaptcha  *cmb.Flag
+	IsVerifiedByPassword cmb.Flag
+	IsVerifiedByEmail    cmb.Flag
 }
 
 func NewPasswordChange() (pc *PasswordChange) {
@@ -56,7 +58,7 @@ func NewPasswordChangeFromScannableSource(src cm.IScannable) (pc *PasswordChange
 		&pc.VerificationCode,
 		&pc.IsEmailSent,
 		&pc.IsVerifiedByEmail,
-		&pc.NewPassword,
+		&pc.NewPasswordBytes,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

@@ -7,11 +7,12 @@ import (
 	"time"
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 type Session struct {
-	Id        uint      `json:"id"`
-	UserId    uint      `json:"userId"`
+	Id        cmb.Id    `json:"id"`
+	UserId    cmb.Id    `json:"userId"`
 	StartTime time.Time `json:"startTime"`
 
 	// IP address of a user. B = Byte array.

@@ -414,17 +414,6 @@ table.acpMenu td {
 	padding-right: 10px;
 }
 
-.subpagePaginator {
-	font-size: 14px;
-	color: grey;
-	margin-bottom: 5px;
-}
-
-.subpageSpacerA {
-	width: 15px;
-	display: inline-block;
-}
-
 table.subpageListOfUsers,
 table.subpageListOfRRFA,
 table.subpageListOfLoggedUsers,

@@ -6,17 +6,18 @@ import (
 
 	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 type Forum struct {
 	// Identifier of this forum.
-	Id uint `json:"id"`
+	Id cmb.Id `json:"id"`
 
 	// Identifier of a section containing this forum.
-	SectionId uint `json:"sectionId"`
+	SectionId cmb.Id `json:"sectionId"`
 
 	// Name of this forum.
-	Name string `json:"name"`
+	Name cm.Name `json:"name"`
 
 	// List of identifiers of threads of this forum.
 	Threads *ul.UidList `json:"threads"`

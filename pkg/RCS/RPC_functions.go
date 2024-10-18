@@ -7,6 +7,8 @@ import (
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	rc "github.com/vault-thirteen/RingCaptcha/server"
 	rm "github.com/vault-thirteen/SimpleBB/pkg/RCS/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 // RPC functions.
@@ -55,8 +57,14 @@ func (srv *Server) checkCaptcha(p *rm.CheckCaptchaParams) (result *rm.CheckCaptc
 }
 
 func (srv *Server) showDiagnosticData() (result *rm.ShowDiagnosticDataResult, re *jrm1.RpcError) {
-	result = &rm.ShowDiagnosticDataResult{}
-	result.TotalRequestsCount, result.SuccessfulRequestsCount = srv.js.GetRequestsCount()
+	trc, src := srv.js.GetRequestsCount()
+
+	result = &rm.ShowDiagnosticDataResult{
+		RequestsCount: cmr.RequestsCount{
+			TotalRequestsCount:      cmb.Text(trc),
+			SuccessfulRequestsCount: cmb.Text(src),
+		},
+	}
 
 	return result, nil
 }

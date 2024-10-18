@@ -4,13 +4,14 @@ import (
 	"errors"
 
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 // SystemSettings are system settings.
 type SystemSettings struct {
-	DKeySize        uint `json:"dKeySize"`
-	MessageEditTime uint `json:"messageEditTime"`
-	PageSize        uint `json:"pageSize"`
+	DKeySize        cmb.Count `json:"dKeySize"`
+	MessageEditTime cmb.Count `json:"messageEditTime"`
+	PageSize        cmb.Count `json:"pageSize"`
 
 	// NewThreadsAtTop parameter controls how new and updated threads are
 	// placed inside forums. If set to 'True', then following will happen:
@@ -21,9 +22,9 @@ type SystemSettings struct {
 	// If set to 'False', then new threads are added to the end (bottom) of the
 	// list and thread's new messages do not update thread's position in the
 	// list.
-	NewThreadsAtTop bool `json:"newThreadsAtTop"`
+	NewThreadsAtTop cmb.Flag `json:"newThreadsAtTop"`
 
-	IsDebugMode bool `json:"isDebugMode"`
+	IsDebugMode cmb.Flag `json:"isDebugMode"`
 }
 
 func (s SystemSettings) Check() (err error) {

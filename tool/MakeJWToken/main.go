@@ -7,6 +7,8 @@ import (
 	"log"
 
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/km"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 const (
@@ -23,7 +25,7 @@ func main() {
 	keyMaker, err = km.New(signingMethod, privateKeyFilePath, publicKeyFilePath)
 	mustBeNoError(err)
 
-	var ts string
+	var ts cm.WebTokenString
 	ts, err = keyMaker.MakeJWToken(userId, sessionId)
 	mustBeNoError(err)
 
@@ -41,13 +43,22 @@ func mustBeNoError(err error) {
 	}
 }
 
-func receiveArguments() (userId uint, sessionId uint, privateKeyFilePath string, publicKeyFilePath string, signingMethod string, err error) {
-	flag.UintVar(&userId, "uid", 0, "user ID")
-	flag.UintVar(&sessionId, "sid", 0, "session ID")
-	flag.StringVar(&privateKeyFilePath, "private_key", "", "path to private key file using PEM format")
-	flag.StringVar(&publicKeyFilePath, "public_key", "", "path to public key file using PEM format")
+func receiveArguments() (userId cmb.Id, sessionId cmb.Id, privateKeyFilePath cm.Path, publicKeyFilePath cm.Path, signingMethod string, err error) {
+	var userIdInt int
+	flag.IntVar(&userIdInt, "uid", 0, "user ID")
+	var sessionIdInt int
+	flag.IntVar(&sessionIdInt, "sid", 0, "session ID")
+	var privateKeyFilePathStr string
+	flag.StringVar(&privateKeyFilePathStr, "private_key", "", "path to private key file using PEM format")
+	var publicKeyFilePathStr string
+	flag.StringVar(&publicKeyFilePathStr, "public_key", "", "path to public key file using PEM format")
 	flag.StringVar(&signingMethod, "method", "", "signing method")
 	flag.Parse()
+
+	userId = cmb.Id(userIdInt)
+	sessionId = cmb.Id(sessionIdInt)
+	privateKeyFilePath = cm.Path(privateKeyFilePathStr)
+	publicKeyFilePath = cm.Path(publicKeyFilePathStr)
 
 	if userId == 0 {
 		return 0, 0, "", "", "", errors.New(ErrUserIdIsNotSet)
