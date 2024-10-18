@@ -46,6 +46,31 @@ func Test_NewFromArray(t *testing.T) {
 	aTest.MustBeAnError(err)
 }
 
+func Test_AsArray(t *testing.T) {
+	aTest := tester.New(t)
+	var ul *UidList
+	var x []cmb.Id
+
+	// Test #1. Case I.
+	ul = nil
+	aTest.MustBeEqual(ul.AsArray(), []cmb.Id{})
+
+	// Test #2. Case II.
+	x = nil
+	ul = (*UidList)(&x)
+	aTest.MustBeEqual(ul.AsArray(), []cmb.Id{})
+
+	// Test #3. Case III.
+	x = []cmb.Id{}
+	ul = (*UidList)(&x)
+	aTest.MustBeEqual(ul.AsArray(), []cmb.Id{})
+
+	// Test #4. Case X. All Clear.
+	x = []cmb.Id{1, 2, 3}
+	ul = (*UidList)(&x)
+	aTest.MustBeEqual(ul.AsArray(), []cmb.Id{1, 2, 3})
+}
+
 func Test_CheckIntegrity(t *testing.T) {
 	aTest := tester.New(t)
 	var ul *UidList

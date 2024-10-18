@@ -69,7 +69,7 @@ type GetSelfSubscriptionsOnPageParams struct {
 
 type GetSelfSubscriptionsOnPageResult struct {
 	cmr.CommonResult
-	SubscriptionsOnPage *SubscriptionsOnPage `json:"sop"`
+	UserSubscriptions *UserSubscriptions `json:"userSubscriptions"`
 }
 
 type GetUserSubscriptionsParams struct {
@@ -82,6 +82,17 @@ type GetUserSubscriptionsResult struct {
 	UserSubscriptions *UserSubscriptions `json:"userSubscriptions"`
 }
 
+type GetUserSubscriptionsOnPageParams struct {
+	cmr.CommonParams
+	UserId cmb.Id    `json:"userId"`
+	Page   cmb.Count `json:"page"`
+}
+
+type GetUserSubscriptionsOnPageResult struct {
+	cmr.CommonResult
+	UserSubscriptions *UserSubscriptions `json:"userSubscriptions"`
+}
+
 type GetThreadSubscribersSParams struct {
 	cmr.CommonParams
 	cmr.DKeyParams
@@ -90,7 +101,7 @@ type GetThreadSubscribersSParams struct {
 
 type GetThreadSubscribersSResult struct {
 	cmr.CommonResult
-	ThreadSubscriptions *ThreadSubscriptions `json:"threadSubscriptions"`
+	ThreadSubscriptions *ThreadSubscriptionsRecord `json:"threadSubscriptions"`
 }
 
 type DeleteSelfSubscriptionParams struct {

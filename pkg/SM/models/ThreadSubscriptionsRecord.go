@@ -9,24 +9,24 @@ import (
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
-type ThreadSubscriptions struct {
+type ThreadSubscriptionsRecord struct {
 	Id       cmb.Id      `json:"id"`
 	ThreadId cmb.Id      `json:"threadId"`
 	Users    *ul.UidList `json:"userIds"`
 }
 
-func NewThreadSubscriptions() (ts *ThreadSubscriptions) {
-	return &ThreadSubscriptions{}
+func NewThreadSubscriptions() (tsr *ThreadSubscriptionsRecord) {
+	return &ThreadSubscriptionsRecord{}
 }
 
-func NewThreadSubscriptionsFromScannableSource(src cm.IScannable) (ts *ThreadSubscriptions, err error) {
-	ts = NewThreadSubscriptions()
+func NewThreadSubscriptionsFromScannableSource(src cm.IScannable) (tsr *ThreadSubscriptionsRecord, err error) {
+	tsr = NewThreadSubscriptions()
 	var x = ul.New()
 
 	err = src.Scan(
-		&ts.Id,
-		&ts.ThreadId,
-		x, //&ts.Users,
+		&tsr.Id,
+		&tsr.ThreadId,
+		x, //&tsr.Users,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -36,6 +36,6 @@ func NewThreadSubscriptionsFromScannableSource(src cm.IScannable) (ts *ThreadSub
 		}
 	}
 
-	ts.Users = x
-	return ts, nil
+	tsr.Users = x
+	return tsr, nil
 }

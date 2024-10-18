@@ -2249,6 +2249,35 @@ func (srv *Server) GetUserSubscriptions(ar *api.Request, _ *http.Request, hrw ht
 	return
 }
 
+func (srv *Server) GetUserSubscriptionsOnPage(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params sm.GetUserSubscriptionsOnPageParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(sm.GetUserSubscriptionsOnPageResult)
+	var re *jrm1.RpcError
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncGetUserSubscriptionsOnPage, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_SM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
 func (srv *Server) DeleteSelfSubscription(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
 	var params sm.DeleteSelfSubscriptionParams

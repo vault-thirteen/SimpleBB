@@ -54,6 +54,23 @@ func NewFromArray(uids []cmb.Id) (ul *UidList, err error) {
 	return ul, nil
 }
 
+// AsArray returns the list as an array.
+func (ul *UidList) AsArray() (arr []cmb.Id) {
+	if ul == nil {
+		return []cmb.Id{}
+	}
+
+	if *ul == nil {
+		return []cmb.Id{}
+	}
+
+	if len(*ul) == 0 {
+		return []cmb.Id{}
+	}
+
+	return *ul
+}
+
 // CheckIntegrity verifies integrity of the list.
 func (ul *UidList) CheckIntegrity() (err error) {
 	if ul == nil {

@@ -58,63 +58,65 @@ func (srv *Server) addSubscription(p *sm.AddSubscriptionParams) (result *sm.AddS
 	// Read Subscriptions. If they are not initialised, initialise them. Other
 	// methods reading subscriptions should not initialise un-initialised
 	// subscriptions.
-	var us *sm.UserSubscriptions
+	var usr *sm.UserSubscriptionsRecord
 	var err error
-	us, err = srv.dbo.GetUserSubscriptions(p.UserId)
+	usr, err = srv.dbo.GetUserSubscriptions(p.UserId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	if us == nil {
+	// If no real record exists, create it.
+	if usr.Id == sm.IdForVirtualUserSubscriptionsRecord {
 		err = srv.dbo.InitUserSubscriptions(p.UserId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 
-		us, err = srv.dbo.GetUserSubscriptions(p.UserId)
+		usr, err = srv.dbo.GetUserSubscriptions(p.UserId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 	}
 
-	var ts *sm.ThreadSubscriptions
-	ts, err = srv.dbo.GetThreadSubscriptions(p.ThreadId)
+	var tsr *sm.ThreadSubscriptionsRecord
+	tsr, err = srv.dbo.GetThreadSubscriptions(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	if ts == nil {
+	// If no real record exists, create it.
+	if tsr == nil {
 		err = srv.dbo.InitThreadSubscriptions(p.ThreadId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 
-		ts, err = srv.dbo.GetThreadSubscriptions(p.ThreadId)
+		tsr, err = srv.dbo.GetThreadSubscriptions(p.ThreadId)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
 	}
 
 	// Add items.
-	err = us.Threads.AddItem(p.ThreadId, false)
+	err = usr.Threads.AddItem(p.ThreadId, false)
 	if err != nil {
 		srv.logError(err)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
-	err = ts.Users.AddItem(p.UserId, false)
+	err = tsr.Users.AddItem(p.UserId, false)
 	if err != nil {
 		srv.logError(err)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	// Save changes.
-	err = srv.dbo.SaveUserSubscriptions(us)
+	err = srv.dbo.SaveUserSubscriptions(usr)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	err = srv.dbo.SaveThreadSubscriptions(ts)
+	err = srv.dbo.SaveThreadSubscriptions(tsr)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
@@ -235,11 +237,14 @@ func (srv *Server) getSelfSubscriptions(p *sm.GetSelfSubscriptionsParams) (resul
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	result = &sm.GetSelfSubscriptionsResult{}
-
-	result.UserSubscriptions, re = srv.getUserSubscriptionsH(userRoles.User.Id)
+	var usr *sm.UserSubscriptionsRecord
+	usr, re = srv.getUserSubscriptionsRecordH(userRoles.User.Id)
 	if re != nil {
 		return nil, re
+	}
+
+	result = &sm.GetSelfSubscriptionsResult{
+		UserSubscriptions: sm.NewUserSubscriptions(userRoles.User.Id, usr.Threads, 0, 0),
 	}
 
 	return result, nil
@@ -263,11 +268,14 @@ func (srv *Server) getSelfSubscriptionsOnPage(p *sm.GetSelfSubscriptionsOnPagePa
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	result = &sm.GetSelfSubscriptionsOnPageResult{}
-
-	result.SubscriptionsOnPage, re = srv.getUserSubscriptionsOnPageH(userRoles.User.Id, p.Page)
+	var usr *sm.UserSubscriptionsRecord
+	usr, re = srv.getUserSubscriptionsRecordH(userRoles.User.Id)
 	if re != nil {
 		return nil, re
+	}
+
+	result = &sm.GetSelfSubscriptionsOnPageResult{
+		UserSubscriptions: sm.NewUserSubscriptions(userRoles.User.Id, usr.Threads, p.Page, srv.settings.SystemSettings.PageSize),
 	}
 
 	return result, nil
@@ -294,11 +302,51 @@ func (srv *Server) getUserSubscriptions(p *sm.GetUserSubscriptionsParams) (resul
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	result = &sm.GetUserSubscriptionsResult{}
-
-	result.UserSubscriptions, re = srv.getUserSubscriptionsH(p.UserId)
+	var usr *sm.UserSubscriptionsRecord
+	usr, re = srv.getUserSubscriptionsRecordH(p.UserId)
 	if re != nil {
 		return nil, re
+	}
+
+	result = &sm.GetUserSubscriptionsResult{
+		UserSubscriptions: sm.NewUserSubscriptions(p.UserId, usr.Threads, 0, 0),
+	}
+
+	return result, nil
+}
+
+// getUserSubscriptionsOnPage reads user subscriptions on the selected page.
+func (srv *Server) getUserSubscriptionsOnPage(p *sm.GetUserSubscriptionsOnPageParams) (result *sm.GetUserSubscriptionsOnPageResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.UserId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
+	}
+	if p.Page == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
+	}
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.User.Roles.IsReader {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+	if userRoles.User.Id != p.UserId {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	var usr *sm.UserSubscriptionsRecord
+	usr, re = srv.getUserSubscriptionsRecordH(p.UserId)
+	if re != nil {
+		return nil, re
+	}
+
+	result = &sm.GetUserSubscriptionsOnPageResult{
+		UserSubscriptions: sm.NewUserSubscriptions(p.UserId, usr.Threads, p.Page, srv.settings.SystemSettings.PageSize),
 	}
 
 	return result, nil
@@ -341,15 +389,15 @@ func (srv *Server) getThreadSubscribersS(p *sm.GetThreadSubscribersSParams) (res
 	defer srv.dbo.UnlockAfterReading()
 
 	// Read Subscriptions.
-	var ts *sm.ThreadSubscriptions
+	var tsr *sm.ThreadSubscriptionsRecord
 	var err error
-	ts, err = srv.dbo.GetThreadSubscriptions(p.ThreadId)
+	tsr, err = srv.dbo.GetThreadSubscriptions(p.ThreadId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
 	result = &sm.GetThreadSubscribersSResult{
-		ThreadSubscriptions: ts,
+		ThreadSubscriptions: tsr,
 	}
 
 	return result, nil

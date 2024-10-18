@@ -96,6 +96,7 @@ const (
 	ApiFunctionName_GetSelfSubscriptions       = "getSelfSubscriptions"
 	ApiFunctionName_GetSelfSubscriptionsOnPage = "getSelfSubscriptionsOnPage"
 	ApiFunctionName_GetUserSubscriptions       = "getUserSubscriptions"
+	ApiFunctionName_GetUserSubscriptionsOnPage = "getUserSubscriptionsOnPage"
 	ApiFunctionName_DeleteSelfSubscription     = "deleteSelfSubscription"
 	ApiFunctionName_DeleteSubscription         = "deleteSubscription"
 )

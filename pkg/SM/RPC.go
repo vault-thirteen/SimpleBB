@@ -37,6 +37,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.GetSelfSubscriptions,
 		srv.GetSelfSubscriptionsOnPage,
 		srv.GetUserSubscriptions,
+		srv.GetUserSubscriptionsOnPage,
 		srv.GetThreadSubscribersS,
 		srv.DeleteSelfSubscription,
 		srv.DeleteSubscription,
@@ -175,6 +176,22 @@ func (srv *Server) GetUserSubscriptions(params *json.RawMessage, _ *jrm1.Respons
 
 	var r *sm.GetUserSubscriptionsResult
 	r, re = srv.getUserSubscriptions(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) GetUserSubscriptionsOnPage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *sm.GetUserSubscriptionsOnPageParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *sm.GetUserSubscriptionsOnPageResult
+	r, re = srv.getUserSubscriptionsOnPage(p)
 	if re != nil {
 		return nil, re
 	}

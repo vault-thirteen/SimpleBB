@@ -13,7 +13,6 @@ import (
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
@@ -190,45 +189,45 @@ func (srv *Server) deleteSubscriptionH(s *sm.Subscription) (re *jrm1.RpcError) {
 	defer srv.dbo.UnlockAfterWriting()
 
 	// Read Subscriptions.
-	var us *sm.UserSubscriptions
+	var usr *sm.UserSubscriptionsRecord
 	var err error
-	us, err = srv.dbo.GetUserSubscriptions(s.UserId)
+	usr, err = srv.dbo.GetUserSubscriptions(s.UserId)
 	if err != nil {
 		return srv.databaseError(err)
 	}
-	if us == nil {
+	if usr == nil {
 		return jrm1.NewRpcErrorByUser(RpcErrorCode_SubscriptionIsNotFound, RpcErrorMsg_SubscriptionIsNotFound, nil)
 	}
 
-	var ts *sm.ThreadSubscriptions
-	ts, err = srv.dbo.GetThreadSubscriptions(s.ThreadId)
+	var tsr *sm.ThreadSubscriptionsRecord
+	tsr, err = srv.dbo.GetThreadSubscriptions(s.ThreadId)
 	if err != nil {
 		return srv.databaseError(err)
 	}
-	if ts == nil {
+	if tsr == nil {
 		return jrm1.NewRpcErrorByUser(RpcErrorCode_SubscriptionIsNotFound, RpcErrorMsg_SubscriptionIsNotFound, nil)
 	}
 
 	// Remove items.
-	err = us.Threads.RemoveItem(s.ThreadId)
+	err = usr.Threads.RemoveItem(s.ThreadId)
 	if err != nil {
 		srv.logError(err)
 		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
-	err = ts.Users.RemoveItem(s.UserId)
+	err = tsr.Users.RemoveItem(s.UserId)
 	if err != nil {
 		srv.logError(err)
 		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 	}
 
 	// Save changes.
-	err = srv.dbo.SaveUserSubscriptions(us)
+	err = srv.dbo.SaveUserSubscriptions(usr)
 	if err != nil {
 		return srv.databaseError(err)
 	}
 
-	err = srv.dbo.SaveThreadSubscriptions(ts)
+	err = srv.dbo.SaveThreadSubscriptions(tsr)
 	if err != nil {
 		return srv.databaseError(err)
 	}
@@ -242,18 +241,18 @@ func (srv *Server) clearThreadSubscriptionsH(threadId cmb.Id) (re *jrm1.RpcError
 	srv.dbo.LockForWriting()
 	defer srv.dbo.UnlockAfterWriting()
 
-	var ts *sm.ThreadSubscriptions
+	var tsr *sm.ThreadSubscriptionsRecord
 	var err error
-	ts, err = srv.dbo.GetThreadSubscriptions(threadId)
+	tsr, err = srv.dbo.GetThreadSubscriptions(threadId)
 	if err != nil {
 		return srv.databaseError(err)
 	}
-	if ts == nil {
+	if tsr == nil {
 		// Nothing to clear.
 		return nil
 	}
 
-	if ts.Users == nil {
+	if tsr.Users == nil {
 		// No subscribers.
 		// Clear the T.S. record only.
 		err = srv.dbo.ClearThreadSubscriptionRecord(threadId)
@@ -265,24 +264,24 @@ func (srv *Server) clearThreadSubscriptionsH(threadId cmb.Id) (re *jrm1.RpcError
 	}
 
 	// Delete subscription to the thread from all subscribers.
-	var us *sm.UserSubscriptions
-	for _, userId := range *ts.Users {
-		us, err = srv.dbo.GetUserSubscriptions(userId)
+	var usr *sm.UserSubscriptionsRecord
+	for _, userId := range *tsr.Users {
+		usr, err = srv.dbo.GetUserSubscriptions(userId)
 		if err != nil {
 			return srv.databaseError(err)
 		}
 
-		if us.Threads == nil {
+		if usr.Threads == nil {
 			continue
 		}
 
-		err = us.Threads.RemoveItem(threadId)
+		err = usr.Threads.RemoveItem(threadId)
 		if err != nil {
 			srv.logError(err)
 			return jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
 		}
 
-		err = srv.dbo.SaveUserSubscriptions(us)
+		err = srv.dbo.SaveUserSubscriptions(usr)
 		if err != nil {
 			return srv.databaseError(err)
 		}
@@ -325,78 +324,34 @@ func (srv *Server) countSelfSubscriptionsH(userId cmb.Id) (usc cmb.Count, re *jr
 	defer srv.dbo.UnlockAfterReading()
 
 	// Get subscriptions and count them.
-	var us *sm.UserSubscriptions
+	var usr *sm.UserSubscriptionsRecord
 	var err error
-	us, err = srv.dbo.GetUserSubscriptions(userId)
+	usr, err = srv.dbo.GetUserSubscriptions(userId)
 	if err != nil {
 		return cdbo.CountOnError, srv.databaseError(err)
 	}
 
-	if us == nil {
+	if usr == nil {
 		return 0, nil
 	}
 
-	return us.Threads.Size(), nil
+	return usr.Threads.Size(), nil
 }
 
-// getUserSubscriptionsH is a helper function to read user's subscriptions.
-func (srv *Server) getUserSubscriptionsH(userId cmb.Id) (us *sm.UserSubscriptions, re *jrm1.RpcError) {
+// getUserSubscriptionsRecordH is a helper function to read a user
+// subscriptions record.
+func (srv *Server) getUserSubscriptionsRecordH(userId cmb.Id) (usr *sm.UserSubscriptionsRecord, re *jrm1.RpcError) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
 
 	// Read Subscriptions.
 	var err error
-	us, err = srv.dbo.GetUserSubscriptions(userId)
+	usr, err = srv.dbo.GetUserSubscriptions(userId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	return us, nil
-}
-
-// getUserSubscriptionsOnPageH is a helper function to read user's
-// subscriptions on the selected page.
-func (srv *Server) getUserSubscriptionsOnPageH(userId cmb.Id, page cmb.Count) (sop *sm.SubscriptionsOnPage, re *jrm1.RpcError) {
-	srv.dbo.LockForReading()
-	defer srv.dbo.UnlockAfterReading()
-
-	// Read all user's subscriptions.
-	var us *sm.UserSubscriptions
-	var err error
-	us, err = srv.dbo.GetUserSubscriptions(userId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	if us == nil {
-		us = &sm.UserSubscriptions{
-			Id:     0,
-			UserId: userId,
-		}
-
-		us.Threads, err = ul.NewFromArray([]cmb.Id{})
-		if err != nil {
-			srv.logError(err)
-			return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
-		}
-	}
-
-	var allThreadIds = us.Threads
-	var threadIdsOnPage = allThreadIds.OnPage(page, srv.settings.SystemSettings.PageSize)
-
-	sop = &sm.SubscriptionsOnPage{
-		Subscriber:    userId,
-		Subscriptions: threadIdsOnPage,
-		PageData: &cmr.PageData{
-			PageNumber:  page,
-			TotalPages:  cmb.CalculateTotalPages(allThreadIds.Size(), srv.settings.SystemSettings.PageSize),
-			PageSize:    srv.settings.SystemSettings.PageSize,
-			ItemsOnPage: threadIdsOnPage.Size(),
-			TotalItems:  allThreadIds.Size(),
-		},
-	}
-
-	return sop, nil
+	return usr, nil
 }
 
 // isUserSubscribedH is a helper function to check whether the user has a
@@ -406,19 +361,19 @@ func (srv *Server) isUserSubscribedH(userId cmb.Id, threadId cmb.Id) (isSubscrib
 	defer srv.dbo.UnlockAfterReading()
 
 	// Read Subscriptions.
-	var us *sm.UserSubscriptions
+	var usr *sm.UserSubscriptionsRecord
 	var err error
-	us, err = srv.dbo.GetUserSubscriptions(userId)
+	usr, err = srv.dbo.GetUserSubscriptions(userId)
 	if err != nil {
 		return false, srv.databaseError(err)
 	}
 
-	if us == nil {
+	if usr == nil {
 		return false, nil
 	}
 
 	// Search for an item.
-	isSubscribed = cmb.Flag(us.Threads.HasItem(threadId))
+	isSubscribed = cmb.Flag(usr.Threads.HasItem(threadId))
 
 	return isSubscribed, nil
 }

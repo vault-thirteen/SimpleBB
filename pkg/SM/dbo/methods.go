@@ -53,31 +53,42 @@ func (dbo *DatabaseObject) InitThreadSubscriptions(threadId cmb.Id) (err error) 
 	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) GetUserSubscriptions(userId cmb.Id) (us *sm.UserSubscriptions, err error) {
+func (dbo *DatabaseObject) GetUserSubscriptions(userId cmb.Id) (usr *sm.UserSubscriptionsRecord, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetUserSubscriptions).QueryRow(userId)
 
-	us, err = sm.NewUserSubscriptionsFromScannableSource(row)
+	usr, err = sm.NewUserSubscriptionsRecordFromScannableSource(row)
 	if err != nil {
 		return nil, err
 	}
 
-	return us, nil
+	// If record does not exist, we return a virtual empty record.
+	// Virtual record is marked with a negative ID in order to distinguish it
+	// from real records.
+	if usr == nil {
+		usr = &sm.UserSubscriptionsRecord{
+			Id:      sm.IdForVirtualUserSubscriptionsRecord,
+			UserId:  userId,
+			Threads: nil,
+		}
+	}
+
+	return usr, nil
 }
 
-func (dbo *DatabaseObject) GetThreadSubscriptions(threadId cmb.Id) (ts *sm.ThreadSubscriptions, err error) {
+func (dbo *DatabaseObject) GetThreadSubscriptions(threadId cmb.Id) (tsr *sm.ThreadSubscriptionsRecord, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetThreadSubscriptions).QueryRow(threadId)
 
-	ts, err = sm.NewThreadSubscriptionsFromScannableSource(row)
+	tsr, err = sm.NewThreadSubscriptionsFromScannableSource(row)
 	if err != nil {
 		return nil, err
 	}
 
-	return ts, nil
+	return tsr, nil
 }
 
-func (dbo *DatabaseObject) SaveUserSubscriptions(us *sm.UserSubscriptions) (err error) {
+func (dbo *DatabaseObject) SaveUserSubscriptions(usr *sm.UserSubscriptionsRecord) (err error) {
 	var result sql.Result
-	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SaveUserSubscriptions).Exec(us.Threads, us.UserId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SaveUserSubscriptions).Exec(usr.Threads, usr.UserId)
 	if err != nil {
 		return err
 	}
@@ -85,9 +96,9 @@ func (dbo *DatabaseObject) SaveUserSubscriptions(us *sm.UserSubscriptions) (err 
 	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SaveThreadSubscriptions(ts *sm.ThreadSubscriptions) (err error) {
+func (dbo *DatabaseObject) SaveThreadSubscriptions(tsr *sm.ThreadSubscriptionsRecord) (err error) {
 	var result sql.Result
-	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SaveThreadSubscriptions).Exec(ts.Users, ts.ThreadId)
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SaveThreadSubscriptions).Exec(tsr.Users, tsr.ThreadId)
 	if err != nil {
 		return err
 	}

@@ -17,6 +17,7 @@ const (
 	FuncGetSelfSubscriptions       = "GetSelfSubscriptions"
 	FuncGetSelfSubscriptionsOnPage = "GetSelfSubscriptionsOnPage"
 	FuncGetUserSubscriptions       = "GetUserSubscriptions"
+	FuncGetUserSubscriptionsOnPage = "GetUserSubscriptionsOnPage"
 	FuncGetThreadSubscribersS      = "GetThreadSubscribersS"
 	FuncDeleteSelfSubscription     = "DeleteSelfSubscription"
 	FuncDeleteSubscription         = "DeleteSubscription"
