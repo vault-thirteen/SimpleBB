@@ -18,7 +18,6 @@ type SendMessageParams struct {
 	Subject   cmb.Text `json:"subject"`
 	Message   cmb.Text `json:"message"`
 }
-
 type SendMessageResult struct {
 	cmr.CommonResult
 }
@@ -26,7 +25,6 @@ type SendMessageResult struct {
 // Other.
 
 type ShowDiagnosticDataParams struct{}
-
 type ShowDiagnosticDataResult struct {
 	cmr.CommonResult
 	cmr.RequestsCount

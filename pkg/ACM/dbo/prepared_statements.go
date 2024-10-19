@@ -77,11 +77,14 @@ const (
 	DbPsid_SaveLogEvent                           = 65
 	DbPsid_ClearEmailChangesTable                 = 66
 	DbPsid_CountAllUsers                          = 67
-	DbPsid_GetListOfAllUsers                      = 68
+	DbPsid_GetListOfAllUsersOnPage                = 68
 	DbPsid_CountRegistrationsReadyForApproval     = 69
 	DbPsid_GetListOfRegistrationsReadyForApproval = 70
 	DbPsid_RejectRegistrationRequest              = 71
 	DbPsid_GetUserNameById                        = 72
+	DbPsid_GetListOfLoggedUsersOnPage             = 73
+	DbPsid_CountLoggedUsers                       = 74
+	DbPsid_GetListOfAllUsers                      = 75
 )
 
 func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
@@ -378,6 +381,18 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 
 	// 72.
 	q = fmt.Sprintf(`SELECT Name FROM %s WHERE Id = ?;`, dbo.tableNames.Users)
+	qs = append(qs, q)
+
+	// 73.
+	q = fmt.Sprintf(`SELECT UserId FROM %s LIMIT ? OFFSET ?;`, dbo.tableNames.Sessions)
+	qs = append(qs, q)
+
+	// 74.
+	q = fmt.Sprintf(`SELECT COUNT(UserId) FROM %s;`, dbo.tableNames.Sessions)
+	qs = append(qs, q)
+
+	// 75.
+	q = fmt.Sprintf(`SELECT Id FROM %s ORDER BY Id;`, dbo.tableNames.Users)
 	qs = append(qs, q)
 
 	return qs

@@ -1,5 +1,3 @@
-* Repair admin. interface
-
 * Delete old notifications
 * Limit new notifications
 * Subscriptions

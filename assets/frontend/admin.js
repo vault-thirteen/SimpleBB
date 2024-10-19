@@ -12,11 +12,90 @@ window.onpageshow = function (event) {
 	}
 };
 
-// Settings.
-settingsPath = "settings.json";
-rootPath = "/";
-adminPage = "/admin";
-redirectDelay = 3;
+ButtonName = {
+	PaginatorPrev: "<",
+	PaginatorNext: ">",
+	BackA: "Go Back",
+	Accept: "Accept",
+	Reject: "Reject",
+	LogOut: "Log Out",
+	EnableRole: "Enable Role",
+	DisableRole: "Disable Role",
+	Proceed: "Proceed",
+	CreateRootSection: "Create",
+	CreateNormalSection: "Create",
+	ChangeSectionName: "Change Name",
+	ChangeSectionParent: "Change Parent",
+	MoveSectionUp: "Move Up",
+	MoveSectionDown: "Move Down",
+	DeleteSection: "Delete",
+	CreateForum: "Create",
+	ChangeForumName: "Change Name",
+	ChangeForumParent: "Change Parent",
+	MoveForumUp: "Move Up",
+	MoveForumDown: "Move Down",
+	DeleteForum: "Delete",
+	CreateThread: "Create",
+	ChangeThreadName: "Change Name",
+	ChangeThreadParent: "Change Parent",
+	MoveThreadUp: "Move Up",
+	MoveThreadDown: "Move Down",
+	DeleteThread: "Delete",
+	CreateMessage: "Create",
+	ChangeMessageText: "Change Text",
+	ChangeMessageParent: "Change Parent",
+	DeleteMessage: "Delete",
+	CreateNotification: "Create",
+	DeleteNotification: "Delete",
+}
+
+ButtonClass = {
+	PaginatorPrev: "btnPrev",
+	PaginatorNext: "btnNext",
+	BackA: "btnBack",
+	Accept: "btnAccept",
+	Reject: "btnReject",
+	LogOut: "btnLogOut",
+	EnableRole: "btnEnableRole",
+	DisableRole: "btnDisableRole",
+	Proceed: "btnProceed",
+	CreateRootSection: "btnCreateRootSection",
+	CreateNormalSection: "btnCreateNormalSection",
+	ChangeSectionName: "btnChangeSectionName",
+	ChangeSectionParent: "btnChangeSectionParent",
+	MoveSection: "btnMoveSection",
+	DeleteSection: "btnDeleteSection",
+	CreateForum: "btnCreateForum",
+	ChangeForumName: "btnChangeForumName",
+	ChangeForumParent: "btnChangeForumParent",
+	MoveForum: "btnMoveForum",
+	DeleteForum: "btnDeleteForum",
+	CreateThread: "btnCreateThread",
+	ChangeThreadName: "btnChangeThreadName",
+	ChangeThreadParent: "btnChangeThreadParent",
+	MoveThread: "btnMoveThread",
+	DeleteThread: "btnDeleteThread",
+	CreateMessage: "btnCreateMessage",
+	ChangeMessageText: "btnChangeMessageText",
+	ChangeMessageParent: "btnChangeMessageParent",
+	DeleteMessage: "btnDeleteMessage",
+	CreateNotification: "btnCreateNotification",
+	DeleteNotification: "btnDeleteNotification",
+}
+
+PageZoneClass = {
+	Paginator: "paginator",
+	SubpageTitleA: "subpageTitle",
+}
+
+EventHandlerVariant = {
+	UserListPrevA: "userListPrev",
+	UserListNextA: "userListNext",
+	LoggedUserListPrevA: "loggedUserListPrev",
+	LoggedUserListNextA: "loggedUserListNext",
+	RrfaListPrevA: "rrfaListPrev",
+	RrfaListNextA: "rrfaListNext",
+}
 
 // Global variables.
 class GlobalVariablesContainer {
@@ -30,6 +109,8 @@ class GlobalVariablesContainer {
 }
 
 mca_gvc = new GlobalVariablesContainer(false, null, 0, 0);
+
+// Settings.
 
 function isSettingsUpdateNeeded() {
 	return true;
@@ -56,17 +137,16 @@ async function onPageLoad() {
 	if (!ok) {
 		return;
 	}
-	//let settings = getSettings();
 
 	// Select a page.
 	let curPage = window.location.search;
 	let sp = new URLSearchParams(curPage);
 
-	if (sp.has(Qpn.ListOfUsers)) {
+	if (sp.has(Qpn.RegistrationsReadyForApproval)) {
 		if (!preparePageVariable(sp)) {
 			return;
 		}
-		await showPage_ListOfUsers();
+		await showPage_RegistrationsReadyForApproval();
 		return;
 	}
 
@@ -78,11 +158,11 @@ async function onPageLoad() {
 		return;
 	}
 
-	if (sp.has(Qpn.RegistrationsReadyForApproval)) {
+	if (sp.has(Qpn.ListOfUsers)) {
 		if (!preparePageVariable(sp)) {
 			return;
 		}
-		await showPage_RegistrationsReadyForApproval();
+		await showPage_ListOfUsers();
 		return;
 	}
 
@@ -122,160 +202,88 @@ async function onPageLoad() {
 	showPage_MainMenu();
 }
 
-async function onGoRegApprovalClick(btn) {
-	await redirectToSubPage(false, Qp.Prefix + Qpn.RegistrationsReadyForApproval);
-}
-
-async function onGoLoggedUsersClick(btn) {
-	await redirectToSubPage(false, Qp.Prefix + Qpn.ListOfLoggedUsers);
-}
-
-async function onGoListAllUsersClick(btn) {
-	await redirectToSubPage(false, Qp.Prefix + Qpn.ListOfUsers);
-}
-
-async function onGoManageSectionsClick(btn) {
-	await redirectToSubPage(false, Qp.Prefix + Qpn.ManagerOfSections);
-}
-
-async function onGoManageForumsClick(btn) {
-	await redirectToSubPage(false, Qp.Prefix + Qpn.ManagerOfForums);
-}
-
-async function onGoManageThreadsClick(btn) {
-	await redirectToSubPage(false, Qp.Prefix + Qpn.ManagerOfThreads);
-}
-
-async function onGoManageMessagesClick(btn) {
-	await redirectToSubPage(false, Qp.Prefix + Qpn.ManagerOfMessages);
-}
-
-async function onGoManageNotificationsClick(btn) {
-	await redirectToSubPage(false, Qp.Prefix + Qpn.ManagerOfNotifications);
-}
-
-function showPage_MainMenu() {
-	document.getElementById("acpMenu").style.display = "table";
-}
-
-async function showPage_ListOfUsers() {
-	let pageNumber = mca_gvc.Page;
-	let resp = await getListOfAllUsers(pageNumber);
-	if (resp == null) {
-		return;
-	}
-	let pageCount = resp.result.totalPages;
-	pageCount = repairUndefinedPageCount(pageCount);
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	if (pageNumber > pageCount) {
-		console.error(Err.PageNotFound);
-		return;
-	}
-
-	let userIds = resp.result.userIds;
-
-	// Draw.
-	let p = document.getElementById("subpage");
-	p.style.display = "block";
-	addBtnBack(p);
-	addTitle(p, "List of All Users");
-	addPaginator(p, pageNumber, pageCount, "userListPrev", "userListNext");
-	addDiv(p, "subpageListOfUsers");
-	await fillListOfUsers("subpageListOfUsers", userIds);
-}
-
-async function showPage_ListOfLoggedUsers() {
-	let pageNumber = mca_gvc.Page;
-	let resp = await getListOfLoggedInUsers();
-	if (resp == null) {
-		return;
-	}
-	let userIds = resp.result.loggedUserIds;
-	let userCount = userIds.length;
-	let settings = getSettings();
-	let pageCount = Math.ceil(userCount / settings.PageSize);
-	pageCount = repairUndefinedPageCount(pageCount);
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	if (pageNumber > pageCount) {
-		console.error(Err.PageNotFound);
-		return;
-	}
-
-	let userIdsOnPage = calculateItemsOnPage(userIds, pageNumber, settings.PageSize);
-
-	// Draw.
-	let p = document.getElementById("subpage");
-	p.style.display = "block";
-	addBtnBack(p);
-	addTitle(p, "List of logged-in Users");
-	addPaginator(p, pageNumber, pageCount, "loggedUserListPrev", "loggedUserListNext");
-	addDiv(p, "subpageListOfLoggedUsers");
-	await fillListOfLoggedUsers("subpageListOfLoggedUsers", userIdsOnPage);
-}
-
 async function showPage_RegistrationsReadyForApproval() {
-	let pageNumber = mca_gvc.Page;
-	let resp = await getListOfRegistrationsReadyForApproval(pageNumber);
-	if (resp == null) {
-		return;
-	}
-	let pageCount = resp.result.totalPages;
-	pageCount = repairUndefinedPageCount(pageCount);
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	if (pageNumber > pageCount) {
-		console.error(Err.PageNotFound);
-		return;
+	let res = await getListOfRegistrationsReadyForApproval(mca_gvc.Page);
+	let pageCount = res.pageData.totalPages;
+	if (!preparePageNumber(pageCount)) {
+		return
 	}
 
-	let rrfas = resp.result.rrfa;
+	let rrfas = jsonToRrfas(res.rrfa);
 
 	// Draw.
 	let p = document.getElementById("subpage");
-	p.style.display = "block";
+	showBlock(p);
 	addBtnBack(p);
 	addTitle(p, "List of Registrations ready for Approval");
-	addPaginator(p, pageNumber, pageCount, "rrfaListPrev", "rrfaListNext");
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.RrfaListPrevA, EventHandlerVariant.RrfaListNextA);
 	addDiv(p, "subpageListOfRRFA");
 	await fillListOfRRFA("subpageListOfRRFA", rrfas);
 }
 
-async function showPage_UserPage() {
-	let userId = mca_gvc.Id;
-	let resp = await viewUserParameters(userId);
-	if (resp == null) {
-		return;
+async function showPage_ListOfLoggedUsers() {
+	let res = await getListOfLoggedUsersOnPage(mca_gvc.Page);
+	let pageCount = res.pageData.totalPages;
+	if (!preparePageNumber(pageCount)) {
+		return
 	}
-	let userParams = resp.result;
 
-	// Get additional information.
-	resp = await isUserLoggedIn(userId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.userId !== userId) {
-		return;
-	}
-	let userLogInState = resp.result.isUserLoggedIn;
+	let userIds = res.loggedUserIds;
 
 	// Draw.
 	let p = document.getElementById("subpage");
-	p.style.display = "block";
+	showBlock(p);
+	addBtnBack(p);
+	addTitle(p, "List of logged-in Users");
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.LoggedUserListPrevA, EventHandlerVariant.LoggedUserListNextA);
+	addDiv(p, "subpageListOfLoggedUsers");
+	await fillListOfLoggedUsers("subpageListOfLoggedUsers", userIds);
+}
+
+async function showPage_ListOfUsers() {
+	let resA = await getListOfAllUsersOnPage(mca_gvc.Page);
+	let pageCount = resA.pageData.totalPages;
+	if (!preparePageNumber(pageCount)) {
+		return
+	}
+
+	let userIds = resA.userIds;
+	let resB = await getListOfLoggedUsers();
+	let loggedUserIds = resB.loggedUserIds;
+
+	// Draw.
+	let p = document.getElementById("subpage");
+	showBlock(p);
+	addBtnBack(p);
+	addTitle(p, "List of All Users");
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.UserListPrevA, EventHandlerVariant.UserListNextA);
+	addDiv(p, "subpageListOfUsers");
+	await fillListOfUsers("subpageListOfUsers", userIds, loggedUserIds);
+}
+
+async function showPage_UserPage() {
+	let userId = mca_gvc.Id;
+	let resA = await viewUserParameters(userId);
+	let user = jsonToUser(resA.user);
+
+	let resB = await isUserLoggedIn(userId);
+	let userLogInState = resB.isUserLoggedIn;
+	let resC = await getSelfRoles();
+	let selfUser = jsonToUser(resC.user);
+
+	// Draw.
+	let p = document.getElementById("subpage");
+	showBlock(p);
 	addBtnBack(p);
 	addTitle(p, "User Page");
 	addDiv(p, "subpageUserPage");
-	fillUserPage("subpageUserPage", userParams, userLogInState);
+	fillUserPage("subpageUserPage", user, userLogInState, selfUser);
 }
 
 async function showPage_ManagerOfSections() {
 	// Draw.
 	let p = document.getElementById("subpage");
-	p.style.display = "block";
+	showBlock(p);
 	addBtnBack(p);
 	addTitle(p, "Management of Sections");
 	addDiv(p, "sectionManager");
@@ -285,7 +293,7 @@ async function showPage_ManagerOfSections() {
 async function showPage_ManagerOfForums() {
 	// Draw.
 	let p = document.getElementById("subpage");
-	p.style.display = "block";
+	showBlock(p);
 	addBtnBack(p);
 	addTitle(p, "Management of Forums");
 	addDiv(p, "forumManager");
@@ -295,7 +303,7 @@ async function showPage_ManagerOfForums() {
 async function showPage_ManagerOfThreads() {
 	// Draw.
 	let p = document.getElementById("subpage");
-	p.style.display = "block";
+	showBlock(p);
 	addBtnBack(p);
 	addTitle(p, "Management of Threads");
 	addDiv(p, "threadManager");
@@ -305,7 +313,7 @@ async function showPage_ManagerOfThreads() {
 async function showPage_ManagerOfMessages() {
 	// Draw.
 	let p = document.getElementById("subpage");
-	p.style.display = "block";
+	showBlock(p);
 	addBtnBack(p);
 	addTitle(p, "Management of Messages");
 	addDiv(p, "messageManager");
@@ -315,118 +323,52 @@ async function showPage_ManagerOfMessages() {
 async function showPage_ManagerOfNotifications() {
 	// Draw.
 	let p = document.getElementById("subpage");
-	p.style.display = "block";
+	showBlock(p);
 	addBtnBack(p);
 	addTitle(p, "Management of Notifications");
 	addDiv(p, "notificationManager");
 	fillNotificationManager("notificationManager");
 }
 
-function addBtnBack(el) {
-	let btn = document.createElement("INPUT");
-	btn.type = "button";
-	btn.className = "btnBack";
-	btn.value = "Go Back";
-	btn.addEventListener("click", async (e) => {
-		await redirectToMainMenu(false);
-	})
-	el.appendChild(btn);
+function showPage_MainMenu() {
+	let tbl = document.getElementById("acpMenu");
+	showTable(tbl);
 }
 
-function addTitle(el, text) {
-	let div = document.createElement("DIV");
-	div.className = "subpageTitle";
-	div.id = "subpageTitle";
-	div.textContent = text;
-	el.appendChild(div);
+// Event handlers.
+
+async function onGoRegApprovalClick(btn) {
+	await redirectToSubPageA(false, Qp.Prefix + Qpn.RegistrationsReadyForApproval);
 }
 
-function addClickEventHandler(btn, variant) {
-	switch (variant) {
-		case "userListPrev":
-			btn.addEventListener("click", async (e) => {
-				await onBtnPrevClick_userList(btn);
-			});
-			return;
-
-		case "userListNext":
-			btn.addEventListener("click", async (e) => {
-				await onBtnNextClick_userList(btn);
-			});
-			return;
-
-		case "loggedUserListPrev":
-			btn.addEventListener("click", async (e) => {
-				await onBtnPrevClick_logged(btn);
-			});
-			return;
-
-		case "loggedUserListNext":
-			btn.addEventListener("click", async (e) => {
-				await onBtnNextClick_logged(btn);
-			});
-			return;
-
-		case "rrfaListPrev":
-			btn.addEventListener("click", async (e) => {
-				await onBtnPrevClick_rrfa(btn);
-			});
-			return;
-
-		case "rrfaListNext":
-			btn.addEventListener("click", async (e) => {
-				await onBtnNextClick_rrfa(btn);
-			});
-			return;
-
-		default:
-			console.error(Err.UnknownVariant);
-	}
+async function onGoLoggedUsersClick(btn) {
+	await redirectToSubPageA(false, Qp.Prefix + Qpn.ListOfLoggedUsers);
 }
 
-async function onBtnPrevClick_userList(btn) {
-	if (mca_gvc.Page <= 1) {
-		console.error(Err.PreviousPageDoesNotExist);
-		return;
-	}
-
-	mca_gvc.Page--;
-	let url = composeUrlForAdminPage(Qpn.ListOfUsers, mca_gvc.Page);
-	await redirectPage(false, url);
+async function onGoListAllUsersClick(btn) {
+	await redirectToSubPageA(false, Qp.Prefix + Qpn.ListOfUsers);
 }
 
-async function onBtnNextClick_userList(btn) {
-	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(Err.NextPageDoesNotExist);
-		return;
-	}
-
-	mca_gvc.Page++;
-	let url = composeUrlForAdminPage(Qpn.ListOfUsers, mca_gvc.Page);
-	await redirectPage(false, url);
+async function onGoManageSectionsClick(btn) {
+	await redirectToSubPageA(false, Qp.Prefix + Qpn.ManagerOfSections);
 }
 
-async function onBtnPrevClick_logged(btn) {
-	if (mca_gvc.Page <= 1) {
-		console.error(Err.PreviousPageDoesNotExist);
-		return;
-	}
-
-	mca_gvc.Page--;
-	let url = composeUrlForAdminPage(Qpn.ListOfLoggedUsers, mca_gvc.Page);
-	await redirectPage(false, url);
+async function onGoManageForumsClick(btn) {
+	await redirectToSubPageA(false, Qp.Prefix + Qpn.ManagerOfForums);
 }
 
-async function onBtnNextClick_logged(btn) {
-	if (mca_gvc.Page >= mca_gvc.Pages) {
-		console.error(Err.NextPageDoesNotExist);
-		return;
-	}
-
-	mca_gvc.Page++;
-	let url = composeUrlForAdminPage(Qpn.ListOfLoggedUsers, mca_gvc.Page);
-	await redirectPage(false, url);
+async function onGoManageThreadsClick(btn) {
+	await redirectToSubPageA(false, Qp.Prefix + Qpn.ManagerOfThreads);
 }
+
+async function onGoManageMessagesClick(btn) {
+	await redirectToSubPageA(false, Qp.Prefix + Qpn.ManagerOfMessages);
+}
+
+async function onGoManageNotificationsClick(btn) {
+	await redirectToSubPageA(false, Qp.Prefix + Qpn.ManagerOfNotifications);
+}
+
 
 async function onBtnPrevClick_rrfa(btn) {
 	if (mca_gvc.Page <= 1) {
@@ -435,7 +377,7 @@ async function onBtnPrevClick_rrfa(btn) {
 	}
 
 	mca_gvc.Page--;
-	let url = composeUrlForAdminPage(Qpn.RegistrationsReadyForApproval, mca_gvc.Page);
+	let url = composeUrlForAdminPageA(Qpn.RegistrationsReadyForApproval, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
@@ -446,584 +388,151 @@ async function onBtnNextClick_rrfa(btn) {
 	}
 
 	mca_gvc.Page++;
-	let url = composeUrlForAdminPage(Qpn.RegistrationsReadyForApproval, mca_gvc.Page);
+	let url = composeUrlForAdminPageA(Qpn.RegistrationsReadyForApproval, mca_gvc.Page);
 	await redirectPage(false, url);
 }
 
-function addDiv(el, x) {
-	let div = document.createElement("DIV");
-	div.className = x;
-	div.id = x;
-	el.appendChild(div);
+async function onBtnPrevClick_logged(btn) {
+	if (mca_gvc.Page <= 1) {
+		console.error(Err.PreviousPageDoesNotExist);
+		return;
+	}
+
+	mca_gvc.Page--;
+	let url = composeUrlForAdminPageA(Qpn.ListOfLoggedUsers, mca_gvc.Page);
+	await redirectPage(false, url);
 }
 
-async function fillListOfLoggedUsers(elClass, userIdsOnPage) {
-	let div = document.getElementById(elClass);
-	div.innerHTML = "";
-	let tbl = document.createElement("TABLE");
-	tbl.className = elClass;
-
-	// Header.
-	let tr = document.createElement("TR");
-	let ths = [
-		"#", "ID", "E-Mail", "Name", "IP Address", "Log Time", "Actions"];
-	let th;
-	for (let i = 0; i < ths.length; i++) {
-		th = document.createElement("TH");
-		if (i === 0) {
-			th.className = "numCol";
-		}
-		th.textContent = ths[i];
-		tr.appendChild(th);
-	}
-	tbl.appendChild(tr);
-
-	let columnsWithLink = [1, 2, 3];
-
-	// Cells.
-	let userId, userParams, userSession, resp;
-	for (let i = 0; i < userIdsOnPage.length; i++) {
-		userId = userIdsOnPage[i];
-
-		// Get user parameters.
-		resp = await viewUserParameters(userId);
-		if (resp == null) {
-			return;
-		}
-		userParams = resp.result;
-
-		// Get user session.
-		resp = await getUserSession(userId);
-		if (resp == null) {
-			return;
-		}
-		userSession = resp.result.session;
-
-		// Fill data.
-		tr = document.createElement("TR");
-		let tds = [];
-		for (let j = 0; j < ths.length; j++) {
-			tds.push("");
-		}
-
-		tds[0] = (i + 1).toString();
-		tds[1] = userId.toString();
-		tds[2] = userParams.email;
-		tds[3] = userParams.name;
-		tds[4] = userSession.userIPA;
-		tds[5] = prettyTime(userSession.startTime);
-		tds[6] = '<input type="button" class="btnLogOut" value="Log Out" onclick="onBtnLogOutClick(this)">';
-
-		let td, url;
-		for (let j = 0; j < tds.length; j++) {
-			url = composeUrlForUserPage(userId.toString());
-			td = document.createElement("TD");
-
-			if (j === 0) {
-				td.className = "numCol";
-			}
-
-			if (columnsWithLink.includes(j)) {
-				td.innerHTML = '<a href="' + url + '">' + tds[j] + '</a>';
-			} else if (j === 6) {
-				td.innerHTML = tds[j];
-			} else {
-				td.textContent = tds[j];
-			}
-			tr.appendChild(td);
-		}
-
-		tbl.appendChild(tr);
+async function onBtnNextClick_logged(btn) {
+	if (mca_gvc.Page >= mca_gvc.Pages) {
+		console.error(Err.NextPageDoesNotExist);
+		return;
 	}
 
-	div.appendChild(tbl);
+	mca_gvc.Page++;
+	let url = composeUrlForAdminPageA(Qpn.ListOfLoggedUsers, mca_gvc.Page);
+	await redirectPage(false, url);
 }
 
-async function fillListOfRRFA(elClass, rrfas) {
-	let div = document.getElementById(elClass);
-	div.innerHTML = "";
-	let tbl = document.createElement("TABLE");
-	tbl.className = elClass;
-
-	// Header.
-	let tr = document.createElement("TR");
-	let ths = ["#", "ID", "PreRegTime", "E-Mail", "Name", "Actions"];
-	let th;
-	for (let i = 0; i < ths.length; i++) {
-		th = document.createElement("TH");
-		if (i === 0) {
-			th.className = "numCol";
-		}
-		th.textContent = ths[i];
-		tr.appendChild(th);
-	}
-	tbl.appendChild(tr);
-
-	// Cells.
-	let rrfa;
-	for (let i = 0; i < rrfas.length; i++) {
-		rrfa = rrfas[i];
-
-		// Fill data.
-		tr = document.createElement("TR");
-		let tds = [];
-		for (let j = 0; j < ths.length; j++) {
-			tds.push("");
-		}
-
-		tds[0] = (i + 1).toString();
-		tds[1] = rrfa.id.toString();
-		tds[2] = prettyTime(rrfa.preRegTime);
-		tds[3] = rrfa.email;
-		tds[4] = rrfa.name;
-		tds[5] = '<input type="button" class="btnAccept" value="Accept" onclick="onBtnAcceptClick(this)">' +
-			'<span class="subpageSpacerA">&nbsp;</span>' +
-			'<input type="button" class="btnReject" value="Reject" onclick="onBtnRejectClick(this)">';
-
-		let td;
-		for (let j = 0; j < tds.length; j++) {
-			td = document.createElement("TD");
-
-			if (j === 0) {
-				td.className = "numCol";
-			}
-
-			if (j !== 5) {
-				td.textContent = tds[j];
-			} else {
-				td.innerHTML = tds[j];
-			}
-			tr.appendChild(td);
-		}
-
-		tbl.appendChild(tr);
+async function onBtnPrevClick_userList(btn) {
+	if (mca_gvc.Page <= 1) {
+		console.error(Err.PreviousPageDoesNotExist);
+		return;
 	}
 
-	div.appendChild(tbl);
+	mca_gvc.Page--;
+	let url = composeUrlForAdminPageA(Qpn.ListOfUsers, mca_gvc.Page);
+	await redirectPage(false, url);
 }
 
-async function getListOfLoggedInUsers() {
-	let reqData = new ApiRequest(ActionName.GetListOfLoggedUsers, {});
-	let resp = await sendApiRequest(reqData);
-	if (!resp.IsOk) {
-		console.error(composeErrorText(resp.ErrorText));
-		return null;
+async function onBtnNextClick_userList(btn) {
+	if (mca_gvc.Page >= mca_gvc.Pages) {
+		console.error(Err.NextPageDoesNotExist);
+		return;
 	}
-	return resp.JsonObject;
+
+	mca_gvc.Page++;
+	let url = composeUrlForAdminPageA(Qpn.ListOfUsers, mca_gvc.Page);
+	await redirectPage(false, url);
 }
+
 
 async function onBtnAcceptClick(btn) {
 	let tr = btn.parentElement.parentElement;
 	let reqEmail = tr.children[3].textContent;
-	let resp = await approveAndRegisterUser(reqEmail);
-	if (resp == null) {
+	let res = await approveAndRegisterUser(reqEmail);
+	if (!res.ok) {
 		return;
 	}
-	if (!resp.result.ok) {
-		return;
-	}
-	tr.style.display = "none";
+	hideBlock(tr);
 }
 
 async function onBtnRejectClick(btn) {
 	let tr = btn.parentElement.parentElement;
 	let reqId = Number(tr.children[1].textContent);
-	let resp = await rejectRegistrationRequest(reqId);
-	if (resp == null) {
+	let res = await rejectRegistrationRequest(reqId);
+	if (!res.ok) {
 		return;
 	}
-	if (!resp.result.ok) {
-		return;
-	}
-	tr.style.display = "none";
+	hideBlock(tr);
 }
 
 async function onBtnLogOutClick(btn) {
 	let tr = btn.parentElement.parentElement;
 	let userId = Number(tr.children[1].textContent);
-	let resp = await logUserOutA(userId);
-	if (resp == null) {
+	let res = await logUserOutA(userId);
+	if (!res.ok) {
 		return;
 	}
-	if (!resp.result.ok) {
-		return;
-	}
-	tr.style.display = "none";
+	hideBlock(tr);
 }
 
 async function onBtnLogOutUPClick(userId) {
-	let resp = await logUserOutA(userId);
-	if (resp == null) {
-		return;
-	}
-	if (!resp.result.ok) {
+	let res = await logUserOutA(userId);
+	if (!res.ok) {
 		return;
 	}
 	await reloadPage(false);
 }
 
 async function onBtnEnableRoleUPClick(role, userId) {
-	let resp;
+	let res;
 	switch (role) {
 		case UserRole.Author:
-			resp = await setUserRoleAuthor(userId, true);
+			res = await setUserRoleAuthor(userId, true);
 			break;
 
 		case UserRole.Writer:
-			resp = await setUserRoleWriter(userId, true);
+			res = await setUserRoleWriter(userId, true);
 			break;
 
 		case UserRole.Reader:
-			resp = await setUserRoleReader(userId, true);
+			res = await setUserRoleReader(userId, true);
 			break;
 
 		case UserRole.Logging:
-			resp = await unbanUser(userId);
+			res = await unbanUser(userId);
 			break;
 
 		default:
 			return;
 	}
 
-	if (resp == null) {
-		return;
-	}
-	if (!resp.result.ok) {
+	if (!res.ok) {
 		return;
 	}
 	await reloadPage(false);
 }
 
 async function onBtnDisableRoleUPClick(role, userId) {
-	let resp;
+	let res;
 	switch (role) {
 		case UserRole.Author:
-			resp = await setUserRoleAuthor(userId, false);
+			res = await setUserRoleAuthor(userId, false);
 			break;
 
 		case UserRole.Writer:
-			resp = await setUserRoleWriter(userId, false);
+			res = await setUserRoleWriter(userId, false);
 			break;
 
 		case UserRole.Reader:
-			resp = await setUserRoleReader(userId, false);
+			res = await setUserRoleReader(userId, false);
 			break;
 
 		case UserRole.Logging:
-			resp = await banUser(userId);
+			res = await banUser(userId);
 			break;
 
 		default:
 			return;
 	}
 
-	if (resp == null) {
-		return;
-	}
-	if (!resp.result.ok) {
+	if (!res.ok) {
 		return;
 	}
 	await reloadPage(false);
 }
 
-function calculateItemsOnPage(items, pageN, pageSize) {
-	let x = Math.min(pageN * pageSize, items.length);
-	return items.slice((pageN - 1) * pageSize, x);
-}
-
-async function fillListOfUsers(elClass, userIds) {
-	let div = document.getElementById(elClass);
-	div.innerHTML = "";
-	let tbl = document.createElement("TABLE");
-	tbl.className = elClass;
-
-	// Header.
-	let tr = document.createElement("TR");
-	let ths = [
-		"#", "ID", "IsLoggedIn", "E-Mail", "Name", "RegTime", "ApprovalTime",
-		"LastBadLogInTime", "LastBadActionTime", "BanTime", "CanLogIn",
-		"IsReader", "IsWriter", "IsAuthor", "IsModerator", "IsAdministrator"];
-	let th;
-	for (let i = 0; i < ths.length; i++) {
-		th = document.createElement("TH");
-		if (i === 0) {
-			th.className = "numCol";
-		}
-		th.textContent = ths[i];
-		tr.appendChild(th);
-	}
-	tbl.appendChild(tr);
-
-	// Get list of logged-in users (for flags).
-	let resp = await getListOfLoggedInUsers();
-	if (resp == null) {
-		return;
-	}
-	let loggedUserIds = resp.result.loggedUserIds;
-	let columnsWithLink = [1, 3, 4];
-
-	// Cells.
-	let isUserLoggedIn, userId, userParams;
-	for (let i = 0; i < userIds.length; i++) {
-		userId = userIds[i];
-
-		// Get user parameters.
-		resp = await viewUserParameters(userId);
-		if (resp == null) {
-			return;
-		}
-		userParams = resp.result;
-
-		// Fill data.
-		tr = document.createElement("TR");
-		let tds = [];
-		for (let j = 0; j < ths.length; j++) {
-			tds.push("");
-		}
-
-		tds[0] = (i + 1).toString();
-		tds[1] = userId.toString();
-		isUserLoggedIn = loggedUserIds.includes(userId);
-		tds[2] = booleanToString(isUserLoggedIn);
-		tds[3] = userParams.email;
-		tds[4] = userParams.name;
-		tds[5] = prettyTime(userParams.regTime);
-		tds[6] = prettyTime(userParams.approvalTime);
-		tds[7] = prettyTime(userParams.lastBadLogInTime);
-		tds[8] = prettyTime(userParams.lastBadActionTime);
-		tds[9] = prettyTime(userParams.banTime);
-		tds[10] = booleanToString(userParams.canLogIn);
-		tds[11] = booleanToString(userParams.isReader);
-		tds[12] = booleanToString(userParams.isWriter);
-		tds[13] = booleanToString(userParams.isAuthor);
-		tds[14] = booleanToString(userParams.isModerator);
-		tds[15] = booleanToString(userParams.isAdministrator);
-
-		let td, url;
-		for (let j = 0; j < tds.length; j++) {
-			url = composeUrlForUserPage(userId.toString());
-			td = document.createElement("TD");
-
-			if (j === 0) {
-				td.className = "numCol";
-			}
-
-			if (columnsWithLink.includes(j)) {
-				td.innerHTML = '<a href="' + url + '">' + tds[j] + '</a>';
-			} else {
-				td.textContent = tds[j];
-			}
-			tr.appendChild(td);
-		}
-
-		tbl.appendChild(tr);
-	}
-
-	div.appendChild(tbl);
-}
-
-function fillUserPage(elClass, userParams, userLogInState) {
-	let div = document.getElementById(elClass);
-	div.innerHTML = "";
-	let tbl = document.createElement("TABLE");
-	tbl.className = elClass;
-
-	// Header.
-	let tr = document.createElement("TR");
-	let ths = ["#", "Field Name", "Value", "Actions"];
-	let th;
-	for (let i = 0; i < ths.length; i++) {
-		th = document.createElement("TH");
-		if (i === 0) {
-			th.className = "numCol";
-		}
-		th.textContent = ths[i];
-		tr.appendChild(th);
-	}
-	tbl.appendChild(tr);
-
-	let userId = mca_gvc.Id;
-	let fieldNames = [
-		"ID", "E-Mail", "Name", "PreRegTime", "RegTime", "ApprovalTime",
-		"IsAdministrator", "IsModerator", "IsAuthor", "IsWriter", "IsReader",
-		"CanLogIn", "LastBadLogInTime", "BanTime", "LastBadActionTime",
-		"IsLoggedIn"
-	];
-	let fieldValues = [
-		userId.toString(),
-		userParams.email,
-		userParams.name,
-		prettyTime(userParams.preRegTime),
-		prettyTime(userParams.regTime),
-		prettyTime(userParams.approvalTime),
-		booleanToString(userParams.isAdministrator),
-		booleanToString(userParams.isModerator),
-		booleanToString(userParams.isAuthor),
-		booleanToString(userParams.isWriter),
-		booleanToString(userParams.isReader),
-		booleanToString(userParams.canLogIn),
-		prettyTime(userParams.lastBadLogInTime),
-		prettyTime(userParams.banTime),
-		prettyTime(userParams.lastBadActionTime),
-		booleanToString(userLogInState),
-	];
-
-	// Rows.
-	let tds, td, actions;
-	for (let i = 0; i < fieldNames.length; i++) {
-		tr = document.createElement("TR");
-
-		tds = [];
-		for (let j = 0; j < ths.length; j++) {
-			tds.push("");
-		}
-
-		tds[0] = (i + 1).toString();
-		tds[1] = fieldNames[i];
-		tds[2] = fieldValues[i];
-
-		switch (fieldNames[i]) {
-			case "IsAuthor":
-				if (userParams.isAuthor) {
-					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Author + '\',' + userId + ')">';
-				} else {
-					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Author + '\',' + userId + ')">';
-				}
-				break;
-
-			case "IsWriter":
-				if (userParams.isWriter) {
-					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Writer + '\',' + userId + ')">';
-				} else {
-					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Writer + '\',' + userId + ')">';
-				}
-				break;
-
-			case "IsReader":
-				if (userParams.isReader) {
-					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Reader + '\',' + userId + ')">';
-				} else {
-					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Reader + '\',' + userId + ')">';
-				}
-				break;
-
-			case "CanLogIn":
-				if (userParams.canLogIn) {
-					actions = '<input type="button" class="btnDisableRole" value="Disable Role" ' +
-						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Logging + '\',' + userId + ')">';
-				} else {
-					actions = '<input type="button" class="btnEnableRole" value="Enable Role" ' +
-						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Logging + '\',' + userId + ')">';
-				}
-				break;
-
-			case "IsLoggedIn":
-				if (userLogInState) {
-					actions = '<input type="button" class="btnLogOut" value="Log Out" onclick="onBtnLogOutUPClick(' + userId + ')">';
-				} else {
-					actions = "";
-				}
-				break;
-
-			default:
-				actions = "";
-		}
-		tds[3] = actions;
-
-		let jLast = tds.length - 1;
-		for (let j = 0; j < tds.length; j++) {
-			td = document.createElement("TD");
-			if (j === 0) {
-				td.className = "numCol";
-			}
-			if (j === jLast) {
-				td.innerHTML = tds[j];
-			} else {
-				td.textContent = tds[j];
-			}
-			tr.appendChild(td);
-		}
-
-		tbl.appendChild(tr);
-	}
-
-	div.appendChild(tbl);
-}
-
-function fillSectionManager(elClass) {
-	let div = document.getElementById(elClass);
-	div.innerHTML = "";
-	let fs = document.createElement("FIELDSET");
-	div.appendChild(fs);
-
-	let actionNames = ["Select an action", "Create a root section", "Create a normal section",
-		"Change section's name", "Change section's parent", "Move section up & down", "Delete a section"];
-	createRadioButtonsForActions(fs, actionNames);
-	let d = document.createElement("DIV");
-	d.innerHTML = '<input type="button" class="btnProceed" value="Proceed" onclick="onSectionManagerBtnProceedClick(this)">';
-	fs.appendChild(d);
-}
-
-function fillForumManager(elClass) {
-	let div = document.getElementById(elClass);
-	div.innerHTML = "";
-	let fs = document.createElement("FIELDSET");
-	div.appendChild(fs);
-
-	let actionNames = ["Select an action", "Create a forum", "Change forums's name",
-		"Change forums's parent", "Move forum up & down", "Delete a forum"];
-	createRadioButtonsForActions(fs, actionNames);
-	let d = document.createElement("DIV");
-	d.innerHTML = '<input type="button" class="btnProceed" value="Proceed" onclick="onForumManagerBtnProceedClick(this)">';
-	fs.appendChild(d);
-}
-
-function fillThreadManager(elClass) {
-	let div = document.getElementById(elClass);
-	div.innerHTML = "";
-	let fs = document.createElement("FIELDSET");
-	div.appendChild(fs);
-
-	let actionNames = ["Select an action", "Create a thread", "Change thread's name",
-		"Change thread's parent", "Move thread up & down", "Delete a thread"];
-	createRadioButtonsForActions(fs, actionNames);
-	let d = document.createElement("DIV");
-	d.innerHTML = '<input type="button" class="btnProceed" value="Proceed" onclick="onThreadManagerBtnProceedClick(this)">';
-	fs.appendChild(d);
-}
-
-function fillMessageManager(elClass) {
-	let div = document.getElementById(elClass);
-	div.innerHTML = "";
-	let fs = document.createElement("FIELDSET");
-	div.appendChild(fs);
-
-	let actionNames = ["Select an action",
-		"Create a message", "Change message's text", "Change message's parent", "Delete a message"];
-	createRadioButtonsForActions(fs, actionNames);
-	let d = document.createElement("DIV");
-	d.innerHTML = '<input type="button" class="btnProceed" value="Proceed" onclick="onMessageManagerBtnProceedClick(this)">';
-	fs.appendChild(d);
-}
-
-function fillNotificationManager(elClass) {
-	let div = document.getElementById(elClass);
-	div.innerHTML = "";
-	let fs = document.createElement("FIELDSET");
-	div.appendChild(fs);
-
-	let actionNames = ["Select an action", "Create a notification", "Delete a notification"];
-	createRadioButtonsForActions(fs, actionNames);
-	let d = document.createElement("DIV");
-	d.innerHTML = '<input type="button" class="btnProceed" value="Proceed" onclick="onNotificationManagerBtnProceedClick(this)">';
-	fs.appendChild(d);
-}
 
 function onSectionManagerBtnProceedClick(btn) {
 	let selectedActionIdx = getSelectedActionIdxBPC(btn);
@@ -1036,86 +545,77 @@ function onSectionManagerBtnProceedClick(btn) {
 
 	// Draw.
 	let sm = document.getElementById("sectionManager");
-	let fs = document.createElement("FIELDSET");
+	let fs = newFieldset();
 	sm.appendChild(fs);
 
-	let d = document.createElement("DIV");
+	let d = newDiv();
 	d.className = "title";
 	d.textContent = "Section Parameters";
 	fs.appendChild(d);
 
 	switch (selectedActionIdx) {
 		case 1: // Create a root section.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="name">Name</label>' +
-				'<input type="text" name="name" id="name" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterName("");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnCreateRootSection" value="Create" onclick="onBtnCreateRootSectionClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.CreateRootSection + '" value="' + ButtonName.CreateRootSection + '" onclick="onBtnCreateRootSectionClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 2: // Create a normal section.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="name">Name</label>' +
-				'<input type="text" name="name" id="name" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterName("");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent section">Parent</label>' +
-				'<input type="text" name="parent" id="parent" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterParent("ID of a parent section");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnCreateNormalSection" value="Create" onclick="onBtnCreateNormalSectionClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.CreateNormalSection + '" value="' + ButtonName.CreateNormalSection + '" onclick="onBtnCreateNormalSectionClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 3: // Change section's name.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed section">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the changed section");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="name" title="New name of the section">New Name</label>' +
-				'<input type="text" name="name" id="name" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterNewName("New name of the section");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnChangeSectionName" value="Change Name" onclick="onBtnChangeSectionNameClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.ChangeSectionName + '" value="' + ButtonName.ChangeSectionName + '" onclick="onBtnChangeSectionNameClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 4: // Change section's parent.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed section">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the changed section");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="newParent" title="ID of the new parent">New Parent</label>' +
-				'<input type="text" name="newParent" id="newParent" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterNewParent("ID of the new parent");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnChangeSectionParent" value="Change Parent" onclick="onBtnChangeSectionParentClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.ChangeSectionParent + '" value="' + ButtonName.ChangeSectionParent + '" onclick="onBtnChangeSectionParentClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 5: // Move section up & down.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the moved section">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the moved section");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnMoveSection" value="Move Up" onclick="onBtnMoveSectionUpClick(this)">' +
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.MoveSection + '" value="' + ButtonName.MoveSectionUp + '" onclick="onBtnMoveSectionUpClick(this)">' +
 				'<span class="subpageSpacerA">&nbsp;</span>' +
-				'<input type="button" class="btnMoveSection" value="Move Down" onclick="onBtnMoveSectionDownClick(this)">';
+				'<input type="button" class="' + ButtonClass.MoveSection + '" value="' + ButtonName.MoveSectionDown + '" onclick="onBtnMoveSectionDownClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 6: // Delete a section.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the section to delete">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the section to delete");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnDeleteSection" value="Delete" onclick="onBtnDeleteSectionClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.DeleteSection + '" value="' + ButtonName.DeleteSection + '" onclick="onBtnDeleteSectionClick(this)">';
 			fs.appendChild(d);
 			break;
 	}
@@ -1131,11 +631,8 @@ async function onBtnCreateRootSectionClick(btn) {
 	}
 
 	// Work.
-	let resp = await addSection(null, name);
-	if (resp == null) {
-		return;
-	}
-	let sectionId = resp.result.sectionId;
+	let res = await addSection(null, name);
+	let sectionId = res.sectionId;
 	disableParentForm(btn, pp, false);
 	let txt = "A root section was created. ID=" + sectionId.toString() + ".";
 	showActionSuccess(btn, txt);
@@ -1157,11 +654,8 @@ async function onBtnCreateNormalSectionClick(btn) {
 	}
 
 	// Work.
-	let resp = await addSection(parent, name);
-	if (resp == null) {
-		return;
-	}
-	let sectionId = resp.result.sectionId;
+	let res = await addSection(parent, name);
+	let sectionId = res.sectionId;
 	disableParentForm(btn, pp, false);
 	let txt = "A normal section was created. ID=" + sectionId.toString() + ".";
 	showActionSuccess(btn, txt);
@@ -1183,11 +677,8 @@ async function onBtnChangeSectionNameClick(btn) {
 	}
 
 	// Work.
-	let resp = await changeSectionName(sectionId, newName);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await changeSectionName(sectionId, newName);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -1211,11 +702,8 @@ async function onBtnChangeSectionParentClick(btn) {
 	}
 
 	// Work.
-	let resp = await changeSectionParent(sectionId, newParent);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await changeSectionParent(sectionId, newParent);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -1234,11 +722,8 @@ async function onBtnMoveSectionUpClick(btn) {
 	}
 
 	// Work.
-	let resp = await moveSectionUp(sectionId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await moveSectionUp(sectionId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, true);
@@ -1257,11 +742,8 @@ async function onBtnMoveSectionDownClick(btn) {
 	}
 
 	// Work.
-	let resp = await moveSectionDown(sectionId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await moveSectionDown(sectionId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, true);
@@ -1280,11 +762,8 @@ async function onBtnDeleteSectionClick(btn) {
 	}
 
 	// Work.
-	let resp = await deleteSection(sectionId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await deleteSection(sectionId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -1292,6 +771,7 @@ async function onBtnDeleteSectionClick(btn) {
 	showActionSuccess(btn, txt);
 	await reloadPage(true);
 }
+
 
 function onForumManagerBtnProceedClick(btn) {
 	let selectedActionIdx = getSelectedActionIdxBPC(btn);
@@ -1304,76 +784,68 @@ function onForumManagerBtnProceedClick(btn) {
 
 	// Draw.
 	let fm = document.getElementById("forumManager");
-	let fs = document.createElement("FIELDSET");
+	let fs = newFieldset();
 	fm.appendChild(fs);
 
-	let d = document.createElement("DIV");
+	let d = newDiv();
 	d.className = "title";
 	d.textContent = "Forum Parameters";
 	fs.appendChild(d);
 
 	switch (selectedActionIdx) {
 		case 1: // Create a forum.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="name">Name</label>' +
-				'<input type="text" name="name" id="name" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterName("");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent section">Parent</label>' +
-				'<input type="text" name="parent" id="parent" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterParent("ID of a parent section");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnCreateForum" value="Create" onclick="onBtnCreateForumClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.CreateForum + '" value="' + ButtonName.CreateForum + '" onclick="onBtnCreateForumClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 2: // Change forum's name.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed forum">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the changed forum");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="name" title="New name of the forum">New Name</label>' +
-				'<input type="text" name="name" id="name" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterNewName("New name of the forum");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnChangeForumName" value="Change Name" onclick="onBtnChangeForumNameClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.ChangeForumName + '" value="' + ButtonName.ChangeForumName + '" onclick="onBtnChangeForumNameClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 3: // Change forum's parent.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed forum">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the changed forum");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="newParent" title="ID of the new parent">New Parent</label>' +
-				'<input type="text" name="newParent" id="newParent" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterNewParent("ID of the new parent");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnChangeForumParent" value="Change Parent" onclick="onBtnChangeForumParentClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.ChangeForumParent + '" value="' + ButtonName.ChangeForumParent + '" onclick="onBtnChangeForumParentClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 4: // Move forum up & down.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the moved forum">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the moved forum");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnMoveForum" value="Move Up" onclick="onBtnMoveForumUpClick(this)">' +
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.MoveForum + '" value="' + ButtonName.MoveForumUp + '" onclick="onBtnMoveForumUpClick(this)">' +
 				'<span class="subpageSpacerA">&nbsp;</span>' +
-				'<input type="button" class="btnMoveForum" value="Move Down" onclick="onBtnMoveForumDownClick(this)">';
+				'<input type="button" class="' + ButtonClass.MoveForum + '" value="' + ButtonName.MoveForumDown + '" onclick="onBtnMoveForumDownClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 5: // Delete a forum.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the forum to delete">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the forum to delete");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnDeleteForum" value="Delete" onclick="onBtnDeleteForumClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.DeleteForum + '" value="' + ButtonName.DeleteForum + '" onclick="onBtnDeleteForumClick(this)">';
 			fs.appendChild(d);
 			break;
 	}
@@ -1394,11 +866,8 @@ async function onBtnCreateForumClick(btn) {
 	}
 
 	// Work.
-	let resp = await addForum(parent, name);
-	if (resp == null) {
-		return;
-	}
-	let forumId = resp.result.forumId;
+	let res = await addForum(parent, name);
+	let forumId = res.forumId;
 	disableParentForm(btn, pp, false);
 	let txt = "A forum was created. ID=" + forumId.toString() + ".";
 	showActionSuccess(btn, txt);
@@ -1420,11 +889,8 @@ async function onBtnChangeForumNameClick(btn) {
 	}
 
 	// Work.
-	let resp = await changeForumName(forumId, newName);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await changeForumName(forumId, newName);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -1448,11 +914,8 @@ async function onBtnChangeForumParentClick(btn) {
 	}
 
 	// Work.
-	let resp = await changeForumSection(forumId, newParent);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await changeForumSection(forumId, newParent);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -1471,11 +934,8 @@ async function onBtnMoveForumUpClick(btn) {
 	}
 
 	// Work.
-	let resp = await moveForumUp(forumId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await moveForumUp(forumId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, true);
@@ -1494,11 +954,8 @@ async function onBtnMoveForumDownClick(btn) {
 	}
 
 	// Work.
-	let resp = await moveForumDown(forumId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await moveForumDown(forumId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, true);
@@ -1517,11 +974,8 @@ async function onBtnDeleteForumClick(btn) {
 	}
 
 	// Work.
-	let resp = await deleteForum(forumId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await deleteForum(forumId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -1529,6 +983,7 @@ async function onBtnDeleteForumClick(btn) {
 	showActionSuccess(btn, txt);
 	await reloadPage(true);
 }
+
 
 function onThreadManagerBtnProceedClick(btn) {
 	let selectedActionIdx = getSelectedActionIdxBPC(btn);
@@ -1541,76 +996,68 @@ function onThreadManagerBtnProceedClick(btn) {
 
 	// Draw.
 	let tm = document.getElementById("threadManager");
-	let fs = document.createElement("FIELDSET");
+	let fs = newFieldset();
 	tm.appendChild(fs);
 
-	let d = document.createElement("DIV");
+	let d = newDiv();
 	d.className = "title";
 	d.textContent = "Thread Parameters";
 	fs.appendChild(d);
 
 	switch (selectedActionIdx) {
 		case 1: // Create a thread.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="name">Name</label>' +
-				'<input type="text" name="name" id="name" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterName("");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent forum">Parent</label>' +
-				'<input type="text" name="parent" id="parent" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterParent("ID of a parent forum");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnCreateThread" value="Create" onclick="onBtnCreateThreadClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.CreateThread + '" value="' + ButtonName.CreateThread + '" onclick="onBtnCreateThreadClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 2: // Change thread's name.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed thread">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the changed thread");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="name" title="New name of the thread">New Name</label>' +
-				'<input type="text" name="name" id="name" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterNewName("New name of the thread");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnChangeThreadName" value="Change Name" onclick="onBtnChangeThreadNameClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.ChangeThreadName + '" value="' + ButtonName.ChangeThreadName + '" onclick="onBtnChangeThreadNameClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 3: // Change thread's parent.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed thread">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the changed thread");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="newParent" title="ID of the new parent">New Parent</label>' +
-				'<input type="text" name="newParent" id="newParent" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterNewParent("ID of the new parent");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnChangeThreadParent" value="Change Parent" onclick="onBtnChangeThreadParentClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.ChangeThreadParent + '" value="' + ButtonName.ChangeThreadParent + '" onclick="onBtnChangeThreadParentClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 4: // Move thread up & down.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the moved thread">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the moved thread");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnMoveThread" value="Move Up" onclick="onBtnMoveThreadUpClick(this)">' +
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.MoveThread + '" value="' + ButtonName.MoveThreadUp + '" onclick="onBtnMoveThreadUpClick(this)">' +
 				'<span class="subpageSpacerA">&nbsp;</span>' +
-				'<input type="button" class="btnMoveThread" value="Move Down" onclick="onBtnMoveThreadDownClick(this)">';
+				'<input type="button" class="' + ButtonClass.MoveThread + '" value="' + ButtonName.MoveThreadDown + '" onclick="onBtnMoveThreadDownClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 5: // Delete a thread.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the thread to delete">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the thread to delete");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnDeleteThread" value="Delete" onclick="onBtnDeleteThreadClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.DeleteThread + '" value="' + ButtonName.DeleteThread + '" onclick="onBtnDeleteThreadClick(this)">';
 			fs.appendChild(d);
 			break;
 	}
@@ -1631,11 +1078,8 @@ async function onBtnCreateThreadClick(btn) {
 	}
 
 	// Work.
-	let resp = await addThread(parent, name);
-	if (resp == null) {
-		return;
-	}
-	let threadId = resp.result.threadId;
+	let res = await addThread(parent, name);
+	let threadId = res.threadId;
 	disableParentForm(btn, pp, false);
 	let txt = "A thread was created. ID=" + threadId.toString() + ".";
 	showActionSuccess(btn, txt);
@@ -1657,11 +1101,8 @@ async function onBtnChangeThreadNameClick(btn) {
 	}
 
 	// Work.
-	let resp = await changeThreadName(threadId, newName);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await changeThreadName(threadId, newName);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -1685,11 +1126,8 @@ async function onBtnChangeThreadParentClick(btn) {
 	}
 
 	// Work.
-	let resp = await changeThreadForum(threadId, newParent);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await changeThreadForum(threadId, newParent);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -1708,11 +1146,8 @@ async function onBtnMoveThreadUpClick(btn) {
 	}
 
 	// Work.
-	let resp = await moveThreadUp(threadId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await moveThreadUp(threadId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, true);
@@ -1731,11 +1166,8 @@ async function onBtnMoveThreadDownClick(btn) {
 	}
 
 	// Work.
-	let resp = await moveThreadDown(threadId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await moveThreadDown(threadId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, true);
@@ -1754,11 +1186,8 @@ async function onBtnDeleteThreadClick(btn) {
 	}
 
 	// Work.
-	let resp = await deleteThread(threadId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await deleteThread(threadId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -1766,6 +1195,7 @@ async function onBtnDeleteThreadClick(btn) {
 	showActionSuccess(btn, txt);
 	await reloadPage(true);
 }
+
 
 function onMessageManagerBtnProceedClick(btn) {
 	let selectedActionIdx = getSelectedActionIdxBPC(btn);
@@ -1778,110 +1208,57 @@ function onMessageManagerBtnProceedClick(btn) {
 
 	// Draw.
 	let mm = document.getElementById("messageManager");
-	let fs = document.createElement("FIELDSET");
+	let fs = newFieldset();
 	mm.appendChild(fs);
 
-	let d = document.createElement("DIV");
+	let d = newDiv();
 	d.className = "title";
 	d.textContent = "Message Parameters";
 	fs.appendChild(d);
 
 	switch (selectedActionIdx) {
 		case 1: // Create a message.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="txt">Text</label>' +
-				'<input type="text" name="txt" id="txt" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterText("");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent thread">Parent</label>' +
-				'<input type="text" name="parent" id="parent" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterParent("ID of a parent thread");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnCreateMessage" value="Create" onclick="onBtnCreateMessageClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.CreateMessage + '" value="' + ButtonName.CreateMessage + '" onclick="onBtnCreateMessageClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 2: // Change message's text.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed message">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the changed message");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="txt" title="New text of the message">New Text</label>' +
-				'<input type="text" name="txt" id="txt" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterNewText("New text of the message");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnChangeMessageText" value="Change Text" onclick="onBtnChangeMessageTextClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.ChangeMessageText + '" value="' + ButtonName.ChangeMessageText + '" onclick="onBtnChangeMessageTextClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 3: // Change message's parent.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the changed message">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the changed message");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="newParent" title="ID of the new parent">New Parent</label>' +
-				'<input type="text" name="newParent" id="newParent" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterNewParent("ID of the new parent");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnChangeMessageParent" value="Change Parent" onclick="onBtnChangeMessageParentClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.ChangeMessageParent + '" value="' + ButtonName.ChangeMessageParent + '" onclick="onBtnChangeMessageParentClick(this)">';
 			fs.appendChild(d);
 			break;
 
 		case 4: // Delete a message.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the message to delete">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the message to delete");
 			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnDeleteMessage" value="Delete" onclick="onBtnDeleteMessageClick(this)">';
-			fs.appendChild(d);
-			break;
-	}
-}
-
-function onNotificationManagerBtnProceedClick(btn) {
-	let selectedActionIdx = getSelectedActionIdxBPC(btn);
-	if (selectedActionIdx == null) {
-		return;
-	}
-
-	btn.disabled = true;
-	disableParentFormBPC(btn);
-
-	// Draw.
-	let nm = document.getElementById("notificationManager");
-	let fs = document.createElement("FIELDSET");
-	nm.appendChild(fs);
-
-	let d = document.createElement("DIV");
-	d.className = "title";
-	d.textContent = "Notification Parameters";
-	fs.appendChild(d);
-
-	switch (selectedActionIdx) {
-		case 1: // Create a notification.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="txt">Text</label>' +
-				'<input type="text" name="txt" id="txt" value="" />';
-			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="user" title="ID of a user">User</label>' +
-				'<input type="text" name="user" id="user" value="" />';
-			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnCreateNotification" value="Create" onclick="onBtnCreateNotificationClick(this)">';
-			fs.appendChild(d);
-			break;
-
-		case 2: // Delete a notification.
-			d = document.createElement("DIV");
-			d.innerHTML = '<label class="parameter" for="id" title="ID of the notification to delete">ID</label>' +
-				'<input type="text" name="id" id="id" value="" />';
-			fs.appendChild(d);
-			d = document.createElement("DIV");
-			d.innerHTML = '<input type="button" class="btnDeleteNotification" value="Delete" onclick="onBtnDeleteNotificationClick(this)">';
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.DeleteMessage + '" value="' + ButtonName.DeleteMessage + '" onclick="onBtnDeleteMessageClick(this)">';
 			fs.appendChild(d);
 			break;
 	}
@@ -1902,39 +1279,10 @@ async function onBtnCreateMessageClick(btn) {
 	}
 
 	// Work.
-	let resp = await addMessage(parent, text);
-	if (resp == null) {
-		return;
-	}
-	let messageId = resp.result.messageId;
+	let res = await addMessage(parent, text);
+	let messageId = res.messageId;
 	disableParentForm(btn, pp, false);
 	let txt = "A message was created. ID=" + messageId.toString() + ".";
-	showActionSuccess(btn, txt);
-	await reloadPage(true);
-}
-
-async function onBtnCreateNotificationClick(btn) {
-	// Input.
-	let pp = btn.parentNode.parentNode;
-	let text = pp.childNodes[1].childNodes[1].value;
-	if (text.length < 1) {
-		console.error(Err.TextIsNotSet);
-		return;
-	}
-	let userId = Number(pp.childNodes[2].childNodes[1].value);
-	if (userId < 1) {
-		console.error(Err.IdNotSet);
-		return;
-	}
-
-	// Work.
-	let resp = await addNotification(userId, text);
-	if (resp == null) {
-		return;
-	}
-	let notificationId = resp.result.notificationId;
-	disableParentForm(btn, pp, false);
-	let txt = "A notification was created. ID=" + notificationId.toString() + ".";
 	showActionSuccess(btn, txt);
 	await reloadPage(true);
 }
@@ -1954,11 +1302,8 @@ async function onBtnChangeMessageTextClick(btn) {
 	}
 
 	// Work.
-	let resp = await changeMessageText(messageId, newText);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await changeMessageText(messageId, newText);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -1982,11 +1327,8 @@ async function onBtnChangeMessageParentClick(btn) {
 	}
 
 	// Work.
-	let resp = await changeMessageThread(messageId, newParent);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await changeMessageThread(messageId, newParent);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -2005,15 +1347,79 @@ async function onBtnDeleteMessageClick(btn) {
 	}
 
 	// Work.
-	let resp = await deleteMessage(messageId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await deleteMessage(messageId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
 	let txt = "Message was deleted.";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
+
+function onNotificationManagerBtnProceedClick(btn) {
+	let selectedActionIdx = getSelectedActionIdxBPC(btn);
+	if (selectedActionIdx == null) {
+		return;
+	}
+
+	btn.disabled = true;
+	disableParentFormBPC(btn);
+
+	// Draw.
+	let nm = document.getElementById("notificationManager");
+	let fs = newFieldset();
+	nm.appendChild(fs);
+
+	let d = newDiv();
+	d.className = "title";
+	d.textContent = "Notification Parameters";
+	fs.appendChild(d);
+
+	switch (selectedActionIdx) {
+		case 1: // Create a notification.
+			d = newDiv();
+			d.innerHTML = htmlInputParameterText("");
+			fs.appendChild(d);
+			d = newDiv();
+			d.innerHTML = htmlInputParameterUser("ID of a user");
+			fs.appendChild(d);
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.CreateNotification + '" value="' + ButtonName.CreateNotification + '" onclick="onBtnCreateNotificationClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 2: // Delete a notification.
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the notification to delete");
+			fs.appendChild(d);
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.DeleteNotification + '" value="' + ButtonName.DeleteNotification + '" onclick="onBtnDeleteNotificationClick(this)">';
+			fs.appendChild(d);
+			break;
+	}
+}
+
+async function onBtnCreateNotificationClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let text = pp.childNodes[1].childNodes[1].value;
+	if (text.length < 1) {
+		console.error(Err.TextIsNotSet);
+		return;
+	}
+	let userId = Number(pp.childNodes[2].childNodes[1].value);
+	if (userId < 1) {
+		console.error(Err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let res = await addNotification(userId, text);
+	let notificationId = res.notificationId;
+	disableParentForm(btn, pp, false);
+	let txt = "A notification was created. ID=" + notificationId.toString() + ".";
 	showActionSuccess(btn, txt);
 	await reloadPage(true);
 }
@@ -2028,11 +1434,8 @@ async function onBtnDeleteNotificationClick(btn) {
 	}
 
 	// Work.
-	let resp = await deleteNotification(notificationId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await deleteNotification(notificationId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -2041,9 +1444,482 @@ async function onBtnDeleteNotificationClick(btn) {
 	await reloadPage(true);
 }
 
+
+// Other functions.
+
+async function fillListOfRRFA(elClass, rrfas) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let tbl = newTable();
+	tbl.className = elClass;
+
+	// Header.
+	let tr = newTr();
+	let ths = ["#", "ID", "PreRegTime", "E-Mail", "Name", "Actions"];
+	let th;
+	for (let i = 0; i < ths.length; i++) {
+		th = newTh();
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	// Cells.
+	let rrfa;
+	for (let i = 0; i < rrfas.length; i++) {
+		rrfa = rrfas[i];
+
+		// Fill data.
+		tr = newTr();
+		let tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = rrfa.Id.toString();
+		tds[2] = prettyTime(rrfa.PreRegTime);
+		tds[3] = rrfa.Email;
+		tds[4] = rrfa.Name;
+		tds[5] = '<input type="button" class="' + ButtonClass.Accept + '" value="' + ButtonName.Accept + '" onclick="onBtnAcceptClick(this)">' +
+			'<span class="subpageSpacerA">&nbsp;</span>' +
+			'<input type="button" class="' + ButtonClass.Reject + '" value="' + ButtonName.Reject + '" onclick="onBtnRejectClick(this)">';
+
+		let td;
+		for (let j = 0; j < tds.length; j++) {
+			td = newTd();
+
+			if (j === 0) {
+				td.className = "numCol";
+			}
+
+			if (j !== 5) {
+				td.textContent = tds[j];
+			} else {
+				td.innerHTML = tds[j];
+			}
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	div.appendChild(tbl);
+}
+
+async function fillListOfLoggedUsers(elClass, userIds) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let tbl = newTable();
+	tbl.className = elClass;
+
+	// Header.
+	let tr = newTr();
+	let ths = [
+		"#", "ID", "E-Mail", "Name", "IP Address", "Log Time", "Actions"];
+	let th;
+	for (let i = 0; i < ths.length; i++) {
+		th = newTh();
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	let columnsWithLink = [1, 2, 3];
+
+	// Cells.
+	let resA, userId, user, resB, userSession;
+	for (let i = 0; i < userIds.length; i++) {
+		userId = userIds[i];
+
+		// Get user parameters.
+		resA = await viewUserParameters(userId);
+		user = jsonToUser(resA.user);
+
+		// Get user session.
+		resB = await getUserSession(userId);
+		userSession = jsonToSession(resB.session);
+
+		// Fill data.
+		tr = newTr();
+		let tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = userId.toString();
+		tds[2] = user.Email;
+		tds[3] = user.Name;
+		tds[4] = userSession.UserIPA;
+		tds[5] = prettyTime(userSession.StartTime);
+		tds[6] = '<input type="button" class="' + ButtonClass.LogOut + '" value="' + ButtonName.LogOut + '" onclick="onBtnLogOutClick(this)">';
+
+		let td, url;
+		for (let j = 0; j < tds.length; j++) {
+			url = composeUrlForUserPageA(userId.toString());
+			td = newTd();
+
+			if (j === 0) {
+				td.className = "numCol";
+			}
+
+			if (columnsWithLink.includes(j)) {
+				td.innerHTML = '<a href="' + url + '">' + tds[j] + '</a>';
+			} else if (j === 6) {
+				td.innerHTML = tds[j];
+			} else {
+				td.textContent = tds[j];
+			}
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	div.appendChild(tbl);
+}
+
+async function fillListOfUsers(elClass, userIds, loggedUserIds) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let tbl = newTable();
+	tbl.className = elClass;
+
+	// Header.
+	let tr = newTr();
+	let ths = [
+		"#", "ID", "IsLoggedIn", "E-Mail", "Name", "RegTime", "ApprovalTime",
+		"LastBadLogInTime", "LastBadActionTime", "BanTime", "CanLogIn",
+		"IsReader", "IsWriter", "IsAuthor", "IsModerator", "IsAdministrator"];
+	let th;
+	for (let i = 0; i < ths.length; i++) {
+		th = newTh();
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	let columnsWithLink = [1, 3, 4];
+
+	// Cells.
+	let userId, res, user, isUserLoggedIn;
+	for (let i = 0; i < userIds.length; i++) {
+		userId = userIds[i];
+
+		// Get user parameters.
+		res = await viewUserParameters(userId);
+		user = jsonToUser(res.user);
+		isUserLoggedIn = loggedUserIds.includes(userId);
+
+		// Fill data.
+		tr = newTr();
+		let tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = userId.toString();
+		tds[2] = booleanToString(isUserLoggedIn);
+		tds[3] = user.Email;
+		tds[4] = user.Name;
+		tds[5] = prettyTime(user.RegTime);
+		tds[6] = prettyTime(user.ApprovalTime);
+		tds[7] = prettyTime(user.LastBadLogInTime);
+		tds[8] = prettyTime(user.LastBadActionTime);
+		tds[9] = prettyTime(user.BanTime);
+		tds[10] = booleanToString(user.Roles.CanLogIn);
+		tds[11] = booleanToString(user.Roles.IsReader);
+		tds[12] = booleanToString(user.Roles.IsWriter);
+		tds[13] = booleanToString(user.Roles.IsAuthor);
+		tds[14] = booleanToString(user.Roles.IsModerator);
+		tds[15] = booleanToString(user.Roles.IsAdministrator);
+
+		let td, url;
+		for (let j = 0; j < tds.length; j++) {
+			url = composeUrlForUserPageA(userId.toString());
+			td = newTd();
+
+			if (j === 0) {
+				td.className = "numCol";
+			}
+
+			if (columnsWithLink.includes(j)) {
+				td.innerHTML = '<a href="' + url + '">' + tds[j] + '</a>';
+			} else {
+				td.textContent = tds[j];
+			}
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	div.appendChild(tbl);
+}
+
+function fillUserPage(elClass, user, userLogInState, selfUser) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let tbl = newTable();
+	tbl.className = elClass;
+
+	// Header.
+	let tr = newTr();
+	let ths = ["#", "Field Name", "Value", "Actions"];
+	let th;
+	for (let i = 0; i < ths.length; i++) {
+		th = newTh();
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	let userId = mca_gvc.Id;
+	let fieldNames = [
+		"ID", "E-Mail", "Name", "PreRegTime", "RegTime", "ApprovalTime",
+		"IsAdministrator", "IsModerator", "IsAuthor", "IsWriter", "IsReader",
+		"CanLogIn", "LastBadLogInTime", "BanTime", "LastBadActionTime",
+		"IsLoggedIn"
+	];
+	let fieldValues = [
+		userId.toString(),
+		user.Email,
+		user.Name,
+		prettyTime(user.PreRegTime),
+		prettyTime(user.RegTime),
+		prettyTime(user.ApprovalTime),
+		booleanToString(user.Roles.IsAdministrator),
+		booleanToString(user.Roles.IsModerator),
+		booleanToString(user.Roles.IsAuthor),
+		booleanToString(user.Roles.IsWriter),
+		booleanToString(user.Roles.IsReader),
+		booleanToString(user.Roles.CanLogIn),
+		prettyTime(user.LastBadLogInTime),
+		prettyTime(user.BanTime),
+		prettyTime(user.LastBadActionTime),
+		booleanToString(userLogInState),
+	];
+
+	// Rows.
+	let tds, td, actions;
+	for (let i = 0; i < fieldNames.length; i++) {
+		tr = newTr();
+
+		tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = fieldNames[i];
+		tds[2] = fieldValues[i];
+
+		switch (fieldNames[i]) {
+			case "IsAuthor":
+				if (user.Roles.IsAuthor) {
+					actions = '<input type="button" class="' + ButtonClass.DisableRole + '" value="' + ButtonName.DisableRole + '" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Author + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="' + ButtonClass.EnableRole + '" value="' + ButtonName.EnableRole + '" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Author + '\',' + userId + ')">';
+				}
+				break;
+
+			case "IsWriter":
+				if (user.Roles.IsWriter) {
+					actions = '<input type="button" class="' + ButtonClass.DisableRole + '" value="' + ButtonName.DisableRole + '" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Writer + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="' + ButtonClass.EnableRole + '" value="' + ButtonName.EnableRole + '" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Writer + '\',' + userId + ')">';
+				}
+				break;
+
+			case "IsReader":
+				if (user.Roles.IsReader) {
+					actions = '<input type="button" class="' + ButtonClass.DisableRole + '" value="' + ButtonName.DisableRole + '" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Reader + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="' + ButtonClass.EnableRole + '" value="' + ButtonName.EnableRole + '" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Reader + '\',' + userId + ')">';
+				}
+				break;
+
+			case "CanLogIn":
+				if (selfUser.Id === user.Id) {
+					actions = "";
+					break;
+				}
+				if (user.Roles.CanLogIn) {
+					actions = '<input type="button" class="' + ButtonClass.DisableRole + '" value="' + ButtonName.DisableRole + '" ' +
+						'onclick="onBtnDisableRoleUPClick(\'' + UserRole.Logging + '\',' + userId + ')">';
+				} else {
+					actions = '<input type="button" class="' + ButtonClass.EnableRole + '" value="' + ButtonName.EnableRole + '" ' +
+						'onclick="onBtnEnableRoleUPClick(\'' + UserRole.Logging + '\',' + userId + ')">';
+				}
+				break;
+
+			case "IsLoggedIn":
+				if (userLogInState) {
+					actions = '<input type="button" class="' + ButtonClass.LogOut + '" value="' + ButtonName.LogOut + '" onclick="onBtnLogOutUPClick(' + userId + ')">';
+				} else {
+					actions = "";
+				}
+				break;
+
+			default:
+				actions = "";
+		}
+		tds[3] = actions;
+
+		let jLast = tds.length - 1;
+		for (let j = 0; j < tds.length; j++) {
+			td = newTd();
+			if (j === 0) {
+				td.className = "numCol";
+			}
+			if (j === jLast) {
+				td.innerHTML = tds[j];
+			} else {
+				td.textContent = tds[j];
+			}
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	div.appendChild(tbl);
+}
+
+function fillSectionManager(elClass) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let fs = newFieldset();
+	div.appendChild(fs);
+
+	let actionNames = ["Select an action", "Create a root section", "Create a normal section",
+		"Change section's name", "Change section's parent", "Move section up & down", "Delete a section"];
+	createRadioButtonsForActions(fs, actionNames);
+	let d = newDiv();
+	d.innerHTML = '<input type="button" class="' + ButtonClass.Proceed + '" value="' + ButtonName.Proceed + '" onclick="onSectionManagerBtnProceedClick(this)">';
+	fs.appendChild(d);
+}
+
+function fillForumManager(elClass) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let fs = newFieldset();
+	div.appendChild(fs);
+
+	let actionNames = ["Select an action", "Create a forum", "Change forums's name",
+		"Change forums's parent", "Move forum up & down", "Delete a forum"];
+	createRadioButtonsForActions(fs, actionNames);
+	let d = newDiv();
+	d.innerHTML = '<input type="button" class="' + ButtonClass.Proceed + '" value="' + ButtonName.Proceed + '" onclick="onForumManagerBtnProceedClick(this)">';
+	fs.appendChild(d);
+}
+
+function fillThreadManager(elClass) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let fs = newFieldset();
+	div.appendChild(fs);
+
+	let actionNames = ["Select an action", "Create a thread", "Change thread's name",
+		"Change thread's parent", "Move thread up & down", "Delete a thread"];
+	createRadioButtonsForActions(fs, actionNames);
+	let d = newDiv();
+	d.innerHTML = '<input type="button" class="' + ButtonClass.Proceed + '" value="' + ButtonName.Proceed + '" onclick="onThreadManagerBtnProceedClick(this)">';
+	fs.appendChild(d);
+}
+
+function fillMessageManager(elClass) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let fs = newFieldset();
+	div.appendChild(fs);
+
+	let actionNames = ["Select an action",
+		"Create a message", "Change message's text", "Change message's parent", "Delete a message"];
+	createRadioButtonsForActions(fs, actionNames);
+	let d = newDiv();
+	d.innerHTML = '<input type="button" class="' + ButtonClass.Proceed + '" value="' + ButtonName.Proceed + '" onclick="onMessageManagerBtnProceedClick(this)">';
+	fs.appendChild(d);
+}
+
+function fillNotificationManager(elClass) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let fs = newFieldset();
+	div.appendChild(fs);
+
+	let actionNames = ["Select an action", "Create a notification", "Delete a notification"];
+	createRadioButtonsForActions(fs, actionNames);
+	let d = newDiv();
+	d.innerHTML = '<input type="button" class="' + ButtonClass.Proceed + '" value="' + ButtonName.Proceed + '" onclick="onNotificationManagerBtnProceedClick(this)">';
+	fs.appendChild(d);
+}
+
+function addBtnBack(el) {
+	let btn = newInput();
+	btn.type = "button";
+	btn.className = ButtonClass.BackA;
+	btn.value = ButtonName.BackA;
+	btn.addEventListener("click", async (e) => {
+		await redirectToMainMenuA(false);
+	})
+	el.appendChild(btn);
+}
+
+function addTitle(el, text) {
+	let div = newDiv();
+	let cn = PageZoneClass.SubpageTitleA
+	div.className = cn;
+	div.id = cn;
+	div.textContent = text;
+	el.appendChild(div);
+}
+
+function addDiv(el, x) {
+	let div = newDiv();
+	div.className = x;
+	div.id = x;
+	el.appendChild(div);
+}
+
+function createRadioButtonsForActions(fs, actionNames) {
+	for (let i = 0; i < actionNames.length; i++) {
+		let d = newDiv();
+		if (i === 0) {
+			d.className = "title";
+			d.textContent = actionNames[i];
+		} else {
+			d.innerHTML = '<input type="radio" name="action" id="action_' + i + '" value="' + actionNames[i] + '" />' +
+				'<label class="action" for="action_' + i + '">' + actionNames[i] + '</label>';
+
+		}
+		fs.appendChild(d);
+	}
+}
+
 function showActionSuccess(btn, txt) {
 	let ppp = btn.parentNode.parentNode.parentNode;
-	let d = document.createElement("DIV");
+	let d = newDiv();
 	d.className = "actionSuccess";
 	d.textContent = txt;
 	ppp.appendChild(d);
@@ -2073,35 +1949,49 @@ function getSelectedActionIdxBPC(btn) {
 	return selectedActionIdx;
 }
 
-function createRadioButtonsForActions(fs, actionNames) {
-	for (let i = 0; i < actionNames.length; i++) {
-		let d = document.createElement("DIV");
-		if (i === 0) {
-			d.className = "title";
-			d.textContent = actionNames[i];
-		} else {
-			d.innerHTML = '<input type="radio" name="action" id="action_' + i + '" value="' + actionNames[i] + '" />' +
-				'<label class="action" for="action_' + i + '">' + actionNames[i] + '</label>';
+function htmlInputParameterId(hint) {
+	return htmlInputParameter("ID", hint);
+}
 
-		}
-		fs.appendChild(d);
+function htmlInputParameterName(hint) {
+	return htmlInputParameter("Name", hint);
+}
+
+function htmlInputParameterNewName(hint) {
+	return htmlInputParameter("New Name", hint);
+}
+
+function htmlInputParameterParent(hint) {
+	return htmlInputParameter("Parent", hint);
+}
+
+function htmlInputParameterNewParent(hint) {
+	return htmlInputParameter("New Parent", hint);
+}
+
+function htmlInputParameterText(hint) {
+	return htmlInputParameter("Text", hint);
+}
+
+function htmlInputParameterNewText(hint) {
+	return htmlInputParameter("New Text", hint);
+}
+
+function htmlInputParameterUser(hint) {
+	return htmlInputParameter("User", hint);
+}
+
+function htmlInputParameter(name, hint) {
+	let nameLC = name.toLowerCase().replaceAll(" ", "_");
+
+	let label;
+	if (hint.length > 0) {
+		label = `<label class="parameter" for="` + nameLC + `" title="` + hint + `">` + name + `</label>`;
+	} else {
+		label = `<label class="parameter" for="` + nameLC + `">` + name + `</label>`;
 	}
-}
 
-async function redirectToSubPage(wait, qp) {
-	let url = adminPage + qp;
-	await redirectPage(wait, url);
-}
+	let input = `<input class="parameter" type="text" name="` + nameLC + `" id="` + nameLC + `" value="" />`;
 
-async function redirectToMainMenu(wait) {
-	let url = adminPage;
-	await redirectPage(wait, url);
-}
-
-function composeUrlForUserPage(userId) {
-	return Qp.Prefix + Qpn.UserPage + "&" + Qpn.Id + "=" + userId;
-}
-
-function composeUrlForAdminPage(func, page) {
-	return Qp.Prefix + func + "&" + Qpn.Page + "=" + page;
+	return label + input;
 }

@@ -33,7 +33,6 @@ type IsIPAddressBlockedParams struct {
 	// IP address of a client to check.
 	UserIPA cm.IPAS `json:"userIPA"`
 }
-
 type IsIPAddressBlockedResult struct {
 	cmr.CommonResult
 
@@ -43,7 +42,6 @@ type IsIPAddressBlockedResult struct {
 // Other.
 
 type ShowDiagnosticDataParams struct{}
-
 type ShowDiagnosticDataResult struct {
 	cmr.CommonResult
 	cmr.RequestsCount

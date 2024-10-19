@@ -1,3 +1,9 @@
+// Settings.
+settingsPath = "settings.json";
+rootPath = "/";
+adminPage = "/admin";
+redirectDelay = 3;
+
 // Pages and Query Parameters.
 Qp = {
 	ChangeEmailStep1: "?changeEmail1",
@@ -70,7 +76,9 @@ ActionName = {
 	DeleteThread: "deleteThread",
 	GetLatestMessageOfThread: "getLatestMessageOfThread",
 	GetListOfAllUsers: "getListOfAllUsers",
+	GetListOfAllUsersOnPage: "getListOfAllUsersOnPage",
 	GetListOfLoggedUsers: "getListOfLoggedUsers",
+	GetListOfLoggedUsersOnPage: "getListOfLoggedUsersOnPage",
 	GetListOfRegistrationsReadyForApproval: "getListOfRegistrationsReadyForApproval",
 	GetMessage: "getMessage",
 	GetNotifications: "getNotifications",
@@ -355,7 +363,13 @@ class Parameters_GetLatestMessageOfThread {
 	}
 }
 
-class Parameters_GetListOfAllUsers {
+class Parameters_GetListOfAllUsersOnPage {
+	constructor(page) {
+		this.Page = page;
+	}
+}
+
+class Parameters_GetListOfLoggedUsersOnPage {
 	constructor(page) {
 		this.Page = page;
 	}
@@ -792,9 +806,25 @@ async function getLatestMessageOfThread(threadId) {
 	return await sendApiRequestAndGetResult(reqData);
 }
 
-async function getListOfAllUsers(pageN) {
-	let params = new Parameters_GetListOfAllUsers(pageN);
-	let reqData = new ApiRequest(ActionName.GetListOfAllUsers, params);
+async function getListOfAllUsers() {
+	let reqData = new ApiRequest(ActionName.GetListOfAllUsers, {});
+	return await sendApiRequestAndGetResult(reqData);
+}
+
+async function getListOfAllUsersOnPage(pageN) {
+	let params = new Parameters_GetListOfAllUsersOnPage(pageN);
+	let reqData = new ApiRequest(ActionName.GetListOfAllUsersOnPage, params);
+	return await sendApiRequestAndGetResult(reqData);
+}
+
+async function getListOfLoggedUsers() {
+	let reqData = new ApiRequest(ActionName.GetListOfLoggedUsers, {});
+	return await sendApiRequestAndGetResult(reqData);
+}
+
+async function getListOfLoggedUsersOnPage(pageN) {
+	let params = new Parameters_GetListOfLoggedUsersOnPage(pageN);
+	let reqData = new ApiRequest(ActionName.GetListOfLoggedUsersOnPage, params);
 	return await sendApiRequestAndGetResult(reqData);
 }
 
@@ -1207,6 +1237,15 @@ class Password {
 	}
 }
 
+class RRFA {
+	constructor(id, preRegTime, email, name) {
+		this.Id = id;
+		this.PreRegTime = preRegTime;
+		this.Email = email;
+		this.Name = name;
+	}
+}
+
 class Section {
 	constructor(id, parent, childType, children, name, creator, editor) {
 		this.Id = id;
@@ -1223,6 +1262,15 @@ class SectionNode {
 	constructor(section, level) {
 		this.Section = section;
 		this.Level = level;
+	}
+}
+
+class Session {
+	constructor(id, userId, startTime, userIPA) {
+		this.Id = id;
+		this.UserId = userId;
+		this.StartTime = startTime;
+		this.UserIPA = userIPA;
 	}
 }
 
@@ -1408,6 +1456,22 @@ function jsonToPageData(x) {
 	return new PageData(x.pageNumber, x.totalPages, x.pageSize, x.itemsOnPage, x.totalItems);
 }
 
+function jsonToRrfa(x) {
+	if (x == null) return null;
+	return new RRFA(x.id, x.preRegTime, x.email, x.name);
+}
+
+function jsonToRrfas(x) {
+	if (x == null) return null;
+	let rs = [];
+	let r;
+	for (let i = 0; i < x.length; i++) {
+		r = jsonToRrfa(x[i]);
+		rs.push(r);
+	}
+	return rs;
+}
+
 function jsonToSection(x) {
 	if (x == null) return null;
 	let creator = jsonToEventParameters(x.creator);
@@ -1424,6 +1488,11 @@ function jsonToSections(x) {
 		ss.push(s);
 	}
 	return ss;
+}
+
+function jsonToSession(x) {
+	if (x == null) return null;
+	return new Session(x.id, x.userId, x.startTime, x.userIPA);
 }
 
 function jsonToThread(x) {
@@ -1651,33 +1720,6 @@ function composeErrorText(errMsg) {
 	return Msg.GenericErrorPrefix + errMsg.trim() + ".";
 }
 
-async function redirectPage(wait, url) {
-	if (wait) {
-		await sleep(redirectDelay * 1000);
-	}
-
-	document.location.href = url;
-}
-
-async function reloadPage(wait) {
-	if (wait) {
-		await sleep(redirectDelay * 1000);
-	}
-	location.reload();
-}
-
-// redirectToRelativePath redirects to a page with a relative path.
-// E.g., if a relative path is 'x', then URL is '/x', where '/' is a front end
-// root.
-async function redirectToRelativePath(wait, relPath) {
-	let url = rootPath + relPath;
-	await redirectPage(wait, url);
-}
-
-async function redirectToMainPage(wait) {
-	await redirectPage(wait, rootPath);
-}
-
 function prepareIdVariable(sp) {
 	if (!sp.has(Qpn.Id)) {
 		console.error(Err.IdNotSet);
@@ -1711,7 +1753,7 @@ function preparePageVariable(sp) {
 }
 
 function prettyTime(timeStr) {
-	if (timeStr === null) {
+	if (timeStr == null) {
 		return "";
 	}
 	if (timeStr.length === 0) {
@@ -1740,6 +1782,23 @@ function processMessageText(msgText) {
 	txt = txt.replaceAll("\n", '<br>');
 	txt = txt.replaceAll("\r", '<br>');
 	return txt;
+}
+
+function preparePageNumber(pageCount) {
+	// Repair the page count.
+	if ((pageCount === undefined) || (pageCount === 0)) {
+		pageCount = 1;
+	}
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	let pageNumber = mca_gvc.Page;
+	if (pageNumber > pageCount) {
+		console.error(Err.PageNotFound);
+		return false;
+	}
+
+	return true;
 }
 
 // URL composition.
@@ -1792,6 +1851,53 @@ function composeUrlForThread(threadId) {
 
 function composeUrlForThreadPage(threadId, page) {
 	return composeUrlForEntityPage(Qpn.Thread, threadId, page);
+}
+
+function composeUrlForUserPageA(userId) {
+	return Qp.Prefix + Qpn.UserPage + "&" + Qpn.Id + "=" + userId;
+}
+
+function composeUrlForAdminPageA(func, page) {
+	return Qp.Prefix + func + "&" + Qpn.Page + "=" + page;
+}
+
+// Redirect & page reloading.
+
+async function reloadPage(wait) {
+	if (wait) {
+		await sleep(redirectDelay * 1000);
+	}
+	location.reload();
+}
+
+// redirectToRelativePath redirects to a page with a relative path.
+// E.g., if a relative path is 'x', then URL is '/x', where '/' is a front end
+// root.
+async function redirectToRelativePath(wait, relPath) {
+	let url = rootPath + relPath;
+	await redirectPage(wait, url);
+}
+
+async function redirectToMainPage(wait) {
+	await redirectPage(wait, rootPath);
+}
+
+async function redirectPage(wait, url) {
+	if (wait) {
+		await sleep(redirectDelay * 1000);
+	}
+
+	document.location.href = url;
+}
+
+async function redirectToMainMenuA(wait) {
+	let url = adminPage;
+	await redirectPage(wait, url);
+}
+
+async function redirectToSubPageA(wait, qp) {
+	let url = adminPage + qp;
+	await redirectPage(wait, url);
 }
 
 // UI functions.
@@ -1865,8 +1971,16 @@ function disableParentForm(btn, pp, ignoreButton) {
 	}
 }
 
+function showTable(tbl) {
+	tbl.style.display = "table";
+}
+
 function showBlock(block) {
 	block.style.display = "block";
+}
+
+function hideBlock(block) {
+	block.style.display = "none";
 }
 
 function showActionSuccess(btn, txt) {
@@ -1929,7 +2043,71 @@ function addClickEventHandler(btn, ehVariant) {
 			});
 			return;
 
+		case EventHandlerVariant.UserListPrevA:
+			btn.addEventListener(en, async (e) => {
+				await onBtnPrevClick_userList(btn);
+			});
+			return;
+
+		case EventHandlerVariant.UserListNextA:
+			btn.addEventListener(en, async (e) => {
+				await onBtnNextClick_userList(btn);
+			});
+			return;
+
+		case EventHandlerVariant.LoggedUserListPrevA:
+			btn.addEventListener(en, async (e) => {
+				await onBtnPrevClick_logged(btn);
+			});
+			return;
+
+		case EventHandlerVariant.LoggedUserListNextA:
+			btn.addEventListener(en, async (e) => {
+				await onBtnNextClick_logged(btn);
+			});
+			return;
+
+		case EventHandlerVariant.RrfaListPrevA:
+			btn.addEventListener(en, async (e) => {
+				await onBtnPrevClick_rrfa(btn);
+			});
+			return;
+
+		case EventHandlerVariant.RrfaListNextA:
+			btn.addEventListener(en, async (e) => {
+				await onBtnNextClick_rrfa(btn);
+			});
+			return;
+
 		default:
 			console.error(Err.UnknownVariant);
 	}
+}
+
+function newDiv() {
+	return document.createElement("DIV");
+}
+
+function newFieldset() {
+	return document.createElement("FIELDSET");
+}
+
+function newTable() {
+	return document.createElement("TABLE");
+}
+
+function newTr() {
+	return document.createElement("TR");
+}
+
+function newTh() {
+	return document.createElement("TH");
+}
+
+function newTd() {
+	return document.createElement("TD");
+}
+
+function newInput() {
+	return document.createElement("INPUT");
 }

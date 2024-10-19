@@ -15,7 +15,7 @@ type RegistrationReadyForApproval struct {
 	Id         cmb.Id    `json:"id"`
 	PreRegTime time.Time `json:"preRegTime"`
 	Email      cm.Email  `json:"email"`
-	Name       cm.Name   `json:"name"`
+	Name       *cm.Name  `json:"name"`
 }
 
 func NewRegistrationReadyForApproval() (r *RegistrationReadyForApproval) {

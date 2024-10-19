@@ -12,12 +12,7 @@ window.onpageshow = function (event) {
 	}
 };
 
-// Path to initial settings for a loader script.
-settingsPath = "settings.json";
-rootPath = "/";
-adminPage = "/admin";
 settingsExpirationDuration = 60;
-redirectDelay = 2;
 
 // Names of JavaScript storage variables.
 Varname = {
@@ -1348,25 +1343,25 @@ async function onBtnGoToSectionClick(parentId) {
 async function onBtnStartNewThreadClick(btn, panelCN, forumId) {
 	disableButton(btn);
 	let p = document.getElementById(panelCN);
-	let div = document.createElement("DIV");
+	let div = newDiv();
 	div.className = "newThreadCreation";
 	div.id = "newThreadCreation";
 	p.appendChild(div);
 
 	// Draw.
-	let d = document.createElement("DIV");
+	let d = newDiv();
 	d.className = "title";
 	d.textContent = "New Thread Parameters";
 	div.appendChild(d);
-	d = document.createElement("DIV");
+	d = newDiv();
 	d.innerHTML = '<label class="parameter" for="name">Name</label>' +
 		'<input type="text" name="name" id="name" value="" class="newThreadName" />';
 	div.appendChild(d);
-	d = document.createElement("DIV");
+	d = newDiv();
 	d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent forum" hidden="hidden">Parent</label>' +
 		'<input type="text" name="parent" id="parent" value="' + forumId + '" readonly="readonly" hidden="hidden"/>';
 	div.appendChild(d);
-	d = document.createElement("DIV");
+	d = newDiv();
 	d.innerHTML = '<input type="button" class="' + ButtonClass.ConfirmThreadStart + '" value="' + ButtonName.ConfirmThreadStart + '" onclick="onBtnConfirmThreadStartClick(this)">';
 	div.appendChild(d);
 }
@@ -1397,25 +1392,25 @@ async function onBtnConfirmThreadStartClick(btn) {
 function onBtnAddMessageClick(btn, panelCN, threadId) {
 	disableButton(btn);
 	let p = document.getElementById(panelCN);
-	let div = document.createElement("DIV");
+	let div = newDiv();
 	div.className = "newMessageCreation";
 	div.id = "newMessageCreation";
 	p.appendChild(div);
 
 	// Draw.
-	let d = document.createElement("DIV");
+	let d = newDiv();
 	d.className = "title";
 	d.textContent = "New Message Parameters";
 	div.appendChild(d);
-	d = document.createElement("DIV");
+	d = newDiv();
 	d.innerHTML = '<label class="parameter" for="txt">Text</label>' +
 		'<textarea name="txt" id="txt" class="newMessageText"></textarea>';
 	div.appendChild(d);
-	d = document.createElement("DIV");
+	d = newDiv();
 	d.innerHTML = '<label class="parameter" for="parent" title="ID of a parent thread" hidden="hidden">Parent</label>' +
 		'<input type="text" name="parent" id="parent" value="' + threadId + '" readonly="readonly" hidden="hidden"/>';
 	div.appendChild(d);
-	d = document.createElement("DIV");
+	d = newDiv();
 	d.innerHTML = '<input type="button" class="' + ButtonClass.ConfirmMessageCreation + '" value="' + ButtonName.ConfirmMessageCreation + '" onclick="onBtnConfirmMessageCreationClick(this)">';
 	div.appendChild(d);
 }
@@ -1458,25 +1453,25 @@ async function onBtnEditMessageClick(btn, panelCN, messageId) {
 
 	disableButton(btn);
 	let p = document.getElementById(panelCN);
-	let div = document.createElement("DIV");
+	let div = newDiv();
 	div.className = "messageEditing";
 	div.id = "messageEditing";
 	p.appendChild(div);
 
 	// Draw.
-	let d = document.createElement("DIV");
+	let d = newDiv();
 	d.className = "title";
 	d.textContent = "Message Editing";
 	div.appendChild(d);
-	d = document.createElement("DIV");
+	d = newDiv();
 	d.innerHTML = '<label class="parameter" for="txt">Text</label>' +
 		'<textarea name="txt" id="txt" class="newMessageText">' + escapeHtml(message.Text) + '</textarea>';
 	div.appendChild(d);
-	d = document.createElement("DIV");
+	d = newDiv();
 	d.innerHTML = '<label class="parameter" for="id" title="ID of edited message" hidden="hidden">ID</label>' +
 		'<input type="text" name="id" id="id" value="' + messageId + '" readonly="readonly" hidden="hidden"/>';
 	div.appendChild(d);
-	d = document.createElement("DIV");
+	d = newDiv();
 	d.innerHTML = '<input type="button" class="' + ButtonClass.ConfirmMessageEdit + '" value="' + ButtonName.ConfirmMessageEdit + '" onclick="onBtnConfirmMessageEditClick(this)">';
 	div.appendChild(d);
 }
@@ -1585,18 +1580,18 @@ async function addPageHead(el, text, atTop) {
 	}
 
 	// Draw.
-	let div = document.createElement("DIV");
+	let div = newDiv();
 	let cn = PageZoneClass.PageHead;
 	div.className = cn;
 	div.id = cn;
-	let tbl = document.createElement("TABLE");
-	let tr = document.createElement("TR");
-	let tdL = document.createElement("TD");
+	let tbl = newTable();
+	let tr = newTr();
+	let tdL = newTd();
 	tdL.className = cn + PageZoneClass.L;
 	tdL.id = cn + PageZoneClass.L;
 	tdL.textContent = text;
 	tr.appendChild(tdL);
-	let tdR = document.createElement("TD");
+	let tdR = newTd();
 	tdR.className = cn + PageZoneClass.R;
 	tdR.id = cn + PageZoneClass.R;
 	if (!isLoggedInB) {
@@ -1626,34 +1621,34 @@ async function addPageHead(el, text, atTop) {
 }
 
 function addActionPanel(el, atTop, parentType, parentId) {
-	let div = document.createElement("DIV");
+	let div = newDiv();
 	let cn = PageZoneClass.ActionPanel;
 	div.className = cn;
 	div.id = cn;
-	let tbl = document.createElement("TABLE");
-	let tr = document.createElement("TR");
-	let td = document.createElement("TD");
+	let tbl = newTable();
+	let tr = newTr();
+	let td = newTd();
 	td.innerHTML = '<form><input type="button" value="' + ButtonName.BackToRoot + '" class="' + ButtonClass.BackToRoot + '" onclick="onBtnGoToIndexClick(this)" /></form>';
 	tr.appendChild(td);
 
 	if (parentType != null) {
 		switch (parentType) {
 			case ObjectType.Thread:
-				td = document.createElement("TD");
+				td = newTd();
 				td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
 					'<input type="button" value="' + ButtonName.BackToThread + '" class="' + ButtonClass.BackToThread + '" onclick="onBtnGoToThreadClick(' + parentId + ')" />';
 				tr.appendChild(td);
 				break;
 
 			case ObjectType.Forum:
-				td = document.createElement("TD");
+				td = newTd();
 				td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
 					'<input type="button" value="' + ButtonName.BackToForum + '" class="' + ButtonClass.BackToForum + '" onclick="onBtnGoToForumClick(' + parentId + ')" />';
 				tr.appendChild(td);
 				break;
 
 			case ObjectType.Section:
-				td = document.createElement("TD");
+				td = newTd();
 				td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
 					'<input type="button" value="' + ButtonName.BackToSection + '" class="' + ButtonClass.BackToSection + '" onclick="onBtnGoToSectionClick(' + parentId + ')" />';
 				tr.appendChild(td);
@@ -1678,17 +1673,17 @@ async function addBottomActionPanel(el, objectType, object) {
 	let cnL = cn + PageZoneClass.L;
 	let cnR = cn + PageZoneClass.R;
 
-	let div = document.createElement("DIV");
+	let div = newDiv();
 	div.className = cn;
 	div.id = cn;
-	let tbl = document.createElement("TABLE");
-	let tr = document.createElement("TR");
+	let tbl = newTable();
+	let tr = newTr();
 	tbl.appendChild(tr);
-	let tdL = document.createElement("TD");
+	let tdL = newTd();
 	tdL.id = cnL;
 	tdL.className = cnL;
 	tr.appendChild(tdL);
-	let tdR = document.createElement("TD");
+	let tdR = newTd();
 	tdR.id = cnR;
 	tdR.className = cnR;
 	tr.appendChild(tdR);
@@ -1711,7 +1706,7 @@ async function addBottomActionPanel(el, objectType, object) {
 }
 
 function drawPageTitle(p, title) {
-	let d = document.createElement("DIV");
+	let d = newDiv();
 	d.className = PageZoneClass.PageTitle;
 	let ml = SectionMarginDelta;
 	d.style.cssText = "margin-left: " + ml + "px";
@@ -1732,18 +1727,18 @@ async function drawBottomActionPanelButtonsForThread(thread, tdL, tdR, user, pan
 	let resB = await isSelfSubscribed(thread.Id);
 	let isUserSubscribed = resB.isSubscribed;
 
-	let tbl = document.createElement("TABLE");
-	let tr = document.createElement("TR");
+	let tbl = newTable();
+	let tr = newTr();
 
 	if (!isUserSubscribed) {
-		let td = document.createElement("TD");
+		let td = newTd();
 		td.innerHTML += '<form><input type="button" value="' + ButtonName.SubscribeToThread + '" class="' + ButtonClass.SubscribeToThread + '" ' +
 			'onclick="onBtnSubscribeClick(this, ' + thread.Id + ', ' + user.Id + ')" /></form>';
 		tr.appendChild(td);
 	}
 
 	if (user.canAddMessage(latestMessageInThread)) {
-		let td = document.createElement("TD");
+		let td = newTd();
 		td.innerHTML += '<form><input type="button" value="' + ButtonName.AddMessage + '" class="' + ButtonClass.AddMessage + '" ' +
 			'onclick="onBtnAddMessageClick(this, \'' + panelClass + '\', ' + thread.Id + ')" /></form>';
 		tr.appendChild(td);
@@ -1764,7 +1759,7 @@ async function drawBottomActionPanelButtonsForMessage(message, tdL, tdR, user, p
 
 async function drawMessage(p, message) {
 	// Header.
-	let divMsgHdr = document.createElement("DIV");
+	let divMsgHdr = newDiv();
 	divMsgHdr.className = "messageHeader";
 	divMsgHdr.id = "messageHeader_" + message.Id;
 	let ml = SectionMarginDelta * 2;
@@ -1773,7 +1768,7 @@ async function drawMessage(p, message) {
 	p.appendChild(divMsgHdr);
 
 	// Body.
-	let divMsgBody = document.createElement("DIV");
+	let divMsgBody = newDiv();
 	divMsgBody.className = "messageBody";
 	divMsgBody.id = "messageBody_" + message.Id;
 	ml = SectionMarginDelta * 2;
@@ -1798,7 +1793,7 @@ async function drawThreadMessages(p, thread, messagesMap) {
 		message = messagesMap.get(messageId);
 
 		// Header.
-		divMsgHdr = document.createElement("DIV");
+		divMsgHdr = newDiv();
 		divMsgHdr.className = "messageHeader";
 		divMsgHdr.id = "messageHeader_" + message.Id;
 		ml = SectionMarginDelta * 2;
@@ -1808,7 +1803,7 @@ async function drawThreadMessages(p, thread, messagesMap) {
 		p.appendChild(divMsgHdr);
 
 		// Body.
-		divMsgBody = document.createElement("DIV");
+		divMsgBody = newDiv();
 		divMsgBody.className = "messageBody";
 		divMsgBody.id = "messageBody_" + message.Id;
 		ml = SectionMarginDelta * 2;
@@ -1830,7 +1825,7 @@ function drawForumThreads(p, forum, threadsMap) {
 			}
 			thread = threadsMap.get(threadId);
 
-			divThread = document.createElement("DIV");
+			divThread = newDiv();
 			divThread.className = "thread";
 			divThread.id = "thread_" + thread.Id;
 			ml = SectionMarginDelta * 2;
@@ -1847,7 +1842,7 @@ function drawSectionsAndForums(p, nodes, forumsMap) {
 	for (let i = 0; i < nodes.length; i++) {
 		node = nodes[i];
 
-		divSection = document.createElement("DIV");
+		divSection = newDiv();
 		divSection.className = "section";
 		divSection.id = "section_" + node.Section.Id;
 		ml = SectionMarginDelta * node.Level;
@@ -1865,7 +1860,7 @@ function drawSectionsAndForums(p, nodes, forumsMap) {
 			forumId = sectionForums[j];
 			forum = forumsMap.get(forumId);
 
-			divForum = document.createElement("DIV");
+			divForum = newDiv();
 			divForum.className = "forum";
 			divForum.id = "forum_" + forumId;
 			ml = SectionMarginDelta * (node.Level + 1);
@@ -1878,15 +1873,15 @@ function drawSectionsAndForums(p, nodes, forumsMap) {
 }
 
 function drawSubscriptions(p, elClass, swtnop) {
-	let tbl = document.createElement("TABLE");
+	let tbl = newTable();
 	tbl.className = elClass;
 
 	// Header.
-	let tr = document.createElement("TR");
+	let tr = newTr();
 	let ths = ["#", "Thread ID", "Thread Name", "Actions"];
 	let th;
 	for (let i = 0; i < ths.length; i++) {
-		th = document.createElement("TH");
+		th = newTh();
 		if (i === 0) {
 			th.className = "numCol";
 		}
@@ -1910,7 +1905,7 @@ function drawSubscriptions(p, elClass, swtnop) {
 		threadName = swtnop.ThreadNames[i];
 
 		// Fill data.
-		tr = document.createElement("TR");
+		tr = newTr();
 		let tds = [];
 		for (let j = 0; j < ths.length; j++) {
 			tds.push("");
@@ -1924,7 +1919,7 @@ function drawSubscriptions(p, elClass, swtnop) {
 		let td, url;
 		for (let j = 0; j < tds.length; j++) {
 			url = composeUrlForThread(threadId);
-			td = document.createElement("TD");
+			td = newTd();
 
 			if (j === 0) {
 				td.className = "numCol";
@@ -1947,15 +1942,15 @@ function drawSubscriptions(p, elClass, swtnop) {
 }
 
 function drawNotifications(p, elClass, notifications) {
-	let tbl = document.createElement("TABLE");
+	let tbl = newTable();
 	tbl.className = elClass;
 
 	// Header.
-	let tr = document.createElement("TR");
+	let tr = newTr();
 	let ths = ["#", "Time", "Text", "Actions"];
 	let th;
 	for (let i = 0; i < ths.length; i++) {
-		th = document.createElement("TH");
+		th = newTh();
 		if (i === 0) {
 			th.className = "numCol";
 		}
@@ -1972,7 +1967,7 @@ function drawNotifications(p, elClass, notifications) {
 	for (let i = 0; i < notifications.length; i++) {
 		notification = notifications[i];
 
-		tr = document.createElement("TR");
+		tr = newTr();
 		let tds = [];
 		for (let j = 0; j < ths.length; j++) {
 			tds.push("");
@@ -1993,7 +1988,7 @@ function drawNotifications(p, elClass, notifications) {
 		let td;
 		let jLast = tds.length - 1;
 		for (let j = 0; j < tds.length; j++) {
-			td = document.createElement("TD");
+			td = newTd();
 
 			if (j === 0) {
 				td.className = "numCol";
@@ -2079,21 +2074,4 @@ function setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptI
 		cptAnswerTr.style.display = "none";
 		cptAnswer.enabled = false;
 	}
-}
-
-function preparePageNumber(pageCount) {
-	// Repair the page count.
-	if ((pageCount === undefined) || (pageCount === 0)) {
-		pageCount = 1;
-	}
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	let pageNumber = mca_gvc.Page;
-	if (pageNumber > pageCount) {
-		console.error(Err.PageNotFound);
-		return false;
-	}
-
-	return true;
 }

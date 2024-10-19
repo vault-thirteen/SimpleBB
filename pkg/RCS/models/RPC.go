@@ -12,7 +12,6 @@ type PingResult = cmr.PingResult
 // Captcha.
 
 type CreateCaptchaParams struct{}
-
 type CreateCaptchaResult struct {
 	cmr.CommonResult
 	TaskId              string `json:"taskId"`
@@ -25,7 +24,6 @@ type CheckCaptchaParams struct {
 	TaskId string `json:"taskId"`
 	Value  uint   `json:"value"`
 }
-
 type CheckCaptchaResult struct {
 	cmr.CommonResult
 	TaskId    string `json:"taskId"`
@@ -35,7 +33,6 @@ type CheckCaptchaResult struct {
 // Other.
 
 type ShowDiagnosticDataParams struct{}
-
 type ShowDiagnosticDataResult struct {
 	cmr.CommonResult
 	cmr.RequestsCount

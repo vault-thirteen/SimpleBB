@@ -18,7 +18,6 @@ type AddNotificationParams struct {
 	UserId cmb.Id   `json:"userId"`
 	Text   cmb.Text `json:"text"`
 }
-
 type AddNotificationResult struct {
 	cmr.CommonResult
 
@@ -32,7 +31,6 @@ type AddNotificationSParams struct {
 	UserId cmb.Id   `json:"userId"`
 	Text   cmb.Text `json:"text"`
 }
-
 type AddNotificationSResult struct {
 	cmr.CommonResult
 
@@ -44,7 +42,6 @@ type GetNotificationParams struct {
 	cmr.CommonParams
 	NotificationId cmb.Id `json:"notificationId"`
 }
-
 type GetNotificationResult struct {
 	cmr.CommonResult
 	Notification *Notification `json:"notification"`
@@ -53,7 +50,6 @@ type GetNotificationResult struct {
 type GetNotificationsParams struct {
 	cmr.CommonParams
 }
-
 type GetNotificationsResult struct {
 	cmr.CommonResult
 	NotificationIds *ul.UidList    `json:"notificationIds"`
@@ -64,7 +60,6 @@ type GetNotificationsOnPageParams struct {
 	cmr.CommonParams
 	Page cmb.Count `json:"page"`
 }
-
 type GetNotificationsOnPageResult struct {
 	cmr.CommonResult
 	NotificationsOnPage *NotificationsOnPage `json:"nop"`
@@ -73,7 +68,6 @@ type GetNotificationsOnPageResult struct {
 type GetUnreadNotificationsParams struct {
 	cmr.CommonParams
 }
-
 type GetUnreadNotificationsResult struct {
 	cmr.CommonResult
 	NotificationIds *ul.UidList    `json:"notificationIds"`
@@ -83,7 +77,6 @@ type GetUnreadNotificationsResult struct {
 type CountUnreadNotificationsParams struct {
 	cmr.CommonParams
 }
-
 type CountUnreadNotificationsResult struct {
 	cmr.CommonResult
 	UNC cmb.Count `json:"unc"`
@@ -108,14 +101,12 @@ type DeleteNotificationResult = cmr.CommonResultWithSuccess
 type GetDKeyParams struct {
 	cmr.CommonParams
 }
-
 type GetDKeyResult struct {
 	cmr.CommonResult
 	DKey cmb.Text `json:"dKey"`
 }
 
 type ShowDiagnosticDataParams struct{}
-
 type ShowDiagnosticDataResult struct {
 	cmr.CommonResult
 	cmr.RequestsCount
@@ -124,7 +115,6 @@ type ShowDiagnosticDataResult struct {
 type TestParams struct {
 	N uint `json:"n"`
 }
-
 type TestResult struct {
 	cmr.CommonResult
 }

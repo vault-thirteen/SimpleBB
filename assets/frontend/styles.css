@@ -699,6 +699,13 @@ label.action {
 
 label.parameter {
 	margin-right: 5px;
+	width: 92px;
+	display: inline-block;
+	text-align: right;
+}
+
+input.parameter {
+	min-width: 256px;
 }
 
 div.actionSuccess {

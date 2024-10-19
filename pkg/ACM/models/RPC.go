@@ -31,7 +31,6 @@ type RegisterUserParams struct {
 	// Password. Is used on step 3.
 	Password cm.Password `json:"password"`
 }
-
 type RegisterUserResult struct {
 	cmr.CommonResult
 
@@ -43,7 +42,6 @@ type GetListOfRegistrationsReadyForApprovalParams struct {
 	cmr.CommonParams
 	Page cmb.Count `json:"page"`
 }
-
 type GetListOfRegistrationsReadyForApprovalResult struct {
 	cmr.CommonResult
 	RRFA     []RegistrationReadyForApproval `json:"rrfa"`
@@ -94,7 +92,6 @@ type LogUserInParams struct {
 	// Is used on step 3.
 	VerificationCode cm.VerificationCode `json:"verificationCode"`
 }
-
 type LogUserInResult struct {
 	cmr.CommonResult
 
@@ -127,18 +124,34 @@ type LogUserOutAResult = cmr.CommonResultWithSuccess
 type GetListOfLoggedUsersParams struct {
 	cmr.CommonParams
 }
-
 type GetListOfLoggedUsersResult struct {
 	cmr.CommonResult
 	LoggedUserIds []cmb.Id `json:"loggedUserIds"`
 }
 
-type GetListOfAllUsersParams struct {
+type GetListOfLoggedUsersOnPageParams struct {
 	cmr.CommonParams
 	Page cmb.Count `json:"page"`
 }
+type GetListOfLoggedUsersOnPageResult struct {
+	cmr.CommonResult
+	LoggedUserIds []cmb.Id      `json:"loggedUserIds"`
+	PageData      *cmr.PageData `json:"pageData,omitempty"`
+}
 
+type GetListOfAllUsersParams struct {
+	cmr.CommonParams
+}
 type GetListOfAllUsersResult struct {
+	cmr.CommonResult
+	UserIds []cmb.Id `json:"userIds"`
+}
+
+type GetListOfAllUsersOnPageParams struct {
+	cmr.CommonParams
+	Page cmb.Count `json:"page"`
+}
+type GetListOfAllUsersOnPageResult struct {
 	cmr.CommonResult
 	UserIds  []cmb.Id      `json:"userIds"`
 	PageData *cmr.PageData `json:"pageData,omitempty"`
@@ -148,7 +161,6 @@ type IsUserLoggedInParams struct {
 	cmr.CommonParams
 	UserId cmb.Id `json:"userId"`
 }
-
 type IsUserLoggedInResult struct {
 	cmr.CommonResult
 	UserId         cmb.Id   `json:"userId"`
@@ -184,7 +196,6 @@ type ChangePasswordParams struct {
 	// This field is optional and may be used on step 2.
 	CaptchaAnswer cm.CaptchaAnswer `json:"captchaAnswer"`
 }
-
 type ChangePasswordResult struct {
 	cmr.CommonResult
 	cmr.Success
@@ -231,7 +242,6 @@ type ChangeEmailParams struct {
 	// This field is optional and may be used on step 2.
 	CaptchaAnswer cm.CaptchaAnswer `json:"captchaAnswer"`
 }
-
 type ChangeEmailResult struct {
 	cmr.CommonResult
 	cmr.Success
@@ -251,7 +261,6 @@ type GetUserSessionParams struct {
 	cmr.CommonParams
 	UserId cmb.Id `json:"userId"`
 }
-
 type GetUserSessionResult struct {
 	cmr.CommonResult
 	User    *User    `json:"user"`
@@ -264,7 +273,6 @@ type GetUserNameParams struct {
 	cmr.CommonParams
 	UserId cmb.Id `json:"userId"`
 }
-
 type GetUserNameResult struct {
 	cmr.CommonResult
 	User *User `json:"user"`
@@ -274,7 +282,6 @@ type GetUserRolesParams struct {
 	cmr.CommonParams
 	UserId cmb.Id `json:"userId"`
 }
-
 type GetUserRolesResult struct {
 	cmr.CommonResult
 	User *User `json:"user"`
@@ -284,7 +291,6 @@ type ViewUserParametersParams struct {
 	cmr.CommonParams
 	UserId cmb.Id `json:"userId"`
 }
-
 type ViewUserParametersResult struct {
 	cmr.CommonResult
 	User *User `json:"user"`
@@ -292,15 +298,16 @@ type ViewUserParametersResult struct {
 
 type SetUserRoleAuthorParams = SetUserRoleCommonParams
 type SetUserRoleAuthorResult = SetUserRoleCommonResult
+
 type SetUserRoleWriterParams = SetUserRoleCommonParams
 type SetUserRoleWriterResult = SetUserRoleCommonResult
+
 type SetUserRoleReaderParams = SetUserRoleCommonParams
 type SetUserRoleReaderResult = SetUserRoleCommonResult
 
 type GetSelfRolesParams struct {
 	cmr.CommonParams
 }
-
 type GetSelfRolesResult struct {
 	cmr.CommonResult
 	User *User `json:"user"`
@@ -323,14 +330,12 @@ type UnbanUserResult = cmr.CommonResultWithSuccess
 // Other.
 
 type ShowDiagnosticDataParams struct{}
-
 type ShowDiagnosticDataResult struct {
 	cmr.CommonResult
 	cmr.RequestsCount
 }
 
 type TestParams struct{}
-
 type TestResult struct {
 	cmr.CommonResult
 }

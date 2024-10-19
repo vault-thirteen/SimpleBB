@@ -24,7 +24,6 @@ type AddSectionParams struct {
 	// Name of this section.
 	Name cm.Name `json:"name"`
 }
-
 type AddSectionResult struct {
 	cmr.CommonResult
 
@@ -59,7 +58,6 @@ type GetSectionParams struct {
 
 	SectionId cmb.Id `json:"sectionId"`
 }
-
 type GetSectionResult struct {
 	cmr.CommonResult
 
@@ -100,7 +98,6 @@ type AddForumParams struct {
 	// Name of this forum.
 	Name cm.Name `json:"name"`
 }
-
 type AddForumResult struct {
 	cmr.CommonResult
 
@@ -134,7 +131,6 @@ type GetForumParams struct {
 
 	ForumId cmb.Id `json:"forumId"`
 }
-
 type GetForumResult struct {
 	cmr.CommonResult
 
@@ -175,7 +171,6 @@ type AddThreadParams struct {
 	// Thread name.
 	Name cm.Name `json:"name"`
 }
-
 type AddThreadResult struct {
 	cmr.CommonResult
 
@@ -208,7 +203,6 @@ type GetThreadParams struct {
 
 	ThreadId cmb.Id `json:"threadId"`
 }
-
 type GetThreadResult struct {
 	cmr.CommonResult
 
@@ -220,7 +214,6 @@ type GetThreadNamesByIdsParams struct {
 
 	ThreadIds []cmb.Id `json:"threadIds"`
 }
-
 type GetThreadNamesByIdsResult struct {
 	cmr.CommonResult
 
@@ -257,7 +250,6 @@ type ThreadExistsSParams struct {
 
 	ThreadId cmb.Id `json:"threadId"`
 }
-
 type ThreadExistsSResult struct {
 	cmr.CommonResult
 
@@ -275,7 +267,6 @@ type AddMessageParams struct {
 	// Message text.
 	Text cmb.Text `json:"text"`
 }
-
 type AddMessageResult struct {
 	cmr.CommonResult
 
@@ -308,7 +299,6 @@ type GetMessageParams struct {
 
 	MessageId cmb.Id `json:"messageId"`
 }
-
 type GetMessageResult struct {
 	cmr.CommonResult
 
@@ -320,7 +310,6 @@ type GetLatestMessageOfThreadParams struct {
 
 	ThreadId cmb.Id `json:"threadId"`
 }
-
 type GetLatestMessageOfThreadResult struct {
 	cmr.CommonResult
 
@@ -341,7 +330,6 @@ type ListThreadAndMessagesParams struct {
 
 	ThreadId cmb.Id `json:"threadId"`
 }
-
 type ListThreadAndMessagesResult struct {
 	cmr.CommonResult
 
@@ -354,7 +342,6 @@ type ListThreadAndMessagesOnPageParams struct {
 	ThreadId cmb.Id    `json:"threadId"`
 	Page     cmb.Count `json:"page"`
 }
-
 type ListThreadAndMessagesOnPageResult struct {
 	cmr.CommonResult
 
@@ -366,7 +353,6 @@ type ListForumAndThreadsParams struct {
 
 	ForumId cmb.Id `json:"forumId"`
 }
-
 type ListForumAndThreadsResult struct {
 	cmr.CommonResult
 
@@ -379,7 +365,6 @@ type ListForumAndThreadsOnPageParams struct {
 	ForumId cmb.Id    `json:"forumId"`
 	Page    cmb.Count `json:"page"`
 }
-
 type ListForumAndThreadsOnPageResult struct {
 	cmr.CommonResult
 
@@ -389,7 +374,6 @@ type ListForumAndThreadsOnPageResult struct {
 type ListSectionsAndForumsParams struct {
 	cmr.CommonParams
 }
-
 type ListSectionsAndForumsResult struct {
 	cmr.CommonResult
 
@@ -401,7 +385,6 @@ type ListSectionsAndForumsResult struct {
 type GetDKeyParams struct {
 	cmr.CommonParams
 }
-
 type GetDKeyResult struct {
 	cmr.CommonResult
 
@@ -409,7 +392,6 @@ type GetDKeyResult struct {
 }
 
 type ShowDiagnosticDataParams struct{}
-
 type ShowDiagnosticDataResult struct {
 	cmr.CommonResult
 	cmr.RequestsCount
@@ -418,7 +400,6 @@ type ShowDiagnosticDataResult struct {
 type TestParams struct {
 	N uint `json:"n"`
 }
-
 type TestResult struct {
 	cmr.CommonResult
 }

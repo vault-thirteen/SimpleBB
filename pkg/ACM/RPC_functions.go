@@ -1067,7 +1067,78 @@ func (srv *Server) getListOfLoggedUsers(p *am.GetListOfLoggedUsersParams) (resul
 	return result, nil
 }
 
+func (srv *Server) getListOfLoggedUsersOnPage(p *am.GetListOfLoggedUsersOnPageParams) (result *am.GetListOfLoggedUsersOnPageResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.Page == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
+	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	_, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	var loggedUsersCount cmb.Count
+	var err error
+	loggedUsersCount, err = srv.dbo.CountLoggedUsers()
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	var userIdsOnPage []cmb.Id
+	userIdsOnPage, err = srv.dbo.GetListOfLoggedUsersOnPage(p.Page, srv.settings.SystemSettings.PageSize)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &am.GetListOfLoggedUsersOnPageResult{
+		LoggedUserIds: userIdsOnPage,
+		PageData: &cmr.PageData{
+			PageNumber:  p.Page,
+			TotalPages:  cmb.CalculateTotalPages(loggedUsersCount, srv.settings.SystemSettings.PageSize),
+			PageSize:    srv.settings.SystemSettings.PageSize,
+			ItemsOnPage: cmb.Count(len(userIdsOnPage)),
+			TotalItems:  loggedUsersCount,
+		},
+	}
+
+	return result, nil
+}
+
 func (srv *Server) getListOfAllUsers(p *am.GetListOfAllUsersParams) (result *am.GetListOfAllUsersResult, re *jrm1.RpcError) {
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	var thisUserData *am.UserData
+	thisUserData, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !thisUserData.User.Roles.IsAdministrator {
+		srv.incidentManager.ReportIncident(cm.IncidentType_IllegalAccessAttempt, "", p.Auth.UserIPAB)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	var userIds []cmb.Id
+	var err error
+	userIds, err = srv.dbo.GetListOfAllUsers()
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &am.GetListOfAllUsersResult{
+		UserIds: userIds,
+	}
+
+	return result, nil
+}
+
+func (srv *Server) getListOfAllUsersOnPage(p *am.GetListOfAllUsersOnPageParams) (result *am.GetListOfAllUsersOnPageResult, re *jrm1.RpcError) {
 	// Check parameters.
 	if p.Page == 0 {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
@@ -1088,26 +1159,26 @@ func (srv *Server) getListOfAllUsers(p *am.GetListOfAllUsersParams) (result *am.
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	usersCount, err := srv.dbo.CountAllUsers()
+	allUsersCount, err := srv.dbo.CountAllUsers()
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	var userIds []cmb.Id
-	userIds, err = srv.dbo.GetListOfAllUsers(p.Page, srv.settings.SystemSettings.PageSize)
+	var userIdsOnPage []cmb.Id
+	userIdsOnPage, err = srv.dbo.GetListOfAllUsersOnPage(p.Page, srv.settings.SystemSettings.PageSize)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	result = &am.GetListOfAllUsersResult{
+	result = &am.GetListOfAllUsersOnPageResult{
+		UserIds: userIdsOnPage,
 		PageData: &cmr.PageData{
 			PageNumber:  p.Page,
-			TotalPages:  cmb.CalculateTotalPages(usersCount, srv.settings.SystemSettings.PageSize),
+			TotalPages:  cmb.CalculateTotalPages(allUsersCount, srv.settings.SystemSettings.PageSize),
 			PageSize:    srv.settings.SystemSettings.PageSize,
-			ItemsOnPage: cmb.Count(len(userIds)),
-			TotalItems:  usersCount,
+			ItemsOnPage: cmb.Count(len(userIdsOnPage)),
+			TotalItems:  allUsersCount,
 		},
-		UserIds: userIds,
 	}
 
 	return result, nil

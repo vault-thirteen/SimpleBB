@@ -151,6 +151,17 @@ func (dbo *DatabaseObject) CountEmailChangesByUserId(userId cmb.Id) (n cmb.Count
 	return n, nil
 }
 
+func (dbo *DatabaseObject) CountLoggedUsers() (n cmb.Count, err error) {
+	row := dbo.PreparedStatement(DbPsid_CountLoggedUsers).QueryRow()
+
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	if err != nil {
+		return cdbo.CountOnError, err
+	}
+
+	return n, nil
+}
+
 func (dbo *DatabaseObject) CountPasswordChangesByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountPasswordChangesByUserId).QueryRow(userId)
 
@@ -368,11 +379,30 @@ func (dbo *DatabaseObject) GetEmailChangeByRequestId(requestId cm.RequestId) (ec
 	return am.NewEmailChangeFromScannableSource(row)
 }
 
-func (dbo *DatabaseObject) GetListOfAllUsers(pageNumber cmb.Count, pageSize cmb.Count) (userIds []cmb.Id, err error) {
+func (dbo *DatabaseObject) GetListOfAllUsers() (userIds []cmb.Id, err error) {
 	userIds = make([]cmb.Id, 0)
 
 	var rows *sql.Rows
-	rows, err = dbo.PreparedStatement(DbPsid_GetListOfAllUsers).Query(pageSize, (pageNumber-1)*pageSize)
+	rows, err = dbo.PreparedStatement(DbPsid_GetListOfAllUsers).Query()
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
+		}
+	}()
+
+	return cm.NewArrayFromScannableSource[cmb.Id](rows)
+}
+
+func (dbo *DatabaseObject) GetListOfAllUsersOnPage(pageNumber cmb.Count, pageSize cmb.Count) (userIds []cmb.Id, err error) {
+	userIds = make([]cmb.Id, 0)
+
+	var rows *sql.Rows
+	rows, err = dbo.PreparedStatement(DbPsid_GetListOfAllUsersOnPage).Query(pageSize, (pageNumber-1)*pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -392,6 +422,25 @@ func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []cmb.Id, err error) 
 
 	var rows *sql.Rows
 	rows, err = dbo.PreparedStatement(DbPsid_GetListOfLoggedUsers).Query()
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
+		}
+	}()
+
+	return cm.NewArrayFromScannableSource[cmb.Id](rows)
+}
+
+func (dbo *DatabaseObject) GetListOfLoggedUsersOnPage(pageNumber cmb.Count, pageSize cmb.Count) (userIds []cmb.Id, err error) {
+	userIds = make([]cmb.Id, 0)
+
+	var rows *sql.Rows
+	rows, err = dbo.PreparedStatement(DbPsid_GetListOfLoggedUsersOnPage).Query(pageSize, (pageNumber-1)*pageSize)
 	if err != nil {
 		return nil, err
 	}

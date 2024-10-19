@@ -16,12 +16,14 @@ const (
 	FuncApproveAndRegisterUser                 = "ApproveAndRegisterUser"
 
 	// Logging in and out.
-	FuncLogUserIn            = "LogUserIn"
-	FuncLogUserOut           = "LogUserOut"
-	FuncLogUserOutA          = "LogUserOutA"
-	FuncGetListOfLoggedUsers = "GetListOfLoggedUsers"
-	FuncGetListOfAllUsers    = "GetListOfAllUsers"
-	FuncIsUserLoggedIn       = "IsUserLoggedIn"
+	FuncLogUserIn                  = "LogUserIn"
+	FuncLogUserOut                 = "LogUserOut"
+	FuncLogUserOutA                = "LogUserOutA"
+	FuncGetListOfLoggedUsers       = "GetListOfLoggedUsers"
+	FuncGetListOfLoggedUsersOnPage = "GetListOfLoggedUsersOnPage"
+	FuncGetListOfAllUsers          = "GetListOfAllUsers"
+	FuncGetListOfAllUsersOnPage    = "GetListOfAllUsersOnPage"
+	FuncIsUserLoggedIn             = "IsUserLoggedIn"
 
 	// Various actions.
 	FuncChangePassword = "ChangePassword"

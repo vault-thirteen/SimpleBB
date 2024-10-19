@@ -38,7 +38,9 @@ func (srv *Server) initRpc() (err error) {
 		srv.LogUserOut,
 		srv.LogUserOutA,
 		srv.GetListOfLoggedUsers,
+		srv.GetListOfLoggedUsersOnPage,
 		srv.GetListOfAllUsers,
+		srv.GetListOfAllUsersOnPage,
 		srv.IsUserLoggedIn,
 		srv.ChangePassword,
 		srv.ChangeEmail,
@@ -209,6 +211,22 @@ func (srv *Server) GetListOfLoggedUsers(params *json.RawMessage, _ *jrm1.Respons
 	return r, nil
 }
 
+func (srv *Server) GetListOfLoggedUsersOnPage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.GetListOfLoggedUsersOnPageParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.GetListOfLoggedUsersOnPageResult
+	r, re = srv.getListOfLoggedUsersOnPage(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
 func (srv *Server) GetListOfAllUsers(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
 	var p *am.GetListOfAllUsersParams
 	re = jrm1.ParseParameters(params, &p)
@@ -218,6 +236,22 @@ func (srv *Server) GetListOfAllUsers(params *json.RawMessage, _ *jrm1.ResponseMe
 
 	var r *am.GetListOfAllUsersResult
 	r, re = srv.getListOfAllUsers(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) GetListOfAllUsersOnPage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *am.GetListOfAllUsersOnPageParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *am.GetListOfAllUsersOnPageResult
+	r, re = srv.getListOfAllUsersOnPage(p)
 	if re != nil {
 		return nil, re
 	}
