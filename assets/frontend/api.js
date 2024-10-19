@@ -1017,28 +1017,21 @@ async function viewUserParameters(userId) {
 
 // Various API helpers.
 
-async function getSelfSubscriptionsPaginated(pageNumber) {
-	let resp = await getSelfSubscriptionsOnPage(pageNumber);
-	if (resp == null) {
-		return null;
-	}
-	let result = new Subscriptions(
-		resp.result.sop.subscriber,
-		resp.result.sop.subscriptions,
-		[],
-		pageNumber,
-		resp.result.sop.totalPages,
-		resp.result.sop.totalSubscriptions,
-	)
+async function getSelfSubscriptionsWithThreadNamesPaginated(pageNumber) {
+	let resA = await getSelfSubscriptionsOnPage(pageNumber);
+	let us = resA.userSubscriptions;
+	let userId = us.subscriber;
+	let threadIds = us.subscriptions;
 
-	if ((result.ThreadIds != null) && (result.ThreadIds.length > 0)) {
-		resp = await getThreadNamesByIds(result.ThreadIds);
-		if (resp == null) {
-			return null;
-		}
-		result.ThreadNames = resp.result.threadNames;
+	let threadNames = [];
+	if (threadIds.length > 0) {
+		let resB = await getThreadNamesByIds(threadIds);
+		threadNames = resB.threadNames;
 	}
-	return result;
+
+	let pageData = jsonToPageData(resA.userSubscriptions.pageData);
+
+	return new SubscriptionsWithThreadNamesOnPage(userId, threadIds, threadNames, pageData);
 }
 
 // Models.
@@ -1075,7 +1068,7 @@ class Message {
 		if (this.Editor.Time == null) {
 			return new Date(this.Creator.Time);
 		}
-		return new Date(this.Editor.time);
+		return new Date(this.Editor.Time);
 	}
 
 	getMaxEditTime(settings) {
@@ -1099,6 +1092,16 @@ class OptionalEventParameters {
 	constructor(userId, time) {
 		this.UserId = userId;
 		this.Time = time;
+	}
+}
+
+class PageData {
+	constructor(pageNumber, totalPages, pageSize, itemsOnPage, totalItems) {
+		this.PageNumber = pageNumber;
+		this.TotalPages = totalPages;
+		this.PageSize = pageSize;
+		this.ItemsOnPage = itemsOnPage;
+		this.TotalItems = totalItems;
 	}
 }
 
@@ -1248,14 +1251,12 @@ class Settings {
 	}
 }
 
-class Subscriptions {
-	constructor(userId, threadIds, threadNames, pageNumber, totalPages, totalSubscriptions) {
+class SubscriptionsWithThreadNamesOnPage {
+	constructor(userId, threadIds, threadNames, pageData) {
 		this.UserId = userId;
 		this.ThreadIds = threadIds;
 		this.ThreadNames = threadNames;
-		this.PageNumber = pageNumber;
-		this.TotalPages = totalPages;
-		this.TotalSubscriptions = totalSubscriptions;
+		this.PageData = pageData;
 	}
 }
 
@@ -1340,13 +1341,20 @@ class UserRoles {
 
 // Methods related to models.
 
+function jsonToEventParameters(x) {
+	if (x == null) return null;
+	return new EventParameters(x.userId, x.time);
+}
+
 function jsonToForum(x) {
-	let creator = new EventParameters(x.creator.userId, x.creator.time);
-	let editor = new OptionalEventParameters(x.editor.userId, x.editor.time);
+	if (x == null) return null;
+	let creator = jsonToEventParameters(x.creator);
+	let editor = jsonToOptionalEventParameters(x.editor);
 	return new Forum(x.id, x.sectionId, x.name, x.threads, creator, editor);
 }
 
 function jsonToForums(x) {
+	if (x == null) return null;
 	let fs = [];
 	let f;
 	for (let i = 0; i < x.length; i++) {
@@ -1357,12 +1365,14 @@ function jsonToForums(x) {
 }
 
 function jsonToMessage(x) {
-	let creator = new EventParameters(x.creator.userId, x.creator.time);
-	let editor = new OptionalEventParameters(x.editor.userId, x.editor.time);
+	if (x == null) return null;
+	let creator = jsonToEventParameters(x.creator);
+	let editor = jsonToOptionalEventParameters(x.editor);
 	return new Message(x.id, x.threadId, x.text, x.textChecksum, creator, editor);
 }
 
 function jsonToMessages(x) {
+	if (x == null) return null;
 	let ms = [];
 	let m;
 	for (let i = 0; i < x.length; i++) {
@@ -1373,10 +1383,12 @@ function jsonToMessages(x) {
 }
 
 function jsonToNotification(x) {
+	if (x == null) return null;
 	return new Notification(x.id, x.userId, x.text, x.toc, x.isRead, x.tor);
 }
 
 function jsonToNotifications(x) {
+	if (x == null) return null;
 	let ns = [];
 	let n;
 	for (let i = 0; i < x.length; i++) {
@@ -1386,13 +1398,25 @@ function jsonToNotifications(x) {
 	return ns;
 }
 
+function jsonToOptionalEventParameters(x) {
+	if (x == null) return null;
+	return new OptionalEventParameters(x.userId, x.time);
+}
+
+function jsonToPageData(x) {
+	if (x == null) return null;
+	return new PageData(x.pageNumber, x.totalPages, x.pageSize, x.itemsOnPage, x.totalItems);
+}
+
 function jsonToSection(x) {
-	let creator = new EventParameters(x.creator.userId, x.creator.time);
-	let editor = new OptionalEventParameters(x.editor.userId, x.editor.time);
+	if (x == null) return null;
+	let creator = jsonToEventParameters(x.creator);
+	let editor = jsonToOptionalEventParameters(x.editor);
 	return new Section(x.id, x.parent, x.childType, x.children, x.name, creator, editor);
 }
 
 function jsonToSections(x) {
+	if (x == null) return null;
 	let ss = [];
 	let s;
 	for (let i = 0; i < x.length; i++) {
@@ -1403,12 +1427,14 @@ function jsonToSections(x) {
 }
 
 function jsonToThread(x) {
-	let creator = new EventParameters(x.creator.userId, x.creator.time);
-	let editor = new OptionalEventParameters(x.editor.userId, x.editor.time);
+	if (x == null) return null;
+	let creator = jsonToEventParameters(x.creator);
+	let editor = jsonToOptionalEventParameters(x.editor);
 	return new Thread(x.id, x.forumId, x.name, x.messages, creator, editor);
 }
 
 function jsonToThreads(x) {
+	if (x == null) return null;
 	let ts = [];
 	let t;
 	for (let i = 0; i < x.length; i++) {
@@ -1419,8 +1445,14 @@ function jsonToThreads(x) {
 }
 
 function jsonToUser(x) {
-	let userRoles = new UserRoles(x.roles.isAdministrator, x.roles.isModerator, x.roles.isAuthor, x.roles.isWriter, x.roles.isReader, x.roles.canLogIn);
+	if (x == null) return null;
+	let userRoles = jsonToUserRoles(x.roles);
 	return new User(x.id, x.preRegTime, x.email, x.name, x.approvalTime, x.regTime, userRoles, x.lastBadLogInTime, x.banTime, x.lastBadActionTime);
+}
+
+function jsonToUserRoles(x) {
+	if (x == null) return null;
+	return new UserRoles(x.isAdministrator, x.isModerator, x.isAuthor, x.isWriter, x.isReader, x.canLogIn);
 }
 
 function putArrayItemsIntoMap(a) {
@@ -1710,17 +1742,6 @@ function processMessageText(msgText) {
 	return txt;
 }
 
-function repairUndefinedPageCount(pageCount) {
-	// Unfortunately JavaScript can compare a number with 'undefined' !
-	if (pageCount === undefined) {
-		return 1;
-	}
-	if (pageCount === 0) {
-		return 1;
-	}
-	return pageCount;
-}
-
 // URL composition.
 
 function composeCaptchaImageUrl(captchaId) {
@@ -1777,8 +1798,9 @@ function composeUrlForThreadPage(threadId, page) {
 
 function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
 	let div = document.createElement("DIV");
-	div.className = "paginator";
-	div.id = "paginator";
+	let cn = PageZoneClass.Paginator;
+	div.className = cn;
+	div.id = cn;
 
 	let s = document.createElement("span");
 	s.textContent = "Page " + pageNumber + " of " + pageCount + " ";
@@ -1786,9 +1808,9 @@ function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
 
 	let btnPrev = document.createElement("input");
 	btnPrev.type = "button";
-	btnPrev.className = "btnPrev";
-	btnPrev.id = "btnPrev";
-	btnPrev.value = "<";
+	btnPrev.className = ButtonClass.PaginatorPrev;
+	btnPrev.id = ButtonClass.PaginatorPrev;
+	btnPrev.value = ButtonName.PaginatorPrev;
 	addClickEventHandler(btnPrev, variantPrev);
 	div.appendChild(btnPrev);
 
@@ -1799,9 +1821,9 @@ function addPaginator(el, pageNumber, pageCount, variantPrev, variantNext) {
 
 	let btnNext = document.createElement("input");
 	btnNext.type = "button";
-	btnNext.className = "btnNext";
-	btnNext.id = "btnNext";
-	btnNext.value = ">";
+	btnNext.className = ButtonClass.PaginatorNext;
+	btnNext.id = ButtonClass.PaginatorNext;
+	btnNext.value = ButtonName.PaginatorNext;
 	addClickEventHandler(btnNext, variantNext);
 	div.appendChild(btnNext);
 
@@ -1856,51 +1878,53 @@ function showActionSuccess(btn, txt) {
 }
 
 function addClickEventHandler(btn, ehVariant) {
+	let en = "click";
+
 	switch (ehVariant) {
 		case EventHandlerVariant.ForumPagePrev:
-			btn.addEventListener("click", async (e) => {
+			btn.addEventListener(en, async (e) => {
 				await onBtnPrevClick_forumPage(btn);
 			});
 			return;
 
 		case EventHandlerVariant.ForumPageNext:
-			btn.addEventListener("click", async (e) => {
+			btn.addEventListener(en, async (e) => {
 				await onBtnNextClick_forumPage(btn);
 			});
 			return;
 
 		case EventHandlerVariant.ThreadPagePrev:
-			btn.addEventListener("click", async (e) => {
+			btn.addEventListener(en, async (e) => {
 				await onBtnPrevClick_threadPage(btn);
 			});
 			return;
 
 		case EventHandlerVariant.ThreadPageNext:
-			btn.addEventListener("click", async (e) => {
+			btn.addEventListener(en, async (e) => {
 				await onBtnNextClick_threadPage(btn);
 			});
 			return;
 
 		case EventHandlerVariant.SubscriptionsPrev:
-			btn.addEventListener("click", async (e) => {
+			btn.addEventListener(en, async (e) => {
 				await onBtnPrevClick_subscriptionsPage(btn);
 			});
 			return;
 
 		case EventHandlerVariant.SubscriptionsNext:
-			btn.addEventListener("click", async (e) => {
+			btn.addEventListener(en, async (e) => {
 				await onBtnNextClick_subscriptionsPage(btn);
 			});
 			return;
 
 		case EventHandlerVariant.NotificationsPagePrev:
-			btn.addEventListener("click", async (e) => {
+			btn.addEventListener(en, async (e) => {
 				await onBtnPrevClick_notificationsPage(btn);
 			});
 			return;
 
 		case EventHandlerVariant.NotificationsPageNext:
-			btn.addEventListener("click", async (e) => {
+			btn.addEventListener(en, async (e) => {
 				await onBtnNextClick_notificationsPage(btn);
 			});
 			return;

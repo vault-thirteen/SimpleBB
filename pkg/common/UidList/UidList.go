@@ -111,6 +111,10 @@ func (ul *UidList) Size() (n cmb.Count) {
 
 // HasItem checks whether an item is contained in the list or not.
 func (ul *UidList) HasItem(uid cmb.Id) bool {
+	if ul == nil {
+		return false
+	}
+
 	for _, x := range *ul {
 		if x == uid {
 			return true

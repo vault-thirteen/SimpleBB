@@ -100,9 +100,54 @@ ButtonName = {
 	SubscribeToThread: "Subscribe",
 	AddMessage: "Add a Message",
 	EditMessage: "Edit Message",
+	Notifications: " ☼ ",
+	Account: "Account",
+	PaginatorPrev: "<",
+	PaginatorNext: ">",
+	ShowFullNotificationU: "Show",
+	MarkNotificationAsReadU: "Read",
+	DeleteNotificationU: "DEL",
+	Unsubscribe: "Unsubscribe",
+	ConfirmThreadStart: "Confirm",
+	ConfirmMessageCreation: "Send Message",
+	ConfirmMessageEdit: "Save Message",
+}
+
+ButtonClass = {
+	BackToRoot: "btnGoToIndex",
+	BackToSection: "btnGoToSection",
+	BackToForum: "btnGoToForum",
+	BackToThread: "btnGoToThread",
+	StartNewThread: "btnStartNewThread",
+	SubscribeToThread: "btnSubscribe",
+	AddMessage: "btnAddMessage",
+	EditMessage: "btnEditMessage",
+	NotificationsOn: "btnNotificationsOn",
+	NotificationsOff: "btnNotificationsOff",
+	Account: "btnAccount",
+	PaginatorPrev: "btnPrev",
+	PaginatorNext: "btnNext",
+	ShowFullNotificationU: "btnShowFullNotificationU",
+	MarkNotificationAsReadU: "btnMarkNotificationAsReadU",
+	DeleteNotificationU: "btnDeleteNotificationU",
+	Unsubscribe: "btnUnsubscribe",
+	ConfirmThreadStart: "btnConfirmThreadStart",
+	ConfirmMessageCreation: "btnConfirmMessageCreation",
+	ConfirmMessageEdit: "btnConfirmMessageEdit",
+}
+
+PageZoneClass = {
+	L: "L",
+	R: "R",
+	ActionPanel: "actionPanel",
+	PageHead: "pageHead",
+	PageTitle: "pageTitle",
+	Paginator: "paginator",
+	BottomActionPanel: "bottomActionPanel",
 }
 
 ObjectType = {
+	Section: "Section",
 	Forum: "Forum",
 	Thread: "Thread",
 	Message: "Message",
@@ -117,6 +162,14 @@ EventHandlerVariant = {
 	SubscriptionsNext: "SubscriptionsNext",
 	NotificationsPagePrev: "NotificationsPagePrev",
 	NotificationsPageNext: "NotificationsPageNext",
+}
+
+UserRole = {
+	Administrator: "Administrator",
+	Moderator: "Moderator",
+	Author: "Author",
+	Writer: "Writer",
+	Reader: "Reader",
 }
 
 // Global variables.
@@ -139,11 +192,8 @@ class UserNameCache {
 			return this.m.get(userId);
 		}
 
-		let resp = await getUserName(userId);
-		if (resp == null) {
-			return null;
-		}
-		let user = new User(resp.result.user);
+		let res = await getUserName(userId);
+		let user = jsonToUser(res.user);
 		this.m.set(userId, user.Name);
 		return user.Name;
 	}
@@ -592,11 +642,8 @@ async function showChangePwd3Form() {
 }
 
 async function showUserPage() {
-	let resp = await getSelfRoles();
-	if (resp == null) {
-		return;
-	}
-	let user = jsonToUser(resp.result.user);
+	let res = await getSelfRoles();
+	let user = jsonToUser(res.user);
 	let settings = getSettings();
 
 	// Draw.
@@ -608,22 +655,13 @@ async function showUserPage() {
 }
 
 async function showPage_Notifications() {
-	let pageNumber = mca_gvc.Page;
-	let resp = await getNotificationsOnPage(pageNumber);
-	if (resp == null) {
-		return;
-	}
-	let pageCount = resp.result.nop.totalPages;
-	pageCount = repairUndefinedPageCount(pageCount);
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	if (pageNumber > pageCount) {
-		console.error(Err.PageNotFound);
-		return;
+	let res = await getNotificationsOnPage(mca_gvc.Page);
+	let pageCount = res.nop.pageData.totalPages;
+	if (!preparePageNumber(pageCount)) {
+		return
 	}
 
-	let notifications = jsonToNotifications(resp.result.nop.notifications);
+	let notifications = jsonToNotifications(res.nop.notifications);
 	let settings = getSettings();
 
 	// Draw.
@@ -631,20 +669,16 @@ async function showPage_Notifications() {
 	showBlock(p);
 	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false);
-	drawNotificationsOnPage(p, notifications);
+	drawPageTitle(p, 'Notifications');
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.NotificationsPagePrev, EventHandlerVariant.NotificationsPageNext);
+	drawNotifications(p, 'notificationList', notifications);
 }
 
 async function showPage_Subscriptions() {
-	let pageNumber = mca_gvc.Page;
-	let sop = await getSelfSubscriptionsPaginated(pageNumber);
-	let pageCount = sop.TotalPages;
-	pageCount = repairUndefinedPageCount(pageCount);
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	if (pageNumber > pageCount) {
-		console.error(Err.PageNotFound);
-		return;
+	let swtnop = await getSelfSubscriptionsWithThreadNamesPaginated(mca_gvc.Page);
+	let pageCount = swtnop.PageData.TotalPages;
+	if (!preparePageNumber(pageCount)) {
+		return
 	}
 
 	let settings = getSettings();
@@ -654,17 +688,16 @@ async function showPage_Subscriptions() {
 	showBlock(p);
 	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false);
-	drawSubscriptionsOnPage(p, sop);
+	drawPageTitle(p, 'Subscriptions');
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.SubscriptionsPrev, EventHandlerVariant.SubscriptionsNext);
+	drawSubscriptions(p, 'subscriptionsList', swtnop);
 }
 
 async function showSection() {
 	let sectionId = mca_gvc.Id;
-	let resp = await listSectionsAndForums();
-	if (resp == null) {
-		return;
-	}
-	let sections = jsonToSections(resp.result.saf.sections);
-	let forums = jsonToForums(resp.result.saf.forums);
+	let res = await listSectionsAndForums();
+	let sections = jsonToSections(res.saf.sections);
+	let forums = jsonToForums(res.saf.forums);
 	let rootSectionIdx = getRootSectionIdx(sections);
 	if (rootSectionIdx == null) {
 		console.error(Err.RootSectionNotFound);
@@ -686,6 +719,7 @@ async function showSection() {
 		return;
 	}
 	let curSection = sectionsMap.get(sectionId);
+	console.debug("curSection:", curSection);//TODO
 	let curLevel = findCurrentNodeLevel(allNodes, sectionId);
 	createTreeOfSections(curSection, sectionsMap, curLevel, nodes);
 	let settings = getSettings();
@@ -704,25 +738,17 @@ async function showSection() {
 
 async function showForum() {
 	let forumId = mca_gvc.Id;
-	let pageNumber = mca_gvc.Page;
-	let resp = await listForumAndThreadsOnPage(forumId, pageNumber);
-	if (resp == null) {
-		return;
-	}
-	let pageCount = repairUndefinedPageCount(resp.result.fatop.totalPages);
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	if (pageNumber > pageCount) {
-		console.error(Err.PageNotFound);
-		return;
+	let res = await listForumAndThreadsOnPage(forumId, mca_gvc.Page);
+	let pageCount = res.fatop.pageData.totalPages;
+	if (!preparePageNumber(pageCount)) {
+		return
 	}
 
-	let forum = jsonToForum(resp.result.fatop.forum);
+	let forum = jsonToForum(res.fatop.forum);
 	if (forum.Id !== forumId) {
 		return;
 	}
-	let threads = jsonToThreads(resp.result.fatop.threads);
+	let threads = jsonToThreads(res.fatop.threads);
 	let threadsMap = putArrayItemsIntoMap(threads);
 	if (threadsMap == null) {
 		return;
@@ -734,32 +760,25 @@ async function showForum() {
 	showBlock(p);
 	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false, ObjectType.Section, forum.SectionId);
-	drawForumAndThreads(p, forum, threadsMap);
+	drawPageTitle(p, forum.Name);
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.ForumPagePrev, EventHandlerVariant.ForumPageNext);
+	drawForumThreads(p, forum, threadsMap);
 	await addBottomActionPanel(p, ObjectType.Forum, forum);
 }
 
 async function showThread() {
 	let threadId = mca_gvc.Id;
-	let pageNumber = mca_gvc.Page;
-	let resp = await listThreadAndMessagesOnPage(threadId, pageNumber);
-	if (resp == null) {
-		return;
-	}
-	let pageCount = resp.result.tamop.totalPages;
-	pageCount = repairUndefinedPageCount(pageCount);
-	mca_gvc.Pages = pageCount;
-
-	// Check page number for overflow.
-	if (pageNumber > pageCount) {
-		console.error(Err.PageNotFound);
-		return;
+	let res = await listThreadAndMessagesOnPage(threadId, mca_gvc.Page);
+	let pageCount = res.tamop.pageData.totalPages;
+	if (!preparePageNumber(pageCount)) {
+		return
 	}
 
-	let thread = jsonToThread(resp.result.tamop.thread);
+	let thread = jsonToThread(res.tamop.thread);
 	if (thread.Id !== threadId) {
 		return;
 	}
-	let messages = jsonToMessages(resp.result.tamop.messages);
+	let messages = jsonToMessages(res.tamop.messages);
 	let messagesMap = putArrayItemsIntoMap(messages);
 	if (messagesMap == null) {
 		return;
@@ -771,17 +790,16 @@ async function showThread() {
 	showBlock(p);
 	await addPageHead(p, settings.SiteName, false);
 	addActionPanel(p, false, ObjectType.Forum, thread.ForumId);
-	await drawThreadAndMessages(p, thread, messagesMap);
+	drawPageTitle(p, thread.Name);
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.ThreadPagePrev, EventHandlerVariant.ThreadPageNext);
+	await drawThreadMessages(p, thread, messagesMap);
 	await addBottomActionPanel(p, ObjectType.Thread, thread);
 }
 
 async function showMessage() {
 	let messageId = mca_gvc.Id;
-	let resp = await getMessage(messageId);
-	if (resp == null) {
-		return;
-	}
-	let message = jsonToMessage(resp.result.message);
+	let res = await getMessage(messageId);
+	let message = jsonToMessage(res.message);
 	let settings = getSettings();
 
 	// Draw.
@@ -794,12 +812,9 @@ async function showMessage() {
 }
 
 async function showBB() {
-	let resp = await listSectionsAndForums();
-	if (resp == null) {
-		return;
-	}
-	let sections = jsonToSections(resp.result.saf.sections);
-	let forums = jsonToForums(resp.result.saf.forums);
+	let res = await listSectionsAndForums();
+	let sections = jsonToSections(res.saf.sections);
+	let forums = jsonToForums(res.saf.forums);
 	let rootSectionIdx = getRootSectionIdx(sections);
 	if (rootSectionIdx == null) {
 		console.error(Err.RootSectionNotFound);
@@ -832,11 +847,8 @@ async function onReg1Submit(btn) {
 	let h3Field = document.getElementById("header3TextReg1");
 	let errField = document.getElementById("header4TextReg1");
 	let email = document.getElementById(Fi.id1).value;
-	let resp = await registerUser1(1, email);
-	if (resp == null) {
-		return;
-	}
-	let nextStep = resp.result.nextStep;
+	let res = await registerUser1(1, email);
+	let nextStep = res.nextStep;
 	if (nextStep !== 2) {
 		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
@@ -858,11 +870,8 @@ async function onReg2Submit(btn) {
 	let errField = document.getElementById("header4TextReg2");
 	let email = sessionStorage.getItem(Varname.RegistrationEmail);
 	let vcode = document.getElementById(Fi.id2).value;
-	let resp = await registerUser2(2, email, vcode);
-	if (resp == null) {
-		return;
-	}
-	let nextStep = resp.result.nextStep;
+	let res = await registerUser2(2, email, vcode);
+	let nextStep = res.nextStep;
 	if (nextStep !== 3) {
 		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
@@ -896,11 +905,8 @@ async function onReg3Submit(btn) {
 	let email = sessionStorage.getItem(Varname.RegistrationEmail);
 	let vcode = sessionStorage.getItem(Varname.RegistrationVcode);
 	let name = document.getElementById(Fi.id3).value;
-	let resp = await registerUser3(3, email, vcode, name, pwd.Pwd);
-	if (resp == null) {
-		return;
-	}
-	let nextStep = resp.result.nextStep;
+	let res = await registerUser3(3, email, vcode, name, pwd.Pwd);
+	let nextStep = res.nextStep;
 	if ((nextStep !== 4) && (nextStep !== 0)) {
 		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
@@ -922,11 +928,8 @@ async function onLogIn1Submit(btn) {
 	let h3Field = document.getElementById("header3TextLogIn1");
 	let errField = document.getElementById("header4TextLogIn1");
 	let email = document.getElementById(Fi.id5).value;
-	let resp = await logUserIn1(1, email);
-	if (resp == null) {
-		return;
-	}
-	let nextStep = resp.result.nextStep;
+	let res = await logUserIn1(1, email);
+	let nextStep = res.nextStep;
 	if (nextStep !== 2) {
 		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
@@ -935,13 +938,13 @@ async function onLogIn1Submit(btn) {
 
 	// Save some non-sensitive input data into browser for the next page.
 	sessionStorage.setItem(Varname.LogInEmail, email);
-	let requestId = resp.result.requestId;
+	let requestId = res.requestId;
 	sessionStorage.setItem(Varname.LogInRequestId, requestId);
-	let authDataBytes = resp.result.authDataBytes;
+	let authDataBytes = res.authDataBytes;
 	sessionStorage.setItem(Varname.LogInAuthDataBytes, authDataBytes);
-	let isCaptchaNeeded = resp.result.isCaptchaNeeded;
+	let isCaptchaNeeded = res.isCaptchaNeeded;
 	sessionStorage.setItem(Varname.LogInIsCaptchaNeeded, isCaptchaNeeded.toString());
-	let captchaId = resp.result.captchaId;
+	let captchaId = res.captchaId;
 	sessionStorage.setItem(Varname.LogInCaptchaId, captchaId);
 
 	// Redirect to next step.
@@ -971,11 +974,8 @@ async function onLogIn2Submit(btn) {
 	// Send the request.
 	let email = sessionStorage.getItem(Varname.LogInEmail);
 	let requestId = sessionStorage.getItem(Varname.LogInRequestId);
-	let resp = await logUserIn2(2, email, requestId, captchaAnswer, authChallengeResponse);
-	if (resp == null) {
-		return;
-	}
-	let nextStep = resp.result.nextStep;
+	let res = await logUserIn2(2, email, requestId, captchaAnswer, authChallengeResponse);
+	let nextStep = res.nextStep;
 	if (nextStep !== 3) {
 		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
@@ -988,7 +988,7 @@ async function onLogIn2Submit(btn) {
 	sessionStorage.removeItem(Varname.LogInCaptchaId);
 
 	// Save some non-sensitive input data into browser for the next page.
-	let newRequestId = resp.result.requestId;
+	let newRequestId = res.requestId;
 	sessionStorage.setItem(Varname.LogInRequestId, newRequestId);
 
 	// Redirect to next step.
@@ -1005,12 +1005,9 @@ async function onLogIn3Submit(btn) {
 	let vcode = document.getElementById(Fi.id8).value;
 	let email = sessionStorage.getItem(Varname.LogInEmail);
 	let requestId = sessionStorage.getItem(Varname.LogInRequestId);
-	let resp = await logUserIn3(3, email, requestId, vcode);
-	if (resp == null) {
-		return;
-	}
-	let nextStep = resp.result.nextStep;
-	let isWebTokenSet = resp.result.isWebTokenSet;
+	let res = await logUserIn3(3, email, requestId, vcode);
+	let nextStep = res.nextStep;
+	let isWebTokenSet = res.isWebTokenSet;
 	if (nextStep !== 0) {
 		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
@@ -1037,11 +1034,8 @@ async function onLogIn3Submit(btn) {
 async function onLogOut1Submit(btn) {
 	let errField = document.getElementById("header4TextLogOut1");
 	let h3Field = document.getElementById("header3TextLogOut1");
-	let resp = await logUserOut1();
-	if (resp == null) {
-		return;
-	}
-	let ok = resp.result.ok;
+	let res = await logUserOut1();
+	let ok = res.ok;
 	if (!ok) {
 		errField.innerHTML = composeErrorText(Err.NotOk);
 		return;
@@ -1062,11 +1056,8 @@ async function onChangeEmail1Submit(btn) {
 	let h3Field = document.getElementById("header3TextChangeEmail1");
 	let errField = document.getElementById("header4TextChangeEmail1");
 	let newEmail = document.getElementById(Fi.id9).value;
-	let resp = changeEmail1(1, newEmail);
-	if (resp == null) {
-		return;
-	}
-	let nextStep = resp.result.nextStep;
+	let res = changeEmail1(1, newEmail);
+	let nextStep = res.nextStep;
 	if (nextStep !== 2) {
 		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
@@ -1074,13 +1065,13 @@ async function onChangeEmail1Submit(btn) {
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
-	let requestId = resp.result.requestId;
+	let requestId = res.requestId;
 	sessionStorage.setItem(Varname.ChangeEmailRequestId, requestId);
-	let authDataBytes = resp.result.authDataBytes;
+	let authDataBytes = res.authDataBytes;
 	sessionStorage.setItem(Varname.ChangeEmailAuthDataBytes, authDataBytes);
-	let isCaptchaNeeded = resp.result.isCaptchaNeeded;
+	let isCaptchaNeeded = res.isCaptchaNeeded;
 	sessionStorage.setItem(Varname.ChangeEmailIsCaptchaNeeded, isCaptchaNeeded.toString());
-	let captchaId = resp.result.captchaId;
+	let captchaId = res.captchaId;
 	sessionStorage.setItem(Varname.ChangeEmailCaptchaId, captchaId);
 
 	// Redirect to next step.
@@ -1111,16 +1102,13 @@ async function onChangeEmail2Submit(btn) {
 	let requestId = sessionStorage.getItem(Varname.ChangeEmailRequestId);
 	let vCodeOld = document.getElementById(Fi.id12).value;
 	let vCodeNew = document.getElementById(Fi.id13).value;
-	let resp = changeEmail2(2, requestId, authChallengeResponse, vCodeOld, vCodeNew, captchaAnswer);
-	if (resp == null) {
-		return;
-	}
-	let nextStep = resp.result.nextStep;
+	let res = changeEmail2(2, requestId, authChallengeResponse, vCodeOld, vCodeNew, captchaAnswer);
+	let nextStep = res.nextStep;
 	if (nextStep !== 0) {
 		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
-	let ok = resp.result.ok;
+	let ok = res.ok;
 	if (!ok) {
 		errField.innerHTML = composeErrorText(Err.NotOk);
 		return;
@@ -1147,11 +1135,8 @@ async function onChangePwd1Submit(btn) {
 	let h3Field = document.getElementById("header3TextChangePwd1");
 	let errField = document.getElementById("header4TextChangePwd1");
 	let newPwd = document.getElementById(Fi.id14).value;
-	let resp = await changePwd1(1, newPwd);
-	if (resp == null) {
-		return;
-	}
-	let nextStep = resp.result.nextStep;
+	let res = await changePwd1(1, newPwd);
+	let nextStep = res.nextStep;
 	if (nextStep !== 2) {
 		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
@@ -1159,13 +1144,13 @@ async function onChangePwd1Submit(btn) {
 	errField.innerHTML = "";
 
 	// Save some non-sensitive input data into browser for the next page.
-	let requestId = resp.result.requestId;
+	let requestId = res.requestId;
 	sessionStorage.setItem(Varname.ChangePwdRequestId, requestId);
-	let authDataBytes = resp.result.authDataBytes;
+	let authDataBytes = res.authDataBytes;
 	sessionStorage.setItem(Varname.ChangePwdAuthDataBytes, authDataBytes);
-	let isCaptchaNeeded = resp.result.isCaptchaNeeded;
+	let isCaptchaNeeded = res.isCaptchaNeeded;
 	sessionStorage.setItem(Varname.ChangePwdIsCaptchaNeeded, isCaptchaNeeded.toString());
-	let captchaId = resp.result.captchaId;
+	let captchaId = res.captchaId;
 	sessionStorage.setItem(Varname.ChangePwdCaptchaId, captchaId);
 
 	// Redirect to next step.
@@ -1195,16 +1180,13 @@ async function onChangePwd2Submit(btn) {
 	// Send the request.
 	let requestId = sessionStorage.getItem(Varname.ChangePwdRequestId);
 	let vcode = document.getElementById(Fi.id17).value;
-	let resp = await changePwd2(2, requestId, authChallengeResponse, vcode, captchaAnswer);
-	if (resp == null) {
-		return;
-	}
-	let nextStep = resp.result.nextStep;
+	let res = await changePwd2(2, requestId, authChallengeResponse, vcode, captchaAnswer);
+	let nextStep = res.nextStep;
 	if (nextStep !== 0) {
 		errField.innerHTML = composeErrorText(Err.NextStepUnknown);
 		return;
 	}
-	let ok = resp.result.ok;
+	let ok = res.ok;
 	if (!ok) {
 		errField.innerHTML = composeErrorText(Err.NotOk);
 		return;
@@ -1385,7 +1367,7 @@ async function onBtnStartNewThreadClick(btn, panelCN, forumId) {
 		'<input type="text" name="parent" id="parent" value="' + forumId + '" readonly="readonly" hidden="hidden"/>';
 	div.appendChild(d);
 	d = document.createElement("DIV");
-	d.innerHTML = '<input type="button" class="btnConfirmThreadStart" value="Confirm" onclick="onBtnConfirmThreadStartClick(this)">';
+	d.innerHTML = '<input type="button" class="' + ButtonClass.ConfirmThreadStart + '" value="' + ButtonName.ConfirmThreadStart + '" onclick="onBtnConfirmThreadStartClick(this)">';
 	div.appendChild(d);
 }
 
@@ -1404,18 +1386,15 @@ async function onBtnConfirmThreadStartClick(btn) {
 	}
 
 	// Work.
-	let resp = await addThread(parent, name);
-	if (resp == null) {
-		return;
-	}
-	let threadId = resp.result.threadId;
+	let res = await addThread(parent, name);
+	let threadId = res.threadId;
 	disableParentForm(btn, pp, false);
 	let txt = "A thread was created. ID=" + threadId.toString() + ".";
 	showActionSuccess(btn, txt);
 	await reloadPage(true);
 }
 
-async function onBtnAddMessageClick(btn, panelCN, threadId) {
+function onBtnAddMessageClick(btn, panelCN, threadId) {
 	disableButton(btn);
 	let p = document.getElementById(panelCN);
 	let div = document.createElement("DIV");
@@ -1437,7 +1416,7 @@ async function onBtnAddMessageClick(btn, panelCN, threadId) {
 		'<input type="text" name="parent" id="parent" value="' + threadId + '" readonly="readonly" hidden="hidden"/>';
 	div.appendChild(d);
 	d = document.createElement("DIV");
-	d.innerHTML = '<input type="button" class="btnConfirmMessageCreation" value="Send Message" onclick="onBtnConfirmMessageCreationClick(this)">';
+	d.innerHTML = '<input type="button" class="' + ButtonClass.ConfirmMessageCreation + '" value="' + ButtonName.ConfirmMessageCreation + '" onclick="onBtnConfirmMessageCreationClick(this)">';
 	div.appendChild(d);
 }
 
@@ -1456,11 +1435,8 @@ async function onBtnConfirmMessageCreationClick(btn) {
 	}
 
 	// Work.
-	let resp = await addMessage(parent, text);
-	if (resp == null) {
-		return;
-	}
-	let messageId = resp.result.messageId;
+	let res = await addMessage(parent, text);
+	let messageId = res.messageId;
 	disableParentForm(btn, pp, false);
 	let txt = "A message was created. ID=" + messageId.toString() + ".";
 	showActionSuccess(btn, txt);
@@ -1468,11 +1444,8 @@ async function onBtnConfirmMessageCreationClick(btn) {
 }
 
 async function onBtnSubscribeClick(btn, threadId, userId) {
-	let resp = await addSubscription(threadId, userId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await addSubscription(threadId, userId);
+	if (res.ok !== true) {
 		return;
 	}
 	disableButton(btn);
@@ -1480,11 +1453,8 @@ async function onBtnSubscribeClick(btn, threadId, userId) {
 
 async function onBtnEditMessageClick(btn, panelCN, messageId) {
 	// Get edited message.
-	let resp = await getMessage(messageId);
-	if (resp == null) {
-		return;
-	}
-	let message = jsonToMessages(resp.result.message);
+	let res = await getMessage(messageId);
+	let message = jsonToMessages(res.message);
 
 	disableButton(btn);
 	let p = document.getElementById(panelCN);
@@ -1507,7 +1477,7 @@ async function onBtnEditMessageClick(btn, panelCN, messageId) {
 		'<input type="text" name="id" id="id" value="' + messageId + '" readonly="readonly" hidden="hidden"/>';
 	div.appendChild(d);
 	d = document.createElement("DIV");
-	d.innerHTML = '<input type="button" class="btnConfirmMessageEdit" value="Save Message" onclick="onBtnConfirmMessageEditClick(this)">';
+	d.innerHTML = '<input type="button" class="' + ButtonClass.ConfirmMessageEdit + '" value="' + ButtonName.ConfirmMessageEdit + '" onclick="onBtnConfirmMessageEditClick(this)">';
 	div.appendChild(d);
 }
 
@@ -1526,11 +1496,8 @@ async function onBtnConfirmMessageEditClick(btn) {
 	}
 
 	// Work.
-	let resp = await changeMessageText(messageId, newText);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await changeMessageText(messageId, newText);
+	if (res.ok !== true) {
 		return;
 	}
 	disableParentForm(btn, pp, false);
@@ -1540,11 +1507,8 @@ async function onBtnConfirmMessageEditClick(btn) {
 }
 
 async function onBtnMarkNotificationAsReadClick(btn, notificationId) {
-	let resp = await markNotificationAsRead(notificationId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await markNotificationAsRead(notificationId);
+	if (res.ok !== true) {
 		return;
 	}
 
@@ -1563,11 +1527,8 @@ async function onBtnMarkNotificationAsReadClick(btn, notificationId) {
 }
 
 async function onBtnDeleteNotificationClick(btn, notificationId) {
-	let resp = await deleteNotification(notificationId);
-	if (resp == null) {
-		return;
-	}
-	if (resp.result.ok !== true) {
+	let res = await deleteNotification(notificationId);
+	if (res.ok !== true) {
 		return;
 	}
 
@@ -1585,7 +1546,7 @@ async function onBtnDeleteNotificationClick(btn, notificationId) {
 	disableButton(btn);
 }
 
-async function onBtnShowFullNotificationClick(btn) {
+function onBtnShowFullNotificationClick(btn) {
 	let tr = btn.parentNode.parentNode;
 	let td = tr.childNodes[2];
 	let subtableTbody = td.childNodes[0].childNodes[0];
@@ -1606,11 +1567,8 @@ async function onBtnShowFullNotificationClick(btn) {
 async function onBtnUnsubscribeClick(btn) {
 	let tr = btn.parentElement.parentElement;
 	let threadId = Number(tr.children[1].textContent);
-	let resp = await deleteSelfSubscription(threadId);
-	if (resp == null) {
-		return;
-	}
-	if (!resp.result.ok) {
+	let res = await deleteSelfSubscription(threadId);
+	if (!res.ok) {
 		return;
 	}
 	tr.style.display = "none";
@@ -1623,42 +1581,37 @@ async function addPageHead(el, text, atTop) {
 	let isLoggedInB = isLoggedIn(settings);
 	let unreadNotificationsCount = -1;
 	if (isLoggedInB) {
-		let resp = await countUnreadNotifications();
-		if (resp == null) {
-			return;
-		}
-		unreadNotificationsCount = resp.result.unc;
+		unreadNotificationsCount = (await countUnreadNotifications()).unc;
 	}
 
 	// Draw.
-	let cn = "pageHead";
 	let div = document.createElement("DIV");
+	let cn = PageZoneClass.PageHead;
 	div.className = cn;
 	div.id = cn;
-
 	let tbl = document.createElement("TABLE");
 	let tr = document.createElement("TR");
 	let tdL = document.createElement("TD");
-	tdL.className = cn + "L";
-	tdL.id = cn + "L";
+	tdL.className = cn + PageZoneClass.L;
+	tdL.id = cn + PageZoneClass.L;
 	tdL.textContent = text;
 	tr.appendChild(tdL);
 	let tdR = document.createElement("TD");
-	tdR.className = cn + "R";
-	tdR.id = cn + "R";
+	tdR.className = cn + PageZoneClass.R;
+	tdR.id = cn + PageZoneClass.R;
 	if (!isLoggedInB) {
 		tdR.cssText = '';
 	} else {
 		let bcn;
 		if (unreadNotificationsCount > 0) {
-			bcn = "btnNotificationsOn";
+			bcn = ButtonClass.NotificationsOn;
 		} else {
-			bcn = "btnNotificationsOff";
+			bcn = ButtonClass.NotificationsOff;
 		}
 
 		tdR.innerHTML = '<table><tr>' +
-			'<td><input type="button" value=" ☼ " class="' + bcn + '" onclick="onBtnNotificationsClick(this)" /></td>'
-			+ '<td><input type="button" value="Account" class="btnAccount" onclick="onBtnAccountClick(this)" /></td>' +
+			'<td><input type="button" value="' + ButtonName.Notifications + '" class="' + bcn + '" onclick="onBtnNotificationsClick(this)" /></td>'
+			+ '<td><input type="button" value="' + ButtonName.Account + '" class="' + ButtonClass.Account + '" onclick="onBtnAccountClick(this)" /></td>' +
 			'</tr></table>';
 	}
 	tr.appendChild(tdR);
@@ -1673,37 +1626,39 @@ async function addPageHead(el, text, atTop) {
 }
 
 function addActionPanel(el, atTop, parentType, parentId) {
-	let cn = "actionPanel";
 	let div = document.createElement("DIV");
+	let cn = PageZoneClass.ActionPanel;
 	div.className = cn;
 	div.id = cn;
 	let tbl = document.createElement("TABLE");
 	let tr = document.createElement("TR");
 	let td = document.createElement("TD");
-	td.innerHTML = '<form><input type="button" value="' + ButtonName.BackToRoot + '" class="btnGoToIndex" onclick="onBtnGoToIndexClick(this)" /></form>';
+	td.innerHTML = '<form><input type="button" value="' + ButtonName.BackToRoot + '" class="' + ButtonClass.BackToRoot + '" onclick="onBtnGoToIndexClick(this)" /></form>';
 	tr.appendChild(td);
 
-	switch (parentType) {
-		case ObjectType.Thread:
-			td = document.createElement("TD");
-			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
-				'<input type="button" value="' + ButtonName.BackToThread + '" class="btnGoToThread" onclick="onBtnGoToThreadClick(' + parentId + ')" />';
-			tr.appendChild(td);
-			break;
+	if (parentType != null) {
+		switch (parentType) {
+			case ObjectType.Thread:
+				td = document.createElement("TD");
+				td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
+					'<input type="button" value="' + ButtonName.BackToThread + '" class="' + ButtonClass.BackToThread + '" onclick="onBtnGoToThreadClick(' + parentId + ')" />';
+				tr.appendChild(td);
+				break;
 
-		case ObjectType.Forum:
-			td = document.createElement("TD");
-			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
-				'<input type="button" value="' + ButtonName.BackToForum + '" class="btnGoToForum" onclick="onBtnGoToForumClick(' + parentId + ')" />';
-			tr.appendChild(td);
-			break;
+			case ObjectType.Forum:
+				td = document.createElement("TD");
+				td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
+					'<input type="button" value="' + ButtonName.BackToForum + '" class="' + ButtonClass.BackToForum + '" onclick="onBtnGoToForumClick(' + parentId + ')" />';
+				tr.appendChild(td);
+				break;
 
-		case ObjectType.Section:
-			td = document.createElement("TD");
-			td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
-				'<input type="button" value="' + ButtonName.BackToSection + '" class="btnGoToSection" onclick="onBtnGoToSectionClick(' + parentId + ')" />';
-			tr.appendChild(td);
-			break;
+			case ObjectType.Section:
+				td = document.createElement("TD");
+				td.innerHTML = '<span class="spacerA">&nbsp;</span>' +
+					'<input type="button" value="' + ButtonName.BackToSection + '" class="' + ButtonClass.BackToSection + '" onclick="onBtnGoToSectionClick(' + parentId + ')" />';
+				tr.appendChild(td);
+				break;
+		}
 	}
 
 	tbl.appendChild(tr);
@@ -1717,27 +1672,25 @@ function addActionPanel(el, atTop, parentType, parentId) {
 }
 
 async function addBottomActionPanel(el, objectType, object) {
-	let resp = await getSelfRoles();
-	if (resp == null) {
-		return;
-	}
-	let user = jsonToUser(resp.result.user);
-	let cn = "bottomActionPanel";
+	let res = await getSelfRoles();
+	let user = jsonToUser(res.user);
+	let cn = PageZoneClass.BottomActionPanel;
+	let cnL = cn + PageZoneClass.L;
+	let cnR = cn + PageZoneClass.R;
 
 	let div = document.createElement("DIV");
 	div.className = cn;
 	div.id = cn;
-
 	let tbl = document.createElement("TABLE");
 	let tr = document.createElement("TR");
 	tbl.appendChild(tr);
 	let tdL = document.createElement("TD");
-	tdL.id = "bottomActionPanelLeft";
-	tdL.className = "bottomActionPanelLeft";
+	tdL.id = cnL;
+	tdL.className = cnL;
 	tr.appendChild(tdL);
 	let tdR = document.createElement("TD");
-	tdR.id = "bottomActionPanelRight";
-	tdR.className = "bottomActionPanelRight";
+	tdR.id = cnR;
+	tdR.className = cnR;
 	tr.appendChild(tdR);
 	div.appendChild(tbl);
 	el.appendChild(div);
@@ -1759,7 +1712,7 @@ async function addBottomActionPanel(el, objectType, object) {
 
 function drawPageTitle(p, title) {
 	let d = document.createElement("DIV");
-	d.className = "pageTitle";
+	d.className = PageZoneClass.PageTitle;
 	let ml = SectionMarginDelta;
 	d.style.cssText = "margin-left: " + ml + "px";
 	d.textContent = title;
@@ -1767,38 +1720,31 @@ function drawPageTitle(p, title) {
 }
 
 async function drawBottomActionPanelButtonsForForum(forum, tdL, tdR, user, panelClass) {
-	if (user.IsAuthor) {
-		tdR.innerHTML = '<form><input type="button" value="' + ButtonName.StartNewThread + '" class="btnStartNewThread" ' +
+	if (user.Roles.IsAuthor) {
+		tdR.innerHTML = '<form><input type="button" value="' + ButtonName.StartNewThread + '" class="' + ButtonClass.StartNewThread + '" ' +
 			'onclick="onBtnStartNewThreadClick(this, \'' + panelClass + '\', ' + forum.Id + ')" /></form>';
 	}
 }
 
 async function drawBottomActionPanelButtonsForThread(thread, tdL, tdR, user, panelClass) {
-	let resp = await getLatestMessageOfThread(thread.Id);
-	if (resp == null) {
-		return;
-	}
-	let latestMessageInThread = jsonToMessage(resp.result.message);
-
-	resp = await isSelfSubscribed(thread.Id);
-	if (resp == null) {
-		return;
-	}
-	let isUserSubscribed = resp.result.isSubscribed;
+	let resA = await getLatestMessageOfThread(thread.Id);
+	let latestMessageInThread = jsonToMessage(resA.message);
+	let resB = await isSelfSubscribed(thread.Id);
+	let isUserSubscribed = resB.isSubscribed;
 
 	let tbl = document.createElement("TABLE");
 	let tr = document.createElement("TR");
 
 	if (!isUserSubscribed) {
 		let td = document.createElement("TD");
-		td.innerHTML += '<form><input type="button" value="' + ButtonName.SubscribeToThread + '" class="btnSubscribe" ' +
+		td.innerHTML += '<form><input type="button" value="' + ButtonName.SubscribeToThread + '" class="' + ButtonClass.SubscribeToThread + '" ' +
 			'onclick="onBtnSubscribeClick(this, ' + thread.Id + ', ' + user.Id + ')" /></form>';
 		tr.appendChild(td);
 	}
 
 	if (user.canAddMessage(latestMessageInThread)) {
 		let td = document.createElement("TD");
-		td.innerHTML += '<form><input type="button" value="' + ButtonName.AddMessage + '" class="btnAddMessage" ' +
+		td.innerHTML += '<form><input type="button" value="' + ButtonName.AddMessage + '" class="' + ButtonClass.AddMessage + '" ' +
 			'onclick="onBtnAddMessageClick(this, \'' + panelClass + '\', ' + thread.Id + ')" /></form>';
 		tr.appendChild(td);
 	}
@@ -1808,9 +1754,9 @@ async function drawBottomActionPanelButtonsForThread(thread, tdL, tdR, user, pan
 }
 
 async function drawBottomActionPanelButtonsForMessage(message, tdL, tdR, user, panelClass) {
-	if (user.IsAuthor) {
+	if (user.Roles.IsAuthor) {
 		if (user.canEditMessage(message)) {
-			tdR.innerHTML = '<form><input type="button" value="' + ButtonName.EditMessage + '" class="btnEditMessage" ' +
+			tdR.innerHTML = '<form><input type="button" value="' + ButtonName.EditMessage + '" class="' + ButtonClass.EditMessage + '" ' +
 				'onclick="onBtnEditMessageClick(this, \'' + panelClass + '\', ' + message.Id + ')" /></form>';
 		}
 	}
@@ -1872,18 +1818,6 @@ async function drawThreadMessages(p, thread, messagesMap) {
 	}
 }
 
-async function drawThreadAndMessages(p, thread, messagesMap) {
-	drawPageTitle(p, thread.Name);
-	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.ThreadPagePrev, EventHandlerVariant.ThreadPageNext);
-	await drawThreadMessages(p, thread, messagesMap);
-}
-
-function drawForumAndThreads(p, forum, threadsMap) {
-	drawPageTitle(p, forum.Name);
-	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.ForumPagePrev, EventHandlerVariant.ForumPageNext);
-	drawForumThreads(p, forum, threadsMap);
-}
-
 function drawForumThreads(p, forum, threadsMap) {
 	let divThread, ml, url, threadId, thread;
 	let threadIds = forum.Threads;
@@ -1943,13 +1877,7 @@ function drawSectionsAndForums(p, nodes, forumsMap) {
 	}
 }
 
-function drawSubscriptionsOnPage(p, sop) {
-	drawPageTitle(p, 'Subscriptions');
-	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.SubscriptionsPrev, EventHandlerVariant.SubscriptionsNext);
-	drawSubscriptions(p, 'subscriptionsList', sop);
-}
-
-function drawSubscriptions(p, elClass, sop) {
+function drawSubscriptions(p, elClass, swtnop) {
 	let tbl = document.createElement("TABLE");
 	tbl.className = elClass;
 
@@ -1971,15 +1899,15 @@ function drawSubscriptions(p, elClass, sop) {
 	let columnsWithLink = [1, 2];
 	let columnsWithHtml = [3];
 
-	if (sop.ThreadIds == null) {
+	if (swtnop.ThreadIds == null) {
 		return;
 	}
 
 	// Cells.
 	let threadId, threadName;
-	for (let i = 0; i < sop.ThreadIds.length; i++) {
-		threadId = sop.ThreadIds[i];
-		threadName = sop.ThreadNames[i];
+	for (let i = 0; i < swtnop.ThreadIds.length; i++) {
+		threadId = swtnop.ThreadIds[i];
+		threadName = swtnop.ThreadNames[i];
 
 		// Fill data.
 		tr = document.createElement("TR");
@@ -1991,7 +1919,7 @@ function drawSubscriptions(p, elClass, sop) {
 		tds[0] = (i + 1).toString();
 		tds[1] = threadId.toString();
 		tds[2] = threadName;
-		tds[3] = '<input type="button" class="btnUnsubscribe" value="Unsubscribe" onclick="onBtnUnsubscribeClick(this)">';
+		tds[3] = '<input type="button" class="' + ButtonClass.Unsubscribe + '" value="' + ButtonName.Unsubscribe + '" onclick="onBtnUnsubscribeClick(this)">';
 
 		let td, url;
 		for (let j = 0; j < tds.length; j++) {
@@ -2016,12 +1944,6 @@ function drawSubscriptions(p, elClass, sop) {
 
 		tbl.appendChild(tr);
 	}
-}
-
-function drawNotificationsOnPage(p, notifications) {
-	drawPageTitle(p, 'Notifications');
-	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.NotificationsPagePrev, EventHandlerVariant.NotificationsPageNext);
-	drawNotifications(p, 'notificationList', notifications);
 }
 
 function drawNotifications(p, elClass, notifications) {
@@ -2060,11 +1982,11 @@ function drawNotifications(p, elClass, notifications) {
 		tds[1] = prettyTime(notification.ToC);
 		tds[2] = splitNotificationTextCell(notification.Text);
 
-		actions = '<input type="button" class="btnShowFullNotificationU" value="Show" onclick="onBtnShowFullNotificationClick(this)">';
+		actions = '<input type="button" class="' + ButtonClass.ShowFullNotificationU + '" value="' + ButtonName.ShowFullNotificationU + '" onclick="onBtnShowFullNotificationClick(this)">';
 		if (!notification.IsRead) {
-			actions += '<input type="button" class="btnMarkNotificationAsReadU" value="Read" onclick="onBtnMarkNotificationAsReadClick(this, ' + notification.Id + ')">';
+			actions += '<input type="button" class="' + ButtonClass.MarkNotificationAsReadU + '" value="' + ButtonName.MarkNotificationAsReadU + '" onclick="onBtnMarkNotificationAsReadClick(this, ' + notification.Id + ')">';
 		} else {
-			actions += '<input type="button" class="btnDeleteNotificationU" value="DEL" onclick="onBtnDeleteNotificationClick(this, ' + notification.Id + ')">';
+			actions += '<input type="button" class="' + ButtonClass.DeleteNotificationU + '" value="' + ButtonName.DeleteNotificationU + '" onclick="onBtnDeleteNotificationClick(this, ' + notification.Id + ')">';
 		}
 		tds[3] = actions;
 
@@ -2099,42 +2021,40 @@ function drawNotifications(p, elClass, notifications) {
 }
 
 async function drawUserPage(user) {
+	let subscriptionsCount = (await countSelfSubscriptions()).userSubscriptionsCount;
+
 	document.getElementById(Fi.id18).value = user.Name;
 	document.getElementById(Fi.id19).value = user.Email;
 	document.getElementById(Fi.id20).value = prettyTime(user.RegTime);
 
 	let roles = [];
 	if (user.Roles.IsAdministrator) {
-		roles.push("Administrator");
+		roles.push(UserRole.Administrator);
 	}
 	if (user.Roles.IsModerator) {
-		roles.push("Moderator");
+		roles.push(UserRole.Moderator);
 	}
 	if (user.Roles.IsAuthor) {
-		roles.push("Author");
+		roles.push(UserRole.Author);
 	}
 	if (user.Roles.IsWriter) {
-		roles.push("Writer");
+		roles.push(UserRole.Writer);
 	}
 	if (user.Roles.IsReader) {
-		roles.push("Reader");
+		roles.push(UserRole.Reader);
 	}
 	let rolesHtml = "";
+	let cn = "userPageRole";
 	for (let i = 0; i < roles.length; i++) {
-		if (roles[i] !== "Administrator") {
-			rolesHtml += '<span class="userPageRole">' + roles[i] + '</span>';
+		if (roles[i] !== UserRole.Administrator) {
+			rolesHtml += '<span class="' + cn + '">' + roles[i] + '</span>';
 		} else {
-			rolesHtml += '<span class="userPageRole"><a href="' + adminPage + '" target="_blank" rel="noopener noreferrer">' + roles[i] + '</a></span>';
+			rolesHtml += '<span class="' + cn + '"><a href="' + adminPage + '" target="_blank" rel="noopener noreferrer">' + roles[i] + '</a></span>';
 		}
 	}
 	let tr = document.getElementById(Fi.id21_tr);
 	tr.children[1].innerHTML = rolesHtml;
 
-	let resp = await countSelfSubscriptions();
-	if (resp == null) {
-		return;
-	}
-	let subscriptionsCount = resp.result.userSubscriptionsCount;
 	document.getElementById(Fi.id22).value = subscriptionsCount.toString();
 }
 
@@ -2159,4 +2079,21 @@ function setCaptchaInputsVisibility(isCaptchaNeeded, captchaId, cptImageTr, cptI
 		cptAnswerTr.style.display = "none";
 		cptAnswer.enabled = false;
 	}
+}
+
+function preparePageNumber(pageCount) {
+	// Repair the page count.
+	if ((pageCount === undefined) || (pageCount === 0)) {
+		pageCount = 1;
+	}
+	mca_gvc.Pages = pageCount;
+
+	// Check page number for overflow.
+	let pageNumber = mca_gvc.Page;
+	if (pageNumber > pageCount) {
+		console.error(Err.PageNotFound);
+		return false;
+	}
+
+	return true;
 }

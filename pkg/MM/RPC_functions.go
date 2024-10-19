@@ -2218,6 +2218,7 @@ func (srv *Server) listThreadAndMessagesOnPage(p *mm.ListThreadAndMessagesOnPage
 			},
 		},
 	}
+	thread.Messages = messageIdsOnPage
 
 	return result, nil
 }
@@ -2334,6 +2335,7 @@ func (srv *Server) listForumAndThreadsOnPage(p *mm.ListForumAndThreadsOnPagePara
 			},
 		},
 	}
+	forum.Threads = threadIdsOnPage
 
 	return result, nil
 }

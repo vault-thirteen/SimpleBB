@@ -155,6 +155,10 @@ func Test_HasItem(t *testing.T) {
 	ul, err = NewFromArray([]cmb.Id{1, 2, 3})
 	aTest.MustBeNoError(err)
 	aTest.MustBeEqual(ul.HasItem(3), true)
+
+	// Test #4. Null object.
+	ul = nil
+	aTest.MustBeEqual(ul.HasItem(3), false)
 }
 
 func Test_AddItem(t *testing.T) {

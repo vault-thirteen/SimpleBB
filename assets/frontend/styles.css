@@ -621,7 +621,7 @@ div.messageBody {
 	border: 1px solid black;
 	font-size: 15px;
 	background-color: white;
-	padding-left: 15px;
+	padding: 10px 15px;
 }
 
 div.messageBody a {
@@ -731,12 +731,12 @@ textarea.newMessageText {
 	font-size: 15px;
 }
 
-.bottomActionPanelLeft {
+.bottomActionPanelL {
 	width: 100%;
 	text-align: left;
 }
 
-.bottomActionPanelRight {
+.bottomActionPanelR {
 	width: auto;
 	text-align: right;
 }
