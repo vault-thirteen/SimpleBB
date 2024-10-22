@@ -3,8 +3,11 @@ package sm
 import (
 	"errors"
 	"fmt"
+	"log"
 
+	"github.com/kr/pretty"
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
+	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 )
 
 const (
@@ -18,6 +21,8 @@ const (
 func (srv *Server) checkDatabaseConsistency() (err error) {
 	srv.dbo.LockForReading()
 	defer srv.dbo.UnlockAfterReading()
+
+	fmt.Print(c.MsgDatabaseConsistencyCheck)
 
 	var tsrs []sm.ThreadSubscriptionsRecord
 	tsrs, err = srv.dbo.GetAllThreadSubscriptions()
@@ -51,6 +56,7 @@ func (srv *Server) checkDatabaseConsistency() (err error) {
 	}
 
 	if len(subscriptionsA) != len(subscriptionsB) {
+		log.Println(pretty.Diff(subscriptionsA, subscriptionsB))
 		return errors.New(Err_SubscriptionDataIsDamaged)
 	}
 
@@ -61,6 +67,8 @@ func (srv *Server) checkDatabaseConsistency() (err error) {
 			return fmt.Errorf(ErrF_SubscriptionRecordIsNotFound, key)
 		}
 	}
+
+	fmt.Println(c.MsgOK)
 
 	return nil
 }

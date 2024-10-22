@@ -66,6 +66,9 @@ type Server struct {
 	// External DKeys.
 	dKeyForNM *cmb.Text
 	dKeyForSM *cmb.Text
+
+	// Scheduler.
+	scheduler *cm.Scheduler
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -125,6 +128,8 @@ func NewServer(s cm.ISettings) (srv *Server, err error) {
 		return nil, err
 	}
 
+	srv.initScheduler()
+
 	return srv, nil
 }
 
@@ -147,9 +152,10 @@ func (srv *Server) Start() (err error) {
 
 	srv.startHttpServer()
 
-	srv.subRoutines.Add(2)
+	srv.subRoutines.Add(3)
 	go srv.listenForHttpErrors()
 	go srv.listenForDbErrors()
+	go srv.scheduler.Run()
 
 	err = srv.pingClientsForExternalServices()
 	if err != nil {
@@ -157,6 +163,11 @@ func (srv *Server) Start() (err error) {
 	}
 
 	err = srv.synchroniseModules(true)
+	if err != nil {
+		return err
+	}
+
+	err = srv.checkDatabaseConsistency()
 	if err != nil {
 		return err
 	}
@@ -403,6 +414,13 @@ func (srv *Server) initKeys() (err error) {
 	}
 
 	return nil
+}
+
+func (srv *Server) initScheduler() {
+	funcs3600 := []cm.ScheduledFn{
+		srv.checkDatabaseConsistency,
+	}
+	srv.scheduler = cm.NewScheduler(srv, nil, nil, funcs3600)
 }
 
 func (srv *Server) ReportStart() {

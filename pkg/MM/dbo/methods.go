@@ -346,6 +346,40 @@ func (dbo *DatabaseObject) ReadMessagesById(messageIds *ul.UidList) (messages []
 	return messages, nil
 }
 
+func (dbo *DatabaseObject) ReadMessageLinksById(messageIds *ul.UidList) (messageLinks []mm.MessageLink, err error) {
+	if messageIds == nil {
+		return []mm.MessageLink{}, nil
+	}
+
+	messageLinks = make([]mm.MessageLink, 0, messageIds.Size())
+
+	var query string
+	query, err = dbo.dbQuery_ReadMessageLinksById(*messageIds)
+	if err != nil {
+		return nil, err
+	}
+
+	var rows *sql.Rows
+	rows, err = dbo.DatabaseObject.DB().Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	var ml *mm.MessageLink
+	for rows.Next() {
+		ml, err = mm.NewMessageLinkFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		if ml != nil {
+			messageLinks = append(messageLinks, *ml)
+		}
+	}
+
+	return messageLinks, nil
+}
+
 func (dbo *DatabaseObject) ReadSections() (sections []mm.Section, err error) {
 	sections = make([]mm.Section, 0)
 
@@ -368,6 +402,30 @@ func (dbo *DatabaseObject) ReadSections() (sections []mm.Section, err error) {
 	}
 
 	return sections, nil
+}
+
+func (dbo *DatabaseObject) ReadThreadLinks() (threadLinks []mm.ThreadLink, err error) {
+	threadLinks = make([]mm.ThreadLink, 0)
+
+	var rows *sql.Rows
+	rows, err = dbo.DatabaseObject.PreparedStatement(DbPsid_ReadThreadLinks).Query()
+	if err != nil {
+		return nil, err
+	}
+
+	var threadLink *mm.ThreadLink
+	for rows.Next() {
+		threadLink, err = mm.NewThreadLinkFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		if threadLink != nil {
+			threadLinks = append(threadLinks, *threadLink)
+		}
+	}
+
+	return threadLinks, nil
 }
 
 func (dbo *DatabaseObject) ReadThreadNamesByIds(threadIds ul.UidList) (threadNames []cm.Name, err error) {

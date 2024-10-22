@@ -28,6 +28,7 @@ const (
 	MsgFirewallIsEnabled                = "Firewall is enabled"
 	MsgFirewallIsDisabled               = "Firewall is disabled"
 	MsgPingAttempt                      = "."
+	MsgDatabaseConsistencyCheck         = "Database consistency check ..."
 )
 
 // Error messages (simple).
