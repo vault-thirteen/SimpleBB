@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"time"
@@ -120,10 +121,11 @@ func (cli *Client) Ping(verbose bool) (err error) {
 	}
 
 	var params = cmr.PingParams{}
+	var iMax = int(math.Ceil(float64(c.ServicePingAttemptsDurationMinutes) * float64(60) / float64(c.ServiceNextPingAttemptDelaySec)))
 
 	var result = new(cmr.PingResult)
 	var re *jrm1.RpcError
-	for i := 1; i <= c.ServicePingAttemptsCount; i++ {
+	for i := 1; i <= iMax; i++ {
 		re, err = cli.MakeRequest(context.Background(), FuncPing, params, result)
 		if (err == nil) && (re == nil) {
 			break
@@ -133,7 +135,7 @@ func (cli *Client) Ping(verbose bool) (err error) {
 			fmt.Print(c.MsgPingAttempt)
 		}
 
-		if i < c.ServicePingAttemptsCount {
+		if i < iMax {
 			time.Sleep(time.Second * time.Duration(c.ServiceNextPingAttemptDelaySec))
 		}
 	}
