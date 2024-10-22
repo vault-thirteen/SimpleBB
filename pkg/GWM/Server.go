@@ -804,7 +804,7 @@ func (srv *Server) initScheduler() {
 	funcs60 := []cm.ScheduledFn{
 		srv.clearIPAddresses,
 	}
-	srv.scheduler = cm.NewScheduler(srv, funcs60)
+	srv.scheduler = cm.NewScheduler(srv, funcs60, nil, nil)
 }
 
 func (srv *Server) ReportStart() {

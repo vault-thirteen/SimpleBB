@@ -437,7 +437,7 @@ func (srv *Server) initScheduler() {
 		srv.clearEmailChangesTable,
 		srv.clearSessions,
 	}
-	srv.scheduler = cm.NewScheduler(srv, funcs60)
+	srv.scheduler = cm.NewScheduler(srv, funcs60, nil, nil)
 }
 
 func (srv *Server) ReportStart() {

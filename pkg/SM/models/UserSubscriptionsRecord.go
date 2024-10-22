@@ -43,3 +43,22 @@ func NewUserSubscriptionsRecordFromScannableSource(src cm.IScannable) (usr *User
 	usr.Threads = x
 	return usr, nil
 }
+
+func NewUserSubscriptionsListFromScannableSource(rows cm.IScannableSequence) (usrs []UserSubscriptionsRecord, err error) {
+	usrs = make([]UserSubscriptionsRecord, 0)
+
+	var usr *UserSubscriptionsRecord
+	for rows.Next() {
+		usr = NewUserSubscriptionsRecord()
+		usr, err = NewUserSubscriptionsRecordFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		if usr != nil {
+			usrs = append(usrs, *usr)
+		}
+	}
+
+	return usrs, nil
+}

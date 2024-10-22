@@ -8,14 +8,18 @@ import (
 )
 
 type Scheduler struct {
-	srv     IServer
-	funcs60 []ScheduledFn
+	srv       IServer
+	funcs60   []ScheduledFn
+	funcs600  []ScheduledFn
+	funcs3600 []ScheduledFn
 }
 
-func NewScheduler(srv IServer, funcs60 []ScheduledFn) (s *Scheduler) {
+func NewScheduler(srv IServer, funcs60 []ScheduledFn, funcs600 []ScheduledFn, funcs3600 []ScheduledFn) (s *Scheduler) {
 	s = &Scheduler{
-		srv:     srv,
-		funcs60: funcs60,
+		srv:       srv,
+		funcs60:   funcs60,
+		funcs600:  funcs600,
+		funcs3600: funcs3600,
 	}
 
 	return s
@@ -42,6 +46,26 @@ func (s *Scheduler) Run() {
 				err = fn()
 				if err != nil {
 					s.log(err)
+				}
+			}
+
+			// Periodical tasks (every 10 minutes).
+			if tc%600 == 0 {
+				for _, fn := range s.funcs600 {
+					err = fn()
+					if err != nil {
+						s.log(err)
+					}
+				}
+
+				// Periodical tasks (every hour).
+				if tc%3600 == 0 {
+					for _, fn := range s.funcs3600 {
+						err = fn()
+						if err != nil {
+							s.log(err)
+						}
+					}
 				}
 			}
 		}

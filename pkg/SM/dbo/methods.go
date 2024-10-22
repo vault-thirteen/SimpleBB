@@ -53,6 +53,36 @@ func (dbo *DatabaseObject) InitThreadSubscriptions(threadId cmb.Id) (err error) 
 	return cdbo.CheckRowsAffected(result, 1)
 }
 
+func (dbo *DatabaseObject) GetAllThreadSubscriptions() (tsrs []sm.ThreadSubscriptionsRecord, err error) {
+	var rows *sql.Rows
+	rows, err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetAllThreadSubscriptions).Query()
+	if err != nil {
+		return nil, err
+	}
+
+	tsrs, err = sm.NewThreadSubscriptionsListFromScannableSource(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return tsrs, nil
+}
+
+func (dbo *DatabaseObject) GetAllUserSubscriptions() (usrs []sm.UserSubscriptionsRecord, err error) {
+	var rows *sql.Rows
+	rows, err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetAllUserSubscriptions).Query()
+	if err != nil {
+		return nil, err
+	}
+
+	usrs, err = sm.NewUserSubscriptionsListFromScannableSource(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return usrs, nil
+}
+
 func (dbo *DatabaseObject) GetUserSubscriptions(userId cmb.Id) (usr *sm.UserSubscriptionsRecord, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetUserSubscriptions).QueryRow(userId)
 
@@ -78,7 +108,7 @@ func (dbo *DatabaseObject) GetUserSubscriptions(userId cmb.Id) (usr *sm.UserSubs
 func (dbo *DatabaseObject) GetThreadSubscriptions(threadId cmb.Id) (tsr *sm.ThreadSubscriptionsRecord, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetThreadSubscriptions).QueryRow(threadId)
 
-	tsr, err = sm.NewThreadSubscriptionsFromScannableSource(row)
+	tsr, err = sm.NewThreadSubscriptionsRecordFromScannableSource(row)
 	if err != nil {
 		return nil, err
 	}

@@ -16,6 +16,8 @@ const (
 	DbPsid_SaveUserSubscriptions         = 6
 	DbPsid_SaveThreadSubscriptions       = 7
 	DbPsid_ClearThreadSubscriptionRecord = 8
+	DbPsid_GetAllThreadSubscriptions     = 9
+	DbPsid_GetAllUserSubscriptions       = 10
 )
 
 func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
@@ -56,6 +58,14 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 
 	// 8.
 	q = fmt.Sprintf(`DELETE FROM %s WHERE ThreadId = ?;`, dbo.tableNames.ThreadSubscriptions)
+	qs = append(qs, q)
+
+	// 9.
+	q = fmt.Sprintf(`SELECT Id, ThreadId, Users FROM %s;`, dbo.tableNames.ThreadSubscriptions)
+	qs = append(qs, q)
+
+	// 10.
+	q = fmt.Sprintf(`SELECT Id, UserId, Threads FROM %s;`, dbo.tableNames.UserSubscriptions)
 	qs = append(qs, q)
 
 	return qs

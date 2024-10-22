@@ -15,12 +15,12 @@ type ThreadSubscriptionsRecord struct {
 	Users    *ul.UidList `json:"userIds"`
 }
 
-func NewThreadSubscriptions() (tsr *ThreadSubscriptionsRecord) {
+func NewThreadSubscriptionsRecord() (tsr *ThreadSubscriptionsRecord) {
 	return &ThreadSubscriptionsRecord{}
 }
 
-func NewThreadSubscriptionsFromScannableSource(src cm.IScannable) (tsr *ThreadSubscriptionsRecord, err error) {
-	tsr = NewThreadSubscriptions()
+func NewThreadSubscriptionsRecordFromScannableSource(src cm.IScannable) (tsr *ThreadSubscriptionsRecord, err error) {
+	tsr = NewThreadSubscriptionsRecord()
 	var x = ul.New()
 
 	err = src.Scan(
@@ -38,4 +38,23 @@ func NewThreadSubscriptionsFromScannableSource(src cm.IScannable) (tsr *ThreadSu
 
 	tsr.Users = x
 	return tsr, nil
+}
+
+func NewThreadSubscriptionsListFromScannableSource(rows cm.IScannableSequence) (tsrs []ThreadSubscriptionsRecord, err error) {
+	tsrs = make([]ThreadSubscriptionsRecord, 0)
+
+	var tsr *ThreadSubscriptionsRecord
+	for rows.Next() {
+		tsr = NewThreadSubscriptionsRecord()
+		tsr, err = NewThreadSubscriptionsRecordFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		if tsr != nil {
+			tsrs = append(tsrs, *tsr)
+		}
+	}
+
+	return tsrs, nil
 }
