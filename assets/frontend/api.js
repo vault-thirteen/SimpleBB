@@ -1275,7 +1275,7 @@ class Session {
 }
 
 class Settings {
-	constructor(version, productVersion, siteName, siteDomain, captchaFolder, sessionMaxDuration, messageEditTime, pageSize, apiFolder, publicSettingsFileName, isFrontEndEnabled, frontEndStaticFilesFolder) {
+	constructor(version, productVersion, siteName, siteDomain, captchaFolder, sessionMaxDuration, messageEditTime, pageSize, apiFolder, publicSettingsFileName, isFrontEndEnabled, frontEndStaticFilesFolder, notificationCountLimit) {
 		this.Version = version;
 		this.ProductVersion = productVersion;
 		this.SiteName = siteName;
@@ -1288,6 +1288,7 @@ class Settings {
 		this.PublicSettingsFileName = publicSettingsFileName;
 		this.IsFrontEndEnabled = isFrontEndEnabled;
 		this.FrontEndStaticFilesFolder = frontEndStaticFilesFolder;
+		this.NotificationCountLimit = notificationCountLimit;
 	}
 
 	check() {
@@ -1631,6 +1632,7 @@ function jsonToSettings(x) {
 		x.publicSettingsFileName,
 		x.isFrontEndEnabled,
 		x.frontEndStaticFilesFolder,
+		x.notificationCountLimit,
 	);
 }
 

@@ -30,6 +30,7 @@ Varname = {
 	SettingsPublicSettingsFileName: "settingsPublicSettingsFileName",
 	SettingsIsFrontEndEnabled: "settingsIsFrontEndEnabled",
 	SettingsFrontEndStaticFilesFolder: "settingsFrontEndStaticFilesFolder",
+	SettingsNotificationCountLimit: "settingsNotificationCountLimit",
 	IsLoggedIn: "isLoggedIn",
 	RegistrationEmail: "registrationEmail",
 	RegistrationVcode: "registrationVcode",
@@ -117,6 +118,7 @@ ButtonClass = {
 	SubscribeToThread: "btnSubscribe",
 	AddMessage: "btnAddMessage",
 	EditMessage: "btnEditMessage",
+	NotificationsBoxFull: "btnNotificationsBoxFull",
 	NotificationsOn: "btnNotificationsOn",
 	NotificationsOff: "btnNotificationsOff",
 	Account: "btnAccount",
@@ -139,6 +141,12 @@ PageZoneClass = {
 	PageTitle: "pageTitle",
 	Paginator: "paginator",
 	BottomActionPanel: "bottomActionPanel",
+}
+
+Hint = {
+	NoNewNotifications: "All notifications are read.",
+	NewNotifications: "New notifications are available.",
+	NotificationBoxIsFull: "Notification box is full. You are not receiving new notifications.",
 }
 
 ObjectType = {
@@ -230,6 +238,7 @@ function saveSettings(s) {
 	sessionStorage.setItem(Varname.SettingsPublicSettingsFileName, s.PublicSettingsFileName);
 	sessionStorage.setItem(Varname.SettingsIsFrontEndEnabled, s.IsFrontEndEnabled.toString());
 	sessionStorage.setItem(Varname.SettingsFrontEndStaticFilesFolder, s.FrontEndStaticFilesFolder);
+	sessionStorage.setItem(Varname.SettingsNotificationCountLimit, s.NotificationCountLimit.toString());
 
 	let timeNow = getCurrentTimestamp();
 	sessionStorage.setItem(Varname.SettingsLoadTime, timeNow.toString());
@@ -255,6 +264,7 @@ function getSettings() {
 		sessionStorage.getItem(Varname.SettingsPublicSettingsFileName),
 		sessionStorage.getItem(Varname.SettingsIsFrontEndEnabled),
 		sessionStorage.getItem(Varname.SettingsFrontEndStaticFilesFolder),
+		sessionStorage.getItem(Varname.SettingsNotificationCountLimit),
 	);
 }
 
@@ -1598,14 +1608,22 @@ async function addPageHead(el, text, atTop) {
 		tdR.cssText = '';
 	} else {
 		let bcn;
+		let bt;
 		if (unreadNotificationsCount > 0) {
-			bcn = ButtonClass.NotificationsOn;
+			if (unreadNotificationsCount >= settings.NotificationCountLimit) {
+				bcn = ButtonClass.NotificationsBoxFull;
+				bt = Hint.NotificationBoxIsFull;
+			} else {
+				bcn = ButtonClass.NotificationsOn;
+				bt = Hint.NewNotifications;
+			}
 		} else {
 			bcn = ButtonClass.NotificationsOff;
+			bt = Hint.NoNewNotifications;
 		}
 
 		tdR.innerHTML = '<table><tr>' +
-			'<td><input type="button" value="' + ButtonName.Notifications + '" class="' + bcn + '" onclick="onBtnNotificationsClick(this)" /></td>'
+			'<td><input type="button" value="' + ButtonName.Notifications + '" class="' + bcn + '" onclick="onBtnNotificationsClick(this)" title="' + bt + '" /></td>'
 			+ '<td><input type="button" value="' + ButtonName.Account + '" class="' + ButtonClass.Account + '" onclick="onBtnAccountClick(this)" /></td>' +
 			'</tr></table>';
 	}

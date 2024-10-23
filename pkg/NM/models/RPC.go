@@ -38,6 +38,20 @@ type AddNotificationSResult struct {
 	NotificationId cmb.Id `json:"notificationId"`
 }
 
+type SendNotificationIfPossibleSParams struct {
+	cmr.CommonParams
+	cmr.DKeyParams
+	UserId cmb.Id   `json:"userId"`
+	Text   cmb.Text `json:"text"`
+}
+type SendNotificationIfPossibleSResult struct {
+	cmr.CommonResult
+
+	// ID and status of the created notification when it is available.
+	IsSent         cmb.Flag `json:"isSent"`
+	NotificationId cmb.Id   `json:"notificationId"`
+}
+
 type GetNotificationParams struct {
 	cmr.CommonParams
 	NotificationId cmb.Id `json:"notificationId"`

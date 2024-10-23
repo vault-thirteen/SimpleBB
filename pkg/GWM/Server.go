@@ -442,6 +442,7 @@ func (srv *Server) initPublicSettings() (err error) {
 		PublicSettingsFileName:    srv.settings.SystemSettings.PublicSettingsFileName,
 		IsFrontEndEnabled:         srv.settings.SystemSettings.IsFrontEndEnabled,
 		FrontEndStaticFilesFolder: srv.settings.SystemSettings.FrontEndStaticFilesFolder,
+		NotificationCountLimit:    srv.settings.SystemSettings.NotificationCountLimit,
 	}
 
 	srv.publicSettingsFileData, err = json.Marshal(publicSettings)

@@ -53,6 +53,8 @@ type SystemSettings struct {
 	IsDebugMode                               cmb.Flag `json:"isDebugMode"`
 	IsDeveloperMode                           cmb.Flag `json:"isDeveloperMode"`
 	DevModeHttpHeaderAccessControlAllowOrigin string   `json:"devModeHttpHeaderAccessControlAllowOrigin"`
+
+	NotificationCountLimit cmb.Count `json:"notificationCountLimit"`
 }
 
 func (s SystemSettings) Check() (err error) {
@@ -68,7 +70,8 @@ func (s SystemSettings) Check() (err error) {
 		(s.MessageEditTime == 0) ||
 		(s.PageSize == 0) ||
 		(len(s.ApiFolder) == 0) ||
-		(len(s.PublicSettingsFileName) == 0) {
+		(len(s.PublicSettingsFileName) == 0) ||
+		(s.NotificationCountLimit == 0) {
 		return errors.New(c.MsgSystemSettingError)
 	}
 

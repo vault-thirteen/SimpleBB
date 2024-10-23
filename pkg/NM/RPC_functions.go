@@ -94,6 +94,61 @@ func (srv *Server) addNotificationS(p *nm.AddNotificationSParams) (result *nm.Ad
 	return result, nil
 }
 
+// sendNotificationIfPossibleS tries to send a notification to a user when it
+// is possible. This method is used by the system.
+func (srv *Server) sendNotificationIfPossibleS(p *nm.SendNotificationIfPossibleSParams) (result *nm.SendNotificationIfPossibleSResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.UserId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
+	}
+
+	if len(p.Text) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_TextIsNotSet, RpcErrorMsg_TextIsNotSet, nil)
+	}
+
+	re = srv.mustBeNoAuth(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check the DKey.
+	if !srv.dKeyI.CheckString(p.DKey.ToString()) {
+		srv.incidentManager.ReportIncident(cm.IncidentType_WrongDKey, "", nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var err error
+	var unc cmb.Count
+	unc, err = srv.dbo.CountUnreadNotificationsByUserId(p.UserId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	// Notification box is full.
+	if unc >= srv.settings.SystemSettings.NotificationCountLimit {
+		result = &nm.SendNotificationIfPossibleSResult{
+			IsSent: false,
+		}
+		return result, nil
+	}
+
+	var insertedNotificationId cmb.Id
+	insertedNotificationId, err = srv.dbo.InsertNewNotification(p.UserId, p.Text)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &nm.SendNotificationIfPossibleSResult{
+		IsSent:         true,
+		NotificationId: insertedNotificationId,
+	}
+
+	return result, nil
+}
+
 // getNotification reads a notification.
 func (srv *Server) getNotification(p *nm.GetNotificationParams) (result *nm.GetNotificationResult, re *jrm1.RpcError) {
 	// Check parameters.

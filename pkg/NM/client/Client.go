@@ -10,15 +10,16 @@ const (
 	FuncPing = cc.FuncPing
 
 	// Notification.
-	FuncAddNotification          = "AddNotification"
-	FuncAddNotificationS         = "AddNotificationS"
-	FuncGetNotification          = "GetNotification"
-	FuncGetNotifications         = "GetNotifications"
-	FuncGetNotificationsOnPage   = "GetNotificationsOnPage"
-	FuncGetUnreadNotifications   = "GetUnreadNotifications"
-	FuncCountUnreadNotifications = "CountUnreadNotifications"
-	FuncMarkNotificationAsRead   = "MarkNotificationAsRead"
-	FuncDeleteNotification       = "DeleteNotification"
+	FuncAddNotification             = "AddNotification"
+	FuncAddNotificationS            = "AddNotificationS"
+	FuncSendNotificationIfPossibleS = "SendNotificationIfPossibleS"
+	FuncGetNotification             = "GetNotification"
+	FuncGetNotifications            = "GetNotifications"
+	FuncGetNotificationsOnPage      = "GetNotificationsOnPage"
+	FuncGetUnreadNotifications      = "GetUnreadNotifications"
+	FuncCountUnreadNotifications    = "CountUnreadNotifications"
+	FuncMarkNotificationAsRead      = "MarkNotificationAsRead"
+	FuncDeleteNotification          = "DeleteNotification"
 
 	// Other.
 	FuncGetDKey            = "GetDKey"

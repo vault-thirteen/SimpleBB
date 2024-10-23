@@ -32,6 +32,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.Ping,
 		srv.AddNotification,
 		srv.AddNotificationS,
+		srv.SendNotificationIfPossibleS,
 		srv.GetNotification,
 		srv.GetNotifications,
 		srv.GetNotificationsOnPage,
@@ -92,6 +93,22 @@ func (srv *Server) AddNotificationS(params *json.RawMessage, _ *jrm1.ResponseMet
 
 	var r *nm.AddNotificationSResult
 	r, re = srv.addNotificationS(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) SendNotificationIfPossibleS(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.SendNotificationIfPossibleSParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.SendNotificationIfPossibleSResult
+	r, re = srv.sendNotificationIfPossibleS(p)
 	if re != nil {
 		return nil, re
 	}

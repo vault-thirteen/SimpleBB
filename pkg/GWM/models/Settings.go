@@ -18,4 +18,5 @@ type Settings struct {
 	PublicSettingsFileName    cm.Path   `json:"publicSettingsFileName"`
 	IsFrontEndEnabled         cmb.Flag  `json:"isFrontEndEnabled"`
 	FrontEndStaticFilesFolder cm.Path   `json:"frontEndStaticFilesFolder"`
+	NotificationCountLimit    cmb.Count `json:"notificationCountLimit"`
 }

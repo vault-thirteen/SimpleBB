@@ -258,6 +258,7 @@ table.acpMenu td {
 .btnConfirmMessageEdit,
 .btnNotificationsOff,
 .btnNotificationsOn,
+.btnNotificationsBoxFull,
 .btnCreateNotification,
 .btnDeleteNotification,
 .btnMarkNotificationAsReadU,
@@ -276,7 +277,8 @@ table.acpMenu td {
 }
 
 .btnNotificationsOff,
-.btnNotificationsOn {
+.btnNotificationsOn,
+.btnNotificationsBoxFull {
 	width: 32px;
 }
 
@@ -287,6 +289,10 @@ table.acpMenu td {
 
 .btnNotificationsOn {
 	background-color: gold;
+}
+
+.btnNotificationsBoxFull {
+	background-color: orangered;
 }
 
 .btnGoToThread,
