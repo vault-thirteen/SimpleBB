@@ -42,6 +42,19 @@ type IsUserSubscribedResult struct {
 	IsSubscribed cmb.Flag `json:"isSubscribed"`
 }
 
+type IsUserSubscribedSParams struct {
+	cmr.CommonParams
+	cmr.DKeyParams
+	UserId   cmb.Id `json:"userId"`
+	ThreadId cmb.Id `json:"threadId"`
+}
+type IsUserSubscribedSResult struct {
+	cmr.CommonResult
+	UserId       cmb.Id   `json:"userId"`
+	ThreadId     cmb.Id   `json:"threadId"`
+	IsSubscribed cmb.Flag `json:"isSubscribed"`
+}
+
 type CountSelfSubscriptionsParams struct {
 	cmr.CommonParams
 }

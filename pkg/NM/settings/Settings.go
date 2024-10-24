@@ -26,6 +26,7 @@ type Settings struct {
 	// External services.
 	AcmSettings cs.ServiceClientSettings `json:"acm"`
 	GwmSettings cs.ServiceClientSettings `json:"gwm"`
+	SmSettings  cs.ServiceClientSettings `json:"sm"`
 }
 
 func NewSettingsFromFile(filePath string, versionInfo *ver.Versioneer) (stn *Settings, err error) {
@@ -89,10 +90,13 @@ func (stn *Settings) Check() (err error) {
 	if err != nil {
 		return cs.DetailedScsError(app.ServiceShortName_ACM, err)
 	}
-
 	err = stn.GwmSettings.Check()
 	if err != nil {
 		return cs.DetailedScsError(app.ServiceShortName_GWM, err)
+	}
+	err = stn.SmSettings.Check()
+	if err != nil {
+		return cs.DetailedScsError(app.ServiceShortName_SM, err)
 	}
 
 	return nil

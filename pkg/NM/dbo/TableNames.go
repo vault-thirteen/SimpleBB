@@ -1,11 +1,13 @@
 package dbo
 
 const (
-	TableNotifications = "Notifications"
 	TableIncidents     = "Incidents"
+	TableNotifications = "Notifications"
+	TableSystemEvents  = "SystemEvents"
 )
 
 type TableNames struct {
-	Notifications string
 	Incidents     string
+	Notifications string
+	SystemEvents  string
 }

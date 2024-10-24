@@ -55,7 +55,6 @@ type Server struct {
 	// Clients for external services.
 	acmServiceClient *cc.Client
 	nmServiceClient  *cc.Client
-	smServiceClient  *cc.Client
 
 	// CRC32 Table.
 	crcTable *crc32.Table
@@ -65,7 +64,6 @@ type Server struct {
 
 	// External DKeys.
 	dKeyForNM *cmb.Text
-	dKeyForSM *cmb.Text
 
 	// Scheduler.
 	scheduler *cm.Scheduler
@@ -316,22 +314,6 @@ func (srv *Server) createClientsForExternalServices() (err error) {
 		}
 	}
 
-	// SM module.
-	{
-		var smSCS = &cset.ServiceClientSettings{
-			Schema:                      srv.settings.SmSettings.Schema,
-			Host:                        srv.settings.SmSettings.Host,
-			Port:                        srv.settings.SmSettings.Port,
-			Path:                        srv.settings.SmSettings.Path,
-			EnableSelfSignedCertificate: srv.settings.SmSettings.EnableSelfSignedCertificate,
-		}
-
-		srv.smServiceClient, err = cc.NewClientWithSCS(smSCS, app.ServiceShortName_SM)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -352,14 +334,6 @@ func (srv *Server) pingClientsForExternalServices() (err error) {
 		}
 	}
 
-	// SM module.
-	{
-		err = srv.smServiceClient.Ping(true)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -372,23 +346,6 @@ func (srv *Server) synchroniseModules(verbose bool) (err error) {
 
 		var re *jrm1.RpcError
 		srv.dKeyForNM, re = srv.getDKeyForNM()
-		if re != nil {
-			return re.AsError()
-		}
-
-		if verbose {
-			fmt.Println(c.MsgOK)
-		}
-	}
-
-	// SM module.
-	{
-		if verbose {
-			fmt.Print(fmt.Sprintf(c.MsgFSynchronisingWithModule, app.ServiceShortName_SM))
-		}
-
-		var re *jrm1.RpcError
-		srv.dKeyForSM, re = srv.getDKeyForSM()
 		if re != nil {
 			return re.AsError()
 		}

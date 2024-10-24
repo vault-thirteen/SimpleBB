@@ -22,7 +22,8 @@
     "tableNamePrefix": "v1",
     "tablesToInit": [
       "Incidents",
-      "Notifications"
+      "Notifications",
+      "SystemEvents"
     ],
     "tableInitScriptsFolder": "sql\\NM\\table_init"
   },
@@ -51,5 +52,12 @@
     "host": "localhost",
     "port": 2006,
     "path": "/"
+  },
+  "sm": {
+    "schema": "https",
+    "host": "localhost",
+    "port": 2008,
+    "path": "/",
+    "enableSelfSignedCertificate": true
   }
 }

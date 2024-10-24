@@ -22,7 +22,8 @@ const (
 	FuncDeleteNotification          = "DeleteNotification"
 
 	// Other.
-	FuncGetDKey            = "GetDKey"
-	FuncShowDiagnosticData = cc.FuncShowDiagnosticData
-	FuncTest               = "Test"
+	FuncProcessSystemEventS = "ProcessSystemEventS"
+	FuncGetDKey             = "GetDKey"
+	FuncShowDiagnosticData  = cc.FuncShowDiagnosticData
+	FuncTest                = "Test"
 )

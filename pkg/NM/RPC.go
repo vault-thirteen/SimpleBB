@@ -40,6 +40,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.CountUnreadNotifications,
 		srv.MarkNotificationAsRead,
 		srv.DeleteNotification,
+		srv.ProcessSystemEventS,
 		srv.GetDKey,
 		srv.ShowDiagnosticData,
 		srv.Test,
@@ -229,6 +230,22 @@ func (srv *Server) DeleteNotification(params *json.RawMessage, _ *jrm1.ResponseM
 }
 
 // Other.
+
+func (srv *Server) ProcessSystemEventS(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.ProcessSystemEventSParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.ProcessSystemEventSResult
+	r, re = srv.processSystemEventS(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
 
 func (srv *Server) GetDKey(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
 	var p *nm.GetDKeyParams

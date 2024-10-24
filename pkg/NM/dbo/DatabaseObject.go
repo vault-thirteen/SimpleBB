@@ -39,8 +39,9 @@ func (dbo *DatabaseObject) Init() (err error) {
 
 func (dbo *DatabaseObject) initTableNames() {
 	dbo.tableNames = &TableNames{
-		Notifications: dbo.prefixTableName(TableNotifications),
 		Incidents:     dbo.prefixTableName(TableIncidents),
+		Notifications: dbo.prefixTableName(TableNotifications),
+		SystemEvents:  dbo.prefixTableName(TableSystemEvents),
 	}
 }
 

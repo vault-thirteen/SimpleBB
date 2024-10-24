@@ -22,6 +22,7 @@ import (
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/dk"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cset "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
 
@@ -54,15 +55,19 @@ type Server struct {
 	// Clients for external services.
 	acmServiceClient *cc.Client
 	gwmServiceClient *cc.Client
+	smServiceClient  *cc.Client
 
 	// Incident manager.
 	incidentManager *im.IncidentManager
 
-	// Scheduler.
-	scheduler *cm.Scheduler
-
 	// Internal DKeys.
 	dKeyI *dk.DKey
+
+	// External DKeys.
+	dKeyForSM *cmb.Text
+
+	// Scheduler.
+	scheduler *cm.Scheduler
 }
 
 func NewServer(s cm.ISettings) (srv *Server, err error) {
@@ -157,6 +162,11 @@ func (srv *Server) Start() (err error) {
 	}
 
 	err = srv.pingClientsForExternalServices()
+	if err != nil {
+		return err
+	}
+
+	err = srv.synchroniseModules(true)
 	if err != nil {
 		return err
 	}
@@ -316,6 +326,22 @@ func (srv *Server) createClientsForExternalServices() (err error) {
 		}
 	}
 
+	// SM module.
+	{
+		var smSCS = &cset.ServiceClientSettings{
+			Schema:                      srv.settings.SmSettings.Schema,
+			Host:                        srv.settings.SmSettings.Host,
+			Port:                        srv.settings.SmSettings.Port,
+			Path:                        srv.settings.SmSettings.Path,
+			EnableSelfSignedCertificate: srv.settings.SmSettings.EnableSelfSignedCertificate,
+		}
+
+		srv.smServiceClient, err = cc.NewClientWithSCS(smSCS, app.ServiceShortName_SM)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -333,6 +359,35 @@ func (srv *Server) pingClientsForExternalServices() (err error) {
 		err = srv.gwmServiceClient.Ping(true)
 		if err != nil {
 			return err
+		}
+	}
+
+	// SM module.
+	{
+		err = srv.smServiceClient.Ping(true)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (srv *Server) synchroniseModules(verbose bool) (err error) {
+	// SM module.
+	{
+		if verbose {
+			fmt.Print(fmt.Sprintf(c.MsgFSynchronisingWithModule, app.ServiceShortName_SM))
+		}
+
+		var re *jrm1.RpcError
+		srv.dKeyForSM, re = srv.getDKeyForSM()
+		if re != nil {
+			return re.AsError()
+		}
+
+		if verbose {
+			fmt.Println(c.MsgOK)
 		}
 	}
 

@@ -9,8 +9,12 @@ import (
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
 	ac "github.com/vault-thirteen/SimpleBB/pkg/ACM/client"
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
+	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
+	sc "github.com/vault-thirteen/SimpleBB/pkg/SM/client"
+	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 )
@@ -157,4 +161,290 @@ func (srv *Server) doTestA(wg *sync.WaitGroup, errChan chan error) {
 	if re != nil {
 		errChan <- re.AsError()
 	}
+}
+
+// getDKeyForSM receives a DKey from Subscription module.
+func (srv *Server) getDKeyForSM() (dKey *cmb.Text, re *jrm1.RpcError) {
+	params := sm.GetDKeyParams{}
+	result := new(sm.GetDKeyResult)
+	var err error
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncGetDKey, params, result)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
+	}
+	if re != nil {
+		return nil, re
+	}
+
+	// DKey must be non-empty.
+	if len(result.DKey) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_ModuleSynchronisation, c.RpcErrorMsg_ModuleSynchronisation, nil)
+	}
+
+	return &result.DKey, nil
+}
+
+func (srv *Server) processSystemEvent_ThreadParentChange(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	return srv.sendNotificationsToThreadSubscribers(se)
+}
+
+func (srv *Server) processSystemEvent_ThreadNameChange(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	return srv.sendNotificationsToThreadSubscribers(se)
+}
+
+func (srv *Server) processSystemEvent_ThreadDeletion(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	re = srv.sendNotificationsToThreadSubscribers(se)
+	if re != nil {
+		return re
+	}
+
+	// Ask the SM module to clear the subscriptions.
+	re = srv.clearSubscriptionsOfDeletedThread(se.ThreadId)
+	if re != nil {
+		return re
+	}
+
+	return nil
+}
+
+func (srv *Server) processSystemEvent_ThreadNewMessage(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	return srv.sendNotificationsToThreadSubscribers(se)
+}
+
+func (srv *Server) processSystemEvent_ThreadMessageEdit(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	return srv.sendNotificationsToThreadSubscribers(se)
+}
+
+func (srv *Server) processSystemEvent_ThreadMessageDeletion(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	return srv.sendNotificationsToThreadSubscribers(se)
+}
+
+func (srv *Server) processSystemEvent_MessageTextEdit(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	var isSubscribed cmb.Flag
+	isSubscribed, re = srv.isUserSubscribed(se.ThreadId, *se.MessageCreator)
+	if re != nil {
+		return re
+	}
+
+	// If user is subscribed to the thread, it does not need the second
+	// notification about this message.
+	if isSubscribed {
+		return nil
+	}
+
+	return srv.sendNotificationToAuthor(se)
+}
+
+func (srv *Server) processSystemEvent_MessageParentChange(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	return srv.sendNotificationToAuthor(se)
+}
+
+func (srv *Server) processSystemEvent_MessageDeletion(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	var isSubscribed cmb.Flag
+	isSubscribed, re = srv.isUserSubscribed(se.ThreadId, *se.MessageCreator)
+	if re != nil {
+		return re
+	}
+
+	// If user is subscribed to the thread, it does not need the second
+	// notification about this message.
+	if isSubscribed {
+		return nil
+	}
+
+	return srv.sendNotificationToAuthor(se)
+}
+
+// sendNotificationsToThreadSubscribers sends notifications to thread
+// subscribers.
+func (srv *Server) sendNotificationsToThreadSubscribers(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	var tsr *sm.ThreadSubscriptionsRecord
+	tsr, re = srv.getThreadSubscribers(se.ThreadId)
+	if re != nil {
+		return re
+	}
+
+	var notificationText cmb.Text
+	notificationText, re = srv.composeNotificationText(se)
+	if re != nil {
+		return re
+	}
+
+	if tsr != nil {
+		for _, userId := range tsr.Users.AsArray() {
+			_, re = srv.sendNotificationIfPossibleH(userId, notificationText)
+			if re != nil {
+				return re
+			}
+		}
+	}
+
+	return nil
+}
+
+// sendNotificationToAuthor sends a notification to message creator.
+func (srv *Server) sendNotificationToAuthor(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	var notificationText cmb.Text
+	notificationText, re = srv.composeNotificationText(se)
+	if re != nil {
+		return re
+	}
+
+	_, re = srv.sendNotificationIfPossibleH(*se.MessageCreator, notificationText)
+	if re != nil {
+		return re
+	}
+
+	return nil
+}
+
+// composeNotificationText creates a text for notification about the system
+// event.
+func (srv *Server) composeNotificationText(se *cm.SystemEvent) (text cmb.Text, re *jrm1.RpcError) {
+	switch se.Type {
+	case cm.SystemEventType_ThreadParentChange:
+		text = cmb.Text(fmt.Sprintf("A thread was moved to another forum. ThreadId=%d.", se.ThreadId))
+	case cm.SystemEventType_ThreadNameChange:
+		text = cmb.Text(fmt.Sprintf("A thread was renamed. ThreadId=%d.", se.ThreadId))
+	case cm.SystemEventType_ThreadDeletion:
+		text = cmb.Text(fmt.Sprintf("A thread was deleted. ThreadId=%d.", se.ThreadId))
+	case cm.SystemEventType_ThreadNewMessage:
+		text = cmb.Text(fmt.Sprintf("A new message was added into the thread. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+	case cm.SystemEventType_ThreadMessageEdit:
+		text = cmb.Text(fmt.Sprintf("A message was edited in the thread. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+	case cm.SystemEventType_ThreadMessageDeletion:
+		text = cmb.Text(fmt.Sprintf("A message was deleted from the thread. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+	case cm.SystemEventType_MessageTextEdit:
+		text = cmb.Text(fmt.Sprintf("Your message was edited. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+	case cm.SystemEventType_MessageParentChange:
+		text = cmb.Text(fmt.Sprintf("Your message was moved to another thread. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+	case cm.SystemEventType_MessageDeletion:
+		text = cmb.Text(fmt.Sprintf("Your message was deleted from the thread. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+
+	default:
+		return "", jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEventType, RpcErrorMsg_SystemEventType, nil)
+	}
+
+	return text, nil
+}
+
+// clearSubscriptionsOfDeletedThread clears remains of subscriptions of a
+// deleted thread.
+func (srv *Server) clearSubscriptionsOfDeletedThread(threadId cmb.Id) (re *jrm1.RpcError) {
+	params := sm.ClearThreadSubscriptionsSParams{
+		DKeyParams: cmr.DKeyParams{
+			// DKey is set during module start-up, so it is non-null.
+			DKey: *srv.dKeyForSM,
+		},
+		ThreadId: threadId,
+	}
+	result := new(sm.ClearThreadSubscriptionsSResult)
+	var err error
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncClearThreadSubscriptionsS, params, result)
+	if err != nil {
+		srv.logError(err)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
+	}
+	if re != nil {
+		return re
+	}
+
+	return nil
+}
+
+// getThreadSubscribers gets a list of users subscribed to the thread.
+func (srv *Server) getThreadSubscribers(threadId cmb.Id) (tsr *sm.ThreadSubscriptionsRecord, re *jrm1.RpcError) {
+	params := sm.GetThreadSubscribersSParams{
+		DKeyParams: cmr.DKeyParams{
+			// DKey is set during module start-up, so it is non-null.
+			DKey: *srv.dKeyForSM,
+		},
+		ThreadId: threadId,
+	}
+	result := new(sm.GetThreadSubscribersSResult)
+	var err error
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncGetThreadSubscribersS, params, result)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
+	}
+	if re != nil {
+		return nil, re
+	}
+
+	return result.ThreadSubscriptions, nil
+}
+
+// isUserSubscribed checks whether the user is subscribed to the thread.
+func (srv *Server) isUserSubscribed(threadId cmb.Id, userId cmb.Id) (isSubscribed cmb.Flag, re *jrm1.RpcError) {
+	params := sm.IsUserSubscribedSParams{
+		DKeyParams: cmr.DKeyParams{
+			// DKey is set during module start-up, so it is non-null.
+			DKey: *srv.dKeyForSM,
+		},
+		ThreadId: threadId,
+		UserId:   userId,
+	}
+	result := new(sm.IsUserSubscribedSResult)
+	var err error
+	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncIsUserSubscribedS, params, result)
+	if err != nil {
+		srv.logError(err)
+		return false, jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
+	}
+	if re != nil {
+		return false, re
+	}
+
+	return result.IsSubscribed, nil
+}
+
+// sendNotificationIfPossibleH is a helper function which tries to send a
+// notification to a user when it is possible.
+func (srv *Server) sendNotificationIfPossibleH(userId cmb.Id, text cmb.Text) (result *nm.SendNotificationIfPossibleSResult, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var err error
+	var unc cmb.Count
+	unc, err = srv.dbo.CountUnreadNotificationsByUserId(userId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	// Notification box is full.
+	if unc >= srv.settings.SystemSettings.NotificationCountLimit {
+		result = &nm.SendNotificationIfPossibleSResult{
+			IsSent: false,
+		}
+		return result, nil
+	}
+
+	var insertedNotificationId cmb.Id
+	insertedNotificationId, err = srv.dbo.InsertNewNotification(userId, text)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &nm.SendNotificationIfPossibleSResult{
+		IsSent:         true,
+		NotificationId: insertedNotificationId,
+	}
+
+	return result, nil
+}
+
+// saveSystemEventH saves the system event into database.
+func (srv *Server) saveSystemEventH(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var err error
+	err = srv.dbo.SaveSystemEvent(*se)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	return nil
 }

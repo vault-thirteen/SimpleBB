@@ -201,6 +201,42 @@ func (srv *Server) isUserSubscribed(p *sm.IsUserSubscribedParams) (result *sm.Is
 	return result, nil
 }
 
+// isUserSubscribedS checks whether the user has a subscription to the thread.
+// This method is used by the system.
+func (srv *Server) isUserSubscribedS(p *sm.IsUserSubscribedSParams) (result *sm.IsUserSubscribedSResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.ThreadId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIdIsNotSet, RpcErrorMsg_ThreadIdIsNotSet, nil)
+	}
+	if p.UserId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_UserIdIsNotSet, RpcErrorMsg_UserIdIsNotSet, nil)
+	}
+
+	re = srv.mustBeNoAuth(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check the DKey.
+	if !srv.dKeyI.CheckString(p.DKey.ToString()) {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	var isSubscribed cmb.Flag
+	isSubscribed, re = srv.isUserSubscribedH(p.UserId, p.ThreadId)
+	if re != nil {
+		return nil, re
+	}
+
+	result = &sm.IsUserSubscribedSResult{
+		UserId:       p.UserId,
+		ThreadId:     p.ThreadId,
+		IsSubscribed: isSubscribed,
+	}
+
+	return result, nil
+}
+
 // countSelfSubscriptions counts subscriptions of the current user.
 func (srv *Server) countSelfSubscriptions(p *sm.CountSelfSubscriptionsParams) (result *sm.CountSelfSubscriptionsResult, re *jrm1.RpcError) {
 	var userRoles *am.GetSelfRolesResult
@@ -520,8 +556,8 @@ func (srv *Server) deleteSubscriptionS(p *sm.DeleteSubscriptionSParams) (result 
 	return result, nil
 }
 
-// clearThreadSubscriptionsS clears remains of subscriptions of a deleted
-// thread. This method is used by the system.
+// clearThreadSubscriptionsS clears subscriptions of an existing thread. This
+// method is used by the system.
 func (srv *Server) clearThreadSubscriptionsS(p *sm.ClearThreadSubscriptionsSParams) (result *sm.ClearThreadSubscriptionsSResult, re *jrm1.RpcError) {
 	// Check parameters.
 	if p.ThreadId == 0 {
@@ -545,9 +581,8 @@ func (srv *Server) clearThreadSubscriptionsS(p *sm.ClearThreadSubscriptionsSPara
 		return nil, re
 	}
 
-	// If thread exists, we can not clear anything.
-	if threadExists {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadExists, RpcErrorMsg_ThreadExists, nil)
+	if !threadExists {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadDoesNotExist, RpcErrorMsg_ThreadDoesNotExist, nil)
 	}
 
 	// Clear subscriptions.

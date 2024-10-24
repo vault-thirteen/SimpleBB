@@ -160,3 +160,24 @@ func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module cm.Module, incident
 
 	return cdbo.CheckRowsAffected(result, 1)
 }
+
+func (dbo *DatabaseObject) SaveSystemEvent(se cm.SystemEvent) (err error) {
+	var result sql.Result
+	result, err = dbo.PreparedStatement(DbPsid_SaveSystemEvent).Exec(se.Type, se.ThreadId, se.MessageId)
+	if err != nil {
+		return err
+	}
+
+	return cdbo.CheckRowsAffected(result, 1)
+}
+
+func (dbo *DatabaseObject) GetSystemEventById(systemEventId cmb.Id) (se *cm.SystemEvent, err error) {
+	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetSystemEventById).QueryRow(systemEventId)
+
+	se, err = cm.NewSystemEventFromScannableSource(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return se, nil
+}

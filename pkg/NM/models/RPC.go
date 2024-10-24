@@ -2,6 +2,7 @@ package models
 
 import (
 	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
@@ -111,6 +112,16 @@ type DeleteNotificationParams struct {
 type DeleteNotificationResult = cmr.CommonResultWithSuccess
 
 // Other.
+
+type ProcessSystemEventSParams struct {
+	cmr.CommonParams
+	cmr.DKeyParams
+	Type           cm.SystemEventType `json:"type"`
+	ThreadId       cmb.Id             `json:"threadId"`
+	MessageId      cmb.Id             `json:"messageId"`
+	MessageCreator *cmb.Id            `json:"messageCreator,omitempty"`
+}
+type ProcessSystemEventSResult = cmr.CommonResultWithSuccess
 
 type GetDKeyParams struct {
 	cmr.CommonParams

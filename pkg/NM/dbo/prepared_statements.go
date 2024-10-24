@@ -21,6 +21,8 @@ const (
 	DbPsid_ClearNotifications               = 9
 	DbPsid_GetNotificationsByUserIdOnPage   = 10
 	DbPsid_CountAllNotificationsByUserId    = 11
+	DbPsid_SaveSystemEvent                  = 12
+	DbPsid_GetSystemEventById               = 13
 )
 
 func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
@@ -73,6 +75,14 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 
 	// 11.
 	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s WHERE UserId = ?;`, dbo.tableNames.Notifications)
+	qs = append(qs, q)
+
+	// 12.
+	q = fmt.Sprintf(`INSERT INTO %s (Type, ThreadId, MessageId) VALUES (?, ?, ?);`, dbo.tableNames.SystemEvents)
+	qs = append(qs, q)
+
+	// 13.
+	q = fmt.Sprintf(`SELECT Id, Type, ThreadId, MessageId, Time FROM %s WHERE Id = ?;`, dbo.tableNames.SystemEvents)
 	qs = append(qs, q)
 
 	return qs

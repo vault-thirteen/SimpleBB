@@ -48,12 +48,5 @@
     "port": 2007,
     "path": "/",
     "enableSelfSignedCertificate": true
-  },
-  "sm": {
-    "schema": "https",
-    "host": "localhost",
-    "port": 2008,
-    "path": "/",
-    "enableSelfSignedCertificate": true
   }
 }

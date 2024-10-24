@@ -21,8 +21,8 @@ github.com/vault-thirteen/BytePackedPassword v0.3.14 h1:1kQP0dNHPT4ye3C0QuJ7FTcE
 github.com/vault-thirteen/BytePackedPassword v0.3.14/go.mod h1:U+0YL/HBCgeiSqBcXNk/ao4Outgj+bFE0qgAWiP9XxY=
 github.com/vault-thirteen/Cache v0.12.11 h1:UpaPv20uK0RcS1Ro3MiMPnSQPI3ChsPqO3bD9JlraBg=
 github.com/vault-thirteen/Cache v0.12.11/go.mod h1:KeKzXYQSTjKmKmh+N4yPvIEiS8Vl9qqzVnMzDS4DPbI=
-github.com/vault-thirteen/JSON-RPC-M1 v0.3.11 h1:uVyYaKwCebNonm/0q9oYYiZaghAMU6AA9rONlAfQDQM=
-github.com/vault-thirteen/JSON-RPC-M1 v0.3.11/go.mod h1:EuYJ83mN+VfZH4FU64w9jkflvLdk2b6wBIXtlLd/8OE=
+github.com/vault-thirteen/JSON-RPC-M1 v0.3.12 h1:Y/Wpzgh4zZuy6MTQiUkz+/JRUeiSSYidPDWAhXmSBRc=
+github.com/vault-thirteen/JSON-RPC-M1 v0.3.12/go.mod h1:EuYJ83mN+VfZH4FU64w9jkflvLdk2b6wBIXtlLd/8OE=
 github.com/vault-thirteen/RingCaptcha v0.7.10 h1:ueWi53EC0PdBIVP/lsTyk0NcEFd32x0i0u0wlrtbax4=
 github.com/vault-thirteen/RingCaptcha v0.7.10/go.mod h1:H1eQECh8wNg3lI7C77eRju7M8blXecRkVQ6bqpmcr+s=
 github.com/vault-thirteen/Simple-File-Server v0.12.7 h1:hyqVF9rhcYIsImki/4OfLjaie0aL8j8c8g6uyOWYFrU=

@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS SystemEvents
+(
+    Id        bigint AUTO_INCREMENT NOT NULL,
+    Type      tinyint unsigned      NOT NULL,
+    ThreadId  bigint                NOT NULL,
+    MessageId bigint                NOT NULL,
+    Time      datetime              NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY (Id),
+    INDEX idx_Type USING BTREE (Type),
+    INDEX idx_ThreadId USING BTREE (ThreadId),
+    INDEX idx_MessageId USING BTREE (MessageId),
+    INDEX idx_Time USING BTREE (Time)
+);

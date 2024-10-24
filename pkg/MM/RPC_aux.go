@@ -14,10 +14,9 @@ import (
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	nc "github.com/vault-thirteen/SimpleBB/pkg/NM/client"
 	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
-	sc "github.com/vault-thirteen/SimpleBB/pkg/SM/client"
-	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
@@ -172,28 +171,6 @@ func (srv *Server) getDKeyForNM() (dKey *cmb.Text, re *jrm1.RpcError) {
 	return &result.DKey, nil
 }
 
-// getDKeyForSM receives a DKey from Subscription module.
-func (srv *Server) getDKeyForSM() (dKey *cmb.Text, re *jrm1.RpcError) {
-	params := sm.GetDKeyParams{}
-	result := new(sm.GetDKeyResult)
-	var err error
-	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncGetDKey, params, result)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
-	}
-	if re != nil {
-		return nil, re
-	}
-
-	// DKey must be non-empty.
-	if len(result.DKey) == 0 {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_ModuleSynchronisation, c.RpcErrorMsg_ModuleSynchronisation, nil)
-	}
-
-	return &result.DKey, nil
-}
-
 // sendNotificationToUser sends a system notification to a user.
 func (srv *Server) sendNotificationToUser(userId cmb.Id, text cmb.Text) (re *jrm1.RpcError) {
 	params := nm.AddNotificationSParams{
@@ -207,30 +184,6 @@ func (srv *Server) sendNotificationToUser(userId cmb.Id, text cmb.Text) (re *jrm
 	result := new(nm.AddNotificationSResult)
 	var err error
 	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncAddNotificationS, params, result)
-	if err != nil {
-		srv.logError(err)
-		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
-	}
-	if re != nil {
-		return re
-	}
-
-	return nil
-}
-
-// clearSubscriptionsOfDeletedThread clears remains of subscriptions of a
-// deleted thread.
-func (srv *Server) clearSubscriptionsOfDeletedThread(threadId cmb.Id) (re *jrm1.RpcError) {
-	params := sm.ClearThreadSubscriptionsSParams{
-		DKeyParams: cmr.DKeyParams{
-			// DKey is set during module start-up, so it is non-null.
-			DKey: *srv.dKeyForSM,
-		},
-		ThreadId: threadId,
-	}
-	result := new(sm.ClearThreadSubscriptionsSResult)
-	var err error
-	re, err = srv.smServiceClient.MakeRequest(context.Background(), sc.FuncClearThreadSubscriptionsS, params, result)
 	if err != nil {
 		srv.logError(err)
 		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
@@ -407,6 +360,415 @@ func (srv *Server) deleteThreadH(threadId cmb.Id) (re *jrm1.RpcError) {
 	err = srv.dbo.DeleteThreadById(threadId)
 	if err != nil {
 		return srv.databaseError(err)
+	}
+
+	return nil
+}
+
+// changeThreadForumH is a helper function used by other functions to move a
+// thread from an old forum to a new forum.
+func (srv *Server) changeThreadForumH(threadId cmb.Id, newForumId cmb.Id, userId cmb.Id) (re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var n cmb.Count
+	var err error
+	n, err = srv.dbo.CountThreadsById(threadId)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	// Ensure that an old parent exists.
+	var oldParent cmb.Id
+	oldParent, err = srv.dbo.GetThreadForumById(threadId)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	n, err = srv.dbo.CountForumsById(oldParent)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
+	// Ensure that a new parent exists.
+	n, err = srv.dbo.CountForumsById(newForumId)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
+	}
+
+	// Update the moved thread.
+	err = srv.dbo.SetThreadForumById(threadId, newForumId, userId)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	// Update the new link.
+	var threadsR *ul.UidList
+	threadsR, err = srv.dbo.GetForumThreadsById(newForumId)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	err = threadsR.AddItem(threadId, false)
+	if err != nil {
+		srv.logError(err)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetForumThreadsById(newForumId, threadsR)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	// Update the old link.
+	var threadsL *ul.UidList
+	threadsL, err = srv.dbo.GetForumThreadsById(oldParent)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	err = threadsL.RemoveItem(threadId)
+	if err != nil {
+		srv.logError(err)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetForumThreadsById(oldParent, threadsL)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	return nil
+}
+
+// changeThreadNameH is a helper function used by other functions to rename a
+// thread.
+func (srv *Server) changeThreadNameH(threadId cmb.Id, newThreadName cmb.Text, userId cmb.Id) (re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var n cmb.Count
+	var err error
+	n, err = srv.dbo.CountThreadsById(threadId)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	err = srv.dbo.SetThreadNameById(threadId, newThreadName, userId)
+	if err != nil {
+		return srv.databaseError(err)
+	}
+
+	return nil
+}
+
+// addMessageH is a helper function used by other functions to inserts a new
+// message into a thread.
+func (srv *Server) addMessageH(threadId cmb.Id, messageText cmb.Text, userRoles *am.GetSelfRolesResult) (result *mm.AddMessageResult, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	// Get the latest message in the thread.
+	var latestMessageInThread *mm.Message
+	latestMessageInThread, re = srv.getLatestMessageOfThreadH(threadId)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions (Part II).
+	canIAddMessage := srv.canUserAddMessage(userRoles, latestMessageInThread)
+	if !canIAddMessage {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Ensure that a parent exists.
+	var err error
+	var n cmb.Count
+	n, err = srv.dbo.CountThreadsById(threadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	// Insert a message and link it with its thread.
+	var parentMessages *ul.UidList
+	parentMessages, err = srv.dbo.GetThreadMessagesById(threadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	messageTextChecksum := srv.getMessageTextChecksum(messageText)
+
+	var insertedMessageId cmb.Id
+	insertedMessageId, err = srv.dbo.InsertNewMessage(threadId, messageText, messageTextChecksum, userRoles.User.Id)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	err = parentMessages.AddItem(insertedMessageId, false)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetThreadMessagesById(threadId, parentMessages)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	// Update thread's position if needed.
+	if srv.settings.SystemSettings.NewThreadsAtTop {
+		var messageThread *mm.Thread
+		messageThread, err = srv.dbo.GetThreadById(threadId)
+		if err != nil {
+			return nil, srv.databaseError(err)
+		}
+
+		if messageThread == nil {
+			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+		}
+
+		var threads *ul.UidList
+		threads, err = srv.dbo.GetForumThreadsById(messageThread.ForumId)
+		if err != nil {
+			return nil, srv.databaseError(err)
+		}
+
+		var isAlreadyRaised bool
+		isAlreadyRaised, err = threads.RaiseItem(threadId)
+		if err != nil {
+			srv.logError(err)
+			return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+		}
+
+		// Update the list if it has been changed.
+		if !isAlreadyRaised {
+			err = srv.dbo.SetForumThreadsById(messageThread.ForumId, threads)
+			if err != nil {
+				return nil, srv.databaseError(err)
+			}
+		}
+	}
+
+	result = &mm.AddMessageResult{
+		MessageId: insertedMessageId,
+	}
+
+	return result, nil
+}
+
+// changeMessageTextH is a helper function used by other functions to change
+// text of a message.
+func (srv *Server) changeMessageTextH(messageId cmb.Id, newText cmb.Text, userRoles *am.GetSelfRolesResult) (initialMessage *mm.Message, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	// Get the edited message.
+	var err error
+	initialMessage, err = srv.dbo.GetMessageById(messageId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if initialMessage == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	}
+
+	// Check permissions.
+	canIEditMessage := srv.canUserEditMessage(userRoles, initialMessage)
+	if !canIEditMessage {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Edit the message.
+	messageTextChecksum := srv.getMessageTextChecksum(newText)
+
+	err = srv.dbo.SetMessageTextById(messageId, newText, messageTextChecksum, userRoles.User.Id)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	return initialMessage, nil
+}
+
+// changeMessageThreadH is a helper function used by other functions to move a
+// message from an old thread to a new thread.
+func (srv *Server) changeMessageThreadH(messageId cmb.Id, newThreadId cmb.Id, userRoles *am.GetSelfRolesResult) (initialMessage *mm.Message, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var n cmb.Count
+	var err error
+	n, err = srv.dbo.CountMessagesById(messageId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	}
+
+	// Get the edited message.
+	initialMessage, err = srv.dbo.GetMessageById(messageId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	// Ensure that an old parent exists.
+	var oldParent cmb.Id
+	oldParent, err = srv.dbo.GetMessageThreadById(messageId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	n, err = srv.dbo.CountThreadsById(oldParent)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	// Ensure that a new parent exists.
+	n, err = srv.dbo.CountThreadsById(newThreadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if n == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
+	}
+
+	// Update the moved message.
+	err = srv.dbo.SetMessageThreadById(messageId, newThreadId, userRoles.User.Id)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	// Update the new link.
+	var messagesR *ul.UidList
+	messagesR, err = srv.dbo.GetThreadMessagesById(newThreadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	err = messagesR.AddItem(messageId, false)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetThreadMessagesById(newThreadId, messagesR)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	// Update the old link.
+	var messagesL *ul.UidList
+	messagesL, err = srv.dbo.GetThreadMessagesById(oldParent)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	err = messagesL.RemoveItem(messageId)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetThreadMessagesById(oldParent, messagesL)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	return initialMessage, nil
+}
+
+// deleteMessageH is a helper function used by other functions to remove a
+// message.
+func (srv *Server) deleteMessageH(messageId cmb.Id) (initialMessage *mm.Message, re *jrm1.RpcError) {
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	// Read the message.
+	var err error
+	initialMessage, err = srv.dbo.GetMessageById(messageId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	if initialMessage == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	}
+
+	// Update the link.
+	var linkMessages *ul.UidList
+	linkMessages, err = srv.dbo.GetThreadMessagesById(initialMessage.ThreadId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	err = linkMessages.RemoveItem(messageId)
+	if err != nil {
+		srv.logError(err)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
+	}
+
+	err = srv.dbo.SetThreadMessagesById(initialMessage.ThreadId, linkMessages)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	// Delete the message.
+	err = srv.dbo.DeleteMessageById(messageId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	return initialMessage, nil
+}
+
+// reportSystemEvent reports the system event to the notification module.
+func (srv *Server) reportSystemEvent(se cm.SystemEvent) (re *jrm1.RpcError) {
+	params := nm.ProcessSystemEventSParams{
+		DKeyParams: cmr.DKeyParams{
+			// DKey is set during module start-up, so it is non-null.
+			DKey: *srv.dKeyForNM,
+		},
+		Type:           se.Type,
+		ThreadId:       se.ThreadId,
+		MessageId:      se.MessageId,
+		MessageCreator: se.MessageCreator,
+	}
+	result := new(nm.ProcessSystemEventSResult)
+	var err error
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncProcessSystemEventS, params, result)
+	if err != nil {
+		srv.logError(err)
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_RPCCall, c.RpcErrorMsg_RPCCall, nil)
+	}
+	if re != nil {
+		return re
 	}
 
 	return nil

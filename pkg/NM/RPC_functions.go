@@ -117,36 +117,7 @@ func (srv *Server) sendNotificationIfPossibleS(p *nm.SendNotificationIfPossibleS
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
-	var err error
-	var unc cmb.Count
-	unc, err = srv.dbo.CountUnreadNotificationsByUserId(p.UserId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	// Notification box is full.
-	if unc >= srv.settings.SystemSettings.NotificationCountLimit {
-		result = &nm.SendNotificationIfPossibleSResult{
-			IsSent: false,
-		}
-		return result, nil
-	}
-
-	var insertedNotificationId cmb.Id
-	insertedNotificationId, err = srv.dbo.InsertNewNotification(p.UserId, p.Text)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	result = &nm.SendNotificationIfPossibleSResult{
-		IsSent:         true,
-		NotificationId: insertedNotificationId,
-	}
-
-	return result, nil
+	return srv.sendNotificationIfPossibleH(p.UserId, p.Text)
 }
 
 // getNotification reads a notification.
@@ -442,6 +413,75 @@ func (srv *Server) deleteNotification(p *nm.DeleteNotificationParams) (result *n
 }
 
 // Other.
+
+// processSystemEventS processes a system event. This method is used by the
+// system.
+func (srv *Server) processSystemEventS(p *nm.ProcessSystemEventSParams) (result *nm.ProcessSystemEventSResult, re *jrm1.RpcError) {
+	// Check parameters.
+	var se = &cm.SystemEvent{
+		Type:           p.Type,
+		ThreadId:       p.ThreadId,
+		MessageId:      p.MessageId,
+		MessageCreator: p.MessageCreator,
+	}
+	if !se.CheckType() {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEventType, RpcErrorMsg_SystemEventType, nil)
+	}
+	if !se.CheckParameters() {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEventParameter, RpcErrorMsg_SystemEventParameter, nil)
+	}
+
+	re = srv.mustBeNoAuth(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check the DKey.
+	if !srv.dKeyI.CheckString(p.DKey.ToString()) {
+		srv.incidentManager.ReportIncident(cm.IncidentType_WrongDKey, "", nil)
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	re = srv.saveSystemEventH(se)
+	if re != nil {
+		return nil, re
+	}
+
+	switch se.Type {
+	case cm.SystemEventType_ThreadParentChange:
+		re = srv.processSystemEvent_ThreadParentChange(se)
+	case cm.SystemEventType_ThreadNameChange:
+		re = srv.processSystemEvent_ThreadNameChange(se)
+	case cm.SystemEventType_ThreadDeletion:
+		re = srv.processSystemEvent_ThreadDeletion(se)
+	case cm.SystemEventType_ThreadNewMessage:
+		re = srv.processSystemEvent_ThreadNewMessage(se)
+	case cm.SystemEventType_ThreadMessageEdit:
+		re = srv.processSystemEvent_ThreadMessageEdit(se)
+	case cm.SystemEventType_ThreadMessageDeletion:
+		re = srv.processSystemEvent_ThreadMessageDeletion(se)
+	case cm.SystemEventType_MessageTextEdit:
+		re = srv.processSystemEvent_MessageTextEdit(se)
+	case cm.SystemEventType_MessageParentChange:
+		re = srv.processSystemEvent_MessageParentChange(se)
+	case cm.SystemEventType_MessageDeletion:
+		re = srv.processSystemEvent_MessageDeletion(se)
+
+	default:
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEventType, RpcErrorMsg_SystemEventType, nil)
+	}
+
+	if re != nil {
+		return nil, re
+	}
+
+	result = &nm.ProcessSystemEventSResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
+}
 
 func (srv *Server) getDKey(p *nm.GetDKeyParams) (result *nm.GetDKeyResult, re *jrm1.RpcError) {
 	re = srv.mustBeNoAuth(p.Auth)

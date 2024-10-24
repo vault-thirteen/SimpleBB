@@ -1,4 +1,3 @@
-* Subscriptions
 * Notification Templates
 * Message Hash Sum Check
 * SUidList

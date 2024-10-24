@@ -2,7 +2,6 @@ package mm
 
 import (
 	"fmt"
-	"log"
 	"sync"
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
@@ -1246,23 +1245,14 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
-	var n cmb.Count
-	var err error
-	n, err = srv.dbo.CountThreadsById(p.ThreadId)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	re = srv.reportSystemEvent(cm.SystemEvent{Type: cm.SystemEventType_ThreadNameChange, ThreadId: p.ThreadId})
+	if re != nil {
+		return nil, re
 	}
 
-	if n == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
-	}
-
-	err = srv.dbo.SetThreadNameById(p.ThreadId, p.Name, userRoles.User.Id)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	re = srv.changeThreadNameH(p.ThreadId, p.Name, userRoles.User.Id)
+	if re != nil {
+		return nil, re
 	}
 
 	result = &mm.ChangeThreadNameResult{
@@ -1295,86 +1285,14 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
-	var n cmb.Count
-	var err error
-	n, err = srv.dbo.CountThreadsById(p.ThreadId)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	re = srv.reportSystemEvent(cm.SystemEvent{Type: cm.SystemEventType_ThreadParentChange, ThreadId: p.ThreadId})
+	if re != nil {
+		return nil, re
 	}
 
-	if n == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
-	}
-
-	// Ensure that an old parent exists.
-	var oldParent cmb.Id
-	oldParent, err = srv.dbo.GetThreadForumById(p.ThreadId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	n, err = srv.dbo.CountForumsById(oldParent)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	if n == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
-	}
-
-	// Ensure that a new parent exists.
-	n, err = srv.dbo.CountForumsById(p.ForumId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	if n == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ForumIsNotFound, RpcErrorMsg_ForumIsNotFound, nil)
-	}
-
-	// Update the moved thread.
-	err = srv.dbo.SetThreadForumById(p.ThreadId, p.ForumId, userRoles.User.Id)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	// Update the new link.
-	var threadsR *ul.UidList
-	threadsR, err = srv.dbo.GetForumThreadsById(p.ForumId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	err = threadsR.AddItem(p.ThreadId, false)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
-	}
-
-	err = srv.dbo.SetForumThreadsById(p.ForumId, threadsR)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	// Update the old link.
-	var threadsL *ul.UidList
-	threadsL, err = srv.dbo.GetForumThreadsById(oldParent)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	err = threadsL.RemoveItem(p.ThreadId)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
-	}
-
-	err = srv.dbo.SetForumThreadsById(oldParent, threadsL)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	re = srv.changeThreadForumH(p.ThreadId, p.ForumId, userRoles.User.Id)
+	if re != nil {
+		return nil, re
 	}
 
 	result = &mm.ChangeThreadForumResult{
@@ -1628,17 +1546,14 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	re = srv.deleteThreadH(p.ThreadId)
+	re = srv.reportSystemEvent(cm.SystemEvent{Type: cm.SystemEventType_ThreadDeletion, ThreadId: p.ThreadId})
 	if re != nil {
 		return nil, re
 	}
 
-	// Ask the SM module to clear the subscriptions.
-	re = srv.clearSubscriptionsOfDeletedThread(p.ThreadId)
+	re = srv.deleteThreadH(p.ThreadId)
 	if re != nil {
-		log.Println(re)
-	} else {
-		log.Println("OK")
+		return nil, re
 	}
 
 	result = &mm.DeleteThreadResult{
@@ -1709,96 +1624,14 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
-	// Get the latest message in the thread.
-	var latestMessageInThread *mm.Message
-	latestMessageInThread, re = srv.getLatestMessageOfThreadH(p.ThreadId)
+	result, re = srv.addMessageH(p.ThreadId, p.Text, userRoles)
 	if re != nil {
 		return nil, re
 	}
 
-	// Check permissions (Part II).
-	canIAddMessage := srv.canUserAddMessage(userRoles, latestMessageInThread)
-	if !canIAddMessage {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	// Ensure that a parent exists.
-	var err error
-	var n cmb.Count
-	n, err = srv.dbo.CountThreadsById(p.ThreadId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	if n == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
-	}
-
-	// Insert a message and link it with its thread.
-	var parentMessages *ul.UidList
-	parentMessages, err = srv.dbo.GetThreadMessagesById(p.ThreadId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	messageTextChecksum := srv.getMessageTextChecksum(p.Text)
-
-	var insertedMessageId cmb.Id
-	insertedMessageId, err = srv.dbo.InsertNewMessage(p.ThreadId, p.Text, messageTextChecksum, userRoles.User.Id)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	err = parentMessages.AddItem(insertedMessageId, false)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
-	}
-
-	err = srv.dbo.SetThreadMessagesById(p.ThreadId, parentMessages)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	// Update thread's position if needed.
-	if srv.settings.SystemSettings.NewThreadsAtTop {
-		var messageThread *mm.Thread
-		messageThread, err = srv.dbo.GetThreadById(p.ThreadId)
-		if err != nil {
-			return nil, srv.databaseError(err)
-		}
-
-		if messageThread == nil {
-			return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
-		}
-
-		var threads *ul.UidList
-		threads, err = srv.dbo.GetForumThreadsById(messageThread.ForumId)
-		if err != nil {
-			return nil, srv.databaseError(err)
-		}
-
-		var isAlreadyRaised bool
-		isAlreadyRaised, err = threads.RaiseItem(p.ThreadId)
-		if err != nil {
-			srv.logError(err)
-			return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
-		}
-
-		// Update the list if it has been changed.
-		if !isAlreadyRaised {
-			err = srv.dbo.SetForumThreadsById(messageThread.ForumId, threads)
-			if err != nil {
-				return nil, srv.databaseError(err)
-			}
-		}
-	}
-
-	result = &mm.AddMessageResult{
-		MessageId: insertedMessageId,
+	re = srv.reportSystemEvent(cm.SystemEvent{Type: cm.SystemEventType_ThreadNewMessage, ThreadId: p.ThreadId, MessageId: result.MessageId})
+	if re != nil {
+		return nil, re
 	}
 
 	return result, nil
@@ -1821,31 +1654,22 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 		return nil, re
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
-	// Get the edited message.
-	message, err := srv.dbo.GetMessageById(p.MessageId)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	var initialMessage *mm.Message
+	initialMessage, re = srv.changeMessageTextH(p.MessageId, p.Text, userRoles)
+	if re != nil {
+		return nil, re
 	}
 
-	if message == nil {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	se := cm.SystemEvent{Type: cm.SystemEventType_ThreadMessageEdit, ThreadId: initialMessage.ThreadId, MessageId: p.MessageId}
+	re = srv.reportSystemEvent(se)
+	if re != nil {
+		return nil, re
 	}
 
-	// Check permissions.
-	canIEditMessage := srv.canUserEditMessage(userRoles, message)
-	if !canIEditMessage {
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
-	}
-
-	// Edit the message.
-	messageTextChecksum := srv.getMessageTextChecksum(p.Text)
-
-	err = srv.dbo.SetMessageTextById(p.MessageId, p.Text, messageTextChecksum, userRoles.User.Id)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	se = cm.SystemEvent{Type: cm.SystemEventType_MessageTextEdit, ThreadId: initialMessage.ThreadId, MessageId: p.MessageId, MessageCreator: &initialMessage.Creator.UserId}
+	re = srv.reportSystemEvent(se)
+	if re != nil {
+		return nil, re
 	}
 
 	result = &mm.ChangeMessageTextResult{
@@ -1878,86 +1702,16 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
-	var n cmb.Count
-	var err error
-	n, err = srv.dbo.CountMessagesById(p.MessageId)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	var initialMessage *mm.Message
+	initialMessage, re = srv.changeMessageThreadH(p.MessageId, p.ThreadId, userRoles)
+	if re != nil {
+		return nil, re
 	}
 
-	if n == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
-	}
-
-	// Ensure that an old parent exists.
-	var oldParent cmb.Id
-	oldParent, err = srv.dbo.GetMessageThreadById(p.MessageId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	n, err = srv.dbo.CountThreadsById(oldParent)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	if n == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
-	}
-
-	// Ensure that a new parent exists.
-	n, err = srv.dbo.CountThreadsById(p.ThreadId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	if n == 0 {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ThreadIsNotFound, RpcErrorMsg_ThreadIsNotFound, nil)
-	}
-
-	// Update the moved message.
-	err = srv.dbo.SetMessageThreadById(p.MessageId, p.ThreadId, userRoles.User.Id)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	// Update the new link.
-	var messagesR *ul.UidList
-	messagesR, err = srv.dbo.GetThreadMessagesById(p.ThreadId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	err = messagesR.AddItem(p.MessageId, false)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
-	}
-
-	err = srv.dbo.SetThreadMessagesById(p.ThreadId, messagesR)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	// Update the old link.
-	var messagesL *ul.UidList
-	messagesL, err = srv.dbo.GetThreadMessagesById(oldParent)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	err = messagesL.RemoveItem(p.MessageId)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
-	}
-
-	err = srv.dbo.SetThreadMessagesById(oldParent, messagesL)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	se := cm.SystemEvent{Type: cm.SystemEventType_MessageParentChange, ThreadId: initialMessage.ThreadId, MessageId: p.MessageId, MessageCreator: &initialMessage.Creator.UserId}
+	re = srv.reportSystemEvent(se)
+	if re != nil {
+		return nil, re
 	}
 
 	result = &mm.ChangeMessageThreadResult{
@@ -2057,43 +1811,22 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	srv.dbo.LockForWriting()
-	defer srv.dbo.UnlockAfterWriting()
-
-	// Read the message.
-	var message *mm.Message
-	var err error
-	message, err = srv.dbo.GetMessageById(p.MessageId)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	var initialMessage *mm.Message
+	initialMessage, re = srv.deleteMessageH(p.MessageId)
+	if re != nil {
+		return nil, re
 	}
 
-	if message == nil {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_MessageIsNotFound, RpcErrorMsg_MessageIsNotFound, nil)
+	se := cm.SystemEvent{Type: cm.SystemEventType_ThreadMessageDeletion, ThreadId: initialMessage.ThreadId, MessageId: p.MessageId}
+	re = srv.reportSystemEvent(se)
+	if re != nil {
+		return nil, re
 	}
 
-	// Update the link.
-	var linkMessages *ul.UidList
-	linkMessages, err = srv.dbo.GetThreadMessagesById(message.ThreadId)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	err = linkMessages.RemoveItem(p.MessageId)
-	if err != nil {
-		srv.logError(err)
-		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)
-	}
-
-	err = srv.dbo.SetThreadMessagesById(message.ThreadId, linkMessages)
-	if err != nil {
-		return nil, srv.databaseError(err)
-	}
-
-	// Delete the message.
-	err = srv.dbo.DeleteMessageById(p.MessageId)
-	if err != nil {
-		return nil, srv.databaseError(err)
+	se = cm.SystemEvent{Type: cm.SystemEventType_MessageDeletion, ThreadId: initialMessage.ThreadId, MessageId: p.MessageId, MessageCreator: &initialMessage.Creator.UserId}
+	re = srv.reportSystemEvent(se)
+	if re != nil {
+		return nil, re
 	}
 
 	result = &mm.DeleteMessageResult{
