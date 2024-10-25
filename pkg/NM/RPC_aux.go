@@ -200,7 +200,7 @@ func (srv *Server) processSystemEvent_ThreadDeletion(se *cm.SystemEvent) (re *jr
 	}
 
 	// Ask the SM module to clear the subscriptions.
-	re = srv.clearSubscriptionsOfDeletedThread(se.ThreadId)
+	re = srv.clearSubscriptionsOfDeletedThread(*se.ThreadId)
 	if re != nil {
 		return re
 	}
@@ -222,7 +222,7 @@ func (srv *Server) processSystemEvent_ThreadMessageDeletion(se *cm.SystemEvent) 
 
 func (srv *Server) processSystemEvent_MessageTextEdit(se *cm.SystemEvent) (re *jrm1.RpcError) {
 	var isSubscribed cmb.Flag
-	isSubscribed, re = srv.isUserSubscribed(se.ThreadId, *se.MessageCreator)
+	isSubscribed, re = srv.isUserSubscribed(*se.ThreadId, *se.Creator)
 	if re != nil {
 		return re
 	}
@@ -233,16 +233,26 @@ func (srv *Server) processSystemEvent_MessageTextEdit(se *cm.SystemEvent) (re *j
 		return nil
 	}
 
-	return srv.sendNotificationToAuthor(se)
+	// The actor does not need a notification about self action.
+	if *se.UserId == *se.Creator {
+		return nil
+	}
+
+	return srv.sendNotificationToCreator(se)
 }
 
 func (srv *Server) processSystemEvent_MessageParentChange(se *cm.SystemEvent) (re *jrm1.RpcError) {
-	return srv.sendNotificationToAuthor(se)
+	// The actor does not need a notification about self action.
+	if *se.UserId == *se.Creator {
+		return nil
+	}
+
+	return srv.sendNotificationToCreator(se)
 }
 
 func (srv *Server) processSystemEvent_MessageDeletion(se *cm.SystemEvent) (re *jrm1.RpcError) {
 	var isSubscribed cmb.Flag
-	isSubscribed, re = srv.isUserSubscribed(se.ThreadId, *se.MessageCreator)
+	isSubscribed, re = srv.isUserSubscribed(*se.ThreadId, *se.Creator)
 	if re != nil {
 		return re
 	}
@@ -253,14 +263,19 @@ func (srv *Server) processSystemEvent_MessageDeletion(se *cm.SystemEvent) (re *j
 		return nil
 	}
 
-	return srv.sendNotificationToAuthor(se)
+	// The actor does not need a notification about self action.
+	if *se.UserId == *se.Creator {
+		return nil
+	}
+
+	return srv.sendNotificationToCreator(se)
 }
 
 // sendNotificationsToThreadSubscribers sends notifications to thread
 // subscribers.
 func (srv *Server) sendNotificationsToThreadSubscribers(se *cm.SystemEvent) (re *jrm1.RpcError) {
 	var tsr *sm.ThreadSubscriptionsRecord
-	tsr, re = srv.getThreadSubscribers(se.ThreadId)
+	tsr, re = srv.getThreadSubscribers(*se.ThreadId)
 	if re != nil {
 		return re
 	}
@@ -273,6 +288,13 @@ func (srv *Server) sendNotificationsToThreadSubscribers(se *cm.SystemEvent) (re 
 
 	if tsr != nil {
 		for _, userId := range tsr.Users.AsArray() {
+			// The performer of the action does not need the notification.
+			if se.SystemEventData.UserId != nil {
+				if userId == *se.SystemEventData.UserId {
+					continue
+				}
+			}
+
 			_, re = srv.sendNotificationIfPossibleH(userId, notificationText)
 			if re != nil {
 				return re
@@ -283,15 +305,16 @@ func (srv *Server) sendNotificationsToThreadSubscribers(se *cm.SystemEvent) (re 
 	return nil
 }
 
-// sendNotificationToAuthor sends a notification to message creator.
-func (srv *Server) sendNotificationToAuthor(se *cm.SystemEvent) (re *jrm1.RpcError) {
+// sendNotificationToCreator sends a notification to the initial creator of the
+// object.
+func (srv *Server) sendNotificationToCreator(se *cm.SystemEvent) (re *jrm1.RpcError) {
 	var notificationText cmb.Text
 	notificationText, re = srv.composeNotificationText(se)
 	if re != nil {
 		return re
 	}
 
-	_, re = srv.sendNotificationIfPossibleH(*se.MessageCreator, notificationText)
+	_, re = srv.sendNotificationIfPossibleH(*se.Creator, notificationText)
 	if re != nil {
 		return re
 	}
@@ -304,26 +327,26 @@ func (srv *Server) sendNotificationToAuthor(se *cm.SystemEvent) (re *jrm1.RpcErr
 func (srv *Server) composeNotificationText(se *cm.SystemEvent) (text cmb.Text, re *jrm1.RpcError) {
 	switch se.Type {
 	case cm.SystemEventType_ThreadParentChange:
-		text = cmb.Text(fmt.Sprintf("A thread was moved to another forum. ThreadId=%d.", se.ThreadId))
+		text = cmb.Text(fmt.Sprintf("A thread was moved to another forum. ThreadId=%d, UserId=%d.", *se.ThreadId, *se.UserId))
 	case cm.SystemEventType_ThreadNameChange:
-		text = cmb.Text(fmt.Sprintf("A thread was renamed. ThreadId=%d.", se.ThreadId))
+		text = cmb.Text(fmt.Sprintf("A thread was renamed. ThreadId=%d, UserId=%d.", *se.ThreadId, *se.UserId))
 	case cm.SystemEventType_ThreadDeletion:
-		text = cmb.Text(fmt.Sprintf("A thread was deleted. ThreadId=%d.", se.ThreadId))
+		text = cmb.Text(fmt.Sprintf("A thread was deleted. ThreadId=%d, UserId=%d.", *se.ThreadId, *se.UserId))
 	case cm.SystemEventType_ThreadNewMessage:
-		text = cmb.Text(fmt.Sprintf("A new message was added into the thread. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+		text = cmb.Text(fmt.Sprintf("A new message was added into the thread. ThreadId=%d, MessageId=%d, UserId=%d.", *se.ThreadId, *se.MessageId, *se.UserId))
 	case cm.SystemEventType_ThreadMessageEdit:
-		text = cmb.Text(fmt.Sprintf("A message was edited in the thread. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+		text = cmb.Text(fmt.Sprintf("A message was edited in the thread. ThreadId=%d, MessageId=%d, UserId=%d.", *se.ThreadId, *se.MessageId, *se.UserId))
 	case cm.SystemEventType_ThreadMessageDeletion:
-		text = cmb.Text(fmt.Sprintf("A message was deleted from the thread. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+		text = cmb.Text(fmt.Sprintf("A message was deleted from the thread. ThreadId=%d, MessageId=%d, UserId=%d.", *se.ThreadId, *se.MessageId, *se.UserId))
 	case cm.SystemEventType_MessageTextEdit:
-		text = cmb.Text(fmt.Sprintf("Your message was edited. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+		text = cmb.Text(fmt.Sprintf("Your message was edited. ThreadId=%d, MessageId=%d, UserId=%d, Creator=%d.", *se.ThreadId, *se.MessageId, *se.UserId, *se.Creator))
 	case cm.SystemEventType_MessageParentChange:
-		text = cmb.Text(fmt.Sprintf("Your message was moved to another thread. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+		text = cmb.Text(fmt.Sprintf("Your message was moved to another thread. ThreadId=%d, MessageId=%d, UserId=%d, Creator=%d.", *se.ThreadId, *se.MessageId, *se.UserId, *se.Creator))
 	case cm.SystemEventType_MessageDeletion:
-		text = cmb.Text(fmt.Sprintf("Your message was deleted from the thread. ThreadId=%d, MessageId=%d.", se.ThreadId, se.MessageId))
+		text = cmb.Text(fmt.Sprintf("Your message was deleted from the thread. ThreadId=%d, MessageId=%d, UserId=%d, Creator=%d.", *se.ThreadId, *se.MessageId, *se.UserId, *se.Creator))
 
 	default:
-		return "", jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEventType, RpcErrorMsg_SystemEventType, nil)
+		return "", jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEvent, RpcErrorMsg_SystemEvent, nil)
 	}
 
 	return text, nil

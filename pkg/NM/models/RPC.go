@@ -116,10 +116,7 @@ type DeleteNotificationResult = cmr.CommonResultWithSuccess
 type ProcessSystemEventSParams struct {
 	cmr.CommonParams
 	cmr.DKeyParams
-	Type           cm.SystemEventType `json:"type"`
-	ThreadId       cmb.Id             `json:"threadId"`
-	MessageId      cmb.Id             `json:"messageId"`
-	MessageCreator *cmb.Id            `json:"messageCreator,omitempty"`
+	SystemEventData cm.SystemEventData `json:"systemEventData"`
 }
 type ProcessSystemEventSResult = cmr.CommonResultWithSuccess
 

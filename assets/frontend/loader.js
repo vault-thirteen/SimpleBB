@@ -1767,11 +1767,9 @@ async function drawBottomActionPanelButtonsForThread(thread, tdL, tdR, user, pan
 }
 
 async function drawBottomActionPanelButtonsForMessage(message, tdL, tdR, user, panelClass) {
-	if (user.Roles.IsAuthor) {
-		if (user.canEditMessage(message)) {
-			tdR.innerHTML = '<form><input type="button" value="' + ButtonName.EditMessage + '" class="' + ButtonClass.EditMessage + '" ' +
-				'onclick="onBtnEditMessageClick(this, \'' + panelClass + '\', ' + message.Id + ')" /></form>';
-		}
+	if (user.canEditMessage(message)) {
+		tdR.innerHTML = '<form><input type="button" value="' + ButtonName.EditMessage + '" class="' + ButtonClass.EditMessage + '" ' +
+			'onclick="onBtnEditMessageClick(this, \'' + panelClass + '\', ' + message.Id + ')" /></form>';
 	}
 }
 

@@ -1245,7 +1245,18 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	re = srv.reportSystemEvent(cm.SystemEvent{Type: cm.SystemEventType_ThreadNameChange, ThreadId: p.ThreadId})
+	se, err := cm.NewSystemEventWithData(
+		cm.SystemEventData{
+			Type:     cm.SystemEventType_ThreadNameChange,
+			ThreadId: &p.ThreadId,
+			UserId:   &userRoles.User.Id,
+		},
+	)
+	if err != nil {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_SystemEvent, c.RpcErrorMsg_SystemEvent, nil)
+	}
+
+	re = srv.reportSystemEvent(se)
 	if re != nil {
 		return nil, re
 	}
@@ -1285,7 +1296,18 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	re = srv.reportSystemEvent(cm.SystemEvent{Type: cm.SystemEventType_ThreadParentChange, ThreadId: p.ThreadId})
+	se, err := cm.NewSystemEventWithData(
+		cm.SystemEventData{
+			Type:     cm.SystemEventType_ThreadParentChange,
+			ThreadId: &p.ThreadId,
+			UserId:   &userRoles.User.Id,
+		},
+	)
+	if err != nil {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_SystemEvent, c.RpcErrorMsg_SystemEvent, nil)
+	}
+
+	re = srv.reportSystemEvent(se)
 	if re != nil {
 		return nil, re
 	}
@@ -1546,7 +1568,18 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
 	}
 
-	re = srv.reportSystemEvent(cm.SystemEvent{Type: cm.SystemEventType_ThreadDeletion, ThreadId: p.ThreadId})
+	se, err := cm.NewSystemEventWithData(
+		cm.SystemEventData{
+			Type:     cm.SystemEventType_ThreadDeletion,
+			ThreadId: &p.ThreadId,
+			UserId:   &userRoles.User.Id,
+		},
+	)
+	if err != nil {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_SystemEvent, c.RpcErrorMsg_SystemEvent, nil)
+	}
+
+	re = srv.reportSystemEvent(se)
 	if re != nil {
 		return nil, re
 	}
@@ -1629,7 +1662,19 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 		return nil, re
 	}
 
-	re = srv.reportSystemEvent(cm.SystemEvent{Type: cm.SystemEventType_ThreadNewMessage, ThreadId: p.ThreadId, MessageId: result.MessageId})
+	se, err := cm.NewSystemEventWithData(
+		cm.SystemEventData{
+			Type:      cm.SystemEventType_ThreadNewMessage,
+			ThreadId:  &p.ThreadId,
+			MessageId: &result.MessageId,
+			UserId:    &userRoles.User.Id,
+		},
+	)
+	if err != nil {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_SystemEvent, c.RpcErrorMsg_SystemEvent, nil)
+	}
+
+	re = srv.reportSystemEvent(se)
 	if re != nil {
 		return nil, re
 	}
@@ -1660,13 +1705,36 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 		return nil, re
 	}
 
-	se := cm.SystemEvent{Type: cm.SystemEventType_ThreadMessageEdit, ThreadId: initialMessage.ThreadId, MessageId: p.MessageId}
+	se, err := cm.NewSystemEventWithData(
+		cm.SystemEventData{
+			Type:      cm.SystemEventType_ThreadMessageEdit,
+			ThreadId:  &initialMessage.ThreadId,
+			MessageId: &p.MessageId,
+			UserId:    &userRoles.User.Id,
+		},
+	)
+	if err != nil {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_SystemEvent, c.RpcErrorMsg_SystemEvent, nil)
+	}
+
 	re = srv.reportSystemEvent(se)
 	if re != nil {
 		return nil, re
 	}
 
-	se = cm.SystemEvent{Type: cm.SystemEventType_MessageTextEdit, ThreadId: initialMessage.ThreadId, MessageId: p.MessageId, MessageCreator: &initialMessage.Creator.UserId}
+	se, err = cm.NewSystemEventWithData(
+		cm.SystemEventData{
+			Type:      cm.SystemEventType_MessageTextEdit,
+			ThreadId:  &initialMessage.ThreadId,
+			MessageId: &p.MessageId,
+			UserId:    &userRoles.User.Id,
+			Creator:   &initialMessage.Creator.UserId,
+		},
+	)
+	if err != nil {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_SystemEvent, c.RpcErrorMsg_SystemEvent, nil)
+	}
+
 	re = srv.reportSystemEvent(se)
 	if re != nil {
 		return nil, re
@@ -1708,7 +1776,19 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 		return nil, re
 	}
 
-	se := cm.SystemEvent{Type: cm.SystemEventType_MessageParentChange, ThreadId: initialMessage.ThreadId, MessageId: p.MessageId, MessageCreator: &initialMessage.Creator.UserId}
+	se, err := cm.NewSystemEventWithData(
+		cm.SystemEventData{
+			Type:      cm.SystemEventType_MessageParentChange,
+			ThreadId:  &initialMessage.ThreadId,
+			MessageId: &p.MessageId,
+			UserId:    &userRoles.User.Id,
+			Creator:   &initialMessage.Creator.UserId,
+		},
+	)
+	if err != nil {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_SystemEvent, c.RpcErrorMsg_SystemEvent, nil)
+	}
+
 	re = srv.reportSystemEvent(se)
 	if re != nil {
 		return nil, re
@@ -1817,13 +1897,36 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 		return nil, re
 	}
 
-	se := cm.SystemEvent{Type: cm.SystemEventType_ThreadMessageDeletion, ThreadId: initialMessage.ThreadId, MessageId: p.MessageId}
+	se, err := cm.NewSystemEventWithData(
+		cm.SystemEventData{
+			Type:      cm.SystemEventType_ThreadMessageDeletion,
+			ThreadId:  &initialMessage.ThreadId,
+			MessageId: &p.MessageId,
+			UserId:    &userRoles.User.Id,
+		},
+	)
+	if err != nil {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_SystemEvent, c.RpcErrorMsg_SystemEvent, nil)
+	}
+
 	re = srv.reportSystemEvent(se)
 	if re != nil {
 		return nil, re
 	}
 
-	se = cm.SystemEvent{Type: cm.SystemEventType_MessageDeletion, ThreadId: initialMessage.ThreadId, MessageId: p.MessageId, MessageCreator: &initialMessage.Creator.UserId}
+	se, err = cm.NewSystemEventWithData(
+		cm.SystemEventData{
+			Type:      cm.SystemEventType_MessageDeletion,
+			ThreadId:  &initialMessage.ThreadId,
+			MessageId: &p.MessageId,
+			UserId:    &userRoles.User.Id,
+			Creator:   &initialMessage.Creator.UserId,
+		},
+	)
+	if err != nil {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_SystemEvent, c.RpcErrorMsg_SystemEvent, nil)
+	}
+
 	re = srv.reportSystemEvent(se)
 	if re != nil {
 		return nil, re

@@ -418,17 +418,9 @@ func (srv *Server) deleteNotification(p *nm.DeleteNotificationParams) (result *n
 // system.
 func (srv *Server) processSystemEventS(p *nm.ProcessSystemEventSParams) (result *nm.ProcessSystemEventSResult, re *jrm1.RpcError) {
 	// Check parameters.
-	var se = &cm.SystemEvent{
-		Type:           p.Type,
-		ThreadId:       p.ThreadId,
-		MessageId:      p.MessageId,
-		MessageCreator: p.MessageCreator,
-	}
-	if !se.CheckType() {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEventType, RpcErrorMsg_SystemEventType, nil)
-	}
-	if !se.CheckParameters() {
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEventParameter, RpcErrorMsg_SystemEventParameter, nil)
+	se, err := cm.NewSystemEventWithData(p.SystemEventData)
+	if err != nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEvent, RpcErrorMsg_SystemEvent, nil)
 	}
 
 	re = srv.mustBeNoAuth(p.Auth)
@@ -468,7 +460,7 @@ func (srv *Server) processSystemEventS(p *nm.ProcessSystemEventSParams) (result 
 		re = srv.processSystemEvent_MessageDeletion(se)
 
 	default:
-		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEventType, RpcErrorMsg_SystemEventType, nil)
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEvent, RpcErrorMsg_SystemEvent, nil)
 	}
 
 	if re != nil {

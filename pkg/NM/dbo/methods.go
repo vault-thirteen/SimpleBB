@@ -163,7 +163,7 @@ func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module cm.Module, incident
 
 func (dbo *DatabaseObject) SaveSystemEvent(se cm.SystemEvent) (err error) {
 	var result sql.Result
-	result, err = dbo.PreparedStatement(DbPsid_SaveSystemEvent).Exec(se.Type, se.ThreadId, se.MessageId)
+	result, err = dbo.PreparedStatement(DbPsid_SaveSystemEvent).Exec(se.Type, se.ThreadId, se.MessageId, se.UserId)
 	if err != nil {
 		return err
 	}

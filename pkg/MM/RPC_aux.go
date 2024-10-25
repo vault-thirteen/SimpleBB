@@ -749,16 +749,17 @@ func (srv *Server) deleteMessageH(messageId cmb.Id) (initialMessage *mm.Message,
 }
 
 // reportSystemEvent reports the system event to the notification module.
-func (srv *Server) reportSystemEvent(se cm.SystemEvent) (re *jrm1.RpcError) {
+func (srv *Server) reportSystemEvent(se *cm.SystemEvent) (re *jrm1.RpcError) {
+	if se == nil {
+		return jrm1.NewRpcErrorByUser(c.RpcErrorCode_SystemEvent, c.RpcErrorMsg_SystemEvent, nil)
+	}
+
 	params := nm.ProcessSystemEventSParams{
 		DKeyParams: cmr.DKeyParams{
 			// DKey is set during module start-up, so it is non-null.
 			DKey: *srv.dKeyForNM,
 		},
-		Type:           se.Type,
-		ThreadId:       se.ThreadId,
-		MessageId:      se.MessageId,
-		MessageCreator: se.MessageCreator,
+		SystemEventData: se.SystemEventData,
 	}
 	result := new(nm.ProcessSystemEventSResult)
 	var err error

@@ -15,6 +15,7 @@ const (
 	RpcErrorCode_Captcha                  = 1024 * 64
 	RpcErrorCode_Password                 = 1024 * 128
 	RpcErrorCode_ModuleSynchronisation    = 1024 * 256
+	RpcErrorCode_SystemEvent              = 1024 * 512
 )
 
 // Messages.
@@ -28,6 +29,7 @@ const (
 	RpcErrorMsg_Captcha                  = "captcha error"
 	RpcErrorMsg_Password                 = "password error"
 	RpcErrorMsg_ModuleSynchronisation    = "module synchronisation error"
+	RpcErrorMsg_SystemEvent              = "system event error"
 )
 
 // Unique HTTP status codes used in the map:
@@ -45,5 +47,6 @@ func GetMapOfHttpStatusCodesByRpcErrorCodes() map[int]int {
 		RpcErrorCode_Captcha:                  http.StatusForbidden,
 		RpcErrorCode_Password:                 http.StatusForbidden,
 		RpcErrorCode_ModuleSynchronisation:    http.StatusInternalServerError,
+		RpcErrorCode_SystemEvent:              http.StatusInternalServerError,
 	}
 }

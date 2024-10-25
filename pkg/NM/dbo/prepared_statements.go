@@ -78,11 +78,11 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 12.
-	q = fmt.Sprintf(`INSERT INTO %s (Type, ThreadId, MessageId) VALUES (?, ?, ?);`, dbo.tableNames.SystemEvents)
+	q = fmt.Sprintf(`INSERT INTO %s (Type, ThreadId, MessageId, UserId) VALUES (?, ?, ?, ?);`, dbo.tableNames.SystemEvents)
 	qs = append(qs, q)
 
 	// 13.
-	q = fmt.Sprintf(`SELECT Id, Type, ThreadId, MessageId, Time FROM %s WHERE Id = ?;`, dbo.tableNames.SystemEvents)
+	q = fmt.Sprintf(`SELECT Id, Type, ThreadId, MessageId, UserId, Time FROM %s WHERE Id = ?;`, dbo.tableNames.SystemEvents)
 	qs = append(qs, q)
 
 	return qs
