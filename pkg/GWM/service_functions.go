@@ -41,6 +41,7 @@ import (
 
 // ACM.
 
+// TODO:Automate.
 func (srv *Server) RegisterUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
 	var params am.RegisterUserParams
@@ -2097,6 +2098,122 @@ func (srv *Server) DeleteNotification(ar *api.Request, _ *http.Request, hrw http
 	var result = new(nm.DeleteNotificationResult)
 	var re *jrm1.RpcError
 	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncDeleteNotification, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_NM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) AddResource(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params nm.AddResourceParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(nm.AddResourceResult)
+	var re *jrm1.RpcError
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncAddResource, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_NM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) GetResource(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params nm.GetResourceParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(nm.GetResourceResult)
+	var re *jrm1.RpcError
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncGetResource, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_NM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) GetResourceValue(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params nm.GetResourceValueParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(nm.GetResourceValueResult)
+	var re *jrm1.RpcError
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncGetResourceValue, params, result)
+	if err != nil {
+		srv.processInternalServerError(hrw, err)
+		return
+	}
+	if re != nil {
+		srv.processRpcError(app.ModuleId_NM, re, hrw)
+		return
+	}
+
+	result.CommonResult.Clear()
+	var response = &api.Response{Action: ar.Action, Result: result}
+	srv.respondWithJsonObject(hrw, response)
+	return
+}
+
+func (srv *Server) DeleteResource(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
+	var err error
+	var params nm.DeleteResourceParams
+	err = json.Unmarshal(*ar.Parameters, &params)
+	if err != nil {
+		srv.respondBadRequest(hrw)
+		return
+	}
+
+	params.CommonParams = cmr.CommonParams{Auth: ar.Authorisation}
+
+	var result = new(nm.DeleteResourceResult)
+	var re *jrm1.RpcError
+	re, err = srv.nmServiceClient.MakeRequest(context.Background(), nc.FuncDeleteResource, params, result)
 	if err != nil {
 		srv.processInternalServerError(hrw, err)
 		return

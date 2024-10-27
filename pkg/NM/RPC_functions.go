@@ -412,6 +412,151 @@ func (srv *Server) deleteNotification(p *nm.DeleteNotificationParams) (result *n
 	return result, nil
 }
 
+// Resource.
+
+// addResource creates a new resource.
+func (srv *Server) addResource(p *nm.AddResourceParams) (result *nm.AddResourceResult, re *jrm1.RpcError) {
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.User.Roles.IsAdministrator {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	resource := cm.NewResourceFromValue(p.Resource)
+	if resource == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ResourceIsNotValid, RpcErrorMsg_ResourceIsNotValid, nil)
+	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	insertedNotificationId, err := srv.dbo.AddResource(resource)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &nm.AddResourceResult{
+		ResourceId: insertedNotificationId,
+	}
+
+	return result, nil
+}
+
+// getResource reads a resource.
+func (srv *Server) getResource(p *nm.GetResourceParams) (result *nm.GetResourceResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.ResourceId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ResourceIdIsNotSet, RpcErrorMsg_ResourceIdIsNotSet, nil)
+	}
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.User.Roles.CanLogIn {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Read the resource.
+	resource, err := srv.dbo.GetResourceById(p.ResourceId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if resource == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ResourceIsNotFound, RpcErrorMsg_ResourceIsNotFound, nil)
+	}
+
+	result = &nm.GetResourceResult{
+		Resource: resource,
+	}
+
+	return result, nil
+}
+
+// getResource reads the value of a resource.
+func (srv *Server) getResourceValue(p *nm.GetResourceValueParams) (result *nm.GetResourceValueResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.ResourceId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ResourceIdIsNotSet, RpcErrorMsg_ResourceIdIsNotSet, nil)
+	}
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.User.Roles.CanLogIn {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Read the resource.
+	resource, err := srv.dbo.GetResourceById(p.ResourceId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if resource == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ResourceIsNotFound, RpcErrorMsg_ResourceIsNotFound, nil)
+	}
+
+	result = &nm.GetResourceValueResult{
+		ResourceId:    p.ResourceId,
+		ResourceValue: resource.Value(),
+	}
+
+	return result, nil
+}
+
+// deleteResource removes a resource.
+func (srv *Server) deleteResource(p *nm.DeleteResourceParams) (result *nm.DeleteResourceResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.ResourceId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ResourceIdIsNotSet, RpcErrorMsg_ResourceIdIsNotSet, nil)
+	}
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.User.Roles.IsAdministrator {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	// Delete the resource.
+	err := srv.dbo.DeleteResourceById(p.ResourceId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &nm.DeleteResourceResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
+}
+
 // Other.
 
 // processSystemEventS processes a system event. This method is used by the

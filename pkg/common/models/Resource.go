@@ -20,6 +20,41 @@ func NewResource() (r *Resource) {
 	return &Resource{}
 }
 
+func NewResourceFromValue(value any) (r *Resource) {
+	switch value.(type) {
+	case float64:
+		return NewResourceFromNumber(cmb.Count(value.(float64)))
+
+	case int64:
+		return NewResourceFromNumber(cmb.Count(value.(int64)))
+
+	case int:
+		return NewResourceFromNumber(cmb.Count(value.(int)))
+
+	case []byte:
+		return NewResourceFromText(cmb.Text(value.([]byte)))
+
+	case string:
+		return NewResourceFromText(cmb.Text(value.(string)))
+	}
+
+	return nil
+}
+
+func NewResourceFromText(t cmb.Text) (r *Resource) {
+	return &Resource{
+		Type: ResourceType_Text,
+		Text: &t,
+	}
+}
+
+func NewResourceFromNumber(n cmb.Count) (r *Resource) {
+	return &Resource{
+		Type:   ResourceType_Number,
+		Number: &n,
+	}
+}
+
 func NewResourceFromScannableSource(src IScannable) (r *Resource, err error) {
 	r = NewResource()
 

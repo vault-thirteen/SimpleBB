@@ -111,6 +111,44 @@ type DeleteNotificationParams struct {
 }
 type DeleteNotificationResult = cmr.CommonResultWithSuccess
 
+// Resource.
+
+type AddResourceParams struct {
+	cmr.CommonParams
+	Resource any `json:"resource"`
+}
+type AddResourceResult struct {
+	cmr.CommonResult
+
+	// ID of the created resource.
+	ResourceId cmb.Id `json:"resourceId"`
+}
+
+type GetResourceParams struct {
+	cmr.CommonParams
+	ResourceId cmb.Id `json:"resourceId"`
+}
+type GetResourceResult struct {
+	cmr.CommonResult
+	Resource *cm.Resource `json:"resource"`
+}
+
+type GetResourceValueParams struct {
+	cmr.CommonParams
+	ResourceId cmb.Id `json:"resourceId"`
+}
+type GetResourceValueResult struct {
+	cmr.CommonResult
+	ResourceId    cmb.Id `json:"resourceId"`
+	ResourceValue any    `json:"resourceValue"`
+}
+
+type DeleteResourceParams struct {
+	cmr.CommonParams
+	ResourceId cmb.Id `json:"resourceId"`
+}
+type DeleteResourceResult = cmr.CommonResultWithSuccess
+
 // Other.
 
 type ProcessSystemEventSParams struct {

@@ -13,6 +13,16 @@ import (
 	ae "github.com/vault-thirteen/auxie/errors"
 )
 
+func (dbo *DatabaseObject) AddResource(r *cm.Resource) (lastInsertedId cmb.Id, err error) {
+	var result sql.Result
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_AddResource).Exec(r.Type, r.Text, r.Number)
+	if err != nil {
+		return cdbo.LastInsertedIdOnError, err
+	}
+
+	return cdbo.CheckRowsAffectedAndGetLastInsertedId(result, 1)
+}
+
 func (dbo *DatabaseObject) CountAllNotificationsByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountAllNotificationsByUserId).QueryRow(userId)
 
@@ -38,6 +48,16 @@ func (dbo *DatabaseObject) CountUnreadNotificationsByUserId(userId cmb.Id) (n cm
 func (dbo *DatabaseObject) DeleteNotificationById(notificationId cmb.Id) (err error) {
 	var result sql.Result
 	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_DeleteNotificationById).Exec(notificationId)
+	if err != nil {
+		return err
+	}
+
+	return cdbo.CheckRowsAffected(result, 1)
+}
+
+func (dbo *DatabaseObject) DeleteResourceById(resourceId cmb.Id) (err error) {
+	var result sql.Result
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_DeleteResourceById).Exec(resourceId)
 	if err != nil {
 		return err
 	}
@@ -95,6 +115,28 @@ func (dbo *DatabaseObject) GetNotificationsByUserIdOnPage(userId cmb.Id, pageNum
 	}()
 
 	return nm.NewNotificationArrayFromRows(rows)
+}
+
+func (dbo *DatabaseObject) GetResourceById(resourceId cmb.Id) (r *cm.Resource, err error) {
+	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetResourceById).QueryRow(resourceId)
+
+	r, err = cm.NewResourceFromScannableSource(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
+func (dbo *DatabaseObject) GetSystemEventById(systemEventId cmb.Id) (se *cm.SystemEvent, err error) {
+	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetSystemEventById).QueryRow(systemEventId)
+
+	se, err = cm.NewSystemEventFromScannableSource(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return se, nil
 }
 
 func (dbo *DatabaseObject) GetUnreadNotifications(userId cmb.Id) (notifications []nm.Notification, err error) {
@@ -169,15 +211,4 @@ func (dbo *DatabaseObject) SaveSystemEvent(se cm.SystemEvent) (err error) {
 	}
 
 	return cdbo.CheckRowsAffected(result, 1)
-}
-
-func (dbo *DatabaseObject) GetSystemEventById(systemEventId cmb.Id) (se *cm.SystemEvent, err error) {
-	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetSystemEventById).QueryRow(systemEventId)
-
-	se, err = cm.NewSystemEventFromScannableSource(row)
-	if err != nil {
-		return nil, err
-	}
-
-	return se, nil
 }

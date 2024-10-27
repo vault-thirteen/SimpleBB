@@ -699,6 +699,10 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_CountUnreadNotifications,
 		ApiFunctionName_MarkNotificationAsRead,
 		ApiFunctionName_DeleteNotification,
+		ApiFunctionName_AddResource,
+		ApiFunctionName_GetResource,
+		ApiFunctionName_GetResourceValue,
+		ApiFunctionName_DeleteResource,
 
 		// SM.
 		ApiFunctionName_AddSubscription,
@@ -784,6 +788,10 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_CountUnreadNotifications: srv.CountUnreadNotifications,
 		ApiFunctionName_MarkNotificationAsRead:   srv.MarkNotificationAsRead,
 		ApiFunctionName_DeleteNotification:       srv.DeleteNotification,
+		ApiFunctionName_AddResource:              srv.AddResource,
+		ApiFunctionName_GetResource:              srv.GetResource,
+		ApiFunctionName_GetResourceValue:         srv.GetResourceValue,
+		ApiFunctionName_DeleteResource:           srv.DeleteResource,
 
 		// SM.
 		ApiFunctionName_AddSubscription:            srv.AddSubscription,

@@ -40,6 +40,10 @@ func (srv *Server) initRpc() (err error) {
 		srv.CountUnreadNotifications,
 		srv.MarkNotificationAsRead,
 		srv.DeleteNotification,
+		srv.AddResource,
+		srv.GetResource,
+		srv.GetResourceValue,
+		srv.DeleteResource,
 		srv.ProcessSystemEventS,
 		srv.GetDKey,
 		srv.ShowDiagnosticData,
@@ -222,6 +226,72 @@ func (srv *Server) DeleteNotification(params *json.RawMessage, _ *jrm1.ResponseM
 
 	var r *nm.DeleteNotificationResult
 	r, re = srv.deleteNotification(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+// Resource.
+
+func (srv *Server) AddResource(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.AddResourceParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.AddResourceResult
+	r, re = srv.addResource(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) GetResource(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.GetResourceParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.GetResourceResult
+	r, re = srv.getResource(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) GetResourceValue(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.GetResourceValueParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.GetResourceValueResult
+	r, re = srv.getResourceValue(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) DeleteResource(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.DeleteResourceParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.DeleteResourceResult
+	r, re = srv.deleteResource(p)
 	if re != nil {
 		return nil, re
 	}

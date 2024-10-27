@@ -89,6 +89,10 @@ const (
 	ApiFunctionName_CountUnreadNotifications = "countUnreadNotifications"
 	ApiFunctionName_MarkNotificationAsRead   = "markNotificationAsRead"
 	ApiFunctionName_DeleteNotification       = "deleteNotification"
+	ApiFunctionName_AddResource              = "addResource"
+	ApiFunctionName_GetResource              = "getResource"
+	ApiFunctionName_GetResourceValue         = "getResourceValue"
+	ApiFunctionName_DeleteResource           = "deleteResource"
 
 	// SM.
 	ApiFunctionName_AddSubscription            = "addSubscription"

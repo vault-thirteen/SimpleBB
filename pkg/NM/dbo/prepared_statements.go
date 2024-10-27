@@ -23,6 +23,9 @@ const (
 	DbPsid_CountAllNotificationsByUserId    = 11
 	DbPsid_SaveSystemEvent                  = 12
 	DbPsid_GetSystemEventById               = 13
+	DbPsid_AddResource                      = 14
+	DbPsid_GetResourceById                  = 15
+	DbPsid_DeleteResourceById               = 16
 )
 
 func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
@@ -83,6 +86,18 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 
 	// 13.
 	q = fmt.Sprintf(`SELECT Id, Type, ThreadId, MessageId, UserId, Time FROM %s WHERE Id = ?;`, dbo.tableNames.SystemEvents)
+	qs = append(qs, q)
+
+	// 14.
+	q = fmt.Sprintf(`INSERT INTO %s (Type, Text, Number) VALUES (?, ?, ?);`, dbo.tableNames.Resources)
+	qs = append(qs, q)
+
+	// 15.
+	q = fmt.Sprintf(`SELECT Id, Type, Text, Number, ToC FROM %s WHERE Id = ?;`, dbo.tableNames.Resources)
+	qs = append(qs, q)
+
+	// 16.
+	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ?;`, dbo.tableNames.Resources)
 	qs = append(qs, q)
 
 	return qs

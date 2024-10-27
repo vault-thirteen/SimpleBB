@@ -21,6 +21,12 @@ const (
 	FuncMarkNotificationAsRead      = "MarkNotificationAsRead"
 	FuncDeleteNotification          = "DeleteNotification"
 
+	// Resource.
+	FuncAddResource      = "AddResource"
+	FuncGetResource      = "GetResource"
+	FuncGetResourceValue = "GetResourceValue"
+	FuncDeleteResource   = "DeleteResource"
+
 	// Other.
 	FuncProcessSystemEventS = "ProcessSystemEventS"
 	FuncGetDKey             = "GetDKey"
