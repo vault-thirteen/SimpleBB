@@ -41,7 +41,6 @@ import (
 
 // ACM.
 
-// TODO:Automate.
 func (srv *Server) RegisterUser(ar *api.Request, _ *http.Request, hrw http.ResponseWriter) {
 	var err error
 	var params am.RegisterUserParams
