@@ -10,7 +10,7 @@ require (
 	github.com/vault-thirteen/BytePackedPassword v0.3.14
 	github.com/vault-thirteen/JSON-RPC-M1 v0.3.12
 	github.com/vault-thirteen/RingCaptcha v0.7.10
-	github.com/vault-thirteen/auxie v0.27.2
+	github.com/vault-thirteen/auxie v0.27.3
 	golang.org/x/term v0.25.0
 )
 

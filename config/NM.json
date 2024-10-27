@@ -23,6 +23,7 @@
     "tablesToInit": [
       "Incidents",
       "Notifications",
+      "Resources",
       "SystemEvents"
     ],
     "tableInitScriptsFolder": "sql\\NM\\table_init"

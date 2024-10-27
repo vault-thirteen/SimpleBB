@@ -2,11 +2,9 @@ package models
 
 import (
 	"database/sql/driver"
-	"fmt"
-	"reflect"
 	"strconv"
 
-	num "github.com/vault-thirteen/auxie/number"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 type SystemEventType byte
@@ -23,10 +21,6 @@ const (
 	SystemEventType_MessageDeletion       = SystemEventType(9) // -> Author of the message.
 
 	SystemEventTypeLast = SystemEventType_MessageDeletion
-)
-
-const (
-	ErrF_UnsupportedDataType = "unsupported data type: %s"
 )
 
 func (set SystemEventType) IsValid() bool {
@@ -46,25 +40,9 @@ func (set SystemEventType) AsByte() byte {
 
 func (set *SystemEventType) Scan(src any) (err error) {
 	var x int
-
-	switch src.(type) {
-	case int64:
-		x = int(src.(int64))
-
-	case []byte:
-		x, err = num.ParseInt(string(src.([]byte)))
-		if err != nil {
-			return err
-		}
-
-	case string:
-		x, err = num.ParseInt(src.(string))
-		if err != nil {
-			return err
-		}
-
-	default:
-		return fmt.Errorf(ErrF_UnsupportedDataType, reflect.TypeOf(src).String())
+	x, err = cmb.ScanSrcAsInt(src)
+	if err != nil {
+		return err
 	}
 
 	*set = SystemEventType(x)

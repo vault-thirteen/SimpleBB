@@ -41,6 +41,7 @@ func (dbo *DatabaseObject) initTableNames() {
 	dbo.tableNames = &TableNames{
 		Incidents:     dbo.prefixTableName(TableIncidents),
 		Notifications: dbo.prefixTableName(TableNotifications),
+		Resources:     dbo.prefixTableName(TableResources),
 		SystemEvents:  dbo.prefixTableName(TableSystemEvents),
 	}
 }

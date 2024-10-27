@@ -2,11 +2,7 @@ package base
 
 import (
 	"database/sql/driver"
-	"fmt"
-	"reflect"
 	"strconv"
-
-	num "github.com/vault-thirteen/auxie/number"
 )
 
 type Id int
@@ -21,25 +17,9 @@ func (i Id) AsInt() int {
 
 func (i *Id) Scan(src any) (err error) {
 	var x int
-
-	switch src.(type) {
-	case int64:
-		x = int(src.(int64))
-
-	case []byte:
-		x, err = num.ParseInt(string(src.([]byte)))
-		if err != nil {
-			return err
-		}
-
-	case string:
-		x, err = num.ParseInt(src.(string))
-		if err != nil {
-			return err
-		}
-
-	default:
-		return fmt.Errorf(ErrF_UnsupportedDataType, reflect.TypeOf(src).String())
+	x, err = ScanSrcAsInt(src)
+	if err != nil {
+		return err
 	}
 
 	*i = Id(x)
