@@ -27,6 +27,9 @@ const (
 	FuncGetResourceValue            = "GetResourceValue"
 	FuncGetListOfAllResourcesOnPage = "GetListOfAllResourcesOnPage"
 	FuncDeleteResource              = "DeleteResource"
+	FuncAddFormatString             = "AddFormatString"
+	FuncGetFormatString             = "GetFormatString"
+	FuncDeleteFormatString          = "DeleteFormatString"
 
 	// Other.
 	FuncProcessSystemEventS = "ProcessSystemEventS"

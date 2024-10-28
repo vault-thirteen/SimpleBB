@@ -704,6 +704,9 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_GetResourceValue,
 		ApiFunctionName_GetListOfAllResourcesOnPage,
 		ApiFunctionName_DeleteResource,
+		ApiFunctionName_AddFormatString,
+		ApiFunctionName_GetFormatString,
+		ApiFunctionName_DeleteFormatString,
 
 		// SM.
 		ApiFunctionName_AddSubscription,
@@ -794,6 +797,9 @@ func (srv *Server) initApiFunctions() (err error) {
 		ApiFunctionName_GetResourceValue:            srv.GetResourceValue,
 		ApiFunctionName_GetListOfAllResourcesOnPage: srv.GetListOfAllResourcesOnPage,
 		ApiFunctionName_DeleteResource:              srv.DeleteResource,
+		ApiFunctionName_AddFormatString:             srv.AddFormatString,
+		ApiFunctionName_GetFormatString:             srv.GetFormatString,
+		ApiFunctionName_DeleteFormatString:          srv.DeleteFormatString,
 
 		// SM.
 		ApiFunctionName_AddSubscription:            srv.AddSubscription,

@@ -19,6 +19,7 @@ const (
 	RpcErrorCode_ResourceIdIsNotSet        = 9
 	RpcErrorCode_ResourceIsNotFound        = 10
 	RpcErrorCode_ResourceIsNotValid        = 11
+	RpcErrorCode_FormatStringType          = 12
 )
 
 // Messages.
@@ -34,6 +35,7 @@ const (
 	RpcErrorMsg_ResourceIdIsNotSet        = "resource ID is not set"
 	RpcErrorMsg_ResourceIsNotFound        = "resource is not found"
 	RpcErrorMsg_ResourceIsNotValid        = "resource is not valid"
+	RpcErrorMsg_FormatStringType          = "format string type error"
 )
 
 // Unique HTTP status codes used in the map:
@@ -54,5 +56,6 @@ func GetMapOfHttpStatusCodesByRpcErrorCodes() map[int]int {
 		RpcErrorCode_ResourceIdIsNotSet:        http.StatusBadRequest,
 		RpcErrorCode_ResourceIsNotFound:        http.StatusNotFound,
 		RpcErrorCode_ResourceIsNotValid:        http.StatusBadRequest,
+		RpcErrorCode_FormatStringType:          http.StatusBadRequest,
 	}
 }

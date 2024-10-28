@@ -23,6 +23,16 @@ func (dbo *DatabaseObject) AddResource(r *cm.Resource) (lastInsertedId cmb.Id, e
 	return cdbo.CheckRowsAffectedAndGetLastInsertedId(result, 1)
 }
 
+func (dbo *DatabaseObject) AddFormatStringResource(fsr *cm.FormatStringResource) (lastInsertedId cmb.Id, err error) {
+	var result sql.Result
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_AddFormatStringResource).Exec(fsr.Type, fsr.FSType, fsr.Text)
+	if err != nil {
+		return cdbo.LastInsertedIdOnError, err
+	}
+
+	return cdbo.CheckRowsAffectedAndGetLastInsertedId(result, 1)
+}
+
 func (dbo *DatabaseObject) CountAllNotificationsByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountAllNotificationsByUserId).QueryRow(userId)
 
@@ -54,6 +64,16 @@ func (dbo *DatabaseObject) CountUnreadNotificationsByUserId(userId cmb.Id) (n cm
 	}
 
 	return n, nil
+}
+
+func (dbo *DatabaseObject) DeleteFormatStringById(resourceId cmb.Id) (err error) {
+	var result sql.Result
+	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_DeleteFormatStringById).Exec(resourceId)
+	if err != nil {
+		return err
+	}
+
+	return cdbo.CheckRowsAffected(result, 1)
 }
 
 func (dbo *DatabaseObject) DeleteNotificationById(notificationId cmb.Id) (err error) {
@@ -98,6 +118,17 @@ func (dbo *DatabaseObject) GetAllNotificationsByUserId(userId cmb.Id) (notificat
 	}
 
 	return notifications, nil
+}
+
+func (dbo *DatabaseObject) GetFormatStringById(resourceId cmb.Id) (fsr *cm.FormatStringResource, err error) {
+	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetFormatStringById).QueryRow(resourceId)
+
+	fsr, err = cm.NewFormatStringResourceFromScannableSource(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return fsr, nil
 }
 
 func (dbo *DatabaseObject) GetNotificationById(notificationId cmb.Id) (notification *nm.Notification, err error) {

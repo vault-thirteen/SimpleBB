@@ -45,6 +45,9 @@ func (srv *Server) initRpc() (err error) {
 		srv.GetResourceValue,
 		srv.GetListOfAllResourcesOnPage,
 		srv.DeleteResource,
+		srv.AddFormatString,
+		srv.GetFormatString,
+		srv.DeleteFormatString,
 		srv.ProcessSystemEventS,
 		srv.GetDKey,
 		srv.ShowDiagnosticData,
@@ -309,6 +312,54 @@ func (srv *Server) DeleteResource(params *json.RawMessage, _ *jrm1.ResponseMetaD
 
 	var r *nm.DeleteResourceResult
 	r, re = srv.deleteResource(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) AddFormatString(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.AddFormatStringParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.AddFormatStringResult
+	r, re = srv.addFormatString(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) GetFormatString(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.GetFormatStringParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.GetFormatStringResult
+	r, re = srv.getFormatString(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) DeleteFormatString(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.DeleteFormatStringParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.DeleteFormatStringResult
+	r, re = srv.deleteFormatString(p)
 	if re != nil {
 		return nil, re
 	}

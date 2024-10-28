@@ -608,6 +608,133 @@ func (srv *Server) deleteResource(p *nm.DeleteResourceParams) (result *nm.Delete
 	return result, nil
 }
 
+// addFormatString creates a new format string.
+func (srv *Server) addFormatString(p *nm.AddFormatStringParams) (result *nm.AddFormatStringResult, re *jrm1.RpcError) {
+	// Check parameters. Part I.
+	if len(p.FormatString) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_TextIsNotSet, RpcErrorMsg_TextIsNotSet, nil)
+	}
+	if len(p.FSType) == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_FormatStringType, RpcErrorMsg_FormatStringType, nil)
+	}
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.User.Roles.IsAdministrator {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	// Check parameters. Part II.
+	fs, err := nm.NewFormatString(p.FormatString.ToString())
+	if err != nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_FormatStringType, RpcErrorMsg_FormatStringType, nil)
+	}
+	if fs.Type() != p.FSType.ToString() {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_FormatStringType, RpcErrorMsg_FormatStringType, nil)
+	}
+
+	fsType := cmb.Text(fs.Type())
+	fsText := cmb.Text(fs.String())
+
+	fsr := &cm.FormatStringResource{
+		Type:   cm.ResourceType_Text,
+		FSType: &fsType,
+		Text:   &fsText,
+	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	var fsrId cmb.Id
+	fsrId, err = srv.dbo.AddFormatStringResource(fsr)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &nm.AddFormatStringResult{
+		ResourceId: fsrId,
+	}
+
+	return result, nil
+}
+
+// getFormatString reads the format string.
+func (srv *Server) getFormatString(p *nm.GetFormatStringParams) (result *nm.GetFormatStringResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.FormatStringId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ResourceIdIsNotSet, RpcErrorMsg_ResourceIdIsNotSet, nil)
+	}
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.User.Roles.CanLogIn {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Read the resource.
+	fsr, err := srv.dbo.GetFormatStringById(p.FormatStringId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+	if fsr == nil {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ResourceIsNotFound, RpcErrorMsg_ResourceIsNotFound, nil)
+	}
+
+	result = &nm.GetFormatStringResult{
+		FormatStringResource: fsr,
+	}
+
+	return result, nil
+}
+
+// deleteFormatString removes a format string.
+func (srv *Server) deleteFormatString(p *nm.DeleteFormatStringParams) (result *nm.DeleteFormatStringResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.FormatStringId == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_ResourceIdIsNotSet, RpcErrorMsg_ResourceIdIsNotSet, nil)
+	}
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.User.Roles.IsAdministrator {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForWriting()
+	defer srv.dbo.UnlockAfterWriting()
+
+	// Delete the format string resource.
+	err := srv.dbo.DeleteFormatStringById(p.FormatStringId)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &nm.DeleteFormatStringResult{
+		Success: cmr.Success{
+			OK: true,
+		},
+	}
+	return result, nil
+}
+
 // Other.
 
 // processSystemEventS processes a system event. This method is used by the

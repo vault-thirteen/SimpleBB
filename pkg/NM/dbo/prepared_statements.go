@@ -28,6 +28,9 @@ const (
 	DbPsid_DeleteResourceById               = 16
 	DbPsid_ListAllResourceIdsOnPage         = 17
 	DbPsid_CountAllResources                = 18
+	DbPsid_AddFormatStringResource          = 19
+	DbPsid_GetFormatStringById              = 20
+	DbPsid_DeleteFormatStringById           = 21
 )
 
 func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
@@ -108,6 +111,18 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 
 	// 18.
 	q = fmt.Sprintf(`SELECT COUNT(Id) FROM %s;`, dbo.tableNames.Resources)
+	qs = append(qs, q)
+
+	// 19.
+	q = fmt.Sprintf(`INSERT INTO %s (Type, FSType, Text) VALUES (?, ?, ?);`, dbo.tableNames.Resources)
+	qs = append(qs, q)
+
+	// 20.
+	q = fmt.Sprintf(`SELECT Id, Type, FSType, Text, ToC FROM %s WHERE Id = ? AND Type = 1;`, dbo.tableNames.Resources)
+	qs = append(qs, q)
+
+	// 21.
+	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ? AND Type = 1;`, dbo.tableNames.Resources)
 	qs = append(qs, q)
 
 	return qs

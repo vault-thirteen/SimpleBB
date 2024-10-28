@@ -327,23 +327,40 @@ func (srv *Server) sendNotificationToCreator(se *cm.SystemEvent) (re *jrm1.RpcEr
 func (srv *Server) composeNotificationText(se *cm.SystemEvent) (text cmb.Text, re *jrm1.RpcError) {
 	switch se.Type {
 	case cm.SystemEventType_ThreadParentChange:
-		text = cmb.Text(fmt.Sprintf("A thread was moved to another forum. ThreadId=%d, UserId=%d.", *se.ThreadId, *se.UserId))
+		// Template: FUT.
+		text = cmb.Text(fmt.Sprintf("A user (%d) has moved the thread (%d) into another forum.", *se.UserId, *se.ThreadId))
+
 	case cm.SystemEventType_ThreadNameChange:
-		text = cmb.Text(fmt.Sprintf("A thread was renamed. ThreadId=%d, UserId=%d.", *se.ThreadId, *se.UserId))
+		// Template: FUT.
+		text = cmb.Text(fmt.Sprintf("A user (%d) has renamed the thread (%d).", *se.UserId, *se.ThreadId))
+
 	case cm.SystemEventType_ThreadDeletion:
-		text = cmb.Text(fmt.Sprintf("A thread was deleted. ThreadId=%d, UserId=%d.", *se.ThreadId, *se.UserId))
+		// Template: FUT.
+		text = cmb.Text(fmt.Sprintf("A user (%d) has deleted the thread (%d).", *se.UserId, *se.ThreadId))
+
 	case cm.SystemEventType_ThreadNewMessage:
-		text = cmb.Text(fmt.Sprintf("A new message was added into the thread. ThreadId=%d, MessageId=%d, UserId=%d.", *se.ThreadId, *se.MessageId, *se.UserId))
+		// Template: FUMT.
+		text = cmb.Text(fmt.Sprintf("A user (%d) has added a new message (%d) into the thread (%d).", *se.UserId, *se.MessageId, *se.ThreadId))
+
 	case cm.SystemEventType_ThreadMessageEdit:
-		text = cmb.Text(fmt.Sprintf("A message was edited in the thread. ThreadId=%d, MessageId=%d, UserId=%d.", *se.ThreadId, *se.MessageId, *se.UserId))
+		// Template: FUMT.
+		text = cmb.Text(fmt.Sprintf("A user (%d) has edited a message (%d) in the thread (%d).", *se.UserId, *se.MessageId, *se.ThreadId))
+
 	case cm.SystemEventType_ThreadMessageDeletion:
-		text = cmb.Text(fmt.Sprintf("A message was deleted from the thread. ThreadId=%d, MessageId=%d, UserId=%d.", *se.ThreadId, *se.MessageId, *se.UserId))
+		// Template: FUMT.
+		text = cmb.Text(fmt.Sprintf("A user (%d) has deleted a message (%d) from the thread (%d).", *se.UserId, *se.MessageId, *se.ThreadId))
+
 	case cm.SystemEventType_MessageTextEdit:
-		text = cmb.Text(fmt.Sprintf("Your message was edited. ThreadId=%d, MessageId=%d, UserId=%d, Creator=%d.", *se.ThreadId, *se.MessageId, *se.UserId, *se.Creator))
+		// Template: FMTU.
+		text = cmb.Text(fmt.Sprintf("Your message (%d) in the thread (%d) was edited by a user (%d).", *se.MessageId, *se.ThreadId, *se.UserId))
+
 	case cm.SystemEventType_MessageParentChange:
-		text = cmb.Text(fmt.Sprintf("Your message was moved to another thread. ThreadId=%d, MessageId=%d, UserId=%d, Creator=%d.", *se.ThreadId, *se.MessageId, *se.UserId, *se.Creator))
+		// Template: FMTU.
+		text = cmb.Text(fmt.Sprintf("Your message (%d) in the thread (%d) was moved into another thread by a user (%d).", *se.MessageId, *se.ThreadId, *se.UserId))
+
 	case cm.SystemEventType_MessageDeletion:
-		text = cmb.Text(fmt.Sprintf("Your message was deleted from the thread. ThreadId=%d, MessageId=%d, UserId=%d, Creator=%d.", *se.ThreadId, *se.MessageId, *se.UserId, *se.Creator))
+		// Template: FMTU.
+		text = cmb.Text(fmt.Sprintf("Your message (%d) in the thread (%d) was deleted by a user (%d).", *se.MessageId, *se.ThreadId, *se.UserId))
 
 	default:
 		return "", jrm1.NewRpcErrorByUser(RpcErrorCode_SystemEvent, RpcErrorMsg_SystemEvent, nil)

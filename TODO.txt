@@ -1,3 +1,8 @@
+Front End
+    AddFormatString
+    GetFormatString
+    DeleteFormatString
+
 * Notification Templates
 * Message Hash Sum Check
 * SUidList

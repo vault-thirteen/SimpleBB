@@ -157,6 +157,33 @@ type DeleteResourceParams struct {
 }
 type DeleteResourceResult = cmr.CommonResultWithSuccess
 
+type AddFormatStringParams struct {
+	cmr.CommonParams
+	FormatString cmb.Text `json:"formatString"`
+	FSType       cmb.Text `json:"fsType"`
+}
+type AddFormatStringResult struct {
+	cmr.CommonResult
+
+	// ID of the created resource.
+	ResourceId cmb.Id `json:"resourceId"`
+}
+
+type GetFormatStringParams struct {
+	cmr.CommonParams
+	FormatStringId cmb.Id `json:"fsId"`
+}
+type GetFormatStringResult struct {
+	cmr.CommonResult
+	FormatStringResource *cm.FormatStringResource `json:"fsr"`
+}
+
+type DeleteFormatStringParams struct {
+	cmr.CommonParams
+	FormatStringId cmb.Id `json:"fsId"`
+}
+type DeleteFormatStringResult = cmr.CommonResultWithSuccess
+
 // Other.
 
 type ProcessSystemEventSParams struct {
