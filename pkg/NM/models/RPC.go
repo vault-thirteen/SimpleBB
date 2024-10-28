@@ -139,8 +139,16 @@ type GetResourceValueParams struct {
 }
 type GetResourceValueResult struct {
 	cmr.CommonResult
-	ResourceId    cmb.Id `json:"resourceId"`
-	ResourceValue any    `json:"resourceValue"`
+	Resource ResourceWithValue `json:"resource"`
+}
+
+type GetListOfAllResourcesOnPageParams struct {
+	cmr.CommonParams
+	Page cmb.Count `json:"page"`
+}
+type GetListOfAllResourcesOnPageResult struct {
+	cmr.CommonResult
+	ResourcesOnPage *ResourcesOnPage `json:"rop"`
 }
 
 type DeleteResourceParams struct {

@@ -43,6 +43,7 @@ func (srv *Server) initRpc() (err error) {
 		srv.AddResource,
 		srv.GetResource,
 		srv.GetResourceValue,
+		srv.GetListOfAllResourcesOnPage,
 		srv.DeleteResource,
 		srv.ProcessSystemEventS,
 		srv.GetDKey,
@@ -276,6 +277,22 @@ func (srv *Server) GetResourceValue(params *json.RawMessage, _ *jrm1.ResponseMet
 
 	var r *nm.GetResourceValueResult
 	r, re = srv.getResourceValue(p)
+	if re != nil {
+		return nil, re
+	}
+
+	return r, nil
+}
+
+func (srv *Server) GetListOfAllResourcesOnPage(params *json.RawMessage, _ *jrm1.ResponseMetaData) (result any, re *jrm1.RpcError) {
+	var p *nm.GetListOfAllResourcesOnPageParams
+	re = jrm1.ParseParameters(params, &p)
+	if re != nil {
+		return nil, re
+	}
+
+	var r *nm.GetListOfAllResourcesOnPageResult
+	r, re = srv.getListOfAllResourcesOnPage(p)
 	if re != nil {
 		return nil, re
 	}

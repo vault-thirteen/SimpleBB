@@ -22,10 +22,11 @@ const (
 	FuncDeleteNotification          = "DeleteNotification"
 
 	// Resource.
-	FuncAddResource      = "AddResource"
-	FuncGetResource      = "GetResource"
-	FuncGetResourceValue = "GetResourceValue"
-	FuncDeleteResource   = "DeleteResource"
+	FuncAddResource                 = "AddResource"
+	FuncGetResource                 = "GetResource"
+	FuncGetResourceValue            = "GetResourceValue"
+	FuncGetListOfAllResourcesOnPage = "GetListOfAllResourcesOnPage"
+	FuncDeleteResource              = "DeleteResource"
 
 	// Other.
 	FuncProcessSystemEventS = "ProcessSystemEventS"

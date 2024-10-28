@@ -34,6 +34,17 @@ func (dbo *DatabaseObject) CountAllNotificationsByUserId(userId cmb.Id) (n cmb.C
 	return n, nil
 }
 
+func (dbo *DatabaseObject) CountAllResources() (n cmb.Count, err error) {
+	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountAllResources).QueryRow()
+
+	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	if err != nil {
+		return cdbo.CountOnError, err
+	}
+
+	return n, nil
+}
+
 func (dbo *DatabaseObject) CountUnreadNotificationsByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountUnreadNotificationsByUserId).QueryRow(userId)
 
@@ -126,6 +137,23 @@ func (dbo *DatabaseObject) GetResourceById(resourceId cmb.Id) (r *cm.Resource, e
 	}
 
 	return r, nil
+}
+
+func (dbo *DatabaseObject) GetResourceIdsOnPage(pageNumber cmb.Count, pageSize cmb.Count) (resourceIds []cmb.Id, err error) {
+	var rows *sql.Rows
+	rows, err = dbo.PreparedStatement(DbPsid_ListAllResourceIdsOnPage).Query(pageSize, (pageNumber-1)*pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
+		}
+	}()
+
+	return cm.NewArrayFromScannableSource[cmb.Id](rows)
 }
 
 func (dbo *DatabaseObject) GetSystemEventById(systemEventId cmb.Id) (se *cm.SystemEvent, err error) {

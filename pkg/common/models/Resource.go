@@ -9,11 +9,11 @@ import (
 )
 
 type Resource struct {
-	Id     cmb.Id
-	Type   ResourceType
-	Text   *cmb.Text
-	Number *cmb.Count
-	ToC    time.Time
+	Id     cmb.Id       `json:"id"`
+	Type   ResourceType `json:"type"`
+	Text   *cmb.Text    `json:"text"`
+	Number *cmb.Count   `json:"number"`
+	ToC    time.Time    `json:"toc"`
 }
 
 func NewResource() (r *Resource) {

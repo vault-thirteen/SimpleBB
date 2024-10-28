@@ -515,8 +515,59 @@ func (srv *Server) getResourceValue(p *nm.GetResourceValueParams) (result *nm.Ge
 	}
 
 	result = &nm.GetResourceValueResult{
-		ResourceId:    p.ResourceId,
-		ResourceValue: resource.Value(),
+		Resource: nm.ResourceWithValue{
+			Id:    p.ResourceId,
+			Value: resource.Value(),
+		},
+	}
+
+	return result, nil
+}
+
+func (srv *Server) getListOfAllResourcesOnPage(p *nm.GetListOfAllResourcesOnPageParams) (result *nm.GetListOfAllResourcesOnPageResult, re *jrm1.RpcError) {
+	// Check parameters.
+	if p.Page == 0 {
+		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_PageIsNotSet, RpcErrorMsg_PageIsNotSet, nil)
+	}
+
+	var userRoles *am.GetSelfRolesResult
+	userRoles, re = srv.mustBeAnAuthToken(p.Auth)
+	if re != nil {
+		return nil, re
+	}
+
+	// Check permissions.
+	if !userRoles.User.Roles.IsReader {
+		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_Permission, c.RpcErrorMsg_Permission, nil)
+	}
+
+	srv.dbo.LockForReading()
+	defer srv.dbo.UnlockAfterReading()
+
+	// Get resource IDs on page.
+	resourceIds, err := srv.dbo.GetResourceIdsOnPage(p.Page, srv.settings.SystemSettings.PageSize)
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	// Count all resources.
+	var allResourcesCount cmb.Count
+	allResourcesCount, err = srv.dbo.CountAllResources()
+	if err != nil {
+		return nil, srv.databaseError(err)
+	}
+
+	result = &nm.GetListOfAllResourcesOnPageResult{
+		ResourcesOnPage: &nm.ResourcesOnPage{
+			ResourceIds: resourceIds,
+			PageData: &cmr.PageData{
+				PageNumber:  p.Page,
+				TotalPages:  cmb.CalculateTotalPages(allResourcesCount, srv.settings.SystemSettings.PageSize),
+				PageSize:    srv.settings.SystemSettings.PageSize,
+				ItemsOnPage: cmb.Count(len(resourceIds)),
+				TotalItems:  allResourcesCount,
+			},
+		},
 	}
 
 	return result, nil
