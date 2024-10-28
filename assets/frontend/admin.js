@@ -47,6 +47,8 @@ ButtonName = {
 	DeleteMessage: "Delete",
 	CreateNotification: "Create",
 	DeleteNotification: "Delete",
+	CreateResource: "Create",
+	DeleteResource: "Delete",
 }
 
 ButtonClass = {
@@ -81,6 +83,8 @@ ButtonClass = {
 	DeleteMessage: "btnDeleteMessage",
 	CreateNotification: "btnCreateNotification",
 	DeleteNotification: "btnDeleteNotification",
+	CreateResource: "btnCreateResource",
+	DeleteResource: "btnDeleteResource",
 }
 
 PageZoneClass = {
@@ -206,6 +210,11 @@ async function onPageLoad() {
 
 	if (sp.has(Qpn.ManagerOfNotifications)) {
 		await showPage_ManagerOfNotifications();
+		return;
+	}
+
+	if (sp.has(Qpn.ManagerOfResources)) {
+		await showPage_ManagerOfResources();
 		return;
 	}
 
@@ -359,6 +368,16 @@ async function showPage_ManagerOfNotifications() {
 	fillNotificationManager("notificationManager");
 }
 
+async function showPage_ManagerOfResources() {
+	// Draw.
+	let p = document.getElementById("subpage");
+	showBlock(p);
+	addBtnBack(p);
+	addTitle(p, "Management of Resources");
+	addDiv(p, "resourceManager");
+	fillResourceManager("resourceManager");
+}
+
 function showPage_MainMenu() {
 	let tbl = document.getElementById("acpMenu");
 	showTable(tbl);
@@ -402,6 +421,9 @@ async function onGoManageNotificationsClick(btn) {
 	await redirectToSubPageA(false, Qp.Prefix + Qpn.ManagerOfNotifications);
 }
 
+async function onGoManageResourcesClick(btn) {
+	await redirectToSubPageA(false, Qp.Prefix + Qpn.ManagerOfResources);
+}
 
 async function onBtnPrevClick_resources(btn) {
 	if (mca_gvc.Page <= 1) {
@@ -1500,6 +1522,97 @@ async function onBtnDeleteNotificationClick(btn) {
 }
 
 
+function onResourceManagerBtnProceedClick(btn) {
+	let selectedActionIdx = getSelectedActionIdxBPC(btn);
+	if (selectedActionIdx == null) {
+		return;
+	}
+
+	btn.disabled = true;
+	disableParentFormBPC(btn);
+
+	// Draw.
+	let nm = document.getElementById("resourceManager");
+	let fs = newFieldset();
+	nm.appendChild(fs);
+
+	let d = newDiv();
+	d.className = "title";
+	d.textContent = "Resource Parameters";
+	fs.appendChild(d);
+
+	switch (selectedActionIdx) {
+		case 1: // Create a resource.
+			d = newDiv();
+			d.innerHTML = htmlInputParameterType("Resource type: 1 = text, 2 = number.");
+			fs.appendChild(d);
+			d = newDiv();
+			d.innerHTML = htmlInputParameterText("Value: text or number.");
+			fs.appendChild(d);
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.CreateResource + '" value="' + ButtonName.CreateResource + '" onclick="onBtnCreateResourceClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 2: // Delete a resource.
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the resource to delete");
+			fs.appendChild(d);
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.DeleteResource + '" value="' + ButtonName.DeleteResource + '" onclick="onBtnDeleteResourceClick(this)">';
+			fs.appendChild(d);
+			break;
+	}
+}
+
+async function onBtnCreateResourceClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let resourceType = Number(pp.childNodes[1].childNodes[1].value);
+	let resource = new Resource(null, resourceType);
+	if (!resource.checkType()) {
+		console.error(Err.TypeIsNotSet);
+		return;
+	}
+	let resourceValue = pp.childNodes[2].childNodes[1].value;
+	if (resourceValue.length < 1) {
+		console.error(Err.ValueNotSet);
+		return;
+	}
+	if (!resource.setValue(resourceValue)) {
+		return;
+	}
+
+	// Work.
+	let res = await addResource(resource.getValue());
+	let resourceId = res.resourceId;
+	disableParentForm(btn, pp, false);
+	let txt = "A resource was created. ID=" + resourceId.toString() + ".";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
+async function onBtnDeleteResourceClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let resourceId = Number(pp.childNodes[1].childNodes[1].value);
+	if (resourceId < 1) {
+		console.error(Err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let res = await deleteResource(resourceId);
+	if (res.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Resource was deleted.";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
+
 // Other functions.
 
 async function fillListOfRRFA(elClass, rrfas) {
@@ -1991,6 +2104,19 @@ function fillNotificationManager(elClass) {
 	fs.appendChild(d);
 }
 
+function fillResourceManager(elClass) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let fs = newFieldset();
+	div.appendChild(fs);
+
+	let actionNames = ["Select an action", "Create a resource", "Delete a resource"];
+	createRadioButtonsForActions(fs, actionNames);
+	let d = newDiv();
+	d.innerHTML = '<input type="button" class="' + ButtonClass.Proceed + '" value="' + ButtonName.Proceed + '" onclick="onResourceManagerBtnProceedClick(this)">';
+	fs.appendChild(d);
+}
+
 function addBtnBack(el) {
 	let btn = newInput();
 	btn.type = "button";
@@ -2087,6 +2213,10 @@ function htmlInputParameterNewParent(hint) {
 
 function htmlInputParameterText(hint) {
 	return htmlInputParameter("Text", hint);
+}
+
+function htmlInputParameterType(hint) {
+	return htmlInputParameter("Type", hint);
 }
 
 function htmlInputParameterNewText(hint) {

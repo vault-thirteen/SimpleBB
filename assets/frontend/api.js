@@ -37,6 +37,7 @@ Qpn = {
 	ManagerOfThreads: "managerOfThreads",
 	ManagerOfMessages: "managerOfMessages",
 	ManagerOfNotifications: "managerOfNotifications",
+	ManagerOfResources: "managerOfResources",
 	Message: "message",
 	Notifications: "notifications",
 	Page: "page",
@@ -52,6 +53,7 @@ ActionName = {
 	AddForum: "addForum",
 	AddMessage: "addMessage",
 	AddNotification: "addNotification",
+	AddResource: "addResource",
 	AddSection: "addSection",
 	AddSubscription: "addSubscription",
 	AddThread: "addThread",
@@ -72,6 +74,7 @@ ActionName = {
 	DeleteForum: "deleteForum",
 	DeleteMessage: "deleteMessage",
 	DeleteNotification: "deleteNotification",
+	DeleteResource: "deleteResource",
 	DeleteSection: "deleteSection",
 	DeleteSelfSubscription: "deleteSelfSubscription",
 	DeleteThread: "deleteThread",
@@ -136,15 +139,18 @@ Err = {
 	ParentIsNotSet: "parent is not set",
 	PasswordNotValid: "password is not valid",
 	PreviousPageDoesNotExist: "previous page does not exist",
+	ResourceType: "unsupported resource type",
 	RootSectionNotFound: "root section is not found",
 	RpcError: "RPC error",
 	SectionNotFound: "section is not found",
 	Server: "server error",
 	Settings: "settings error",
 	TextIsNotSet: "text is not set",
+	TypeIsNotSet: "type is not set",
 	ThreadNotFound: "thread is not found",
 	Unknown: "unknown error",
 	UnknownVariant: "unknown variant",
+	ValueNotSet: "value is not set",
 	WebTokenIsNotSet: "web token is not set",
 }
 
@@ -198,6 +204,12 @@ class Parameters_AddNotification {
 	constructor(userId, text) {
 		this.UserId = userId;
 		this.Text = text;
+	}
+}
+
+class Parameters_AddResource {
+	constructor(resource) {
+		this.Resource = resource;
 	}
 }
 
@@ -340,6 +352,12 @@ class Parameters_DeleteMessage {
 class Parameters_DeleteNotification {
 	constructor(notificationId) {
 		this.NotificationId = notificationId;
+	}
+}
+
+class Parameters_DeleteResource {
+	constructor(resourceId) {
+		this.ResourceId = resourceId;
 	}
 }
 
@@ -674,6 +692,12 @@ async function addNotification(userId, text) {
 	return await sendApiRequestAndGetResult(reqData);
 }
 
+async function addResource(resource) {
+	let params = new Parameters_AddResource(resource);
+	let reqData = new ApiRequest(ActionName.AddResource, params);
+	return await sendApiRequestAndGetResult(reqData);
+}
+
 async function addSection(parent, name) {
 	let params = new Parameters_AddSection(parent, name);
 	let reqData = new ApiRequest(ActionName.AddSection, params);
@@ -801,6 +825,12 @@ async function deleteMessage(messageId) {
 async function deleteNotification(notificationId) {
 	let params = new Parameters_DeleteNotification(notificationId);
 	let reqData = new ApiRequest(ActionName.DeleteNotification, params);
+	return await sendApiRequestAndGetResult(reqData);
+}
+
+async function deleteResource(resourceId) {
+	let params = new Parameters_DeleteResource(resourceId);
+	let reqData = new ApiRequest(ActionName.DeleteResource, params);
 	return await sendApiRequestAndGetResult(reqData);
 }
 
@@ -1285,6 +1315,50 @@ class Resource {
 		this.Number = number;
 		this.ToC = toc;
 	}
+
+	checkType() {
+		switch (this.Type) {
+			case 1:
+				return true;
+			case 2:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	setValue(v) {
+		switch (this.Type) {
+			case 1:
+				this.Text = String(v);
+				return true;
+
+			case 2:
+				if (!isNumber(v) && !isNumeric(v)) {
+					return false;
+				}
+				this.Number = Number(v);
+				return true;
+
+			default:
+				console.error(Err.ResourceType, this.Type);
+				return false;
+		}
+	}
+
+	getValue() {
+		switch (this.Type) {
+			case 1:
+				return this.Text
+
+			case 2:
+				return this.Number;
+
+			default:
+				console.error(Err.ResourceType, this.Type);
+				return null;
+		}
+	}
 }
 
 class ResourceValue {
@@ -1724,6 +1798,18 @@ async function updateSettings() {
 }
 
 // Various common functions.
+
+function isNumber(x) {
+	return typeof x === 'number';
+}
+
+function isNumeric(str) {
+	if (typeof str != "string") {
+		return false
+	}
+
+	return !isNaN(str) && !isNaN(parseFloat(str))
+}
 
 function booleanToString(b) {
 	if (b === true) {

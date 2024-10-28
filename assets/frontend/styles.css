@@ -267,7 +267,9 @@ table.acpMenu td {
 .btnSubscribe,
 .btnManageSubscriptions,
 .btnBackToAccount,
-.btnUnsubscribe {
+.btnUnsubscribe,
+.btnCreateResource,
+.btnDeleteResource {
 	border: 1px solid grey;
 	color: grey;
 	cursor: pointer;
@@ -354,7 +356,8 @@ table.acpMenu td {
 .btnDeleteMessage,
 .btnDeleteNotification,
 .btnDeleteNotificationU,
-.btnUnsubscribe {
+.btnUnsubscribe,
+.btnDeleteResource {
 	color: crimson;
 }
 
@@ -372,7 +375,8 @@ table.acpMenu td {
 .btnAddMessage,
 .btnConfirmMessageCreation,
 .btnConfirmMessageEdit,
-.btnCreateNotification {
+.btnCreateNotification,
+.btnCreateResource {
 	color: green;
 }
 
@@ -680,7 +684,8 @@ div.messageManager div.title,
 div.newThreadCreation div.title,
 div.newMessageCreation div.title,
 div.messageEditing div.title,
-div.notificationManager div.title {
+div.notificationManager div.title,
+div.resourceManager div.title {
 	font-weight: bold;
 }
 
@@ -691,7 +696,8 @@ div.messageManager div,
 div.newThreadCreation div,
 div.newMessageCreation div,
 div.messageEditing div,
-div.notificationManager div {
+div.notificationManager div,
+div.resourceManager div {
 	margin-bottom: 3px;
 }
 
@@ -702,7 +708,8 @@ div.messageManager fieldset input,
 div.newThreadCreation input,
 div.newMessageCreation input,
 div.messageEditing input,
-div.notificationManager input {
+div.notificationManager input,
+div.resourceManager input {
 	border: 1px solid grey;
 }
 
