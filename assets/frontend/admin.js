@@ -95,6 +95,8 @@ EventHandlerVariant = {
 	LoggedUserListNextA: "loggedUserListNext",
 	RrfaListPrevA: "rrfaListPrev",
 	RrfaListNextA: "rrfaListNext",
+	ResourceListPrevA: "resourceListPrev",
+	ResourceListNextA: "resourceListNext",
 }
 
 // Global variables.
@@ -163,6 +165,14 @@ async function onPageLoad() {
 			return;
 		}
 		await showPage_ListOfUsers();
+		return;
+	}
+
+	if (sp.has(Qpn.ListOfResources)) {
+		if (!preparePageVariable(sp)) {
+			return;
+		}
+		await showPage_ListOfResources();
 		return;
 	}
 
@@ -261,6 +271,25 @@ async function showPage_ListOfUsers() {
 	await fillListOfUsers("subpageListOfUsers", userIds, loggedUserIds);
 }
 
+async function showPage_ListOfResources() {
+	let res = await getListOfAllResourcesOnPage(mca_gvc.Page);
+	let pageCount = res.rop.pageData.totalPages;
+	if (!preparePageNumber(pageCount)) {
+		return
+	}
+
+	let resourceIds = res.rop.resourceIds;
+
+	// Draw.
+	let p = document.getElementById("subpage");
+	showBlock(p);
+	addBtnBack(p);
+	addTitle(p, "List of Resources");
+	addPaginator(p, mca_gvc.Page, mca_gvc.Pages, EventHandlerVariant.ResourceListPrevA, EventHandlerVariant.ResourceListNextA);
+	addDiv(p, "subpageListOfResources");
+	await fillListOfResources("subpageListOfResources", resourceIds);
+}
+
 async function showPage_UserPage() {
 	let userId = mca_gvc.Id;
 	let resA = await viewUserParameters(userId);
@@ -349,6 +378,10 @@ async function onGoListAllUsersClick(btn) {
 	await redirectToSubPageA(false, Qp.Prefix + Qpn.ListOfUsers);
 }
 
+async function onGoListResourcesClick(btn) {
+	await redirectToSubPageA(false, Qp.Prefix + Qpn.ListOfResources);
+}
+
 async function onGoManageSectionsClick(btn) {
 	await redirectToSubPageA(false, Qp.Prefix + Qpn.ManagerOfSections);
 }
@@ -369,6 +402,28 @@ async function onGoManageNotificationsClick(btn) {
 	await redirectToSubPageA(false, Qp.Prefix + Qpn.ManagerOfNotifications);
 }
 
+
+async function onBtnPrevClick_resources(btn) {
+	if (mca_gvc.Page <= 1) {
+		console.error(Err.PreviousPageDoesNotExist);
+		return;
+	}
+
+	mca_gvc.Page--;
+	let url = composeUrlForAdminPageA(Qpn.ListOfResources, mca_gvc.Page);
+	await redirectPage(false, url);
+}
+
+async function onBtnNextClick_resources(btn) {
+	if (mca_gvc.Page >= mca_gvc.Pages) {
+		console.error(Err.NextPageDoesNotExist);
+		return;
+	}
+
+	mca_gvc.Page++;
+	let url = composeUrlForAdminPageA(Qpn.ListOfResources, mca_gvc.Page);
+	await redirectPage(false, url);
+}
 
 async function onBtnPrevClick_rrfa(btn) {
 	if (mca_gvc.Page <= 1) {
@@ -1659,6 +1714,67 @@ async function fillListOfUsers(elClass, userIds, loggedUserIds) {
 			} else {
 				td.textContent = tds[j];
 			}
+			tr.appendChild(td);
+		}
+
+		tbl.appendChild(tr);
+	}
+
+	div.appendChild(tbl);
+}
+
+async function fillListOfResources(elClass, resourceIds) {
+	let div = document.getElementById(elClass);
+	div.innerHTML = "";
+	let tbl = newTable();
+	tbl.className = elClass;
+
+	// Header.
+	let tr = newTr();
+	let ths = ["#", "ID", "Type", "Text", "Number", "ToC"];
+	let th;
+	for (let i = 0; i < ths.length; i++) {
+		th = newTh();
+		if (i === 0) {
+			th.className = "numCol";
+		}
+		th.textContent = ths[i];
+		tr.appendChild(th);
+	}
+	tbl.appendChild(tr);
+
+	// Cells.
+	let resourceId, res, resource;
+	for (let i = 0; i < resourceIds.length; i++) {
+		resourceId = resourceIds[i];
+
+		// Get resource parameters.
+		res = await getResource(resourceId);
+		resource = jsonToResource(res.resource);
+
+		// Fill data.
+		tr = newTr();
+		let tds = [];
+		for (let j = 0; j < ths.length; j++) {
+			tds.push("");
+		}
+
+		tds[0] = (i + 1).toString();
+		tds[1] = resourceId.toString();
+		tds[2] = resource.Type.toString();
+		tds[3] = resource.Text;
+		tds[4] = resource.Number;
+		tds[5] = prettyTime(resource.ToC);
+
+		let td;
+		for (let j = 0; j < tds.length; j++) {
+			td = newTd();
+
+			if (j === 0) {
+				td.className = "numCol";
+			}
+
+			td.textContent = tds[j];
 			tr.appendChild(td);
 		}
 

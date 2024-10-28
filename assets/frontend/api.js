@@ -29,8 +29,9 @@ Qp = {
 Qpn = {
 	Forum: "forum",
 	Id: "id",
-	ListOfUsers: "listOfUsers",
 	ListOfLoggedUsers: "listOfLoggedUsers",
+	ListOfResources: "listOfResources",
+	ListOfUsers: "listOfUsers",
 	ManagerOfSections: "manageSections",
 	ManagerOfForums: "manageForums",
 	ManagerOfThreads: "managerOfThreads",
@@ -75,6 +76,7 @@ ActionName = {
 	DeleteSelfSubscription: "deleteSelfSubscription",
 	DeleteThread: "deleteThread",
 	GetLatestMessageOfThread: "getLatestMessageOfThread",
+	GetListOfAllResourcesOnPage: "getListOfAllResourcesOnPage",
 	GetListOfAllUsers: "getListOfAllUsers",
 	GetListOfAllUsersOnPage: "getListOfAllUsersOnPage",
 	GetListOfLoggedUsers: "getListOfLoggedUsers",
@@ -83,6 +85,8 @@ ActionName = {
 	GetMessage: "getMessage",
 	GetNotifications: "getNotifications",
 	GetNotificationsOnPage: "getNotificationsOnPage",
+	GetResource: "getResource",
+	GetResourceValue: "getResourceValue",
 	GetSelfRoles: "getSelfRoles",
 	GetSelfSubscriptions: "getSelfSubscriptions",
 	GetSelfSubscriptionsOnPage: "getSelfSubscriptionsOnPage",
@@ -363,6 +367,12 @@ class Parameters_GetLatestMessageOfThread {
 	}
 }
 
+class Parameters_GetListOfAllResourcesOnPage {
+	constructor(page) {
+		this.Page = page;
+	}
+}
+
 class Parameters_GetListOfAllUsersOnPage {
 	constructor(page) {
 		this.Page = page;
@@ -390,6 +400,18 @@ class Parameters_GetMessage {
 class Parameters_GetNotificationsOnPage {
 	constructor(page) {
 		this.Page = page;
+	}
+}
+
+class Parameters_GetResource {
+	constructor(resourceId) {
+		this.ResourceId = resourceId;
+	}
+}
+
+class Parameters_GetResourceValue {
+	constructor(resourceId) {
+		this.ResourceId = resourceId;
 	}
 }
 
@@ -806,6 +828,12 @@ async function getLatestMessageOfThread(threadId) {
 	return await sendApiRequestAndGetResult(reqData);
 }
 
+async function getListOfAllResourcesOnPage(pageN) {
+	let params = new Parameters_GetListOfAllResourcesOnPage(pageN);
+	let reqData = new ApiRequest(ActionName.GetListOfAllResourcesOnPage, params);
+	return await sendApiRequestAndGetResult(reqData);
+}
+
 async function getListOfAllUsers() {
 	let reqData = new ApiRequest(ActionName.GetListOfAllUsers, {});
 	return await sendApiRequestAndGetResult(reqData);
@@ -848,6 +876,18 @@ async function getNotifications() {
 async function getNotificationsOnPage(page) {
 	let params = new Parameters_GetNotificationsOnPage(page);
 	let reqData = new ApiRequest(ActionName.GetNotificationsOnPage, params);
+	return await sendApiRequestAndGetResult(reqData);
+}
+
+async function getResource(resourceId) {
+	let params = new Parameters_GetResource(resourceId);
+	let reqData = new ApiRequest(ActionName.GetResource, params);
+	return await sendApiRequestAndGetResult(reqData);
+}
+
+async function getResourceValue(resourceId) {
+	let params = new Parameters_GetResourceValue(resourceId);
+	let reqData = new ApiRequest(ActionName.GetResourceValue, params);
 	return await sendApiRequestAndGetResult(reqData);
 }
 
@@ -1237,6 +1277,23 @@ class Password {
 	}
 }
 
+class Resource {
+	constructor(id, type, text, number, toc) {
+		this.Id = id;
+		this.Type = type;
+		this.Text = text;
+		this.Number = number;
+		this.ToC = toc;
+	}
+}
+
+class ResourceValue {
+	constructor(id, value) {
+		this.Id = id;
+		this.Value = value;
+	}
+}
+
 class RRFA {
 	constructor(id, preRegTime, email, name) {
 		this.Id = id;
@@ -1455,6 +1512,16 @@ function jsonToOptionalEventParameters(x) {
 function jsonToPageData(x) {
 	if (x == null) return null;
 	return new PageData(x.pageNumber, x.totalPages, x.pageSize, x.itemsOnPage, x.totalItems);
+}
+
+function jsonToResource(x) {
+	if (x == null) return null;
+	return new Resource(x.id, x.type, x.text, x.number, x.toc);
+}
+
+function jsonToResourceValue(x) {
+	if (x == null) return null;
+	return new ResourceValue(x.id, x.value);
 }
 
 function jsonToRrfa(x) {
@@ -2078,6 +2145,18 @@ function addClickEventHandler(btn, ehVariant) {
 		case EventHandlerVariant.RrfaListNextA:
 			btn.addEventListener(en, async (e) => {
 				await onBtnNextClick_rrfa(btn);
+			});
+			return;
+
+		case EventHandlerVariant.ResourceListPrevA:
+			btn.addEventListener(en, async (e) => {
+				await onBtnPrevClick_resources(btn);
+			});
+			return;
+
+		case EventHandlerVariant.ResourceListNextA:
+			btn.addEventListener(en, async (e) => {
+				await onBtnNextClick_resources(btn);
 			});
 			return;
 

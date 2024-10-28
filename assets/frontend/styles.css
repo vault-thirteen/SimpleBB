@@ -423,6 +423,7 @@ table.acpMenu td {
 table.subpageListOfUsers,
 table.subpageListOfRRFA,
 table.subpageListOfLoggedUsers,
+table.subpageListOfResources,
 table.subpageUserPage,
 table.notificationList,
 table.subscriptionsList {
@@ -443,6 +444,7 @@ div.notificationListTitle {
 table.subpageListOfUsers th,
 table.subpageListOfRRFA th,
 table.subpageListOfLoggedUsers th,
+table.subpageListOfResources th,
 table.subpageUserPage th,
 table.notificationList th,
 table.subscriptionsList th {
@@ -455,6 +457,7 @@ table.subscriptionsList th {
 table.subpageListOfUsers td,
 table.subpageListOfRRFA td,
 table.subpageListOfLoggedUsers td,
+table.subpageListOfResources td,
 table.subpageUserPage td,
 table.notificationList td,
 table.subscriptionsList td {
@@ -515,6 +518,7 @@ table.notificationList td.col2 {
 table.subpageListOfUsers tr:nth-child(even),
 table.subpageListOfRRFA tr:nth-child(even),
 table.subpageListOfLoggedUsers tr:nth-child(even),
+table.subpageListOfResources tr:nth-child(even),
 table.subpageUserPage tr:nth-child(even),
 table.subscriptionsList tr:nth-child(even) {
 	background-color: white;
@@ -523,13 +527,16 @@ table.subscriptionsList tr:nth-child(even) {
 table.subpageListOfUsers tr:nth-child(odd),
 table.subpageListOfRRFA tr:nth-child(odd),
 table.subpageListOfLoggedUsers tr:nth-child(odd),
+table.subpageListOfResources tr:nth-child(odd),
 table.subpageUserPage tr:nth-child(odd),
 table.subscriptionsList tr:nth-child(odd) {
 	background-color: #E8E8E8;
 }
 
 table.subpageListOfUsers tr:hover,
-table.subpageListOfLoggedUsers tr:hover {
+table.subpageListOfRRFA tr:hover,
+table.subpageListOfLoggedUsers tr:hover,
+table.subpageListOfResources tr:hover {
 	background-color: #FFFFBA;
 }
 
