@@ -118,11 +118,11 @@ func (dbo *DatabaseObject) makePreparedStatementQueryStrings() (qs []string) {
 	qs = append(qs, q)
 
 	// 20.
-	q = fmt.Sprintf(`SELECT Id, Type, FSType, Text, ToC FROM %s WHERE Id = ? AND Type = 1;`, dbo.tableNames.Resources)
+	q = fmt.Sprintf(`SELECT Id, Type, FSType, Text, ToC FROM %s WHERE Id = ? AND FSType IS NOT NULL;`, dbo.tableNames.Resources)
 	qs = append(qs, q)
 
 	// 21.
-	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ? AND Type = 1;`, dbo.tableNames.Resources)
+	q = fmt.Sprintf(`DELETE FROM %s WHERE Id = ? AND FSType IS NOT NULL;`, dbo.tableNames.Resources)
 	qs = append(qs, q)
 
 	return qs

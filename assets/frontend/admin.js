@@ -49,6 +49,8 @@ ButtonName = {
 	DeleteNotification: "Delete",
 	CreateResource: "Create",
 	DeleteResource: "Delete",
+	CreateFormatString: "Create",
+	DeleteFormatString: "Delete",
 }
 
 ButtonClass = {
@@ -85,6 +87,8 @@ ButtonClass = {
 	DeleteNotification: "btnDeleteNotification",
 	CreateResource: "btnCreateResource",
 	DeleteResource: "btnDeleteResource",
+	CreateFormatString: "btnCreateFormatString",
+	DeleteFormatString: "btnDeleteFormatString",
 }
 
 PageZoneClass = {
@@ -1562,6 +1566,27 @@ function onResourceManagerBtnProceedClick(btn) {
 			d.innerHTML = '<input type="button" class="' + ButtonClass.DeleteResource + '" value="' + ButtonName.DeleteResource + '" onclick="onBtnDeleteResourceClick(this)">';
 			fs.appendChild(d);
 			break;
+
+		case 3: // Create a format string.
+			d = newDiv();
+			d.innerHTML = htmlInputParameterType("Format string type. E.g.: MTU.");
+			fs.appendChild(d);
+			d = newDiv();
+			d.innerHTML = htmlInputParameterText("Format string value");
+			fs.appendChild(d);
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.CreateFormatString + '" value="' + ButtonName.CreateFormatString + '" onclick="onBtnCreateFormatStringClick(this)">';
+			fs.appendChild(d);
+			break;
+
+		case 4: // Delete a format string.
+			d = newDiv();
+			d.innerHTML = htmlInputParameterId("ID of the format string to delete");
+			fs.appendChild(d);
+			d = newDiv();
+			d.innerHTML = '<input type="button" class="' + ButtonClass.DeleteFormatString + '" value="' + ButtonName.DeleteFormatString + '" onclick="onBtnDeleteFormatStringClick(this)">';
+			fs.appendChild(d);
+			break;
 	}
 }
 
@@ -1608,6 +1633,49 @@ async function onBtnDeleteResourceClick(btn) {
 	}
 	disableParentForm(btn, pp, false);
 	let txt = "Resource was deleted.";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
+async function onBtnCreateFormatStringClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let formatStringType = pp.childNodes[1].childNodes[1].value;
+	if (formatStringType.length < 1) {
+		console.error(Err.TypeIsNotSet);
+		return;
+	}
+	let formatStringValue = pp.childNodes[2].childNodes[1].value;
+	if (formatStringValue.length < 1) {
+		console.error(Err.ValueNotSet);
+		return;
+	}
+
+	// Work.
+	let res = await addFormatString(formatStringValue, formatStringType);
+	let resourceId = res.resourceId;
+	disableParentForm(btn, pp, false);
+	let txt = "A format string was created. ID=" + resourceId.toString() + ".";
+	showActionSuccess(btn, txt);
+	await reloadPage(true);
+}
+
+async function onBtnDeleteFormatStringClick(btn) {
+	// Input.
+	let pp = btn.parentNode.parentNode;
+	let fsId = Number(pp.childNodes[1].childNodes[1].value);
+	if (fsId < 1) {
+		console.error(Err.IdNotSet);
+		return;
+	}
+
+	// Work.
+	let res = await deleteFormatString(fsId);
+	if (res.ok !== true) {
+		return;
+	}
+	disableParentForm(btn, pp, false);
+	let txt = "Format string was deleted.";
 	showActionSuccess(btn, txt);
 	await reloadPage(true);
 }
@@ -2110,7 +2178,7 @@ function fillResourceManager(elClass) {
 	let fs = newFieldset();
 	div.appendChild(fs);
 
-	let actionNames = ["Select an action", "Create a resource", "Delete a resource"];
+	let actionNames = ["Select an action", "Create a resource", "Delete a resource", "Create a format string", "Delete a format string"];
 	createRadioButtonsForActions(fs, actionNames);
 	let d = newDiv();
 	d.innerHTML = '<input type="button" class="' + ButtonClass.Proceed + '" value="' + ButtonName.Proceed + '" onclick="onResourceManagerBtnProceedClick(this)">';

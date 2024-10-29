@@ -269,7 +269,9 @@ table.acpMenu td {
 .btnBackToAccount,
 .btnUnsubscribe,
 .btnCreateResource,
-.btnDeleteResource {
+.btnDeleteResource,
+.btnCreateFormatString,
+.btnDeleteFormatString {
 	border: 1px solid grey;
 	color: grey;
 	cursor: pointer;
@@ -357,7 +359,8 @@ table.acpMenu td {
 .btnDeleteNotification,
 .btnDeleteNotificationU,
 .btnUnsubscribe,
-.btnDeleteResource {
+.btnDeleteResource,
+.btnDeleteFormatString {
 	color: crimson;
 }
 
@@ -376,7 +379,8 @@ table.acpMenu td {
 .btnConfirmMessageCreation,
 .btnConfirmMessageEdit,
 .btnCreateNotification,
-.btnCreateResource {
+.btnCreateResource,
+.btnCreateFormatString {
 	color: green;
 }
 
