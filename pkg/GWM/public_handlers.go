@@ -94,9 +94,6 @@ const (
 	ApiFunctionName_GetResourceValue            = "getResourceValue"
 	ApiFunctionName_GetListOfAllResourcesOnPage = "getListOfAllResourcesOnPage"
 	ApiFunctionName_DeleteResource              = "deleteResource"
-	ApiFunctionName_AddFormatString             = "addFormatString"
-	ApiFunctionName_GetFormatString             = "getFormatString"
-	ApiFunctionName_DeleteFormatString          = "deleteFormatString"
 
 	// SM.
 	ApiFunctionName_AddSubscription            = "addSubscription"

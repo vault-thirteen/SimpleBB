@@ -50,7 +50,6 @@ Qpn = {
 
 // Action names.
 ActionName = {
-	AddFormatString: "addFormatString",
 	AddForum: "addForum",
 	AddMessage: "addMessage",
 	AddNotification: "addNotification",
@@ -72,7 +71,6 @@ ActionName = {
 	ChangeThreadForum: "changeThreadForum",
 	CountSelfSubscriptions: "countSelfSubscriptions",
 	CountUnreadNotifications: "countUnreadNotifications",
-	DeleteFormatString: "deleteFormatString",
 	DeleteForum: "deleteForum",
 	DeleteMessage: "deleteMessage",
 	DeleteNotification: "deleteNotification",
@@ -187,13 +185,6 @@ class ApiResponse {
 }
 
 // Request parameters.
-
-class Parameters_AddFormatString {
-	constructor(formatString, fsType) {
-		this.FormatString = formatString;
-		this.FsType = fsType;
-	}
-}
 
 class Parameters_AddForum {
 	constructor(parent, name) {
@@ -343,12 +334,6 @@ class Parameters_ChangeThreadName {
 	constructor(threadId, name) {
 		this.ThreadId = threadId;
 		this.Name = name;
-	}
-}
-
-class Parameters_DeleteFormatString {
-	constructor(fsId) {
-		this.FsId = fsId;
 	}
 }
 
@@ -689,12 +674,6 @@ async function sendApiRequestAndGetResult(reqData) {
 	return jo.result;
 }
 
-async function addFormatString(formatString, fsType) {
-	let params = new Parameters_AddFormatString(formatString, fsType);
-	let reqData = new ApiRequest(ActionName.AddFormatString, params);
-	return await sendApiRequestAndGetResult(reqData);
-}
-
 async function addForum(parent, name) {
 	let params = new Parameters_AddForum(parent, name);
 	let reqData = new ApiRequest(ActionName.AddForum, params);
@@ -828,12 +807,6 @@ async function countSelfSubscriptions() {
 
 async function countUnreadNotifications() {
 	let reqData = new ApiRequest(ActionName.CountUnreadNotifications, {});
-	return await sendApiRequestAndGetResult(reqData);
-}
-
-async function deleteFormatString(fsId) {
-	let params = new Parameters_DeleteFormatString(fsId);
-	let reqData = new ApiRequest(ActionName.DeleteFormatString, params);
 	return await sendApiRequestAndGetResult(reqData);
 }
 
