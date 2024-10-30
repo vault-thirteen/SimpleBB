@@ -27,8 +27,8 @@ type SystemSettings struct {
 	// the most suitable. The second variant ('2') may be used if you are
 	// proxying requests of your clients somewhere inside your own network
 	// infrastructure, such as via a load balancer or with a reverse proxy.
-	ClientIPAddressSource byte   `json:"clientIPAddressSource"`
-	ClientIPAddressHeader string `json:"clientIPAddressHeader"`
+	ClientIPAddressSource cm.ClientIPAddressSource `json:"clientIPAddressSource"`
+	ClientIPAddressHeader string                   `json:"clientIPAddressHeader"`
 
 	// Captcha.
 	CaptchaImgServerHost string  `json:"captchaImgServerHost"`
@@ -61,8 +61,7 @@ func (s SystemSettings) Check() (err error) {
 	if (s.SettingsVersion == 0) ||
 		(len(s.SiteName) == 0) ||
 		(len(s.SiteDomain) == 0) ||
-		(s.ClientIPAddressSource < ClientIPAddressSource_Direct) ||
-		(s.ClientIPAddressSource > ClientIPAddressSource_CustomHeader) ||
+		// s.ClientIPAddressSource is checked in its constructor.
 		(len(s.CaptchaImgServerHost) == 0) ||
 		(s.CaptchaImgServerPort == 0) ||
 		(len(s.CaptchaFolder) == 0) ||
@@ -82,7 +81,7 @@ func (s SystemSettings) Check() (err error) {
 		}
 	}
 
-	if s.ClientIPAddressSource == ClientIPAddressSource_CustomHeader {
+	if s.ClientIPAddressSource.GetValue() == cm.ClientIPAddressSource_CustomHeader {
 		if len(s.ClientIPAddressHeader) == 0 {
 			return errors.New(c.MsgSystemSettingError)
 		}

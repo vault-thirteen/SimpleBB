@@ -642,7 +642,7 @@ func (srv *Server) addFormatString(p *nm.AddFormatStringParams) (result *nm.AddF
 	fsText := cmb.Text(fs.String())
 
 	fsr := &cm.FormatStringResource{
-		Type:   cm.ResourceType_Text,
+		Type:   cm.NewResourceTypeWithValue(cm.ResourceType_Text),
 		FSType: &fsType,
 		Text:   &fsText,
 	}
@@ -762,7 +762,7 @@ func (srv *Server) processSystemEventS(p *nm.ProcessSystemEventSParams) (result 
 		return nil, re
 	}
 
-	switch se.Type {
+	switch se.Type.GetValue() {
 	case cm.SystemEventType_ThreadParentChange:
 		re = srv.processSystemEvent_ThreadParentChange(se)
 	case cm.SystemEventType_ThreadNameChange:

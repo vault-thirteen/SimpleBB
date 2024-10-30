@@ -9,12 +9,6 @@ import (
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
-const (
-	ChildTypeNone    = 0
-	ChildTypeSection = 1
-	ChildTypeForum   = 2
-)
-
 type Section struct {
 	// Identifier of a section.
 	Id cmb.Id `json:"id"`
@@ -25,7 +19,7 @@ type Section struct {
 	Parent *cmb.Id `json:"parent"`
 
 	// Type of child elements: either sub-sections or forums.
-	ChildType byte `json:"childType"`
+	ChildType SectionChildType `json:"childType"`
 
 	// List of IDs of child elements (either sub-sections or forums).
 	// Null means that this section has no children.
@@ -40,6 +34,7 @@ type Section struct {
 
 func NewSection() (sec *Section) {
 	return &Section{
+		ChildType: *NewSectionChildType(),
 		EventData: EventData{
 			Creator: &EventParameters{},
 			Editor:  &OptionalEventParameters{},

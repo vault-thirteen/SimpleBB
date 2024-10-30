@@ -1,55 +1,31 @@
 package models
 
 import (
-	"database/sql/driver"
-	"strconv"
-
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
-type SystemEventType byte
+type SystemEventType = cmb.Enum
 
 const (
-	SystemEventType_ThreadParentChange    = SystemEventType(1) // -> Users subscribed to the thread.
-	SystemEventType_ThreadNameChange      = SystemEventType(2) // -> Users subscribed to the thread.
-	SystemEventType_ThreadDeletion        = SystemEventType(3) // -> Users subscribed to the thread.
-	SystemEventType_ThreadNewMessage      = SystemEventType(4) // -> Users subscribed to the thread.
-	SystemEventType_ThreadMessageEdit     = SystemEventType(5) // -> Users subscribed to the thread.
-	SystemEventType_ThreadMessageDeletion = SystemEventType(6) // -> Users subscribed to the thread.
-	SystemEventType_MessageTextEdit       = SystemEventType(7) // -> Author of the message.
-	SystemEventType_MessageParentChange   = SystemEventType(8) // -> Author of the message.
-	SystemEventType_MessageDeletion       = SystemEventType(9) // -> Author of the message.
+	SystemEventType_ThreadParentChange    = cmb.EnumValue(1) // -> Users subscribed to the thread.
+	SystemEventType_ThreadNameChange      = cmb.EnumValue(2) // -> Users subscribed to the thread.
+	SystemEventType_ThreadDeletion        = cmb.EnumValue(3) // -> Users subscribed to the thread.
+	SystemEventType_ThreadNewMessage      = cmb.EnumValue(4) // -> Users subscribed to the thread.
+	SystemEventType_ThreadMessageEdit     = cmb.EnumValue(5) // -> Users subscribed to the thread.
+	SystemEventType_ThreadMessageDeletion = cmb.EnumValue(6) // -> Users subscribed to the thread.
+	SystemEventType_MessageTextEdit       = cmb.EnumValue(7) // -> Author of the message.
+	SystemEventType_MessageParentChange   = cmb.EnumValue(8) // -> Author of the message.
+	SystemEventType_MessageDeletion       = cmb.EnumValue(9) // -> Author of the message.
 
-	SystemEventTypeLast = SystemEventType_MessageDeletion
+	SystemEventTypeMax = SystemEventType_MessageDeletion
 )
 
-func (set SystemEventType) IsValid() bool {
-	if (set <= 0) || (set > SystemEventTypeLast) {
-		return false
-	}
-	return true
+func NewSystemEventType() *SystemEventType {
+	return cmb.NewEnumFast(SystemEventTypeMax)
 }
 
-func (set SystemEventType) ToString() string {
-	return strconv.Itoa(int(set.AsByte()))
-}
-
-func (set SystemEventType) AsByte() byte {
-	return byte(set)
-}
-
-func (set *SystemEventType) Scan(src any) (err error) {
-	var x int
-	x, err = cmb.ScanSrcAsInt(src)
-	if err != nil {
-		return err
-	}
-
-	*set = SystemEventType(x)
-	return nil
-}
-
-func (set SystemEventType) Value() (dv driver.Value, err error) {
-	// https://pkg.go.dev/database/sql/driver#Value
-	return driver.Value(int64(set)), nil
+func NewSystemEventTypeWithValue(value cmb.EnumValue) SystemEventType {
+	let := NewSystemEventType()
+	let.SetValueFast(value)
+	return *let
 }

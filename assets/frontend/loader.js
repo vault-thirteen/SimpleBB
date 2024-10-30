@@ -13,6 +13,7 @@ window.onpageshow = function (event) {
 };
 
 settingsExpirationDuration = 60;
+userNameForUnknownUser = "Unknown user";
 
 // Names of JavaScript storage variables.
 Varname = {
@@ -196,6 +197,9 @@ class UserNameCache {
 		}
 
 		let res = await getUserName(userId);
+		if (res == null) {
+			return userNameForUnknownUser;
+		}
 		let user = jsonToUser(res.user);
 		this.m.set(userId, user.Name);
 		return user.Name;
@@ -724,7 +728,6 @@ async function showSection() {
 		return;
 	}
 	let curSection = sectionsMap.get(sectionId);
-	console.debug("curSection:", curSection);//TODO
 	let curLevel = findCurrentNodeLevel(allNodes, sectionId);
 	createTreeOfSections(curSection, sectionsMap, curLevel, nodes);
 	let settings = getSettings();

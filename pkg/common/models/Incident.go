@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	ErrIncidentIsNotSet  = "incident is not set"
-	ErrIncidentTypeError = "incident type error"
+	ErrIncidentIsNotSet = "incident is not set"
 )
 
 type Incident struct {
@@ -22,13 +21,16 @@ type Incident struct {
 	UserIPA net.IP
 }
 
+func NewIncident() *Incident {
+	return &Incident{
+		Module: *NewModule(),
+		Type:   *NewIncidentType(),
+	}
+}
+
 func CheckIncident(inc *Incident) (err error) {
 	if inc == nil {
 		return errors.New(ErrIncidentIsNotSet)
-	}
-
-	if !inc.Type.IsValid() {
-		return errors.New(ErrIncidentTypeError)
 	}
 
 	return nil

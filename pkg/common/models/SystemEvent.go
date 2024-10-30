@@ -30,11 +30,6 @@ func NewSystemEventWithData(data SystemEventData) (se *SystemEvent, err error) {
 		SystemEventData: data,
 	}
 
-	_, err = se.CheckType()
-	if err != nil {
-		return nil, err
-	}
-
 	_, err = se.CheckParameters()
 	if err != nil {
 		return nil, err

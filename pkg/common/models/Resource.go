@@ -17,7 +17,9 @@ type Resource struct {
 }
 
 func NewResource() (r *Resource) {
-	return &Resource{}
+	return &Resource{
+		Type: *NewResourceType(),
+	}
 }
 
 func NewResourceFromValue(value any) (r *Resource) {
@@ -43,14 +45,14 @@ func NewResourceFromValue(value any) (r *Resource) {
 
 func NewResourceFromText(t cmb.Text) (r *Resource) {
 	return &Resource{
-		Type: ResourceType_Text,
+		Type: NewResourceTypeWithValue(ResourceType_Text),
 		Text: &t,
 	}
 }
 
 func NewResourceFromNumber(n cmb.Count) (r *Resource) {
 	return &Resource{
-		Type:   ResourceType_Number,
+		Type:   NewResourceTypeWithValue(ResourceType_Number),
 		Number: &n,
 	}
 }
@@ -81,11 +83,7 @@ func (r *Resource) IsValid() bool {
 		return false
 	}
 
-	if !r.Type.IsValid() {
-		return false
-	}
-
-	switch r.Type {
+	switch r.Type.GetValue() {
 	case ResourceType_Text:
 		if r.Text == nil {
 			return false
@@ -112,7 +110,7 @@ func (r *Resource) AsNumber() cmb.Count {
 }
 
 func (r *Resource) Value() any {
-	switch r.Type {
+	switch r.Type.GetValue() {
 	case ResourceType_Text:
 		return *r.Text
 

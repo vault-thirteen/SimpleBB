@@ -78,18 +78,18 @@ func (srv *Server) addSection(p *mm.AddSectionParams) (result *mm.AddSectionResu
 	}
 
 	// Check compatibility.
-	var childType byte
+	var childType mm.SectionChildType
 	childType, err = srv.dbo.GetSectionChildTypeById(*p.Parent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	if childType == mm.ChildTypeForum {
+	if childType.GetValue() == mm.SectionChildType_Forum {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
-	if childType == mm.ChildTypeNone {
-		err = srv.dbo.SetSectionChildTypeById(*p.Parent, mm.ChildTypeSection)
+	if childType.GetValue() == 0 {
+		err = srv.dbo.SetSectionChildTypeById(*p.Parent, mm.SectionChildType_Section)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -242,18 +242,18 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 	}
 
 	// Check compatibility.
-	var childType byte
+	var childType mm.SectionChildType
 	childType, err = srv.dbo.GetSectionChildTypeById(p.Parent)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	if childType == mm.ChildTypeForum {
+	if childType.GetValue() == mm.SectionChildType_Forum {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
-	if childType == mm.ChildTypeNone {
-		err = srv.dbo.SetSectionChildTypeById(p.Parent, mm.ChildTypeSection)
+	if childType.GetValue() == 0 {
+		err = srv.dbo.SetSectionChildTypeById(p.Parent, mm.SectionChildType_Section)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -303,7 +303,7 @@ func (srv *Server) changeSectionParent(p *mm.ChangeSectionParentParams) (result 
 
 	// Clear the child type if the old parent becomes empty.
 	if childrenL.Size() == 0 {
-		err = srv.dbo.SetSectionChildTypeById(*oldParent, mm.ChildTypeNone)
+		err = srv.dbo.SetSectionChildTypeById(*oldParent, 0)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -415,7 +415,7 @@ func (srv *Server) moveSectionUp(p *mm.MoveSectionUpParams) (result *mm.MoveSect
 	}
 
 	// Check compatibility.
-	if parent.ChildType != mm.ChildTypeSection {
+	if parent.ChildType.GetValue() != mm.SectionChildType_Section {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
@@ -497,7 +497,7 @@ func (srv *Server) moveSectionDown(p *mm.MoveSectionDownParams) (result *mm.Move
 	}
 
 	// Check compatibility.
-	if parent.ChildType != mm.ChildTypeSection {
+	if parent.ChildType.GetValue() != mm.SectionChildType_Section {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
@@ -583,7 +583,7 @@ func (srv *Server) deleteSection(p *mm.DeleteSectionParams) (result *mm.DeleteSe
 
 		// Clear the child type if the old parent becomes empty.
 		if linkSections.Size() == 0 {
-			err = srv.dbo.SetSectionChildTypeById(*section.Parent, mm.ChildTypeNone)
+			err = srv.dbo.SetSectionChildTypeById(*section.Parent, 0)
 			if err != nil {
 				return nil, srv.databaseError(err)
 			}
@@ -642,18 +642,18 @@ func (srv *Server) addForum(p *mm.AddForumParams) (result *mm.AddForumResult, re
 	}
 
 	// Check compatibility.
-	var childType byte
+	var childType mm.SectionChildType
 	childType, err = srv.dbo.GetSectionChildTypeById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	if childType == mm.ChildTypeSection {
+	if childType.GetValue() == mm.SectionChildType_Section {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
-	if childType == mm.ChildTypeNone {
-		err = srv.dbo.SetSectionChildTypeById(p.SectionId, mm.ChildTypeForum)
+	if childType.GetValue() == 0 {
+		err = srv.dbo.SetSectionChildTypeById(p.SectionId, mm.SectionChildType_Forum)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -802,18 +802,18 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 	}
 
 	// Check compatibility.
-	var childType byte
+	var childType mm.SectionChildType
 	childType, err = srv.dbo.GetSectionChildTypeById(p.SectionId)
 	if err != nil {
 		return nil, srv.databaseError(err)
 	}
 
-	if childType == mm.ChildTypeSection {
+	if childType.GetValue() == mm.SectionChildType_Section {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
-	if childType == mm.ChildTypeNone {
-		err = srv.dbo.SetSectionChildTypeById(p.SectionId, mm.ChildTypeForum)
+	if childType.GetValue() == 0 {
+		err = srv.dbo.SetSectionChildTypeById(p.SectionId, mm.SectionChildType_Forum)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -863,7 +863,7 @@ func (srv *Server) changeForumSection(p *mm.ChangeForumSectionParams) (result *m
 
 	// Clear the child type if the old section becomes empty.
 	if childrenL.Size() == 0 {
-		err = srv.dbo.SetSectionChildTypeById(oldParent, mm.ChildTypeNone)
+		err = srv.dbo.SetSectionChildTypeById(oldParent, 0)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -973,7 +973,7 @@ func (srv *Server) moveForumUp(p *mm.MoveForumUpParams) (result *mm.MoveForumUpR
 	}
 
 	// Check compatibility.
-	if parent.ChildType != mm.ChildTypeForum {
+	if parent.ChildType.GetValue() != mm.SectionChildType_Forum {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
@@ -1052,7 +1052,7 @@ func (srv *Server) moveForumDown(p *mm.MoveForumDownParams) (result *mm.MoveForu
 	}
 
 	// Check compatibility.
-	if parent.ChildType != mm.ChildTypeForum {
+	if parent.ChildType.GetValue() != mm.SectionChildType_Forum {
 		return nil, jrm1.NewRpcErrorByUser(RpcErrorCode_IncompatibleChildType, RpcErrorMsg_IncompatibleChildType, nil)
 	}
 
@@ -1133,7 +1133,7 @@ func (srv *Server) deleteForum(p *mm.DeleteForumParams) (result *mm.DeleteForumR
 
 	// Clear the child type if the old parent becomes empty.
 	if linkChildren.Size() == 0 {
-		err = srv.dbo.SetSectionChildTypeById(forum.SectionId, mm.ChildTypeNone)
+		err = srv.dbo.SetSectionChildTypeById(forum.SectionId, 0)
 		if err != nil {
 			return nil, srv.databaseError(err)
 		}
@@ -1247,7 +1247,7 @@ func (srv *Server) changeThreadName(p *mm.ChangeThreadNameParams) (result *mm.Ch
 
 	se, err := cm.NewSystemEventWithData(
 		cm.SystemEventData{
-			Type:     cm.SystemEventType_ThreadNameChange,
+			Type:     cm.NewSystemEventTypeWithValue(cm.SystemEventType_ThreadNameChange),
 			ThreadId: &p.ThreadId,
 			UserId:   &userRoles.User.Id,
 		},
@@ -1298,7 +1298,7 @@ func (srv *Server) changeThreadForum(p *mm.ChangeThreadForumParams) (result *mm.
 
 	se, err := cm.NewSystemEventWithData(
 		cm.SystemEventData{
-			Type:     cm.SystemEventType_ThreadParentChange,
+			Type:     cm.NewSystemEventTypeWithValue(cm.SystemEventType_ThreadParentChange),
 			ThreadId: &p.ThreadId,
 			UserId:   &userRoles.User.Id,
 		},
@@ -1570,7 +1570,7 @@ func (srv *Server) deleteThread(p *mm.DeleteThreadParams) (result *mm.DeleteThre
 
 	se, err := cm.NewSystemEventWithData(
 		cm.SystemEventData{
-			Type:     cm.SystemEventType_ThreadDeletion,
+			Type:     cm.NewSystemEventTypeWithValue(cm.SystemEventType_ThreadDeletion),
 			ThreadId: &p.ThreadId,
 			UserId:   &userRoles.User.Id,
 		},
@@ -1664,7 +1664,7 @@ func (srv *Server) addMessage(p *mm.AddMessageParams) (result *mm.AddMessageResu
 
 	se, err := cm.NewSystemEventWithData(
 		cm.SystemEventData{
-			Type:      cm.SystemEventType_ThreadNewMessage,
+			Type:      cm.NewSystemEventTypeWithValue(cm.SystemEventType_ThreadNewMessage),
 			ThreadId:  &p.ThreadId,
 			MessageId: &result.MessageId,
 			UserId:    &userRoles.User.Id,
@@ -1707,7 +1707,7 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 
 	se, err := cm.NewSystemEventWithData(
 		cm.SystemEventData{
-			Type:      cm.SystemEventType_ThreadMessageEdit,
+			Type:      cm.NewSystemEventTypeWithValue(cm.SystemEventType_ThreadMessageEdit),
 			ThreadId:  &initialMessage.ThreadId,
 			MessageId: &p.MessageId,
 			UserId:    &userRoles.User.Id,
@@ -1724,7 +1724,7 @@ func (srv *Server) changeMessageText(p *mm.ChangeMessageTextParams) (result *mm.
 
 	se, err = cm.NewSystemEventWithData(
 		cm.SystemEventData{
-			Type:      cm.SystemEventType_MessageTextEdit,
+			Type:      cm.NewSystemEventTypeWithValue(cm.SystemEventType_MessageTextEdit),
 			ThreadId:  &initialMessage.ThreadId,
 			MessageId: &p.MessageId,
 			UserId:    &userRoles.User.Id,
@@ -1778,7 +1778,7 @@ func (srv *Server) changeMessageThread(p *mm.ChangeMessageThreadParams) (result 
 
 	se, err := cm.NewSystemEventWithData(
 		cm.SystemEventData{
-			Type:      cm.SystemEventType_MessageParentChange,
+			Type:      cm.NewSystemEventTypeWithValue(cm.SystemEventType_MessageParentChange),
 			ThreadId:  &initialMessage.ThreadId,
 			MessageId: &p.MessageId,
 			UserId:    &userRoles.User.Id,
@@ -1899,7 +1899,7 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 
 	se, err := cm.NewSystemEventWithData(
 		cm.SystemEventData{
-			Type:      cm.SystemEventType_ThreadMessageDeletion,
+			Type:      cm.NewSystemEventTypeWithValue(cm.SystemEventType_ThreadMessageDeletion),
 			ThreadId:  &initialMessage.ThreadId,
 			MessageId: &p.MessageId,
 			UserId:    &userRoles.User.Id,
@@ -1916,7 +1916,7 @@ func (srv *Server) deleteMessage(p *mm.DeleteMessageParams) (result *mm.DeleteMe
 
 	se, err = cm.NewSystemEventWithData(
 		cm.SystemEventData{
-			Type:      cm.SystemEventType_MessageDeletion,
+			Type:      cm.NewSystemEventTypeWithValue(cm.SystemEventType_MessageDeletion),
 			ThreadId:  &initialMessage.ThreadId,
 			MessageId: &p.MessageId,
 			UserId:    &userRoles.User.Id,

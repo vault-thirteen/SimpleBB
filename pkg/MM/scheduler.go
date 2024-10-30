@@ -99,7 +99,7 @@ func checkSections(sections []mm.Section, sectionsMap map[cmb.Id]mm.Section) (er
 	var childIds []cmb.Id
 	var ok bool
 	for _, section := range sections {
-		if section.ChildType != mm.ChildTypeSection {
+		if section.ChildType.GetValue() != mm.SectionChildType_Section {
 			continue
 		}
 
@@ -152,7 +152,7 @@ func checkSections(sections []mm.Section, sectionsMap map[cmb.Id]mm.Section) (er
 			return fmt.Errorf(ErrF_SectionIsNotFound, parentId)
 		}
 
-		if parentSection.ChildType != mm.ChildTypeSection {
+		if parentSection.ChildType.GetValue() != mm.SectionChildType_Section {
 			return fmt.Errorf(ErrF_SectionIsDamaged, parentId)
 		}
 
@@ -173,7 +173,7 @@ func checkForums(sections []mm.Section, sectionsMap map[cmb.Id]mm.Section, forum
 	var childIds []cmb.Id
 	var ok bool
 	for _, section := range sections {
-		if section.ChildType != mm.ChildTypeForum {
+		if section.ChildType.GetValue() != mm.SectionChildType_Forum {
 			continue
 		}
 
@@ -207,7 +207,7 @@ func checkForums(sections []mm.Section, sectionsMap map[cmb.Id]mm.Section, forum
 			return fmt.Errorf(ErrF_SectionIsNotFound, parentId)
 		}
 
-		if parentSection.ChildType != mm.ChildTypeForum {
+		if parentSection.ChildType.GetValue() != mm.SectionChildType_Forum {
 			return fmt.Errorf(ErrF_SectionIsDamaged, parentId)
 		}
 

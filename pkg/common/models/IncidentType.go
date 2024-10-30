@@ -1,30 +1,34 @@
 package models
 
-const (
-	IncidentType_IllegalAccessAttempt            = 1
-	IncidentType_FakeToken                       = 2
-	IncidentType_VerificationCodeMismatch        = 3
-	IncidentType_DoubleLogInAttempt              = 4
-	IncidentType_PreSessionHacking               = 5
-	IncidentType_CaptchaAnswerMismatch           = 6
-	IncidentType_PasswordMismatch                = 7
-	IncidentType_PasswordChangeHacking           = 8
-	IncidentType_EmailChangeHacking              = 9
-	IncidentType_FakeIPA                         = 10
-	IncidentType_ReadingNotificationOfOtherUsers = 11
-	IncidentType_WrongDKey                       = 12
+import (
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
+type IncidentType = cmb.Enum
+
 const (
-	IncidentTypesCount = 12
+	IncidentType_IllegalAccessAttempt            = cmb.EnumValue(1)
+	IncidentType_FakeToken                       = cmb.EnumValue(2)
+	IncidentType_VerificationCodeMismatch        = cmb.EnumValue(3)
+	IncidentType_DoubleLogInAttempt              = cmb.EnumValue(4)
+	IncidentType_PreSessionHacking               = cmb.EnumValue(5)
+	IncidentType_CaptchaAnswerMismatch           = cmb.EnumValue(6)
+	IncidentType_PasswordMismatch                = cmb.EnumValue(7)
+	IncidentType_PasswordChangeHacking           = cmb.EnumValue(8)
+	IncidentType_EmailChangeHacking              = cmb.EnumValue(9)
+	IncidentType_FakeIPA                         = cmb.EnumValue(10)
+	IncidentType_ReadingNotificationOfOtherUsers = cmb.EnumValue(11)
+	IncidentType_WrongDKey                       = cmb.EnumValue(12)
+
+	IncidentTypeMax = IncidentType_WrongDKey
 )
 
-type IncidentType byte
+func NewIncidentType() *IncidentType {
+	return cmb.NewEnumFast(IncidentTypeMax)
+}
 
-func (it IncidentType) IsValid() (ok bool) {
-	if (it == 0) || (it > IncidentTypesCount) {
-		return false
-	}
-
-	return true
+func NewIncidentTypeWithValue(value cmb.EnumValue) IncidentType {
+	it := NewIncidentType()
+	it.SetValueFast(value)
+	return *it
 }

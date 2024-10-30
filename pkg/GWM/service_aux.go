@@ -50,8 +50,8 @@ func (srv *Server) isIPAddressAllowed(req *http.Request) (ok bool, clientIPA cm.
 func (srv *Server) getClientIPAddress(req *http.Request) (cipa cm.IPAS, err error) {
 	var host string
 
-	switch srv.settings.SystemSettings.ClientIPAddressSource {
-	case s.ClientIPAddressSource_Direct:
+	switch srv.settings.SystemSettings.ClientIPAddressSource.GetValue() {
+	case cm.ClientIPAddressSource_Direct:
 		host, _, err = cn.SplitHostPort(req.RemoteAddr)
 		if err != nil {
 			return "", err
@@ -59,7 +59,7 @@ func (srv *Server) getClientIPAddress(req *http.Request) (cipa cm.IPAS, err erro
 
 		return cm.IPAS(host), nil
 
-	case s.ClientIPAddressSource_CustomHeader:
+	case cm.ClientIPAddressSource_CustomHeader:
 		host, err = hh.GetSingleHttpHeader(req, srv.settings.SystemSettings.ClientIPAddressHeader)
 		if err != nil {
 			return "", err
@@ -72,7 +72,7 @@ func (srv *Server) getClientIPAddress(req *http.Request) (cipa cm.IPAS, err erro
 	}
 }
 
-func (srv *Server) getHttpStatusCodeByRpcErrorCode(moduleId cm.Module, rpcErrorCode int) (httpStatusCode int, err error) {
+func (srv *Server) getHttpStatusCodeByRpcErrorCode(moduleId cmb.EnumValue, rpcErrorCode int) (httpStatusCode int, err error) {
 	var ok bool
 
 	httpStatusCode, ok = srv.commonHttpStatusCodesByRpcErrorCode[rpcErrorCode]

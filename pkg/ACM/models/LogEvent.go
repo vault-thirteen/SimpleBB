@@ -1,17 +1,11 @@
 package models
 
 import (
-	"errors"
 	"net"
 	"time"
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
-)
-
-const (
-	ErrLogEventIsNotSet  = "log event is not set"
-	ErrLogEventTypeError = "log event type error"
 )
 
 type LogEvent struct {
@@ -27,14 +21,8 @@ type LogEvent struct {
 	AdminId *cmb.Id
 }
 
-func CheckLogEvent(le *LogEvent) (err error) {
-	if le == nil {
-		return errors.New(ErrLogEventIsNotSet)
+func NewLogEvent() *LogEvent {
+	return &LogEvent{
+		Type: *NewLogEventType(),
 	}
-
-	if !le.Type.IsValid() {
-		return errors.New(ErrLogEventTypeError)
-	}
-
-	return nil
 }

@@ -918,7 +918,7 @@ func (srv *Server) logUserInStep3(p *am.LogUserInParams) (result *am.LogUserInRe
 
 	// Journaling.
 	logEvent := &am.LogEvent{
-		Type:     am.LogEventType_LogIn,
+		Type:     am.NewLogEventTypeWithValue(am.LogEventType_LogIn),
 		UserId:   userId,
 		Email:    p.Email,
 		UserIPAB: p.Auth.UserIPAB,
@@ -951,7 +951,7 @@ func (srv *Server) logUserOut(p *am.LogUserOutParams) (result *am.LogUserOutResu
 
 	// Journaling.
 	logEvent := &am.LogEvent{
-		Type:     am.LogEventType_LogOut,
+		Type:     am.NewLogEventTypeWithValue(am.LogEventType_LogOut),
 		UserId:   thisUserData.User.Id,
 		Email:    thisUserData.User.Email,
 		UserIPAB: p.Auth.UserIPAB,
@@ -1027,7 +1027,7 @@ func (srv *Server) logUserOutA(p *am.LogUserOutAParams) (result *am.LogUserOutAR
 
 	// Journaling.
 	logEvent := &am.LogEvent{
-		Type:     am.LogEventType_LogOutA,
+		Type:     am.NewLogEventTypeWithValue(am.LogEventType_LogOutA),
 		UserId:   session.UserId,
 		Email:    user.Email,
 		UserIPAB: session.UserIPAB,

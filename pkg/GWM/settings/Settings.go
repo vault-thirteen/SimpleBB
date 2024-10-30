@@ -12,11 +12,6 @@ import (
 )
 
 const (
-	ClientIPAddressSource_Direct       = 1
-	ClientIPAddressSource_CustomHeader = 2
-)
-
-const (
 	ErrUnknownClientIPAddressSource = "unknown client IP address source"
 )
 
@@ -40,6 +35,14 @@ type Settings struct {
 	SmSettings  cs.ServiceClientSettings `json:"sm"`
 }
 
+func NewSettings() *Settings {
+	return &Settings{
+		SystemSettings: SystemSettings{
+			ClientIPAddressSource: *cm.NewClientIPAddressSource(),
+		},
+	}
+}
+
 func NewSettingsFromFile(filePath string, versionInfo *ver.Versioneer) (stn *Settings, err error) {
 	var buf []byte
 	buf, err = os.ReadFile(filePath)
@@ -47,7 +50,7 @@ func NewSettingsFromFile(filePath string, versionInfo *ver.Versioneer) (stn *Set
 		return stn, err
 	}
 
-	stn = &Settings{}
+	stn = NewSettings()
 	err = json.Unmarshal(buf, stn)
 	if err != nil {
 		return stn, err

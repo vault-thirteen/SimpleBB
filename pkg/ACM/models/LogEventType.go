@@ -1,21 +1,25 @@
 package models
 
-const (
-	LogEventType_LogIn   = 1
-	LogEventType_LogOut  = 2 // Self logging out.
-	LogEventType_LogOutA = 3 // Logging out by an administrator.
+import (
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
+type LogEventType = cmb.Enum
+
 const (
-	LogEventTypesCount = 3
+	LogEventType_LogIn   = cmb.EnumValue(1)
+	LogEventType_LogOut  = cmb.EnumValue(2) // Self logging out.
+	LogEventType_LogOutA = cmb.EnumValue(3) // Logging out by an administrator.
+
+	LogEventTypeMax = LogEventType_LogOutA
 )
 
-type LogEventType byte
+func NewLogEventType() *LogEventType {
+	return cmb.NewEnumFast(LogEventTypeMax)
+}
 
-func (let LogEventType) IsValid() (ok bool) {
-	if (let == 0) || (let > LogEventTypesCount) {
-		return false
-	}
-
-	return true
+func NewLogEventTypeWithValue(value cmb.EnumValue) LogEventType {
+	let := NewLogEventType()
+	let.SetValueFast(value)
+	return *let
 }

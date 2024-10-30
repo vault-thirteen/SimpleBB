@@ -325,7 +325,7 @@ func (srv *Server) sendNotificationToCreator(se *cm.SystemEvent) (re *jrm1.RpcEr
 // composeNotificationText creates a text for notification about the system
 // event.
 func (srv *Server) composeNotificationText(se *cm.SystemEvent) (text cmb.Text, re *jrm1.RpcError) {
-	switch se.Type {
+	switch se.Type.GetValue() {
 	case cm.SystemEventType_ThreadParentChange:
 		// Template: FUT.
 		text = cmb.Text(fmt.Sprintf("A user (%d) has moved the thread (%d) into another forum.", *se.UserId, *se.ThreadId))

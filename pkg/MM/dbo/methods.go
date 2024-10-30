@@ -183,12 +183,12 @@ func (dbo *DatabaseObject) GetSectionById(sectionId cmb.Id) (section *mm.Section
 	return section, nil
 }
 
-func (dbo *DatabaseObject) GetSectionChildTypeById(sectionId cmb.Id) (childType byte, err error) {
+func (dbo *DatabaseObject) GetSectionChildTypeById(sectionId cmb.Id) (childType mm.SectionChildType, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetSectionChildTypeById).QueryRow(sectionId)
 
-	childType, err = cm.NewNonNullValueFromScannableSource[byte](row)
+	childType, err = cm.NewNonNullValueFromScannableSource[mm.SectionChildType](row)
 	if err != nil {
-		return 0, err
+		return childType, err
 	}
 
 	return childType, nil
@@ -540,7 +540,7 @@ func (dbo *DatabaseObject) SetMessageThreadById(messageId cmb.Id, threadId cmb.I
 	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetSectionChildTypeById(sectionId cmb.Id, childType byte) (err error) {
+func (dbo *DatabaseObject) SetSectionChildTypeById(sectionId cmb.Id, childType cmb.EnumValue) (err error) {
 	var result sql.Result
 	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetSectionChildTypeById).Exec(childType, sectionId)
 	if err != nil {

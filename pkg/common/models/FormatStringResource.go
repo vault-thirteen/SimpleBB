@@ -19,7 +19,9 @@ type FormatStringResource struct {
 }
 
 func NewFormatStringResource() (fs *FormatStringResource) {
-	return &FormatStringResource{}
+	return &FormatStringResource{
+		Type: *NewResourceType(),
+	}
 }
 
 func NewFormatStringResourceFromScannableSource(src IScannable) (fsr *FormatStringResource, err error) {

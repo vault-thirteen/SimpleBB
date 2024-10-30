@@ -592,7 +592,7 @@ func (dbo *DatabaseObject) RejectRegistrationRequest(id cmb.Id) (err error) {
 	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SaveIncident(module cm.Module, incidentType cm.IncidentType, email cm.Email, userIPAB net.IP) (err error) {
+func (dbo *DatabaseObject) SaveIncident(module cmb.EnumValue, incidentType cm.IncidentType, email cm.Email, userIPAB net.IP) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SaveIncident).Exec(module, incidentType, email, userIPAB)
 	if err != nil {
@@ -602,7 +602,7 @@ func (dbo *DatabaseObject) SaveIncident(module cm.Module, incidentType cm.Incide
 	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module cm.Module, incidentType cm.IncidentType, email cm.Email) (err error) {
+func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module cmb.EnumValue, incidentType cm.IncidentType, email cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SaveIncidentWithoutUserIPA).Exec(module, incidentType, email)
 	if err != nil {

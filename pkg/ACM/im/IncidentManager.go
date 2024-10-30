@@ -35,7 +35,7 @@ type IncidentManager struct {
 	gwmClient              *cc.Client
 
 	// Block time in seconds for each incident type.
-	blockTimePerIncidentType [cm.IncidentTypesCount + 1]cmb.Count
+	blockTimePerIncidentType [cm.IncidentTypeMax + 1]cmb.Count
 }
 
 func NewIncidentManager(
@@ -57,7 +57,7 @@ func NewIncidentManager(
 	return im
 }
 
-func initBlockTimePerIncidentType(blockTimePerIncident *s.BlockTimePerIncident) (blockTimePerIncidentType [cm.IncidentTypesCount + 1]cmb.Count) {
+func initBlockTimePerIncidentType(blockTimePerIncident *s.BlockTimePerIncident) (blockTimePerIncidentType [cm.IncidentTypeMax + 1]cmb.Count) {
 	// The "zero"-indexed element is empty because it is not used.
 	blockTimePerIncidentType[cm.IncidentType_IllegalAccessAttempt] = blockTimePerIncident.IllegalAccessAttempt
 	blockTimePerIncidentType[cm.IncidentType_FakeToken] = blockTimePerIncident.FakeToken
@@ -141,10 +141,10 @@ func (im *IncidentManager) Stop() (err error) {
 	return nil
 }
 
-func (im *IncidentManager) ReportIncident(itype cm.IncidentType, email cm.Email, userIPA net.IP) {
+func (im *IncidentManager) ReportIncident(itype cmb.EnumValue, email cm.Email, userIPA net.IP) {
 	incident := &cm.Incident{
 		Time:    time.Now(),
-		Type:    itype,
+		Type:    cm.NewIncidentTypeWithValue(itype),
 		Email:   email,
 		UserIPA: userIPA,
 	}
@@ -174,7 +174,7 @@ func (im *IncidentManager) saveIncident(inc *cm.Incident) (err error) {
 }
 
 func (im *IncidentManager) informGateway(inc *cm.Incident) (re *jrm1.RpcError) {
-	blockTime := im.blockTimePerIncidentType[inc.Type]
+	blockTime := im.blockTimePerIncidentType[inc.Type.GetValue()]
 
 	// Some incidents are only statistical.
 	if blockTime == 0 {

@@ -41,12 +41,10 @@ type SystemEventData struct {
 	Creator *cmb.Id `json:"creator,omitempty"`
 }
 
-func (sed *SystemEventData) CheckType() (ok bool, err error) {
-	if !sed.Type.IsValid() {
-		return false, fmt.Errorf(ErrSystemEventType)
+func NewSystemEventData() *SystemEventData {
+	return &SystemEventData{
+		Type: *NewSystemEventType(),
 	}
-
-	return true, nil
 }
 
 func (sed *SystemEventData) isThreadIdSet() (ok bool) {
@@ -72,7 +70,7 @@ func (sed *SystemEventData) CheckParameters() (ok bool, err error) {
 		IsUserIdRequired:   true,
 	}
 
-	switch sed.Type {
+	switch sed.Type.GetValue() {
 	case SystemEventType_ThreadParentChange:
 		// Default requirements are used (TU).
 
