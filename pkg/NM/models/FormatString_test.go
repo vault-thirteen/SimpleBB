@@ -8,18 +8,19 @@ import (
 )
 
 func Test_NewFormatString(t *testing.T) {
-	aTest := tester.Test{}
+	aTest := tester.New(t)
 	var fs *FormatString
 	var err error
 
 	type TestCase struct {
-		S               string
-		IsErrorExpected bool
-		ExpectedType    string
-		ExpectedHasM    bool
-		ExpectedHasR    bool
-		ExpectedHasT    bool
-		ExpectedHasU    bool
+		S                    string
+		IsErrorExpected      bool
+		ExpectedType         string
+		ExpectedHasM         bool
+		ExpectedHasR         bool
+		ExpectedHasT         bool
+		ExpectedHasU         bool
+		ExpectedPlaceholders []Placeholder
 	}
 	var tests = []TestCase{
 		{
@@ -43,6 +44,11 @@ func Test_NewFormatString(t *testing.T) {
 			ExpectedHasM:    true,
 			ExpectedHasT:    true,
 			ExpectedHasU:    true,
+			ExpectedPlaceholders: []Placeholder{
+				{Type: PlaceholderTypeT, Pos: 4},
+				{Type: PlaceholderTypeU, Pos: 12},
+				{Type: PlaceholderTypeM, Pos: 20},
+			},
 		},
 		{
 			S:               "{R} ... {T}",
@@ -94,6 +100,10 @@ func Test_NewFormatString(t *testing.T) {
 			aTest.MustBeEqual(fs.HasR(), test.ExpectedHasR)
 			aTest.MustBeEqual(fs.HasT(), test.ExpectedHasT)
 			aTest.MustBeEqual(fs.HasU(), test.ExpectedHasU)
+
+			if test.ExpectedPlaceholders != nil {
+				aTest.MustBeEqual(fs.Placeholders(), test.ExpectedPlaceholders)
+			}
 		}
 	}
 	fmt.Println()

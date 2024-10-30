@@ -137,3 +137,7 @@ func (fs *FormatString) HasT() bool {
 func (fs *FormatString) HasU() bool {
 	return fs.hasU
 }
+
+func (fs *FormatString) Placeholders() []Placeholder {
+	return fs.placeholders
+}
