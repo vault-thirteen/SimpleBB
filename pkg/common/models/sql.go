@@ -6,7 +6,7 @@ import (
 )
 
 func NewArrayFromScannableSource[T any](src IScannableSequence) (values []T, err error) {
-	values = make([]T, 0)
+	values = []T{}
 	var value T
 
 	for src.Next() {
@@ -16,10 +16,6 @@ func NewArrayFromScannableSource[T any](src IScannableSequence) (values []T, err
 		}
 
 		values = append(values, value)
-	}
-
-	if len(values) == 0 {
-		values = nil
 	}
 
 	return values, nil

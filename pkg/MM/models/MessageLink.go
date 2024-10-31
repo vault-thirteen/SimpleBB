@@ -38,3 +38,19 @@ func NewMessageLinkFromScannableSource(src cm.IScannable) (ml *MessageLink, err 
 
 	return ml, nil
 }
+
+func NewMessageLinkArrayFromRows(rows cm.IScannableSequence) (mls []MessageLink, err error) {
+	mls = []MessageLink{}
+	var ml *MessageLink
+
+	for rows.Next() {
+		ml, err = NewMessageLinkFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		mls = append(mls, *ml)
+	}
+
+	return mls, nil
+}

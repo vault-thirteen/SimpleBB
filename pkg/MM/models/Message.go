@@ -59,6 +59,22 @@ func NewMessageFromScannableSource(src cm.IScannable) (msg *Message, err error) 
 	return msg, nil
 }
 
+func NewMessageArrayFromRows(rows cm.IScannableSequence) (msgs []Message, err error) {
+	msgs = []Message{}
+	var msg *Message
+
+	for rows.Next() {
+		msg, err = NewMessageFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		msgs = append(msgs, *msg)
+	}
+
+	return msgs, nil
+}
+
 func (m *Message) GetLastTouchTime() time.Time {
 	if m.Editor.Time == nil {
 		return m.Creator.Time

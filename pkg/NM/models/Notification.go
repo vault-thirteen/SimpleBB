@@ -59,17 +59,14 @@ func NewNotificationFromScannableSource(src cm.IScannable) (n *Notification, err
 	return n, nil
 }
 
-func NewNotificationArrayFromRows(rows *sql.Rows) (ns []Notification, err error) {
+func NewNotificationArrayFromRows(rows cm.IScannableSequence) (ns []Notification, err error) {
 	ns = []Notification{}
 	var n *Notification
+
 	for rows.Next() {
 		n, err = NewNotificationFromScannableSource(rows)
 		if err != nil {
 			return nil, err
-		}
-
-		if n == nil {
-			return nil, errors.New(ErrUnexpectedNull)
 		}
 
 		ns = append(ns, *n)

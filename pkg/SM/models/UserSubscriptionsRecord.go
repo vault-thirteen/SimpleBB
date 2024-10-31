@@ -44,20 +44,17 @@ func NewUserSubscriptionsRecordFromScannableSource(src cm.IScannable) (usr *User
 	return usr, nil
 }
 
-func NewUserSubscriptionsListFromScannableSource(rows cm.IScannableSequence) (usrs []UserSubscriptionsRecord, err error) {
-	usrs = make([]UserSubscriptionsRecord, 0)
-
+func NewUserSubscriptionsRecordArrayFromRows(rows cm.IScannableSequence) (usrs []UserSubscriptionsRecord, err error) {
+	usrs = []UserSubscriptionsRecord{}
 	var usr *UserSubscriptionsRecord
+
 	for rows.Next() {
-		usr = NewUserSubscriptionsRecord()
 		usr, err = NewUserSubscriptionsRecordFromScannableSource(rows)
 		if err != nil {
 			return nil, err
 		}
 
-		if usr != nil {
-			usrs = append(usrs, *usr)
-		}
+		usrs = append(usrs, *usr)
 	}
 
 	return usrs, nil

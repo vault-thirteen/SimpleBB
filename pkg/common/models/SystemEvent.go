@@ -60,17 +60,14 @@ func NewSystemEventFromScannableSource(src IScannable) (se *SystemEvent, err err
 	return se, nil
 }
 
-func NewSystemEventArrayFromRows(rows *sql.Rows) (ses []SystemEvent, err error) {
+func NewSystemEventArrayFromRows(rows IScannableSequence) (ses []SystemEvent, err error) {
 	ses = []SystemEvent{}
 	var se *SystemEvent
+
 	for rows.Next() {
 		se, err = NewSystemEventFromScannableSource(rows)
 		if err != nil {
 			return nil, err
-		}
-
-		if se == nil {
-			return nil, errors.New(ErrUnexpectedNull)
 		}
 
 		ses = append(ses, *se)

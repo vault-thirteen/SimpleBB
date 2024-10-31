@@ -26,7 +26,7 @@ type Thread struct {
 	EventData
 }
 
-func NewThread() (thr *Thread) {
+func NewThread() (t *Thread) {
 	return &Thread{
 		EventData: EventData{
 			Creator: &EventParameters{},
@@ -35,19 +35,19 @@ func NewThread() (thr *Thread) {
 	}
 }
 
-func NewThreadFromScannableSource(src cm.IScannable) (thr *Thread, err error) {
-	thr = NewThread()
+func NewThreadFromScannableSource(src cm.IScannable) (t *Thread, err error) {
+	t = NewThread()
 	var x = ul.New()
 
 	err = src.Scan(
-		&thr.Id,
-		&thr.ForumId,
-		&thr.Name,
-		x, //&thr.Messages,
-		&thr.Creator.UserId,
-		&thr.Creator.Time,
-		&thr.Editor.UserId,
-		&thr.Editor.Time,
+		&t.Id,
+		&t.ForumId,
+		&t.Name,
+		x, //&t.Messages,
+		&t.Creator.UserId,
+		&t.Creator.Time,
+		&t.Editor.UserId,
+		&t.Editor.Time,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -57,6 +57,22 @@ func NewThreadFromScannableSource(src cm.IScannable) (thr *Thread, err error) {
 		}
 	}
 
-	thr.Messages = x
-	return thr, nil
+	t.Messages = x
+	return t, nil
+}
+
+func NewThreadArrayFromRows(rows cm.IScannableSequence) (ts []Thread, err error) {
+	ts = []Thread{}
+	var t *Thread
+
+	for rows.Next() {
+		t, err = NewThreadFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		ts = append(ts, *t)
+	}
+
+	return ts, nil
 }

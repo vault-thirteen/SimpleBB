@@ -41,3 +41,19 @@ func NewRegistrationReadyForApprovalFromScannableSource(src cm.IScannable) (r *R
 
 	return r, nil
 }
+
+func NewRegistrationReadyForApprovalArrayFromRows(rows cm.IScannableSequence) (rs []RegistrationReadyForApproval, err error) {
+	rs = []RegistrationReadyForApproval{}
+	var r *RegistrationReadyForApproval
+
+	for rows.Next() {
+		r, err = NewRegistrationReadyForApprovalFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		rs = append(rs, *r)
+	}
+
+	return rs, nil
+}

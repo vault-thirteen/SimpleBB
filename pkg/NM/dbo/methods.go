@@ -77,27 +77,20 @@ func (dbo *DatabaseObject) DeleteResourceById(resourceId cmb.Id) (err error) {
 }
 
 func (dbo *DatabaseObject) GetAllNotificationsByUserId(userId cmb.Id) (notifications []nm.Notification, err error) {
-	notifications = make([]nm.Notification, 0, 8)
-
 	var rows *sql.Rows
 	rows, err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetAllNotificationsByUserId).Query(userId)
 	if err != nil {
 		return nil, err
 	}
 
-	var notification *nm.Notification
-	for rows.Next() {
-		notification, err = nm.NewNotificationFromScannableSource(rows)
-		if err != nil {
-			return nil, err
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
 		}
+	}()
 
-		if notification != nil {
-			notifications = append(notifications, *notification)
-		}
-	}
-
-	return notifications, nil
+	return nm.NewNotificationArrayFromRows(rows)
 }
 
 func (dbo *DatabaseObject) GetNotificationById(notificationId cmb.Id) (notification *nm.Notification, err error) {
@@ -168,27 +161,20 @@ func (dbo *DatabaseObject) GetSystemEventById(systemEventId cmb.Id) (se *cm.Syst
 }
 
 func (dbo *DatabaseObject) GetUnreadNotifications(userId cmb.Id) (notifications []nm.Notification, err error) {
-	notifications = make([]nm.Notification, 0, 8)
-
 	var rows *sql.Rows
 	rows, err = dbo.DatabaseObject.PreparedStatement(DbPsid_GetUnreadNotificationsByUserId).Query(userId)
 	if err != nil {
 		return nil, err
 	}
 
-	var notification *nm.Notification
-	for rows.Next() {
-		notification, err = nm.NewNotificationFromScannableSource(rows)
-		if err != nil {
-			return nil, err
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
 		}
+	}()
 
-		if notification != nil {
-			notifications = append(notifications, *notification)
-		}
-	}
-
-	return notifications, nil
+	return nm.NewNotificationArrayFromRows(rows)
 }
 
 func (dbo *DatabaseObject) InsertNewNotification(userId cmb.Id, text cmb.Text) (lastInsertedId cmb.Id, err error) {

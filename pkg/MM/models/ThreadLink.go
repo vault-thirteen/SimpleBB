@@ -45,3 +45,19 @@ func NewThreadLinkFromScannableSource(src cm.IScannable) (tl *ThreadLink, err er
 	tl.Messages = x
 	return tl, nil
 }
+
+func NewThreadLinkArrayFromRows(rows cm.IScannableSequence) (tls []ThreadLink, err error) {
+	tls = []ThreadLink{}
+	var tl *ThreadLink
+
+	for rows.Next() {
+		tl, err = NewThreadLinkFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		tls = append(tls, *tl)
+	}
+
+	return tls, nil
+}

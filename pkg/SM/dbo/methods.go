@@ -9,6 +9,7 @@ import (
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	ae "github.com/vault-thirteen/auxie/errors"
 )
 
 func (dbo *DatabaseObject) CountUserSubscriptions(userId cmb.Id) (n cmb.Count, err error) {
@@ -60,12 +61,14 @@ func (dbo *DatabaseObject) GetAllThreadSubscriptions() (tsrs []sm.ThreadSubscrip
 		return nil, err
 	}
 
-	tsrs, err = sm.NewThreadSubscriptionsListFromScannableSource(rows)
-	if err != nil {
-		return nil, err
-	}
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
+		}
+	}()
 
-	return tsrs, nil
+	return sm.NewThreadSubscriptionsRecordArrayFromRows(rows)
 }
 
 func (dbo *DatabaseObject) GetAllUserSubscriptions() (usrs []sm.UserSubscriptionsRecord, err error) {
@@ -75,12 +78,14 @@ func (dbo *DatabaseObject) GetAllUserSubscriptions() (usrs []sm.UserSubscription
 		return nil, err
 	}
 
-	usrs, err = sm.NewUserSubscriptionsListFromScannableSource(rows)
-	if err != nil {
-		return nil, err
-	}
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
+		}
+	}()
 
-	return usrs, nil
+	return sm.NewUserSubscriptionsRecordArrayFromRows(rows)
 }
 
 func (dbo *DatabaseObject) GetUserSubscriptions(userId cmb.Id) (usr *sm.UserSubscriptionsRecord, err error) {

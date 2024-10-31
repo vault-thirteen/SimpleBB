@@ -60,3 +60,19 @@ func NewForumFromScannableSource(src cm.IScannable) (forum *Forum, err error) {
 	forum.Threads = x
 	return forum, nil
 }
+
+func NewForumArrayFromRows(rows cm.IScannableSequence) (forums []Forum, err error) {
+	forums = []Forum{}
+	var f *Forum
+
+	for rows.Next() {
+		f, err = NewForumFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		forums = append(forums, *f)
+	}
+
+	return forums, nil
+}

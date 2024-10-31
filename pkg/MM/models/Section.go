@@ -68,3 +68,19 @@ func NewSectionFromScannableSource(src cm.IScannable) (sec *Section, err error) 
 	sec.Children = x
 	return sec, nil
 }
+
+func NewSectionArrayFromRows(rows cm.IScannableSequence) (sections []Section, err error) {
+	sections = []Section{}
+	var s *Section
+
+	for rows.Next() {
+		s, err = NewSectionFromScannableSource(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		sections = append(sections, *s)
+	}
+
+	return sections, nil
+}

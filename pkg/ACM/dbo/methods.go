@@ -380,8 +380,6 @@ func (dbo *DatabaseObject) GetEmailChangeByRequestId(requestId cm.RequestId) (ec
 }
 
 func (dbo *DatabaseObject) GetListOfAllUsers() (userIds []cmb.Id, err error) {
-	userIds = make([]cmb.Id, 0)
-
 	var rows *sql.Rows
 	rows, err = dbo.PreparedStatement(DbPsid_GetListOfAllUsers).Query()
 	if err != nil {
@@ -399,8 +397,6 @@ func (dbo *DatabaseObject) GetListOfAllUsers() (userIds []cmb.Id, err error) {
 }
 
 func (dbo *DatabaseObject) GetListOfAllUsersOnPage(pageNumber cmb.Count, pageSize cmb.Count) (userIds []cmb.Id, err error) {
-	userIds = make([]cmb.Id, 0)
-
 	var rows *sql.Rows
 	rows, err = dbo.PreparedStatement(DbPsid_GetListOfAllUsersOnPage).Query(pageSize, (pageNumber-1)*pageSize)
 	if err != nil {
@@ -418,8 +414,6 @@ func (dbo *DatabaseObject) GetListOfAllUsersOnPage(pageNumber cmb.Count, pageSiz
 }
 
 func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []cmb.Id, err error) {
-	userIds = make([]cmb.Id, 0)
-
 	var rows *sql.Rows
 	rows, err = dbo.PreparedStatement(DbPsid_GetListOfLoggedUsers).Query()
 	if err != nil {
@@ -437,8 +431,6 @@ func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []cmb.Id, err error) 
 }
 
 func (dbo *DatabaseObject) GetListOfLoggedUsersOnPage(pageNumber cmb.Count, pageSize cmb.Count) (userIds []cmb.Id, err error) {
-	userIds = make([]cmb.Id, 0)
-
 	var rows *sql.Rows
 	rows, err = dbo.PreparedStatement(DbPsid_GetListOfLoggedUsersOnPage).Query(pageSize, (pageNumber-1)*pageSize)
 	if err != nil {
@@ -456,8 +448,6 @@ func (dbo *DatabaseObject) GetListOfLoggedUsersOnPage(pageNumber cmb.Count, page
 }
 
 func (dbo *DatabaseObject) GetListOfRegistrationsReadyForApproval(pageNumber cmb.Count, pageSize cmb.Count) (rrfas []am.RegistrationReadyForApproval, err error) {
-	rrfas = make([]am.RegistrationReadyForApproval, 0)
-
 	var rows *sql.Rows
 	rows, err = dbo.PreparedStatement(DbPsid_GetListOfRegistrationsReadyForApproval).Query(pageSize, (pageNumber-1)*pageSize)
 	if err != nil {
@@ -471,17 +461,7 @@ func (dbo *DatabaseObject) GetListOfRegistrationsReadyForApproval(pageNumber cmb
 		}
 	}()
 
-	var rrfa *am.RegistrationReadyForApproval
-	for rows.Next() {
-		rrfa, err = am.NewRegistrationReadyForApprovalFromScannableSource(rows)
-		if err != nil {
-			return nil, err
-		}
-
-		rrfas = append(rrfas, *rrfa)
-	}
-
-	return rrfas, nil
+	return am.NewRegistrationReadyForApprovalArrayFromRows(rows)
 }
 
 func (dbo *DatabaseObject) GetPasswordChangeByRequestId(requestId cm.RequestId) (pcr *am.PasswordChange, err error) {

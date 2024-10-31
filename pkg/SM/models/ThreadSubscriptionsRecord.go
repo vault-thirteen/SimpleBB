@@ -40,20 +40,17 @@ func NewThreadSubscriptionsRecordFromScannableSource(src cm.IScannable) (tsr *Th
 	return tsr, nil
 }
 
-func NewThreadSubscriptionsListFromScannableSource(rows cm.IScannableSequence) (tsrs []ThreadSubscriptionsRecord, err error) {
-	tsrs = make([]ThreadSubscriptionsRecord, 0)
-
+func NewThreadSubscriptionsRecordArrayFromRows(rows cm.IScannableSequence) (tsrs []ThreadSubscriptionsRecord, err error) {
+	tsrs = []ThreadSubscriptionsRecord{}
 	var tsr *ThreadSubscriptionsRecord
+
 	for rows.Next() {
-		tsr = NewThreadSubscriptionsRecord()
 		tsr, err = NewThreadSubscriptionsRecordFromScannableSource(rows)
 		if err != nil {
 			return nil, err
 		}
 
-		if tsr != nil {
-			tsrs = append(tsrs, *tsr)
-		}
+		tsrs = append(tsrs, *tsr)
 	}
 
 	return tsrs, nil

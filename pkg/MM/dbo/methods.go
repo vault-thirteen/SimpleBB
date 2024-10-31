@@ -11,6 +11,7 @@ import (
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	ae "github.com/vault-thirteen/auxie/errors"
 )
 
 func (dbo *DatabaseObject) CountForumsById(forumId cmb.Id) (n cmb.Count, err error) {
@@ -205,15 +206,8 @@ func (dbo *DatabaseObject) GetSectionChildrenById(sectionId cmb.Id) (children *u
 }
 
 func (dbo *DatabaseObject) GetSectionParentById(sectionId cmb.Id) (parent *cmb.Id, err error) {
-	parent = new(cmb.Id)
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetSectionParentById).QueryRow(sectionId)
-
-	parent, err = cm.NewValueFromScannableSource[cmb.Id](row)
-	if err != nil {
-		return nil, err
-	}
-
-	return parent, nil
+	return cm.NewValueFromScannableSource[cmb.Id](row)
 }
 
 func (dbo *DatabaseObject) GetThreadById(threadId cmb.Id) (thread *mm.Thread, err error) {
@@ -289,35 +283,26 @@ func (dbo *DatabaseObject) InsertNewThread(parentForum cmb.Id, threadName cm.Nam
 }
 
 func (dbo *DatabaseObject) ReadForums() (forums []mm.Forum, err error) {
-	forums = make([]mm.Forum, 0)
-
 	var rows *sql.Rows
 	rows, err = dbo.DatabaseObject.PreparedStatement(DbPsid_ReadForums).Query()
 	if err != nil {
 		return nil, err
 	}
 
-	var forum *mm.Forum
-	for rows.Next() {
-		forum, err = mm.NewForumFromScannableSource(rows)
-		if err != nil {
-			return nil, err
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
 		}
+	}()
 
-		if forum != nil {
-			forums = append(forums, *forum)
-		}
-	}
-
-	return forums, nil
+	return mm.NewForumArrayFromRows(rows)
 }
 
 func (dbo *DatabaseObject) ReadMessagesById(messageIds *ul.UidList) (messages []mm.Message, err error) {
 	if messageIds == nil {
 		return []mm.Message{}, nil
 	}
-
-	messages = make([]mm.Message, 0, messageIds.Size())
 
 	var query string
 	query, err = dbo.dbQuery_ReadMessagesById(*messageIds)
@@ -331,27 +316,20 @@ func (dbo *DatabaseObject) ReadMessagesById(messageIds *ul.UidList) (messages []
 		return nil, err
 	}
 
-	var msg *mm.Message
-	for rows.Next() {
-		msg, err = mm.NewMessageFromScannableSource(rows)
-		if err != nil {
-			return nil, err
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
 		}
+	}()
 
-		if msg != nil {
-			messages = append(messages, *msg)
-		}
-	}
-
-	return messages, nil
+	return mm.NewMessageArrayFromRows(rows)
 }
 
 func (dbo *DatabaseObject) ReadMessageLinksById(messageIds *ul.UidList) (messageLinks []mm.MessageLink, err error) {
 	if messageIds == nil {
 		return []mm.MessageLink{}, nil
 	}
-
-	messageLinks = make([]mm.MessageLink, 0, messageIds.Size())
 
 	var query string
 	query, err = dbo.dbQuery_ReadMessageLinksById(*messageIds)
@@ -365,72 +343,51 @@ func (dbo *DatabaseObject) ReadMessageLinksById(messageIds *ul.UidList) (message
 		return nil, err
 	}
 
-	var ml *mm.MessageLink
-	for rows.Next() {
-		ml, err = mm.NewMessageLinkFromScannableSource(rows)
-		if err != nil {
-			return nil, err
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
 		}
+	}()
 
-		if ml != nil {
-			messageLinks = append(messageLinks, *ml)
-		}
-	}
-
-	return messageLinks, nil
+	return mm.NewMessageLinkArrayFromRows(rows)
 }
 
 func (dbo *DatabaseObject) ReadSections() (sections []mm.Section, err error) {
-	sections = make([]mm.Section, 0)
-
 	var rows *sql.Rows
 	rows, err = dbo.DatabaseObject.PreparedStatement(DbPsid_ReadSections).Query()
 	if err != nil {
 		return nil, err
 	}
 
-	var section *mm.Section
-	for rows.Next() {
-		section, err = mm.NewSectionFromScannableSource(rows)
-		if err != nil {
-			return nil, err
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
 		}
+	}()
 
-		if section != nil {
-			sections = append(sections, *section)
-		}
-	}
-
-	return sections, nil
+	return mm.NewSectionArrayFromRows(rows)
 }
 
 func (dbo *DatabaseObject) ReadThreadLinks() (threadLinks []mm.ThreadLink, err error) {
-	threadLinks = make([]mm.ThreadLink, 0)
-
 	var rows *sql.Rows
 	rows, err = dbo.DatabaseObject.PreparedStatement(DbPsid_ReadThreadLinks).Query()
 	if err != nil {
 		return nil, err
 	}
 
-	var threadLink *mm.ThreadLink
-	for rows.Next() {
-		threadLink, err = mm.NewThreadLinkFromScannableSource(rows)
-		if err != nil {
-			return nil, err
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
 		}
+	}()
 
-		if threadLink != nil {
-			threadLinks = append(threadLinks, *threadLink)
-		}
-	}
-
-	return threadLinks, nil
+	return mm.NewThreadLinkArrayFromRows(rows)
 }
 
 func (dbo *DatabaseObject) ReadThreadNamesByIds(threadIds ul.UidList) (threadNames []cm.Name, err error) {
-	threadNames = make([]cm.Name, 0, threadIds.Size())
-
 	var query string
 	query, err = dbo.dbQuery_ReadThreadNamesByIds(threadIds)
 	if err != nil {
@@ -443,25 +400,20 @@ func (dbo *DatabaseObject) ReadThreadNamesByIds(threadIds ul.UidList) (threadNam
 		return nil, err
 	}
 
-	var threadName cm.Name
-	for rows.Next() {
-		threadName, err = cm.NewNonNullValueFromScannableSource[cm.Name](rows)
-		if err != nil {
-			return nil, err
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
 		}
+	}()
 
-		threadNames = append(threadNames, threadName)
-	}
-
-	return threadNames, nil
+	return cm.NewArrayFromScannableSource[cm.Name](rows)
 }
 
 func (dbo *DatabaseObject) ReadThreadsById(threadIds *ul.UidList) (threads []mm.Thread, err error) {
 	if threadIds == nil {
 		return []mm.Thread{}, nil
 	}
-
-	threads = make([]mm.Thread, 0, threadIds.Size())
 
 	var query string
 	query, err = dbo.dbQuery_ReadThreadsById(*threadIds)
@@ -475,19 +427,14 @@ func (dbo *DatabaseObject) ReadThreadsById(threadIds *ul.UidList) (threads []mm.
 		return nil, err
 	}
 
-	var thread *mm.Thread
-	for rows.Next() {
-		thread, err = mm.NewThreadFromScannableSource(rows)
-		if err != nil {
-			return nil, err
+	defer func() {
+		derr := rows.Close()
+		if derr != nil {
+			err = ae.Combine(err, derr)
 		}
+	}()
 
-		if thread != nil {
-			threads = append(threads, *thread)
-		}
-	}
-
-	return threads, nil
+	return mm.NewThreadArrayFromRows(rows)
 }
 
 func (dbo *DatabaseObject) SetForumNameById(forumId cmb.Id, name cm.Name, editorUserId cmb.Id) (err error) {
