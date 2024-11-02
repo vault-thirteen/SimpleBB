@@ -9,8 +9,10 @@ import (
 
 	am "github.com/vault-thirteen/SimpleBB/pkg/ACM/models"
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/enum"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 	ae "github.com/vault-thirteen/auxie/errors"
 )
 
@@ -58,7 +60,7 @@ func (dbo *DatabaseObject) CheckVerificationCodeForLogIn(requestId cm.RequestId,
 	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodeForLogIn).QueryRow(requestId, code)
 
 	var n int
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cms.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return false, err
 	}
@@ -74,7 +76,7 @@ func (dbo *DatabaseObject) CheckVerificationCodeForPwdChange(requestId cm.Reques
 	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodeForPwdChange).QueryRow(requestId, code)
 
 	var n int
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cms.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return false, err
 	}
@@ -90,7 +92,7 @@ func (dbo *DatabaseObject) CheckVerificationCodeForPreReg(email cm.Email, code c
 	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodeForPreReg).QueryRow(email, code)
 
 	var n int
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cms.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return false, err
 	}
@@ -106,7 +108,7 @@ func (dbo *DatabaseObject) CheckVerificationCodesForEmailChange(requestId cm.Req
 	row := dbo.PreparedStatement(DbPsid_CheckVerificationCodesForEmailChange).QueryRow(requestId, codeOld, codeNew)
 
 	var n int
-	n, err = cm.NewNonNullValueFromScannableSource[int](row)
+	n, err = cms.NewNonNullValueFromScannableSource[int](row)
 	if err != nil {
 		return false, err
 	}
@@ -121,7 +123,7 @@ func (dbo *DatabaseObject) CheckVerificationCodesForEmailChange(requestId cm.Req
 func (dbo *DatabaseObject) CountAllUsers() (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountAllUsers).QueryRow()
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -132,7 +134,7 @@ func (dbo *DatabaseObject) CountAllUsers() (n cmb.Count, err error) {
 func (dbo *DatabaseObject) CountRegistrationsReadyForApproval() (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountRegistrationsReadyForApproval).QueryRow()
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -143,7 +145,7 @@ func (dbo *DatabaseObject) CountRegistrationsReadyForApproval() (n cmb.Count, er
 func (dbo *DatabaseObject) CountEmailChangesByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountEmailChangesByUserId).QueryRow(userId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -154,7 +156,7 @@ func (dbo *DatabaseObject) CountEmailChangesByUserId(userId cmb.Id) (n cmb.Count
 func (dbo *DatabaseObject) CountLoggedUsers() (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountLoggedUsers).QueryRow()
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -165,7 +167,7 @@ func (dbo *DatabaseObject) CountLoggedUsers() (n cmb.Count, err error) {
 func (dbo *DatabaseObject) CountPasswordChangesByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountPasswordChangesByUserId).QueryRow(userId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -176,7 +178,7 @@ func (dbo *DatabaseObject) CountPasswordChangesByUserId(userId cmb.Id) (n cmb.Co
 func (dbo *DatabaseObject) CountPreSessionsByUserEmail(email cm.Email) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountPreSessionsByUserEmail).QueryRow(email)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -187,7 +189,7 @@ func (dbo *DatabaseObject) CountPreSessionsByUserEmail(email cm.Email) (n cmb.Co
 func (dbo *DatabaseObject) CountSessionsByUserEmail(email cm.Email) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountSessionsByUserEmail).QueryRow(email)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -198,7 +200,7 @@ func (dbo *DatabaseObject) CountSessionsByUserEmail(email cm.Email) (n cmb.Count
 func (dbo *DatabaseObject) CountSessionsByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountSessionsByUserId).QueryRow(userId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -209,7 +211,7 @@ func (dbo *DatabaseObject) CountSessionsByUserId(userId cmb.Id) (n cmb.Count, er
 func (dbo *DatabaseObject) CountUsersWithEmailAbleToLogIn(email cm.Email) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountUsersWithEmailAbleToLogIn).QueryRow(email)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -220,7 +222,7 @@ func (dbo *DatabaseObject) CountUsersWithEmailAbleToLogIn(email cm.Email) (n cmb
 func (dbo *DatabaseObject) CountUsersWithEmail(email cm.Email) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountUsersWithEmail).QueryRow(email, email)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -231,7 +233,7 @@ func (dbo *DatabaseObject) CountUsersWithEmail(email cm.Email) (n cmb.Count, err
 func (dbo *DatabaseObject) CountUsersWithName(name cm.Name) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountUsersWithName).QueryRow(name, name)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -393,7 +395,7 @@ func (dbo *DatabaseObject) GetListOfAllUsers() (userIds []cmb.Id, err error) {
 		}
 	}()
 
-	return cm.NewArrayFromScannableSource[cmb.Id](rows)
+	return cms.NewArrayFromScannableSource[cmb.Id](rows)
 }
 
 func (dbo *DatabaseObject) GetListOfAllUsersOnPage(pageNumber cmb.Count, pageSize cmb.Count) (userIds []cmb.Id, err error) {
@@ -410,7 +412,7 @@ func (dbo *DatabaseObject) GetListOfAllUsersOnPage(pageNumber cmb.Count, pageSiz
 		}
 	}()
 
-	return cm.NewArrayFromScannableSource[cmb.Id](rows)
+	return cms.NewArrayFromScannableSource[cmb.Id](rows)
 }
 
 func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []cmb.Id, err error) {
@@ -427,7 +429,7 @@ func (dbo *DatabaseObject) GetListOfLoggedUsers() (userIds []cmb.Id, err error) 
 		}
 	}()
 
-	return cm.NewArrayFromScannableSource[cmb.Id](rows)
+	return cms.NewArrayFromScannableSource[cmb.Id](rows)
 }
 
 func (dbo *DatabaseObject) GetListOfLoggedUsersOnPage(pageNumber cmb.Count, pageSize cmb.Count) (userIds []cmb.Id, err error) {
@@ -444,7 +446,7 @@ func (dbo *DatabaseObject) GetListOfLoggedUsersOnPage(pageNumber cmb.Count, page
 		}
 	}()
 
-	return cm.NewArrayFromScannableSource[cmb.Id](rows)
+	return cms.NewArrayFromScannableSource[cmb.Id](rows)
 }
 
 func (dbo *DatabaseObject) GetListOfRegistrationsReadyForApproval(pageNumber cmb.Count, pageSize cmb.Count) (rrfas []am.RegistrationReadyForApproval, err error) {
@@ -481,7 +483,7 @@ func (dbo *DatabaseObject) GetSessionByUserId(userId cmb.Id) (session *am.Sessio
 
 func (dbo *DatabaseObject) GetUserNameById(userId cmb.Id) (userName *cm.Name, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserNameById).QueryRow(userId)
-	return cm.NewValueFromScannableSource[cm.Name](row)
+	return cms.NewValueFromScannableSource[cm.Name](row)
 }
 
 func (dbo *DatabaseObject) GetUserById(userId cmb.Id) (user *am.User, err error) {
@@ -492,7 +494,7 @@ func (dbo *DatabaseObject) GetUserById(userId cmb.Id) (user *am.User, err error)
 func (dbo *DatabaseObject) GetUserIdByEmail(email cm.Email) (userId cmb.Id, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserIdByEmail).QueryRow(email)
 
-	userId, err = cm.NewNonNullValueFromScannableSource[cmb.Id](row)
+	userId, err = cms.NewNonNullValueFromScannableSource[cmb.Id](row)
 	if err != nil {
 		return cdbo.IdOnError, err
 	}
@@ -522,7 +524,7 @@ func (dbo *DatabaseObject) GetUserLastBadLogInTimeByEmail(email cm.Email) (lastB
 
 func (dbo *DatabaseObject) GetUserPasswordById(userId cmb.Id) (password *[]byte, err error) {
 	row := dbo.PreparedStatement(DbPsid_GetUserPasswordById).QueryRow(userId)
-	return cm.NewValueFromScannableSource[[]byte](row)
+	return cms.NewValueFromScannableSource[[]byte](row)
 }
 
 func (dbo *DatabaseObject) GetUserRolesById(userId cmb.Id) (roles *cm.UserRoles, err error) {
@@ -572,7 +574,7 @@ func (dbo *DatabaseObject) RejectRegistrationRequest(id cmb.Id) (err error) {
 	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SaveIncident(module cmb.EnumValue, incidentType cm.IncidentType, email cm.Email, userIPAB net.IP) (err error) {
+func (dbo *DatabaseObject) SaveIncident(module enum.EnumValue, incidentType cm.IncidentType, email cm.Email, userIPAB net.IP) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SaveIncident).Exec(module, incidentType, email, userIPAB)
 	if err != nil {
@@ -582,7 +584,7 @@ func (dbo *DatabaseObject) SaveIncident(module cmb.EnumValue, incidentType cm.In
 	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module cmb.EnumValue, incidentType cm.IncidentType, email cm.Email) (err error) {
+func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module enum.EnumValue, incidentType cm.IncidentType, email cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SaveIncidentWithoutUserIPA).Exec(module, incidentType, email)
 	if err != nil {

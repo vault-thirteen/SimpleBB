@@ -2,6 +2,7 @@ package models
 
 import (
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type User struct {
@@ -13,7 +14,7 @@ func NewUser() (u *User) {
 	return &User{}
 }
 
-func NewUserFromScannableSource(src cm.IScannable) (u *User, err error) {
+func NewUserFromScannableSource(src cmi.IScannable) (u *User, err error) {
 	u = NewUser()
 
 	var up *cm.UserParameters

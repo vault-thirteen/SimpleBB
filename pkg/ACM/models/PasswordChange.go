@@ -8,6 +8,7 @@ import (
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
@@ -41,7 +42,7 @@ func NewPasswordChange() (pc *PasswordChange) {
 	return &PasswordChange{}
 }
 
-func NewPasswordChangeFromScannableSource(src cm.IScannable) (pc *PasswordChange, err error) {
+func NewPasswordChangeFromScannableSource(src cmi.IScannable) (pc *PasswordChange, err error) {
 	pc = NewPasswordChange()
 
 	err = src.Scan(

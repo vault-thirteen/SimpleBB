@@ -7,15 +7,15 @@ import (
 
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 	ae "github.com/vault-thirteen/auxie/errors"
 )
 
 func (dbo *DatabaseObject) CountUserSubscriptions(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountUserSubscriptions).QueryRow(userId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -26,7 +26,7 @@ func (dbo *DatabaseObject) CountUserSubscriptions(userId cmb.Id) (n cmb.Count, e
 func (dbo *DatabaseObject) CountThreadSubscriptions(threadId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountThreadSubscriptions).QueryRow(threadId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}

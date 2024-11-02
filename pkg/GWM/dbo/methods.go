@@ -7,14 +7,14 @@ import (
 	"net"
 
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 )
 
 func (dbo *DatabaseObject) CountBlocksByIPAddress(ipa net.IP) (n cmb.Count, err error) {
 	row := dbo.PreparedStatement(DbPsid_CountBlocksByIPAddress).QueryRow(ipa)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}

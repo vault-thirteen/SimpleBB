@@ -7,6 +7,7 @@ import (
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 // RegistrationReadyForApproval is a short variant of an object representing a
@@ -22,7 +23,7 @@ func NewRegistrationReadyForApproval() (r *RegistrationReadyForApproval) {
 	return &RegistrationReadyForApproval{}
 }
 
-func NewRegistrationReadyForApprovalFromScannableSource(src cm.IScannable) (r *RegistrationReadyForApproval, err error) {
+func NewRegistrationReadyForApprovalFromScannableSource(src cmi.IScannable) (r *RegistrationReadyForApproval, err error) {
 	r = NewRegistrationReadyForApproval()
 
 	err = src.Scan(
@@ -42,7 +43,7 @@ func NewRegistrationReadyForApprovalFromScannableSource(src cm.IScannable) (r *R
 	return r, nil
 }
 
-func NewRegistrationReadyForApprovalArrayFromRows(rows cm.IScannableSequence) (rs []RegistrationReadyForApproval, err error) {
+func NewRegistrationReadyForApprovalArrayFromRows(rows cmi.IScannableSequence) (rs []RegistrationReadyForApproval, err error) {
 	rs = []RegistrationReadyForApproval{}
 	var r *RegistrationReadyForApproval
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 // FormatStringResource is a format string as a resource.
@@ -24,7 +25,7 @@ func NewFormatStringResource() (fs *FormatStringResource) {
 	}
 }
 
-func NewFormatStringResourceFromScannableSource(src IScannable) (fsr *FormatStringResource, err error) {
+func NewFormatStringResourceFromScannableSource(src cmi.IScannable) (fsr *FormatStringResource, err error) {
 	fsr = NewFormatStringResource()
 
 	err = src.Scan(

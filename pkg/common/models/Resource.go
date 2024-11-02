@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type Resource struct {
@@ -57,7 +58,7 @@ func NewResourceFromNumber(n cmb.Count) (r *Resource) {
 	}
 }
 
-func NewResourceFromScannableSource(src IScannable) (r *Resource, err error) {
+func NewResourceFromScannableSource(src cmi.IScannable) (r *Resource, err error) {
 	r = NewResource()
 
 	err = src.Scan(
@@ -109,7 +110,7 @@ func (r *Resource) AsNumber() cmb.Count {
 	return *r.Number
 }
 
-func (r *Resource) Value() any {
+func (r *Resource) GetValue() any {
 	switch r.Type.GetValue() {
 	case ResourceType_Text:
 		return *r.Text

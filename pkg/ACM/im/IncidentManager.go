@@ -18,6 +18,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/enum"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
@@ -48,7 +49,7 @@ func NewIncidentManager(
 		ssp:                      avm.NewSSP(),
 		wg:                       new(sync.WaitGroup),
 		tasks:                    make(chan *cm.Incident, TaskChannelSize),
-		isTableOfIncidentsUsed:   isTableOfIncidentsUsed.Bool(),
+		isTableOfIncidentsUsed:   isTableOfIncidentsUsed.AsBool(),
 		dbo:                      dbo,
 		gwmClient:                gwmClient,
 		blockTimePerIncidentType: initBlockTimePerIncidentType(blockTimePerIncident),
@@ -141,7 +142,7 @@ func (im *IncidentManager) Stop() (err error) {
 	return nil
 }
 
-func (im *IncidentManager) ReportIncident(itype cmb.EnumValue, email cm.Email, userIPA net.IP) {
+func (im *IncidentManager) ReportIncident(itype enum.EnumValue, email cm.Email, userIPA net.IP) {
 	incident := &cm.Incident{
 		Time:    time.Now(),
 		Type:    cm.NewIncidentTypeWithValue(itype),

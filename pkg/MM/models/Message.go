@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type Message struct {
@@ -35,7 +35,7 @@ func NewMessage() (msg *Message) {
 	}
 }
 
-func NewMessageFromScannableSource(src cm.IScannable) (msg *Message, err error) {
+func NewMessageFromScannableSource(src cmi.IScannable) (msg *Message, err error) {
 	msg = NewMessage()
 
 	err = src.Scan(
@@ -59,7 +59,7 @@ func NewMessageFromScannableSource(src cm.IScannable) (msg *Message, err error) 
 	return msg, nil
 }
 
-func NewMessageArrayFromRows(rows cm.IScannableSequence) (msgs []Message, err error) {
+func NewMessageArrayFromRows(rows cmi.IScannableSequence) (msgs []Message, err error) {
 	msgs = []Message{}
 	var msg *Message
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type UserRoles struct {
@@ -20,7 +21,7 @@ func NewUserRoles() (ur *UserRoles) {
 	return &UserRoles{}
 }
 
-func NewUserRolesFromScannableSource(src IScannable) (ur *UserRoles, err error) {
+func NewUserRolesFromScannableSource(src cmi.IScannable) (ur *UserRoles, err error) {
 	ur = NewUserRoles()
 
 	err = src.Scan(

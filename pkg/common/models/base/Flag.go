@@ -2,48 +2,18 @@ package base
 
 import (
 	"database/sql/driver"
-	"fmt"
-	"reflect"
 	"strconv"
+
+	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 )
 
 type Flag bool
 
-func (f Flag) Bool() bool {
-	return bool(f)
-}
-
 func (f *Flag) Scan(src any) (err error) {
 	var b bool
-
-	switch src.(type) {
-	case int64:
-		x := src.(int64)
-		if x == 0 {
-			b = false
-		} else if x == 1 {
-			b = true
-		} else {
-			return fmt.Errorf(ErrF_UnsupportedDataValue, src)
-		}
-
-	case bool:
-		b = src.(bool)
-
-	case []byte:
-		b, err = strconv.ParseBool(string(src.([]byte)))
-		if err != nil {
-			return err
-		}
-
-	case string:
-		b, err = strconv.ParseBool(src.(string))
-		if err != nil {
-			return err
-		}
-
-	default:
-		return fmt.Errorf(ErrF_UnsupportedDataType, reflect.TypeOf(src).String())
+	b, err = cms.ScanSrcAsBoolean(src)
+	if err != nil {
+		return err
 	}
 
 	*f = Flag(b)
@@ -51,6 +21,17 @@ func (f *Flag) Scan(src any) (err error) {
 }
 
 func (f Flag) Value() (dv driver.Value, err error) {
-	// https://pkg.go.dev/database/sql/driver#Value
-	return driver.Value(bool(f)), nil
+	return driver.Value(cms.BoolToSql(f.AsBool())), nil
+}
+
+func (f Flag) ToString() string {
+	return strconv.FormatBool(f.AsBool())
+}
+
+func (f Flag) RawValue() bool {
+	return f.AsBool()
+}
+
+func (f Flag) AsBool() bool {
+	return bool(f)
 }

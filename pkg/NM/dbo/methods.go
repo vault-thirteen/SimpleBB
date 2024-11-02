@@ -8,8 +8,10 @@ import (
 
 	nm "github.com/vault-thirteen/SimpleBB/pkg/NM/models"
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/enum"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 	ae "github.com/vault-thirteen/auxie/errors"
 )
 
@@ -26,7 +28,7 @@ func (dbo *DatabaseObject) AddResource(r *cm.Resource) (lastInsertedId cmb.Id, e
 func (dbo *DatabaseObject) CountAllNotificationsByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountAllNotificationsByUserId).QueryRow(userId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -37,7 +39,7 @@ func (dbo *DatabaseObject) CountAllNotificationsByUserId(userId cmb.Id) (n cmb.C
 func (dbo *DatabaseObject) CountAllResources() (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountAllResources).QueryRow()
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -48,7 +50,7 @@ func (dbo *DatabaseObject) CountAllResources() (n cmb.Count, err error) {
 func (dbo *DatabaseObject) CountUnreadNotificationsByUserId(userId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountUnreadNotificationsByUserId).QueryRow(userId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -146,7 +148,7 @@ func (dbo *DatabaseObject) GetResourceIdsOnPage(pageNumber cmb.Count, pageSize c
 		}
 	}()
 
-	return cm.NewArrayFromScannableSource[cmb.Id](rows)
+	return cms.NewArrayFromScannableSource[cmb.Id](rows)
 }
 
 func (dbo *DatabaseObject) GetSystemEventById(systemEventId cmb.Id) (se *cm.SystemEvent, err error) {
@@ -197,7 +199,7 @@ func (dbo *DatabaseObject) MarkNotificationAsRead(notificationId cmb.Id, userId 
 	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SaveIncident(module cmb.EnumValue, incidentType cm.IncidentType, email cm.Email, userIPAB net.IP) (err error) {
+func (dbo *DatabaseObject) SaveIncident(module enum.EnumValue, incidentType cm.IncidentType, email cm.Email, userIPAB net.IP) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SaveIncident).Exec(module, incidentType, email, userIPAB)
 	if err != nil {
@@ -207,7 +209,7 @@ func (dbo *DatabaseObject) SaveIncident(module cmb.EnumValue, incidentType cm.In
 	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module cmb.EnumValue, incidentType cm.IncidentType, email cm.Email) (err error) {
+func (dbo *DatabaseObject) SaveIncidentWithoutUserIPA(module enum.EnumValue, incidentType cm.IncidentType, email cm.Email) (err error) {
 	var result sql.Result
 	result, err = dbo.PreparedStatement(DbPsid_SaveIncidentWithoutUserIPA).Exec(module, incidentType, email)
 	if err != nil {

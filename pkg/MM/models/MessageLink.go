@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 // MessageLink is a short variant of a message which stores only IDs.
@@ -21,7 +21,7 @@ func NewMessageLink() (ml *MessageLink) {
 	return &MessageLink{}
 }
 
-func NewMessageLinkFromScannableSource(src cm.IScannable) (ml *MessageLink, err error) {
+func NewMessageLinkFromScannableSource(src cmi.IScannable) (ml *MessageLink, err error) {
 	ml = NewMessageLink()
 
 	err = src.Scan(
@@ -39,7 +39,7 @@ func NewMessageLinkFromScannableSource(src cm.IScannable) (ml *MessageLink, err 
 	return ml, nil
 }
 
-func NewMessageLinkArrayFromRows(rows cm.IScannableSequence) (mls []MessageLink, err error) {
+func NewMessageLinkArrayFromRows(rows cmi.IScannableSequence) (mls []MessageLink, err error) {
 	mls = []MessageLink{}
 	var ml *MessageLink
 

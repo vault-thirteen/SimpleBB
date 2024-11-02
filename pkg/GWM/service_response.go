@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	jrm1 "github.com/vault-thirteen/JSON-RPC-M1"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/enum"
 	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
-	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	"github.com/vault-thirteen/auxie/header"
 )
 
@@ -23,7 +23,7 @@ func (srv *Server) processInternalServerError(rw http.ResponseWriter, err error)
 
 // processRpcError finds an appropriate HTTP status code and message text for
 // an RPC error and responds via HTTP.
-func (srv *Server) processRpcError(moduleId cmb.EnumValue, re *jrm1.RpcError, rw http.ResponseWriter) {
+func (srv *Server) processRpcError(moduleId enum.EnumValue, re *jrm1.RpcError, rw http.ResponseWriter) {
 	var httpStatusCode int
 	var err error
 	httpStatusCode, err = srv.getHttpStatusCodeByRpcErrorCode(moduleId, re.Code.Int())

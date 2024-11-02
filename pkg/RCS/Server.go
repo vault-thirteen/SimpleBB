@@ -16,7 +16,7 @@ import (
 	rs "github.com/vault-thirteen/SimpleBB/pkg/RCS/settings"
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type Server struct {
@@ -44,7 +44,7 @@ type Server struct {
 	js *jrm1.Processor
 }
 
-func NewServer(s cm.ISettings) (srv *Server, err error) {
+func NewServer(s cmi.ISettings) (srv *Server, err error) {
 	stn := s.(*rs.Settings)
 
 	err = stn.Check()
@@ -242,6 +242,6 @@ func (srv *Server) ReportStart() {
 	}
 }
 
-func (srv *Server) UseConstructor(stn cm.ISettings) (cm.IServer, error) {
+func (srv *Server) UseConstructor(stn cmi.ISettings) (cmi.IServer, error) {
 	return NewServer(stn)
 }

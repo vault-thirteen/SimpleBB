@@ -7,6 +7,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type Forum struct {
@@ -35,7 +36,7 @@ func NewForum() (frm *Forum) {
 	}
 }
 
-func NewForumFromScannableSource(src cm.IScannable) (forum *Forum, err error) {
+func NewForumFromScannableSource(src cmi.IScannable) (forum *Forum, err error) {
 	forum = NewForum()
 	var x = ul.New()
 
@@ -61,7 +62,7 @@ func NewForumFromScannableSource(src cm.IScannable) (forum *Forum, err error) {
 	return forum, nil
 }
 
-func NewForumArrayFromRows(rows cm.IScannableSequence) (forums []Forum, err error) {
+func NewForumArrayFromRows(rows cmi.IScannableSequence) (forums []Forum, err error) {
 	forums = []Forum{}
 	var f *Forum
 

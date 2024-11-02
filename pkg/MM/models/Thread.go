@@ -7,6 +7,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type Thread struct {
@@ -35,7 +36,7 @@ func NewThread() (t *Thread) {
 	}
 }
 
-func NewThreadFromScannableSource(src cm.IScannable) (t *Thread, err error) {
+func NewThreadFromScannableSource(src cmi.IScannable) (t *Thread, err error) {
 	t = NewThread()
 	var x = ul.New()
 
@@ -61,7 +62,7 @@ func NewThreadFromScannableSource(src cm.IScannable) (t *Thread, err error) {
 	return t, nil
 }
 
-func NewThreadArrayFromRows(rows cm.IScannableSequence) (ts []Thread, err error) {
+func NewThreadArrayFromRows(rows cmi.IScannableSequence) (ts []Thread, err error) {
 	ts = []Thread{}
 	var t *Thread
 

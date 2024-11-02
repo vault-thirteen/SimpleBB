@@ -9,15 +9,17 @@ import (
 	mm "github.com/vault-thirteen/SimpleBB/pkg/MM/models"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/enum"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 	ae "github.com/vault-thirteen/auxie/errors"
 )
 
 func (dbo *DatabaseObject) CountForumsById(forumId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountForumsById).QueryRow(forumId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -28,7 +30,7 @@ func (dbo *DatabaseObject) CountForumsById(forumId cmb.Id) (n cmb.Count, err err
 func (dbo *DatabaseObject) CountMessagesById(messageId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountMessagesById).QueryRow(messageId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -39,7 +41,7 @@ func (dbo *DatabaseObject) CountMessagesById(messageId cmb.Id) (n cmb.Count, err
 func (dbo *DatabaseObject) CountRootSections() (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountRootSections).QueryRow()
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -50,7 +52,7 @@ func (dbo *DatabaseObject) CountRootSections() (n cmb.Count, err error) {
 func (dbo *DatabaseObject) CountSectionsById(sectionId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountSectionsById).QueryRow(sectionId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -61,7 +63,7 @@ func (dbo *DatabaseObject) CountSectionsById(sectionId cmb.Id) (n cmb.Count, err
 func (dbo *DatabaseObject) CountThreadsById(threadId cmb.Id) (n cmb.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountThreadsById).QueryRow(threadId)
 
-	n, err = cm.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
 		return cdbo.CountOnError, err
 	}
@@ -123,7 +125,7 @@ func (dbo *DatabaseObject) GetForumById(forumId cmb.Id) (forum *mm.Forum, err er
 func (dbo *DatabaseObject) GetForumSectionById(forumId cmb.Id) (sectionId cmb.Id, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetForumSectionById).QueryRow(forumId)
 
-	sectionId, err = cm.NewNonNullValueFromScannableSource[cmb.Id](row)
+	sectionId, err = cms.NewNonNullValueFromScannableSource[cmb.Id](row)
 	if err != nil {
 		return cdbo.IdOnError, err
 	}
@@ -165,7 +167,7 @@ func (dbo *DatabaseObject) GetMessageCreatorAndTimeById(messageId cmb.Id) (creat
 func (dbo *DatabaseObject) GetMessageThreadById(messageId cmb.Id) (threadId cmb.Id, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetMessageThreadById).QueryRow(messageId)
 
-	threadId, err = cm.NewNonNullValueFromScannableSource[cmb.Id](row)
+	threadId, err = cms.NewNonNullValueFromScannableSource[cmb.Id](row)
 	if err != nil {
 		return cdbo.IdOnError, err
 	}
@@ -187,7 +189,7 @@ func (dbo *DatabaseObject) GetSectionById(sectionId cmb.Id) (section *mm.Section
 func (dbo *DatabaseObject) GetSectionChildTypeById(sectionId cmb.Id) (childType mm.SectionChildType, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetSectionChildTypeById).QueryRow(sectionId)
 
-	childType, err = cm.NewNonNullValueFromScannableSource[mm.SectionChildType](row)
+	childType, err = cms.NewNonNullValueFromScannableSource[mm.SectionChildType](row)
 	if err != nil {
 		return childType, err
 	}
@@ -207,7 +209,7 @@ func (dbo *DatabaseObject) GetSectionChildrenById(sectionId cmb.Id) (children *u
 
 func (dbo *DatabaseObject) GetSectionParentById(sectionId cmb.Id) (parent *cmb.Id, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetSectionParentById).QueryRow(sectionId)
-	return cm.NewValueFromScannableSource[cmb.Id](row)
+	return cms.NewValueFromScannableSource[cmb.Id](row)
 }
 
 func (dbo *DatabaseObject) GetThreadById(threadId cmb.Id) (thread *mm.Thread, err error) {
@@ -224,7 +226,7 @@ func (dbo *DatabaseObject) GetThreadById(threadId cmb.Id) (thread *mm.Thread, er
 func (dbo *DatabaseObject) GetThreadForumById(threadId cmb.Id) (forumId cmb.Id, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetThreadForumById).QueryRow(threadId)
 
-	forumId, err = cm.NewNonNullValueFromScannableSource[cmb.Id](row)
+	forumId, err = cms.NewNonNullValueFromScannableSource[cmb.Id](row)
 	if err != nil {
 		return cdbo.IdOnError, err
 	}
@@ -407,7 +409,7 @@ func (dbo *DatabaseObject) ReadThreadNamesByIds(threadIds ul.UidList) (threadNam
 		}
 	}()
 
-	return cm.NewArrayFromScannableSource[cm.Name](rows)
+	return cms.NewArrayFromScannableSource[cm.Name](rows)
 }
 
 func (dbo *DatabaseObject) ReadThreadsById(threadIds *ul.UidList) (threads []mm.Thread, err error) {
@@ -487,7 +489,7 @@ func (dbo *DatabaseObject) SetMessageThreadById(messageId cmb.Id, threadId cmb.I
 	return cdbo.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) SetSectionChildTypeById(sectionId cmb.Id, childType cmb.EnumValue) (err error) {
+func (dbo *DatabaseObject) SetSectionChildTypeById(sectionId cmb.Id, childType enum.EnumValue) (err error) {
 	var result sql.Result
 	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_SetSectionChildTypeById).Exec(childType, sectionId)
 	if err != nil {

@@ -1,6 +1,8 @@
-package models
+package interfaces
 
-import ver "github.com/vault-thirteen/auxie/Versioneer"
+import (
+	ver "github.com/vault-thirteen/auxie/Versioneer"
+)
 
 type ISettings interface {
 	Check() error

@@ -8,6 +8,7 @@ import (
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
@@ -37,7 +38,7 @@ func NewPreSession() (ps *PreSession) {
 	return &PreSession{}
 }
 
-func NewPreSessionFromScannableSource(src cm.IScannable) (ps *PreSession, err error) {
+func NewPreSessionFromScannableSource(src cmi.IScannable) (ps *PreSession, err error) {
 	ps = NewPreSession()
 
 	err = src.Scan(

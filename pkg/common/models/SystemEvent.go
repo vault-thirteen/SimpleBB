@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 const (
@@ -38,7 +39,7 @@ func NewSystemEventWithData(data SystemEventData) (se *SystemEvent, err error) {
 	return se, nil
 }
 
-func NewSystemEventFromScannableSource(src IScannable) (se *SystemEvent, err error) {
+func NewSystemEventFromScannableSource(src cmi.IScannable) (se *SystemEvent, err error) {
 	se = NewSystemEvent()
 
 	err = src.Scan(
@@ -60,7 +61,7 @@ func NewSystemEventFromScannableSource(src IScannable) (se *SystemEvent, err err
 	return se, nil
 }
 
-func NewSystemEventArrayFromRows(rows IScannableSequence) (ses []SystemEvent, err error) {
+func NewSystemEventArrayFromRows(rows cmi.IScannableSequence) (ses []SystemEvent, err error) {
 	ses = []SystemEvent{}
 	var se *SystemEvent
 

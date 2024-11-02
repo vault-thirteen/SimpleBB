@@ -8,6 +8,7 @@ import (
 
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
@@ -46,7 +47,7 @@ func NewEmailChange() (ec *EmailChange) {
 	return &EmailChange{}
 }
 
-func NewEmailChangeFromScannableSource(src cm.IScannable) (ec *EmailChange, err error) {
+func NewEmailChangeFromScannableSource(src cmi.IScannable) (ec *EmailChange, err error) {
 	ec = NewEmailChange()
 
 	err = src.Scan(

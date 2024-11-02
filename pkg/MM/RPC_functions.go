@@ -1205,7 +1205,7 @@ func (srv *Server) addThread(p *mm.AddThreadParams) (result *mm.AddThreadResult,
 		return nil, srv.databaseError(err)
 	}
 
-	err = parentThreads.AddItem(insertedThreadId, srv.settings.SystemSettings.NewThreadsAtTop.Bool())
+	err = parentThreads.AddItem(insertedThreadId, srv.settings.SystemSettings.NewThreadsAtTop.AsBool())
 	if err != nil {
 		srv.logError(err)
 		return nil, jrm1.NewRpcErrorByUser(c.RpcErrorCode_UidList, fmt.Sprintf(c.RpcErrorMsgF_UidList, err.Error()), nil)

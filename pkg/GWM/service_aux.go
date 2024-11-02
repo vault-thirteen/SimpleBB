@@ -8,6 +8,7 @@ import (
 
 	s "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/enum"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
@@ -72,7 +73,7 @@ func (srv *Server) getClientIPAddress(req *http.Request) (cipa cm.IPAS, err erro
 	}
 }
 
-func (srv *Server) getHttpStatusCodeByRpcErrorCode(moduleId cmb.EnumValue, rpcErrorCode int) (httpStatusCode int, err error) {
+func (srv *Server) getHttpStatusCodeByRpcErrorCode(moduleId enum.EnumValue, rpcErrorCode int) (httpStatusCode int, err error) {
 	var ok bool
 
 	httpStatusCode, ok = srv.commonHttpStatusCodesByRpcErrorCode[rpcErrorCode]

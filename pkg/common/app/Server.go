@@ -1,9 +1,9 @@
 package app
 
 import (
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
-func NewServer[T cm.IServer](classSelector T, settings cm.ISettings) (srv cm.IServer, err error) {
+func NewServer[T cmi.IServer](classSelector T, settings cmi.ISettings) (srv cmi.IServer, err error) {
 	return classSelector.UseConstructor(settings)
 }

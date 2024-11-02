@@ -23,6 +23,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/common/dk"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 	cset "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
 
@@ -70,7 +71,7 @@ type Server struct {
 	scheduler *cm.Scheduler
 }
 
-func NewServer(s cm.ISettings) (srv *Server, err error) {
+func NewServer(s cmi.ISettings) (srv *Server, err error) {
 	stn := s.(*ns.Settings)
 
 	err = stn.Check()
@@ -397,7 +398,7 @@ func (srv *Server) synchroniseModules(verbose bool) (err error) {
 // This method uses the GWM service client as an argument, thus it should be
 // called after initialisation of all external service clients.
 func (srv *Server) initIncidentManager() (err error) {
-	srv.incidentManager = im.NewIncidentManager(srv.settings.SystemSettings.IsTableOfIncidentsUsed.Bool(), srv.dbo, srv.gwmServiceClient, &srv.settings.SystemSettings.BlockTimePerIncident)
+	srv.incidentManager = im.NewIncidentManager(srv.settings.SystemSettings.IsTableOfIncidentsUsed.AsBool(), srv.dbo, srv.gwmServiceClient, &srv.settings.SystemSettings.BlockTimePerIncident)
 
 	return nil
 }
@@ -422,6 +423,6 @@ func (srv *Server) ReportStart() {
 	fmt.Println(c.MsgHttpsServer + srv.GetListenDsn())
 }
 
-func (srv *Server) UseConstructor(stn cm.ISettings) (cm.IServer, error) {
+func (srv *Server) UseConstructor(stn cmi.ISettings) (cmi.IServer, error) {
 	return NewServer(stn)
 }

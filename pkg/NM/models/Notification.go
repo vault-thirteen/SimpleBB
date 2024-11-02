@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 const (
@@ -37,7 +37,7 @@ func NewNotification() (n *Notification) {
 	return &Notification{}
 }
 
-func NewNotificationFromScannableSource(src cm.IScannable) (n *Notification, err error) {
+func NewNotificationFromScannableSource(src cmi.IScannable) (n *Notification, err error) {
 	n = NewNotification()
 
 	err = src.Scan(
@@ -59,7 +59,7 @@ func NewNotificationFromScannableSource(src cm.IScannable) (n *Notification, err
 	return n, nil
 }
 
-func NewNotificationArrayFromRows(rows cm.IScannableSequence) (ns []Notification, err error) {
+func NewNotificationArrayFromRows(rows cmi.IScannableSequence) (ns []Notification, err error) {
 	ns = []Notification{}
 	var n *Notification
 

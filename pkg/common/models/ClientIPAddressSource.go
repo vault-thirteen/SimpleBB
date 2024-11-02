@@ -1,23 +1,23 @@
 package models
 
 import (
-	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/enum"
 )
 
-type ClientIPAddressSource = cmb.Enum
+type ClientIPAddressSource = enum.Enum
 
 const (
-	ClientIPAddressSource_Direct       = cmb.EnumValue(1)
-	ClientIPAddressSource_CustomHeader = cmb.EnumValue(2)
+	ClientIPAddressSource_Direct       = enum.EnumValue(1)
+	ClientIPAddressSource_CustomHeader = enum.EnumValue(2)
 
 	ClientIPAddressSourceMax = ClientIPAddressSource_CustomHeader
 )
 
 func NewClientIPAddressSource() *ClientIPAddressSource {
-	return cmb.NewEnumFast(ClientIPAddressSourceMax)
+	return enum.NewEnumFast(ClientIPAddressSourceMax)
 }
 
-func NewClientIPAddressSourceWithValue(value cmb.EnumValue) ClientIPAddressSource {
+func NewClientIPAddressSourceWithValue(value enum.EnumValue) ClientIPAddressSource {
 	cipas := NewClientIPAddressSource()
 	cipas.SetValueFast(value)
 	return *cipas

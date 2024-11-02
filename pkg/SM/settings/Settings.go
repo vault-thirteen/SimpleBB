@@ -7,6 +7,7 @@ import (
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 	ver "github.com/vault-thirteen/auxie/Versioneer"
 )
@@ -97,6 +98,6 @@ func (stn *Settings) Check() (err error) {
 	return nil
 }
 
-func (stn *Settings) UseConstructor(filePath string, versionInfo *ver.Versioneer) (cm.ISettings, error) {
+func (stn *Settings) UseConstructor(filePath string, versionInfo *ver.Versioneer) (cmi.ISettings, error) {
 	return NewSettingsFromFile(filePath, versionInfo)
 }

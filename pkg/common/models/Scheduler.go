@@ -5,16 +5,17 @@ import (
 	"time"
 
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type Scheduler struct {
-	srv       IServer
+	srv       cmi.IServer
 	funcs60   []ScheduledFn
 	funcs600  []ScheduledFn
 	funcs3600 []ScheduledFn
 }
 
-func NewScheduler(srv IServer, funcs60 []ScheduledFn, funcs600 []ScheduledFn, funcs3600 []ScheduledFn) (s *Scheduler) {
+func NewScheduler(srv cmi.IServer, funcs60 []ScheduledFn, funcs600 []ScheduledFn, funcs3600 []ScheduledFn) (s *Scheduler) {
 	s = &Scheduler{
 		srv:       srv,
 		funcs60:   funcs60,

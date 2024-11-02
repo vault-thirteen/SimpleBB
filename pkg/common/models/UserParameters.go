@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type UserParameters struct {
@@ -27,7 +28,7 @@ func NewUserParameters() (up *UserParameters) {
 	}
 }
 
-func NewUserParametersFromScannableSource(src IScannable) (up *UserParameters, err error) {
+func NewUserParametersFromScannableSource(src cmi.IScannable) (up *UserParameters, err error) {
 	up = NewUserParameters()
 
 	err = src.Scan(

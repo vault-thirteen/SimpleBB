@@ -22,6 +22,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/common/avm"
 	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 	cset "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 	rp "github.com/vault-thirteen/auxie/rpofs"
 )
@@ -73,7 +74,7 @@ type Server struct {
 	scheduler *cm.Scheduler
 }
 
-func NewServer(s cm.ISettings) (srv *Server, err error) {
+func NewServer(s cmi.ISettings) (srv *Server, err error) {
 	stn := s.(*as.Settings)
 
 	err = stn.Check()
@@ -444,6 +445,6 @@ func (srv *Server) ReportStart() {
 	fmt.Println(c.MsgHttpsServer + srv.GetListenDsn())
 }
 
-func (srv *Server) UseConstructor(stn cm.ISettings) (cm.IServer, error) {
+func (srv *Server) UseConstructor(stn cmi.ISettings) (cmi.IServer, error) {
 	return NewServer(stn)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type Section struct {
@@ -42,7 +43,7 @@ func NewSection() (sec *Section) {
 	}
 }
 
-func NewSectionFromScannableSource(src cm.IScannable) (sec *Section, err error) {
+func NewSectionFromScannableSource(src cmi.IScannable) (sec *Section, err error) {
 	sec = NewSection()
 	var x = ul.New()
 
@@ -69,7 +70,7 @@ func NewSectionFromScannableSource(src cm.IScannable) (sec *Section, err error) 
 	return sec, nil
 }
 
-func NewSectionArrayFromRows(rows cm.IScannableSequence) (sections []Section, err error) {
+func NewSectionArrayFromRows(rows cmi.IScannableSequence) (sections []Section, err error) {
 	sections = []Section{}
 	var s *Section
 

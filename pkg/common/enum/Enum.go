@@ -1,20 +1,24 @@
-package base
+package enum
 
 import (
 	"database/sql/driver"
-	"encoding/json"
 	"errors"
 	"fmt"
-)
-
-const (
-	Err_MaxValue           = "max value error"
-	ErrF_EnumValueOverflow = "enumeration value overflow: %v"
 )
 
 // Enum is a simple enumeration type supporting up to 255 distinct values.
 // It is not recommended to use zero as a value. Zero is commonly used as a
 // marker of a non-set value. The minimum value should always be equal to 1.
+
+// Limitations for enumeration value.
+const (
+	// EnumValueMin is a minimal value of an enumeration.
+	EnumValueMin = 1
+
+	// Maximum value is set in a child class. Oops. Golang does not know what
+	// classes are. So, we emulate some parts of the class behaviour as we can.
+)
+
 type Enum struct {
 	value    EnumValue
 	maxValue EnumValue
@@ -68,11 +72,6 @@ func (e *Enum) SetValueFast(value EnumValue) {
 	e.value = value
 }
 
-func (e *Enum) setValueJson(value EnumValue) (err error) {
-	e.value = value
-	return nil
-}
-
 func (e *Enum) checkValue(v EnumValue) (err error) {
 	if (v < EnumValueMin) || (v > e.maxValue) {
 		return fmt.Errorf(ErrF_EnumValueOverflow, v)
@@ -85,24 +84,11 @@ func (e *Enum) GetValue() EnumValue {
 }
 
 func (e *Enum) Scan(src any) (err error) {
-	var x int
-	x, err = ScanSrcAsInt(src)
-	if err != nil {
-		return err
-	}
+	return e.value.Scan(src)
+}
 
-	// Type casting (int to byte) must be safe.
-	if (x < 0) || (x > 255) {
-		return fmt.Errorf(ErrF_Overflow, x)
-	}
-	var b = byte(x)
-
-	err = e.SetValue(EnumValue(b))
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (e Enum) Value() (dv driver.Value, err error) {
+	return e.value.Value()
 }
 
 func (e Enum) ToString() string {
@@ -117,24 +103,18 @@ func (e Enum) AsInt() int {
 	return e.value.AsInt()
 }
 
-func (e Enum) Value() (dv driver.Value, err error) {
-	return e.value.Value()
-}
-
 func (e *Enum) UnmarshalJSON(data []byte) (err error) {
-	var x int
-	err = json.Unmarshal(data, &x)
+	// Unfortunately we can not call the constructor of a base class from the
+	// constructor of the child class, while Go language has no classes. We
+	// should emulate classes using existing features of Go language ...
+
+	err = e.value.UnmarshalJSON(data)
 	if err != nil {
 		return err
 	}
 
-	// Type casting (int to byte) must be safe.
-	if (x < 0) || (x > 255) {
-		return fmt.Errorf(ErrF_Overflow, x)
-	}
-	var b = byte(x)
-
-	err = e.setValueJson(EnumValue(b))
+	//TODO:Here be dragons.
+	err = e.checkValue(e.value)
 	if err != nil {
 		return err
 	}
@@ -143,5 +123,5 @@ func (e *Enum) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (e Enum) MarshalJSON() (ba []byte, err error) {
-	return []byte(e.ToString()), nil
+	return e.value.MarshalJSON()
 }

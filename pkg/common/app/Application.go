@@ -7,7 +7,7 @@ import (
 	"time"
 
 	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 	ver "github.com/vault-thirteen/auxie/Versioneer"
 )
 
@@ -21,11 +21,11 @@ type Application struct {
 	configurationFilePathDefault string
 	ver                          *ver.Versioneer
 	cla                          *CommandLineArguments
-	settings                     cm.ISettings
-	server                       cm.IServer
+	settings                     cmi.ISettings
+	server                       cmi.IServer
 }
 
-func NewApplication[T1 cm.ISettings, T2 cm.IServer](
+func NewApplication[T1 cmi.ISettings, T2 cmi.IServer](
 	settingsClassSelector T1,
 	serverClassSelector T2,
 	serviceName string,

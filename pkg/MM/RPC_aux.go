@@ -196,7 +196,7 @@ func (srv *Server) sendNotificationToUser(userId cmb.Id, text cmb.Text) (re *jrm
 }
 
 func (srv *Server) getMessageTextChecksum(msgText cmb.Text) (checksum []byte) {
-	x, _ := ah.CalculateCrc32(msgText.ToBytes())
+	x, _ := ah.CalculateCrc32(msgText.AsBytes())
 	return x[:]
 }
 

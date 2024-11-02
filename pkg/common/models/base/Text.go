@@ -2,32 +2,17 @@ package base
 
 import (
 	"database/sql/driver"
-	"fmt"
-	"reflect"
+
+	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 )
 
 type Text string
 
-func (t Text) ToString() string {
-	return string(t)
-}
-
-func (t Text) ToBytes() []byte {
-	return []byte(t)
-}
-
 func (t *Text) Scan(src any) (err error) {
 	var s string
-
-	switch src.(type) {
-	case string:
-		s = src.(string)
-
-	case []byte:
-		s = string(src.([]byte))
-
-	default:
-		return fmt.Errorf(ErrF_UnsupportedDataType, reflect.TypeOf(src).String())
+	s, err = cms.ScanSrcAsString(src)
+	if err != nil {
+		return err
 	}
 
 	*t = Text(s)
@@ -35,6 +20,21 @@ func (t *Text) Scan(src any) (err error) {
 }
 
 func (t Text) Value() (dv driver.Value, err error) {
-	// https://pkg.go.dev/database/sql/driver#Value
-	return driver.Value(t.ToBytes()), nil
+	return driver.Value(cms.StringToSql(t.AsString())), nil
+}
+
+func (t Text) ToString() string {
+	return t.AsString()
+}
+
+func (t Text) RawValue() string {
+	return t.AsString()
+}
+
+func (t Text) AsString() string {
+	return string(t)
+}
+
+func (t Text) AsBytes() []byte {
+	return []byte(t)
 }

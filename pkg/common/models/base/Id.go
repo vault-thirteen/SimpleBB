@@ -3,21 +3,15 @@ package base
 import (
 	"database/sql/driver"
 	"strconv"
+
+	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 )
 
 type Id int
 
-func (i Id) ToString() string {
-	return strconv.Itoa(i.AsInt())
-}
-
-func (i Id) AsInt() int {
-	return int(i)
-}
-
 func (i *Id) Scan(src any) (err error) {
 	var x int
-	x, err = ScanSrcAsInt(src)
+	x, err = cms.ScanSrcAsInt(src)
 	if err != nil {
 		return err
 	}
@@ -27,6 +21,17 @@ func (i *Id) Scan(src any) (err error) {
 }
 
 func (i Id) Value() (dv driver.Value, err error) {
-	// https://pkg.go.dev/database/sql/driver#Value
-	return driver.Value(int64(i)), nil
+	return driver.Value(cms.IntToSql(i.AsInt())), nil
+}
+
+func (i Id) ToString() string {
+	return strconv.Itoa(i.AsInt())
+}
+
+func (i Id) RawValue() int {
+	return i.AsInt()
+}
+
+func (i Id) AsInt() int {
+	return int(i)
 }

@@ -6,8 +6,8 @@ import (
 	"net"
 	"time"
 
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type Session struct {
@@ -23,7 +23,7 @@ func NewSession() (s *Session) {
 	return &Session{}
 }
 
-func NewSessionFromScannableSource(src cm.IScannable) (s *Session, err error) {
+func NewSessionFromScannableSource(src cmi.IScannable) (s *Session, err error) {
 	s = NewSession()
 
 	err = src.Scan(

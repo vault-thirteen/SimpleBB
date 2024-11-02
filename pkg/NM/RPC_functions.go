@@ -517,7 +517,7 @@ func (srv *Server) getResourceValue(p *nm.GetResourceValueParams) (result *nm.Ge
 	result = &nm.GetResourceValueResult{
 		Resource: nm.ResourceWithValue{
 			Id:    p.ResourceId,
-			Value: resource.Value(),
+			Value: resource.GetValue(),
 		},
 	}
 

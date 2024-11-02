@@ -31,6 +31,7 @@ import (
 	ch "github.com/vault-thirteen/SimpleBB/pkg/common/http"
 	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 	cn "github.com/vault-thirteen/SimpleBB/pkg/common/net"
 	cset "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 )
@@ -93,7 +94,7 @@ type Server struct {
 	scheduler *cm.Scheduler
 }
 
-func NewServer(s cm.ISettings) (srv *Server, err error) {
+func NewServer(s cmi.ISettings) (srv *Server, err error) {
 	stn := s.(*gs.Settings)
 
 	err = stn.Check()
@@ -823,6 +824,6 @@ func (srv *Server) ReportStart() {
 	fmt.Println(c.MsgHttpsServer + srv.GetListenDsnExt())
 }
 
-func (srv *Server) UseConstructor(stn cm.ISettings) (cm.IServer, error) {
+func (srv *Server) UseConstructor(stn cmi.ISettings) (cmi.IServer, error) {
 	return NewServer(stn)
 }
