@@ -61,7 +61,8 @@ func (s SystemSettings) Check() (err error) {
 	if (s.SettingsVersion == 0) ||
 		(len(s.SiteName) == 0) ||
 		(len(s.SiteDomain) == 0) ||
-		// s.ClientIPAddressSource is checked in its constructor.
+		(s.ClientIPAddressSource.GetValue() < cm.ClientIPAddressSource_Direct) ||
+		(s.ClientIPAddressSource.GetValue() > cm.ClientIPAddressSourceMax) ||
 		(len(s.CaptchaImgServerHost) == 0) ||
 		(s.CaptchaImgServerPort == 0) ||
 		(len(s.CaptchaFolder) == 0) ||

@@ -44,10 +44,10 @@ func NewSystemEventFromScannableSource(src cmi.IScannable) (se *SystemEvent, err
 
 	err = src.Scan(
 		&se.Id,
-		&se.Type,
-		&se.ThreadId,
-		&se.MessageId,
-		&se.UserId,
+		&se.SystemEventData.Type,
+		&se.SystemEventData.ThreadId,
+		&se.SystemEventData.MessageId,
+		&se.SystemEventData.UserId,
 		&se.Time,
 	)
 	if err != nil {

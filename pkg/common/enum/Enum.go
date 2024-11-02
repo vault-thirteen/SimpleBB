@@ -19,13 +19,27 @@ const (
 	// classes are. So, we emulate some parts of the class behaviour as we can.
 )
 
+// This model must be initialised manually using a constructor while Go
+// language does not have constructors. Go language does not have constructors
+// as there are no classes in the language. So-called "structs" in Go language
+// do not have an obligatory constructor. All this makes the process of object
+// creation practically uncontrollable. To fix all the automatic
+// initialisations in the code, all the code must be re-written. The chain of
+// dependencies will overwhelm you if you decide to re-write all the parts
+// where objects are created. This is why all serious programming languages
+// use built-in constructors for objects which can not be fooled as in Golang.
+// All in all, Go language is a complete shit.
+
+//TODO: Re-visit this page in 10 years. It may be so that, in 10 years from now
+// Go language will introduce classes or objects with constructors.
+
 type Enum struct {
 	value    EnumValue
 	maxValue EnumValue
 }
 
 func NewEnum(maxValue EnumValue) (e *Enum, err error) {
-	e = &Enum{maxValue: maxValue}
+	e = newEnum(maxValue)
 
 	err = e.checkMaxValue(maxValue)
 	if err != nil {
@@ -36,7 +50,7 @@ func NewEnum(maxValue EnumValue) (e *Enum, err error) {
 }
 
 func NewEnumFast(maxValue EnumValue) (e *Enum) {
-	e = &Enum{maxValue: maxValue}
+	e = newEnum(maxValue)
 
 	err := e.checkMaxValue(maxValue)
 	if err != nil {
@@ -44,6 +58,12 @@ func NewEnumFast(maxValue EnumValue) (e *Enum) {
 	}
 
 	return e
+}
+
+func newEnum(maxValue EnumValue) (e *Enum) {
+	return &Enum{
+		maxValue: maxValue,
+	}
 }
 
 func (e *Enum) checkMaxValue(maxValue EnumValue) (err error) {
@@ -84,7 +104,12 @@ func (e *Enum) GetValue() EnumValue {
 }
 
 func (e *Enum) Scan(src any) (err error) {
-	return e.value.Scan(src)
+	err = e.value.Scan(src)
+	if err != nil {
+		return err
+	}
+
+	return e.checkValue(e.value)
 }
 
 func (e Enum) Value() (dv driver.Value, err error) {
@@ -104,22 +129,12 @@ func (e Enum) AsInt() int {
 }
 
 func (e *Enum) UnmarshalJSON(data []byte) (err error) {
-	// Unfortunately we can not call the constructor of a base class from the
-	// constructor of the child class, while Go language has no classes. We
-	// should emulate classes using existing features of Go language ...
-
 	err = e.value.UnmarshalJSON(data)
 	if err != nil {
 		return err
 	}
 
-	//TODO:Here be dragons.
-	err = e.checkValue(e.value)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return e.checkValue(e.value)
 }
 
 func (e Enum) MarshalJSON() (ba []byte, err error) {
