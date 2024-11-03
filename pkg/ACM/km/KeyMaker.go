@@ -4,11 +4,11 @@ import (
 	"crypto/rsa"
 	"errors"
 	"fmt"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/simple"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
-	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 const (
@@ -35,7 +35,7 @@ type KeyMaker struct {
 	signingMethodName string
 }
 
-func New(signingMethodName string, privateKeyFilePath cm.Path, publicKeyFilePath cm.Path) (km *KeyMaker, err error) {
+func New(signingMethodName string, privateKeyFilePath simple.Path, publicKeyFilePath simple.Path) (km *KeyMaker, err error) {
 	var signingMethod jwt.SigningMethod
 	switch signingMethodName {
 	case TokenAlg_PS512:
@@ -64,7 +64,7 @@ func New(signingMethodName string, privateKeyFilePath cm.Path, publicKeyFilePath
 	return km, nil
 }
 
-func (km *KeyMaker) MakeJWToken(userId cmb.Id, sessionId cmb.Id) (tokenString cm.WebTokenString, err error) {
+func (km *KeyMaker) MakeJWToken(userId cmb.Id, sessionId cmb.Id) (tokenString simple.WebTokenString, err error) {
 	claims := jwt.MapClaims{
 		WebTokenField_UserId:    userId,
 		WebTokenField_SessionId: sessionId,
@@ -78,10 +78,10 @@ func (km *KeyMaker) MakeJWToken(userId cmb.Id, sessionId cmb.Id) (tokenString cm
 		return "", err
 	}
 
-	return cm.WebTokenString(s), nil
+	return simple.WebTokenString(s), nil
 }
 
-func (km *KeyMaker) ValidateToken(tokenString cm.WebTokenString) (userId cmb.Id, sessionId cmb.Id, err error) {
+func (km *KeyMaker) ValidateToken(tokenString simple.WebTokenString) (userId cmb.Id, sessionId cmb.Id, err error) {
 	var token *jwt.Token
 	token, err = jwt.Parse(tokenString.ToString(), func(token *jwt.Token) (interface{}, error) {
 		if strings.ToUpper(token.Method.Alg()) != km.signingMethodName {

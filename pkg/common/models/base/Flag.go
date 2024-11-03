@@ -2,16 +2,15 @@ package base
 
 import (
 	"database/sql/driver"
+	sql2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 	"strconv"
-
-	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 )
 
 type Flag bool
 
 func (f *Flag) Scan(src any) (err error) {
 	var b bool
-	b, err = cms.ScanSrcAsBoolean(src)
+	b, err = sql2.ScanSrcAsBoolean(src)
 	if err != nil {
 		return err
 	}
@@ -21,7 +20,7 @@ func (f *Flag) Scan(src any) (err error) {
 }
 
 func (f Flag) Value() (dv driver.Value, err error) {
-	return driver.Value(cms.BoolToSql(f.AsBool())), nil
+	return driver.Value(sql2.BoolToSql(f.AsBool())), nil
 }
 
 func (f Flag) ToString() string {

@@ -1,7 +1,7 @@
 package json
 
 import (
-	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/interfaces/base1"
 )
 
 func ToJson(x cmi.IToString) []byte {

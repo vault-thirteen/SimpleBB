@@ -3,39 +3,38 @@ package models
 import (
 	"database/sql"
 	"errors"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/interfaces/base1"
+	base2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/simple"
 	"net"
 	"time"
-
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
-	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
-	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
-	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 
 type PasswordChange struct {
-	Id             cmb.Id
-	UserId         cmb.Id
+	Id             base2.Id
+	UserId         base2.Id
 	TimeOfCreation time.Time
-	RequestId      *cm.RequestId
+	RequestId      *simple.RequestId
 
 	// IP address of a user. B = Byte array.
 	UserIPAB net.IP
 
 	AuthDataBytes        cmr.AuthChallengeData
-	IsCaptchaRequired    cmb.Flag
-	CaptchaId            *cm.CaptchaId
-	IsVerifiedByCaptcha  *cmb.Flag
-	IsVerifiedByPassword cmb.Flag
-	VerificationCode     *cm.VerificationCode
-	IsEmailSent          cmb.Flag
-	IsVerifiedByEmail    cmb.Flag
+	IsCaptchaRequired    base2.Flag
+	CaptchaId            *simple.CaptchaId
+	IsVerifiedByCaptcha  *base2.Flag
+	IsVerifiedByPassword base2.Flag
+	VerificationCode     *simple.VerificationCode
+	IsEmailSent          base2.Flag
+	IsVerifiedByEmail    base2.Flag
 	NewPasswordBytes     []byte
 }
 
 type PasswordChangeVerificationFlags struct {
-	IsVerifiedByCaptcha  *cmb.Flag
-	IsVerifiedByPassword cmb.Flag
-	IsVerifiedByEmail    cmb.Flag
+	IsVerifiedByCaptcha  *base2.Flag
+	IsVerifiedByPassword base2.Flag
+	IsVerifiedByEmail    base2.Flag
 }
 
 func NewPasswordChange() (pc *PasswordChange) {

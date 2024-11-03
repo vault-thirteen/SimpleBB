@@ -2,16 +2,15 @@ package base
 
 import (
 	"database/sql/driver"
+	sql2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 	"strconv"
-
-	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 )
 
 type Count int
 
 func (c *Count) Scan(src any) (err error) {
 	var x int
-	x, err = cms.ScanSrcAsInt(src)
+	x, err = sql2.ScanSrcAsInt(src)
 	if err != nil {
 		return err
 	}
@@ -21,7 +20,7 @@ func (c *Count) Scan(src any) (err error) {
 }
 
 func (c Count) Value() (dv driver.Value, err error) {
-	return driver.Value(cms.IntToSql(c.AsInt())), nil
+	return driver.Value(sql2.IntToSql(c.AsInt())), nil
 }
 
 func (c Count) ToString() string {

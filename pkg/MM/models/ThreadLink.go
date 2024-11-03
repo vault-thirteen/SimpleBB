@@ -3,10 +3,9 @@ package models
 import (
 	"database/sql"
 	"errors"
-
-	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/interfaces/base1"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/UidList"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
-	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 // ThreadLink is a short variant of a thread which stores only IDs.
@@ -25,7 +24,7 @@ func NewThreadLink() (tl *ThreadLink) {
 	return &ThreadLink{}
 }
 
-func NewThreadLinkFromScannableSource(src cmi.IScannable) (tl *ThreadLink, err error) {
+func NewThreadLinkFromScannableSource(src base.IScannable) (tl *ThreadLink, err error) {
 	tl = NewThreadLink()
 	var x = ul.New()
 
@@ -46,7 +45,7 @@ func NewThreadLinkFromScannableSource(src cmi.IScannable) (tl *ThreadLink, err e
 	return tl, nil
 }
 
-func NewThreadLinkArrayFromRows(rows cmi.IScannableSequence) (tls []ThreadLink, err error) {
+func NewThreadLinkArrayFromRows(rows base.IScannableSequence) (tls []ThreadLink, err error) {
 	tls = []ThreadLink{}
 	var tl *ThreadLink
 

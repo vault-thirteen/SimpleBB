@@ -2,9 +2,8 @@ package s
 
 import (
 	"errors"
-
-	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	c "github.com/vault-thirteen/SimpleBB/pkg/common/models/server"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models/simple"
 )
 
 // JWTSettings are settings for JSON web tokens.

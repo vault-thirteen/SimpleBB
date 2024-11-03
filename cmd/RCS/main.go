@@ -1,15 +1,15 @@
 package main
 
 import (
+	r "github.com/vault-thirteen/SimpleBB/pkg/RCS/server"
+	app2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/app"
 	"log"
 
-	r "github.com/vault-thirteen/SimpleBB/pkg/RCS"
 	rs "github.com/vault-thirteen/SimpleBB/pkg/RCS/settings"
-	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 )
 
 func main() {
-	theApp, err := app.NewApplication[*rs.Settings, *r.Server](&rs.Settings{}, &r.Server{}, app.ServiceName_RCS, app.ConfigurationFilePathDefault_RCS)
+	theApp, err := app2.NewApplication[*rs.Settings, *r.Server](&rs.Settings{}, &r.Server{}, app2.ServiceName_RCS, app2.ConfigurationFilePathDefault_RCS)
 	mustBeNoError(err)
 
 	err = theApp.Use()

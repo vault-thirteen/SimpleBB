@@ -2,16 +2,15 @@ package s
 
 import (
 	"errors"
-
-	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	base2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	c "github.com/vault-thirteen/SimpleBB/pkg/common/models/server"
 )
 
 // SystemSettings are system settings.
 type SystemSettings struct {
-	PageSize    cmb.Count `json:"pageSize"`
-	DKeySize    cmb.Count `json:"dKeySize"`
-	IsDebugMode cmb.Flag  `json:"isDebugMode"`
+	PageSize    base2.Count `json:"pageSize"`
+	DKeySize    base2.Count `json:"dKeySize"`
+	IsDebugMode base2.Flag  `json:"isDebugMode"`
 }
 
 func (s SystemSettings) Check() (err error) {

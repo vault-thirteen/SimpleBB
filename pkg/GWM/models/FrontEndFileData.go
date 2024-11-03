@@ -1,9 +1,9 @@
 package models
 
 import (
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models/simple"
 	"path/filepath"
 
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 	af "github.com/vault-thirteen/auxie/file"
 )
 

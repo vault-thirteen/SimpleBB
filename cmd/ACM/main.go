@@ -1,15 +1,15 @@
 package main
 
 import (
+	a "github.com/vault-thirteen/SimpleBB/pkg/ACM/server"
+	app2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/app"
 	"log"
 
-	a "github.com/vault-thirteen/SimpleBB/pkg/ACM"
 	as "github.com/vault-thirteen/SimpleBB/pkg/ACM/settings"
-	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 )
 
 func main() {
-	theApp, err := app.NewApplication[*as.Settings, *a.Server](&as.Settings{}, &a.Server{}, app.ServiceName_ACM, app.ConfigurationFilePathDefault_ACM)
+	theApp, err := app2.NewApplication[*as.Settings, *a.Server](&as.Settings{}, &a.Server{}, app2.ServiceName_ACM, app2.ConfigurationFilePathDefault_ACM)
 	mustBeNoError(err)
 
 	err = theApp.Use()

@@ -1,7 +1,7 @@
 package c
 
 import (
-	cc "github.com/vault-thirteen/SimpleBB/pkg/common/client"
+	cc "github.com/vault-thirteen/SimpleBB/pkg/common/models/Client"
 )
 
 // List of supported functions.

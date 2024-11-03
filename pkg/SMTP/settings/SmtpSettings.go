@@ -2,8 +2,7 @@ package settings
 
 import (
 	"errors"
-
-	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	c "github.com/vault-thirteen/SimpleBB/pkg/common/models/server"
 )
 
 // SmtpSettings are parameters of the SMTP server used for sending e-mail

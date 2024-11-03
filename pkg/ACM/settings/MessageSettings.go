@@ -2,9 +2,8 @@ package s
 
 import (
 	"errors"
-
-	c "github.com/vault-thirteen/SimpleBB/pkg/common"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	c "github.com/vault-thirteen/SimpleBB/pkg/common/models/server"
 )
 
 // MessageSettings are settings of e-mail messages.

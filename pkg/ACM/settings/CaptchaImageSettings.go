@@ -2,8 +2,7 @@ package s
 
 import (
 	"errors"
-
-	c "github.com/vault-thirteen/SimpleBB/pkg/common"
+	c "github.com/vault-thirteen/SimpleBB/pkg/common/models/server"
 )
 
 // CaptchaImageSettings are settings of captcha images.

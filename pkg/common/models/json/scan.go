@@ -2,7 +2,6 @@ package json
 
 import (
 	"encoding/json"
-
 	"github.com/vault-thirteen/SimpleBB/pkg/common/models/std"
 )
 

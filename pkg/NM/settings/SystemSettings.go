@@ -2,32 +2,31 @@ package s
 
 import (
 	"errors"
-
-	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	base2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	c "github.com/vault-thirteen/SimpleBB/pkg/common/models/server"
 )
 
 // SystemSettings are system settings.
 type SystemSettings struct {
-	NotificationTtl        cmb.Count `json:"notificationTtl"`
-	NotificationCountLimit cmb.Count `json:"notificationCountLimit"`
-	PageSize               cmb.Count `json:"pageSize"`
-	DKeySize               cmb.Count `json:"dKeySize"`
+	NotificationTtl        base2.Count `json:"notificationTtl"`
+	NotificationCountLimit base2.Count `json:"notificationCountLimit"`
+	PageSize               base2.Count `json:"pageSize"`
+	DKeySize               base2.Count `json:"dKeySize"`
 
 	// This setting must be synchronised with settings of the Gateway module.
-	IsTableOfIncidentsUsed cmb.Flag `json:"isTableOfIncidentsUsed"`
+	IsTableOfIncidentsUsed base2.Flag `json:"isTableOfIncidentsUsed"`
 
 	// This setting is used only when a table of incidents is enabled.
 	BlockTimePerIncident BlockTimePerIncident `json:"blockTimePerIncident"`
 
-	IsDebugMode cmb.Flag `json:"isDebugMode"`
+	IsDebugMode base2.Flag `json:"isDebugMode"`
 }
 
 // BlockTimePerIncident is block time in seconds for each type of incident.
 type BlockTimePerIncident struct {
-	IllegalAccessAttempt            cmb.Count `json:"illegalAccessAttempt"`            // 1.
-	ReadingNotificationOfOtherUsers cmb.Count `json:"readingNotificationOfOtherUsers"` // 2.
-	WrongDKey                       cmb.Count `json:"wrongDKey"`                       // 3.
+	IllegalAccessAttempt            base2.Count `json:"illegalAccessAttempt"`            // 1.
+	ReadingNotificationOfOtherUsers base2.Count `json:"readingNotificationOfOtherUsers"` // 2.
+	WrongDKey                       base2.Count `json:"wrongDKey"`                       // 3.
 }
 
 func (s SystemSettings) Check() (err error) {

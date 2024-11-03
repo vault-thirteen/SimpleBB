@@ -2,7 +2,7 @@ package dbo
 
 import (
 	ss "github.com/vault-thirteen/SimpleBB/pkg/SM/settings"
-	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
+	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/models/dbo"
 )
 
 type DatabaseObject struct {

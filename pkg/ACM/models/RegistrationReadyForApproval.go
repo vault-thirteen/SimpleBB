@@ -3,27 +3,26 @@ package models
 import (
 	"database/sql"
 	"errors"
-	"time"
-
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/interfaces/base1"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
-	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/simple"
+	"time"
 )
 
 // RegistrationReadyForApproval is a short variant of an object representing a
 // request for registration which is ready to be approved.
 type RegistrationReadyForApproval struct {
-	Id         cmb.Id    `json:"id"`
-	PreRegTime time.Time `json:"preRegTime"`
-	Email      cm.Email  `json:"email"`
-	Name       *cm.Name  `json:"name"`
+	Id         cmb.Id       `json:"id"`
+	PreRegTime time.Time    `json:"preRegTime"`
+	Email      simple.Email `json:"email"`
+	Name       *simple.Name `json:"name"`
 }
 
 func NewRegistrationReadyForApproval() (r *RegistrationReadyForApproval) {
 	return &RegistrationReadyForApproval{}
 }
 
-func NewRegistrationReadyForApprovalFromScannableSource(src cmi.IScannable) (r *RegistrationReadyForApproval, err error) {
+func NewRegistrationReadyForApprovalFromScannableSource(src base.IScannable) (r *RegistrationReadyForApproval, err error) {
 	r = NewRegistrationReadyForApproval()
 
 	err = src.Scan(
@@ -43,7 +42,7 @@ func NewRegistrationReadyForApprovalFromScannableSource(src cmi.IScannable) (r *
 	return r, nil
 }
 
-func NewRegistrationReadyForApprovalArrayFromRows(rows cmi.IScannableSequence) (rs []RegistrationReadyForApproval, err error) {
+func NewRegistrationReadyForApprovalArrayFromRows(rows base.IScannableSequence) (rs []RegistrationReadyForApproval, err error) {
 	rs = []RegistrationReadyForApproval{}
 	var r *RegistrationReadyForApproval
 

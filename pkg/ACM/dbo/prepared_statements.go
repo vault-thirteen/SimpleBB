@@ -3,8 +3,7 @@ package dbo
 import (
 	"database/sql"
 	"fmt"
-
-	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
+	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/models/dbo"
 )
 
 // Indices of prepared statements.

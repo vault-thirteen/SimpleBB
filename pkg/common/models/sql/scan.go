@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/interfaces/base1"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/std"
 	"reflect"
 	"strconv"
 
-	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
-	"github.com/vault-thirteen/SimpleBB/pkg/common/models/std"
 	num "github.com/vault-thirteen/auxie/number"
 )
 
@@ -99,7 +99,7 @@ func ScanSrcAsBoolean(src any) (b bool, err error) {
 	return b, nil
 }
 
-func NewArrayFromScannableSource[T any](src cmi.IScannableSequence) (values []T, err error) {
+func NewArrayFromScannableSource[T any](src base.IScannableSequence) (values []T, err error) {
 	values = []T{}
 	var value T
 
@@ -115,7 +115,7 @@ func NewArrayFromScannableSource[T any](src cmi.IScannableSequence) (values []T,
 	return values, nil
 }
 
-func NewValueFromScannableSource[T any](src cmi.IScannable) (*T, error) {
+func NewValueFromScannableSource[T any](src base.IScannable) (*T, error) {
 	var value = new(T)
 
 	err := src.Scan(&value)
@@ -130,7 +130,7 @@ func NewValueFromScannableSource[T any](src cmi.IScannable) (*T, error) {
 	return value, nil
 }
 
-func NewNonNullValueFromScannableSource[T any](src cmi.IScannable) (T, error) {
+func NewNonNullValueFromScannableSource[T any](src base.IScannable) (T, error) {
 	var value T
 
 	err := src.Scan(&value)

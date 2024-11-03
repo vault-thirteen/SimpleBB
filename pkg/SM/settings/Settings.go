@@ -2,13 +2,13 @@ package s
 
 import (
 	"encoding/json"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/interfaces/base1"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/app"
+	c "github.com/vault-thirteen/SimpleBB/pkg/common/models/server"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/settings"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models/simple"
 	"os"
 
-	c "github.com/vault-thirteen/SimpleBB/pkg/common"
-	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
-	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
-	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 	ver "github.com/vault-thirteen/auxie/Versioneer"
 )
 
@@ -25,8 +25,8 @@ type Settings struct {
 	SystemSettings `json:"system"`
 
 	// External services.
-	AcmSettings cs.ServiceClientSettings `json:"acm"`
-	MmSettings  cs.ServiceClientSettings `json:"mm"`
+	AcmSettings s.ServiceClientSettings `json:"acm"`
+	MmSettings  s.ServiceClientSettings `json:"mm"`
 }
 
 func NewSettingsFromFile(filePath string, versionInfo *ver.Versioneer) (stn *Settings, err error) {
@@ -50,7 +50,7 @@ func NewSettingsFromFile(filePath string, versionInfo *ver.Versioneer) (stn *Set
 	}
 
 	if len(stn.Password) == 0 {
-		stn.DbSettings.Password, err = cs.GetPasswordFromStdin(c.MsgEnterDatabasePassword)
+		stn.DbSettings.Password, err = s.GetPasswordFromStdin(c.MsgEnterDatabasePassword)
 		if err != nil {
 			return stn, err
 		}
@@ -62,7 +62,7 @@ func NewSettingsFromFile(filePath string, versionInfo *ver.Versioneer) (stn *Set
 }
 
 func (stn *Settings) Check() (err error) {
-	err = cs.CheckSettingsFilePath(stn.FilePath)
+	err = s.CheckSettingsFilePath(stn.FilePath)
 	if err != nil {
 		return err
 	}
@@ -88,11 +88,11 @@ func (stn *Settings) Check() (err error) {
 	// External services.
 	err = stn.AcmSettings.Check()
 	if err != nil {
-		return cs.DetailedScsError(app.ServiceShortName_ACM, err)
+		return s.DetailedScsError(app.ServiceShortName_ACM, err)
 	}
 	err = stn.MmSettings.Check()
 	if err != nil {
-		return cs.DetailedScsError(app.ServiceShortName_MM, err)
+		return s.DetailedScsError(app.ServiceShortName_MM, err)
 	}
 
 	return nil

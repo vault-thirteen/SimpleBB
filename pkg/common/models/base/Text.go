@@ -2,15 +2,14 @@ package base
 
 import (
 	"database/sql/driver"
-
-	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
+	sql2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 )
 
 type Text string
 
 func (t *Text) Scan(src any) (err error) {
 	var s string
-	s, err = cms.ScanSrcAsString(src)
+	s, err = sql2.ScanSrcAsString(src)
 	if err != nil {
 		return err
 	}
@@ -20,7 +19,7 @@ func (t *Text) Scan(src any) (err error) {
 }
 
 func (t Text) Value() (dv driver.Value, err error) {
-	return driver.Value(cms.StringToSql(t.AsString())), nil
+	return driver.Value(sql2.StringToSql(t.AsString())), nil
 }
 
 func (t Text) ToString() string {

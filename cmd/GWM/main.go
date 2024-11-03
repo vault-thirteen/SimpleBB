@@ -1,15 +1,15 @@
 package main
 
 import (
+	g "github.com/vault-thirteen/SimpleBB/pkg/GWM/server"
+	app2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/app"
 	"log"
 
-	g "github.com/vault-thirteen/SimpleBB/pkg/GWM"
 	gs "github.com/vault-thirteen/SimpleBB/pkg/GWM/settings"
-	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 )
 
 func main() {
-	theApp, err := app.NewApplication[*gs.Settings, *g.Server](&gs.Settings{}, &g.Server{}, app.ServiceName_GWM, app.ConfigurationFilePathDefault_GWM)
+	theApp, err := app2.NewApplication[gs.ISettings, *g.Server](gs.NewSettings(), &g.Server{}, app2.ServiceName_GWM, app2.ConfigurationFilePathDefault_GWM)
 	mustBeNoError(err)
 
 	err = theApp.Use()

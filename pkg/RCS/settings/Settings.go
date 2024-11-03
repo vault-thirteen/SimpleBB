@@ -2,11 +2,11 @@ package settings
 
 import (
 	"encoding/json"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/interfaces/base1"
+	cs "github.com/vault-thirteen/SimpleBB/pkg/common/models/settings"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models/simple"
 	"os"
 
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
-	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
-	cs "github.com/vault-thirteen/SimpleBB/pkg/common/settings"
 	ver "github.com/vault-thirteen/auxie/Versioneer"
 )
 

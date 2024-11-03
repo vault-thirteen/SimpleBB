@@ -3,10 +3,9 @@ package models
 import (
 	"database/sql"
 	"errors"
-
-	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/interfaces/base1"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/UidList"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
-	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 const (
@@ -23,7 +22,7 @@ func NewUserSubscriptionsRecord() (usr *UserSubscriptionsRecord) {
 	return &UserSubscriptionsRecord{}
 }
 
-func NewUserSubscriptionsRecordFromScannableSource(src cmi.IScannable) (usr *UserSubscriptionsRecord, err error) {
+func NewUserSubscriptionsRecordFromScannableSource(src base.IScannable) (usr *UserSubscriptionsRecord, err error) {
 	usr = NewUserSubscriptionsRecord()
 	var x = new(ul.UidList)
 
@@ -44,7 +43,7 @@ func NewUserSubscriptionsRecordFromScannableSource(src cmi.IScannable) (usr *Use
 	return usr, nil
 }
 
-func NewUserSubscriptionsRecordArrayFromRows(rows cmi.IScannableSequence) (usrs []UserSubscriptionsRecord, err error) {
+func NewUserSubscriptionsRecordArrayFromRows(rows base.IScannableSequence) (usrs []UserSubscriptionsRecord, err error) {
 	usrs = []UserSubscriptionsRecord{}
 	var usr *UserSubscriptionsRecord
 

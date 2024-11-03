@@ -5,9 +5,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models/simple"
 	"os"
-
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
 )
 
 //TODO:RSA-PSS.

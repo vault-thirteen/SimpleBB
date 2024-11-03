@@ -1,7 +1,7 @@
 package dbo
 
 import (
-	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/UidList"
 )
 
 func (dbo *DatabaseObject) dbQuery_ReadMessagesById(messageIds ul.UidList) (query string, err error) {

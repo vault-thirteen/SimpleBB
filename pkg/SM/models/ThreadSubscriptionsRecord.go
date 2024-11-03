@@ -3,10 +3,9 @@ package models
 import (
 	"database/sql"
 	"errors"
-
-	ul "github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/interfaces/base1"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/UidList"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
-	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type ThreadSubscriptionsRecord struct {
@@ -19,7 +18,7 @@ func NewThreadSubscriptionsRecord() (tsr *ThreadSubscriptionsRecord) {
 	return &ThreadSubscriptionsRecord{}
 }
 
-func NewThreadSubscriptionsRecordFromScannableSource(src cmi.IScannable) (tsr *ThreadSubscriptionsRecord, err error) {
+func NewThreadSubscriptionsRecordFromScannableSource(src base.IScannable) (tsr *ThreadSubscriptionsRecord, err error) {
 	tsr = NewThreadSubscriptionsRecord()
 	var x = ul.New()
 
@@ -40,7 +39,7 @@ func NewThreadSubscriptionsRecordFromScannableSource(src cmi.IScannable) (tsr *T
 	return tsr, nil
 }
 
-func NewThreadSubscriptionsRecordArrayFromRows(rows cmi.IScannableSequence) (tsrs []ThreadSubscriptionsRecord, err error) {
+func NewThreadSubscriptionsRecordArrayFromRows(rows base.IScannableSequence) (tsrs []ThreadSubscriptionsRecord, err error) {
 	tsrs = []ThreadSubscriptionsRecord{}
 	var tsr *ThreadSubscriptionsRecord
 

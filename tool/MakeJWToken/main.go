@@ -4,11 +4,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/simple"
 	"log"
 
 	"github.com/vault-thirteen/SimpleBB/pkg/ACM/km"
-	cm "github.com/vault-thirteen/SimpleBB/pkg/common/models"
-	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 )
 
 const (
@@ -25,7 +25,7 @@ func main() {
 	keyMaker, err = km.New(signingMethod, privateKeyFilePath, publicKeyFilePath)
 	mustBeNoError(err)
 
-	var ts cm.WebTokenString
+	var ts simple.WebTokenString
 	ts, err = keyMaker.MakeJWToken(userId, sessionId)
 	mustBeNoError(err)
 
@@ -43,7 +43,7 @@ func mustBeNoError(err error) {
 	}
 }
 
-func receiveArguments() (userId cmb.Id, sessionId cmb.Id, privateKeyFilePath cm.Path, publicKeyFilePath cm.Path, signingMethod string, err error) {
+func receiveArguments() (userId cmb.Id, sessionId cmb.Id, privateKeyFilePath simple.Path, publicKeyFilePath simple.Path, signingMethod string, err error) {
 	var userIdInt int
 	flag.IntVar(&userIdInt, "uid", 0, "user ID")
 	var sessionIdInt int
@@ -57,8 +57,8 @@ func receiveArguments() (userId cmb.Id, sessionId cmb.Id, privateKeyFilePath cm.
 
 	userId = cmb.Id(userIdInt)
 	sessionId = cmb.Id(sessionIdInt)
-	privateKeyFilePath = cm.Path(privateKeyFilePathStr)
-	publicKeyFilePath = cm.Path(publicKeyFilePathStr)
+	privateKeyFilePath = simple.Path(privateKeyFilePathStr)
+	publicKeyFilePath = simple.Path(publicKeyFilePathStr)
 
 	if userId == 0 {
 		return 0, 0, "", "", "", errors.New(ErrUserIdIsNotSet)

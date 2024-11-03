@@ -1,15 +1,15 @@
 package main
 
 import (
+	n "github.com/vault-thirteen/SimpleBB/pkg/NM/server"
+	app2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/app"
 	"log"
 
-	n "github.com/vault-thirteen/SimpleBB/pkg/NM"
 	ns "github.com/vault-thirteen/SimpleBB/pkg/NM/settings"
-	"github.com/vault-thirteen/SimpleBB/pkg/common/app"
 )
 
 func main() {
-	theApp, err := app.NewApplication[*ns.Settings, *n.Server](&ns.Settings{}, &n.Server{}, app.ServiceName_NM, app.ConfigurationFilePathDefault_NM)
+	theApp, err := app2.NewApplication[*ns.Settings, *n.Server](&ns.Settings{}, &n.Server{}, app2.ServiceName_NM, app2.ConfigurationFilePathDefault_NM)
 	mustBeNoError(err)
 
 	err = theApp.Use()

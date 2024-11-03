@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/vault-thirteen/SimpleBB/pkg/common/UidList"
+	"github.com/vault-thirteen/SimpleBB/pkg/common/models/UidList"
 	cmr "github.com/vault-thirteen/SimpleBB/pkg/common/models/rpc"
 )
 

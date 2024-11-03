@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS Sections
 (
     Id            bigint AUTO_INCREMENT NOT NULL,
     Parent        bigint,
-    ChildType     tinyint DEFAULT 0,
+    ChildType     tinyint DEFAULT 3,
     Children      json,
     Name          varchar(255)          NOT NULL,
 

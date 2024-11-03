@@ -4,11 +4,10 @@ package dbo
 
 import (
 	"database/sql"
-	"net"
-
-	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
 	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	dbo2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/dbo"
 	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
+	"net"
 )
 
 func (dbo *DatabaseObject) CountBlocksByIPAddress(ipa net.IP) (n cmb.Count, err error) {
@@ -16,7 +15,7 @@ func (dbo *DatabaseObject) CountBlocksByIPAddress(ipa net.IP) (n cmb.Count, err 
 
 	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
 	if err != nil {
-		return cdbo.CountOnError, err
+		return dbo2.CountOnError, err
 	}
 
 	return n, nil
@@ -29,7 +28,7 @@ func (dbo *DatabaseObject) InsertBlock(ipa net.IP, durationSec cmb.Count) (err e
 		return err
 	}
 
-	return cdbo.CheckRowsAffected(result, 1)
+	return dbo2.CheckRowsAffected(result, 1)
 }
 
 func (dbo *DatabaseObject) IncreaseBlockDuration(ipa net.IP, deltaDurationSec cmb.Count) (err error) {
@@ -39,5 +38,5 @@ func (dbo *DatabaseObject) IncreaseBlockDuration(ipa net.IP, deltaDurationSec cm
 		return err
 	}
 
-	return cdbo.CheckRowsAffected(result, 1)
+	return dbo2.CheckRowsAffected(result, 1)
 }

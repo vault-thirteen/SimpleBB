@@ -4,54 +4,53 @@ package dbo
 
 import (
 	"database/sql"
-
 	sm "github.com/vault-thirteen/SimpleBB/pkg/SM/models"
-	cdbo "github.com/vault-thirteen/SimpleBB/pkg/common/dbo"
-	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	base2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
+	dbo2 "github.com/vault-thirteen/SimpleBB/pkg/common/models/dbo"
 	cms "github.com/vault-thirteen/SimpleBB/pkg/common/models/sql"
 	ae "github.com/vault-thirteen/auxie/errors"
 )
 
-func (dbo *DatabaseObject) CountUserSubscriptions(userId cmb.Id) (n cmb.Count, err error) {
+func (dbo *DatabaseObject) CountUserSubscriptions(userId base2.Id) (n base2.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountUserSubscriptions).QueryRow(userId)
 
-	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[base2.Count](row)
 	if err != nil {
-		return cdbo.CountOnError, err
+		return dbo2.CountOnError, err
 	}
 
 	return n, nil
 }
 
-func (dbo *DatabaseObject) CountThreadSubscriptions(threadId cmb.Id) (n cmb.Count, err error) {
+func (dbo *DatabaseObject) CountThreadSubscriptions(threadId base2.Id) (n base2.Count, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_CountThreadSubscriptions).QueryRow(threadId)
 
-	n, err = cms.NewNonNullValueFromScannableSource[cmb.Count](row)
+	n, err = cms.NewNonNullValueFromScannableSource[base2.Count](row)
 	if err != nil {
-		return cdbo.CountOnError, err
+		return dbo2.CountOnError, err
 	}
 
 	return n, nil
 }
 
-func (dbo *DatabaseObject) InitUserSubscriptions(userId cmb.Id) (err error) {
+func (dbo *DatabaseObject) InitUserSubscriptions(userId base2.Id) (err error) {
 	var result sql.Result
 	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_InitUserSubscriptions).Exec(userId)
 	if err != nil {
 		return err
 	}
 
-	return cdbo.CheckRowsAffected(result, 1)
+	return dbo2.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) InitThreadSubscriptions(threadId cmb.Id) (err error) {
+func (dbo *DatabaseObject) InitThreadSubscriptions(threadId base2.Id) (err error) {
 	var result sql.Result
 	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_InitThreadSubscriptions).Exec(threadId)
 	if err != nil {
 		return err
 	}
 
-	return cdbo.CheckRowsAffected(result, 1)
+	return dbo2.CheckRowsAffected(result, 1)
 }
 
 func (dbo *DatabaseObject) GetAllThreadSubscriptions() (tsrs []sm.ThreadSubscriptionsRecord, err error) {
@@ -88,7 +87,7 @@ func (dbo *DatabaseObject) GetAllUserSubscriptions() (usrs []sm.UserSubscription
 	return sm.NewUserSubscriptionsRecordArrayFromRows(rows)
 }
 
-func (dbo *DatabaseObject) GetUserSubscriptions(userId cmb.Id) (usr *sm.UserSubscriptionsRecord, err error) {
+func (dbo *DatabaseObject) GetUserSubscriptions(userId base2.Id) (usr *sm.UserSubscriptionsRecord, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetUserSubscriptions).QueryRow(userId)
 
 	usr, err = sm.NewUserSubscriptionsRecordFromScannableSource(row)
@@ -110,7 +109,7 @@ func (dbo *DatabaseObject) GetUserSubscriptions(userId cmb.Id) (usr *sm.UserSubs
 	return usr, nil
 }
 
-func (dbo *DatabaseObject) GetThreadSubscriptions(threadId cmb.Id) (tsr *sm.ThreadSubscriptionsRecord, err error) {
+func (dbo *DatabaseObject) GetThreadSubscriptions(threadId base2.Id) (tsr *sm.ThreadSubscriptionsRecord, err error) {
 	row := dbo.DatabaseObject.PreparedStatement(DbPsid_GetThreadSubscriptions).QueryRow(threadId)
 
 	tsr, err = sm.NewThreadSubscriptionsRecordFromScannableSource(row)
@@ -128,7 +127,7 @@ func (dbo *DatabaseObject) SaveUserSubscriptions(usr *sm.UserSubscriptionsRecord
 		return err
 	}
 
-	return cdbo.CheckRowsAffected(result, 1)
+	return dbo2.CheckRowsAffected(result, 1)
 }
 
 func (dbo *DatabaseObject) SaveThreadSubscriptions(tsr *sm.ThreadSubscriptionsRecord) (err error) {
@@ -138,15 +137,15 @@ func (dbo *DatabaseObject) SaveThreadSubscriptions(tsr *sm.ThreadSubscriptionsRe
 		return err
 	}
 
-	return cdbo.CheckRowsAffected(result, 1)
+	return dbo2.CheckRowsAffected(result, 1)
 }
 
-func (dbo *DatabaseObject) ClearThreadSubscriptionRecord(threadId cmb.Id) (err error) {
+func (dbo *DatabaseObject) ClearThreadSubscriptionRecord(threadId base2.Id) (err error) {
 	var result sql.Result
 	result, err = dbo.DatabaseObject.PreparedStatement(DbPsid_ClearThreadSubscriptionRecord).Exec(threadId)
 	if err != nil {
 		return err
 	}
 
-	return cdbo.CheckRowsAffected(result, 1)
+	return dbo2.CheckRowsAffected(result, 1)
 }

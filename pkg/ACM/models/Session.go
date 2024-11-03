@@ -3,11 +3,10 @@ package models
 import (
 	"database/sql"
 	"errors"
+	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/interfaces/base1"
+	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
 	"net"
 	"time"
-
-	cmb "github.com/vault-thirteen/SimpleBB/pkg/common/models/base"
-	cmi "github.com/vault-thirteen/SimpleBB/pkg/common/models/interfaces"
 )
 
 type Session struct {
